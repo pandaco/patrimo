@@ -1,0 +1,37 @@
+services:
+  postgres:
+    # PostgreSQL 18.4 — latest stable (verified 2026-05-17, source: endoflife.date/postgresql)
+    image: postgres:18.4-alpine
+    container_name: tracker-ptf-postgres
+    environment:
+      POSTGRES_DB: tracker_ptf
+      POSTGRES_USER: tracker
+      POSTGRES_PASSWORD: tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracker -d tracker_ptf"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    # Redis 8.6.3 — latest stable (verified 2026-05-17, source: endoflife.date/redis)
+    image: redis:8.6-alpine
+    container_name: tracker-ptf-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:

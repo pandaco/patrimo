@@ -1,0 +1,52 @@
+# =========================
+# Temporary personal notes
+# =========================
+# All planning / design docs live here for now.
+# Will be promoted to /docs once the project is bootstrapped.
+/tmp/
+
+# =========================
+# Node / Nx
+# =========================
+node_modules/
+.nx/
+dist/
+tmp-build/
+.angular/
+coverage/
+
+# =========================
+# Env files
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# Local databases
+# =========================
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# =========================
+# OS / Editors
+# =========================
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Logs
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.angular
+
+vitest.config.*.timestamp*

@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2022",
+    "module": "commonjs",
+    "lib": ["es2022", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "domain": ["./libs/api/domain/src/index.ts"],
+      "application": ["./libs/api/application/src/index.ts"],
+      "infrastructure": ["./libs/api/infrastructure/src/index.ts"],
+      "shared": ["./libs/api/shared/src/index.ts"],
+      "ui": ["./libs/web/ui/src/index.ts"],
+      "data-access": ["./libs/web/data-access/src/index.ts"],
+      "features": ["./libs/web/features/src/index.ts"],
+      "contracts": ["./libs/shared/contracts/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
