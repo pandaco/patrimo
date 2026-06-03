@@ -1,4 +1,4 @@
-# Patrimonia — Design Prototype
+# Patrimo — Design Prototype
 
 Clickable HTML/JSX prototype handed off from Claude Design (claude.ai/design). Source of truth for visual design, layout, copy and interactions until the Angular implementation lands.
 
@@ -11,7 +11,7 @@ Clickable HTML/JSX prototype handed off from Claude Design (claude.ai/design). S
 
 | File | Role |
 |---|---|
-| `Patrimonia.html` | Entry point (loads React via UMD + Babel standalone, then all `.jsx` modules) |
+| `Patrimo.html` | Entry point (loads React via UMD + Babel standalone, then all `.jsx` modules) |
 | `app.css` | Full theme — design tokens (CSS custom properties), layout, component styles, a11y |
 | `data.jsx` | Mock data: envelopes, ETFs, transactions, alerts, glossary, perf series, formatters |
 | `shell.jsx` | Sidebar, Topbar, shared atoms (`EnvGlyph`, `Delta`, `Sparkline`, `Bar`, `Donut`, icons) |
@@ -32,7 +32,7 @@ You only need a static file server (Babel runs in the browser via CDN).
 ```bash
 cd design
 python3 -m http.server 8080
-open http://localhost:8080/Patrimonia.html
+open http://localhost:8080/Patrimo.html
 ```
 
 ### Option 2 — npx serve
@@ -44,7 +44,7 @@ npx serve -p 8080 .
 
 ### Option 3 — VS Code Live Server
 
-Right-click `Patrimonia.html` → *Open with Live Server*.
+Right-click `Patrimo.html` → *Open with Live Server*.
 
 > Don't open the file via `file://` — Babel standalone requires HTTP for `<script type="text/babel" src="…">` to work.
 
