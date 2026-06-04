@@ -7,4 +7,8 @@ export interface PositionDto {
   avgPrice: number;
   /** Net invested capital (BUY costs + fees - SELL proceeds). */
   invested: number;
+  /** Latest regular-market price from the live provider, or `null` if unknown. */
+  currentPrice: number | null;
+  /** Previous regular-market close, or `null` if unknown. */
+  prevClose: number | null;
 }

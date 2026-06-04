@@ -46,12 +46,17 @@ function fromCatalog(d: EtfDto): Etf {
 
 function mergePosition(etf: Etf, position: PositionDto | undefined): Etf {
   if (!position) return etf;
+  // Market data is best-effort: when Yahoo returns null we fall back to the
+  // PRU so cost basis and current value match (PnL = 0) instead of inventing
+  // numbers.
+  const price = position.currentPrice ?? position.avgPrice;
+  const prev  = position.prevClose    ?? price;
   return {
     ...etf,
     qty:   position.qty,
     pru:   position.avgPrice,
-    price: position.avgPrice,
-    prev:  position.avgPrice,
+    price,
+    prev,
   };
 }
 

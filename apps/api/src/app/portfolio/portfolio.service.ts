@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
 import { PositionDto } from 'contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import { PriceService } from '../market/price.service';
 
 interface PositionAccumulator {
   qty:      number;
@@ -33,6 +34,7 @@ export class PortfolioService {
   constructor(
     @Inject(TRANSACTION_REPOSITORY) private readonly txRepo: TransactionRepository,
     @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
+    private readonly priceService: PriceService,
   ) {}
 
   async listForUser(userId: string): Promise<PositionDto[]> {
@@ -50,21 +52,28 @@ export class PortfolioService {
       byIsin.set(tx.etfIsin, pos);
     }
 
-    const positions: PositionDto[] = [];
-    for (const [isin, pos] of byIsin) {
-      if (pos.qty <= 0) continue; // fully sold / never bought
-      const etf = etfByIsin.get(isin);
-      if (!etf) continue;
-      positions.push({
-        etfIsin: isin,
-        ticker:  etf.ticker,
-        name:    etf.name,
-        qty:     pos.qty,
-        avgPrice: pos.buyQty > 0 ? pos.buyCost / pos.buyQty : 0,
-        invested: pos.invested,
-      });
-    }
-    positions.sort((a, b) => b.invested - a.invested);
-    return positions;
+    const positions = await Promise.all(
+      Array.from(byIsin.entries())
+        .filter(([isin, pos]) => pos.qty > 0 && etfByIsin.has(isin))
+        .map(async ([isin, pos]) => {
+          const etf = etfByIsin.get(isin);
+          if (!etf) return null;
+          const quote = await this.priceService.getQuote(isin, etf.ticker);
+          return {
+            etfIsin: isin,
+            ticker:  etf.ticker,
+            name:    etf.name,
+            qty:     pos.qty,
+            avgPrice: pos.buyQty > 0 ? pos.buyCost / pos.buyQty : 0,
+            invested: pos.invested,
+            currentPrice: quote.price,
+            prevClose:    quote.prevClose,
+          } satisfies PositionDto;
+        }),
+    );
+
+    return positions
+      .filter((p): p is PositionDto => p !== null)
+      .sort((a, b) => b.invested - a.invested);
   }
 }
