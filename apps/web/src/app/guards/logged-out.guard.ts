@@ -1,4 +1,9 @@
-import { CanActivateFn } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from 'data-access';
 
-// TODO Sprint 1: if authenticated, redirect to /dashboard via inject(Router).
-export const loggedOutGuard: CanActivateFn = () => true;
+export const loggedOutGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  return auth.isAuthenticated() ? router.createUrlTree(['/dashboard']) : true;
+};

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from 'data-access';
 
-// TODO Sprint 1: hydrate AuthService.user from /api/auth/me, then redirect to /dashboard.
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
@@ -9,4 +10,15 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   </div>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuthCallbackComponent {}
+export class AuthCallbackComponent implements OnInit {
+  private readonly auth   = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route  = inject(ActivatedRoute);
+
+  async ngOnInit(): Promise<void> {
+    await this.auth.loadCurrentUser();
+    const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/dashboard';
+    const target = this.auth.isAuthenticated() ? redirect : '/login';
+    this.router.navigateByUrl(target, { replaceUrl: true });
+  }
+}

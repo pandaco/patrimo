@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { UserService } from 'data-access';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService, UserService } from 'data-access';
 import { AppIconComponent, AppIconName } from 'ui';
 
 interface NavItem {
@@ -57,6 +57,14 @@ const NAV: NavGroup[] = [
 export class SidebarComponent {
   openShortcuts = output<void>();
 
+  private readonly auth   = inject(AuthService);
+  private readonly router = inject(Router);
+
   protected readonly nav = NAV;
   protected readonly user = inject(UserService).currentUser;
+
+  protected async logout(): Promise<void> {
+    await this.auth.logout();
+    this.router.navigateByUrl('/login');
+  }
 }
