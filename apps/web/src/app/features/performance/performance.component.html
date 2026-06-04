@@ -2,10 +2,11 @@
 
   <div class="page-head">
     <div class="page-eyebrow">Performance</div>
-    <h1 class="page-title">Tu fais <em>+2,4 pts</em> mieux<br>que le MSCI World cette année.</h1>
+    <h1 class="page-title">Évolution <em>de ton patrimoine</em></h1>
     <p class="page-sub">
-      Performances nettes de frais, brutes de fiscalité. Le benchmark est calculé
-      pondéré selon ta cible (90 % MSCI World + 10 % Bloomberg Euro Govt).
+      Valeur du portefeuille reconstituée jour par jour depuis ton historique
+      de transactions et les cours Yahoo Finance. Performance affichée nette de
+      frais courtage et brut de fiscalité.
     </p>
   </div>
 
@@ -13,22 +14,38 @@
   <div class="card">
     <div class="card-head">
       <div class="card-title">Évolution <em>de la valeur</em></div>
-      <span class="card-sub">12 mois glissants</span>
+      <span class="card-sub">{{ activePeriod() === 'YTD' ? 'depuis le 1ᵉʳ janvier' : activePeriod() }}</span>
       <div class="card-right">
         <div class="tabs">
-          @for (p of ['1M','3M','6M','YTD','1A','3A','5A','MAX']; track p) {
-            <button [class.active]="p === '1A'">{{ p }}</button>
+          @for (p of periodOptions; track p.id) {
+            <button [class.active]="p.id === activePeriod()" (click)="setPeriod(p.id)" [disabled]="loading()">
+              {{ p.label }}
+            </button>
           }
         </div>
       </div>
     </div>
-    <app-perf-chart [portfolio]="portfolio()" [benchmark]="benchmark()" />
+    @if (portfolio().length > 0) {
+      <app-perf-chart [portfolio]="portfolio()" [benchmark]="benchmark()" />
+      <div class="row" style="justify-content:space-between;margin-top:12px;padding:0 12px">
+        <span class="muted small">Période : {{ activePeriod() }}</span>
+        <span class="num" [class.pos]="portfolioPct() >= 0" [class.neg]="portfolioPct() < 0">
+          {{ fmtPct(portfolioPct(), 2) }} sur la période
+        </span>
+      </div>
+    } @else if (loading()) {
+      <div class="muted" style="text-align:center;padding:60px 0">Chargement de la série…</div>
+    } @else {
+      <div class="muted" style="text-align:center;padding:60px 0">
+        Aucune position sur la période sélectionnée. Crée une transaction pour démarrer la courbe.
+      </div>
+    }
   </div>
 
   <!-- MULTI-PERIOD TABLE -->
   <div class="section-head">
     <h2 class="section-title">Multi-périodes</h2>
-    <span class="section-sub">portefeuille vs benchmark</span>
+    <span class="section-sub">total return du portefeuille (clique pour basculer la courbe)</span>
   </div>
 
   <div class="card" style="padding:4px 12px">
@@ -37,70 +54,54 @@
         <tr>
           <th>Période</th>
           <th class="r">Portefeuille</th>
-          <th class="r">Benchmark</th>
-          <th class="r">Alpha</th>
-          <th>Battue</th>
+          <th class="r">Statut</th>
           <th></th>
         </tr>
       </thead>
       <tbody>
-        @for (row of periods; track row.p) {
-          <tr>
+        @for (row of periodRows(); track row.id) {
+          <tr [style.background]="row.active ? 'var(--paper-2)' : null">
             <td>
-              <span class="serif-italic" style="font-size:16px">{{ row.p }}</span>
-              @if (row.ann) { <span class="muted tiny" style="margin-left:6px">annualisé</span> }
+              <span class="serif-italic" style="font-size:16px">{{ row.label }}</span>
             </td>
-            <td class="r"><span class="num pos">{{ fmtPct(row.port, 2) }}</span></td>
-            <td class="r"><span class="num muted">{{ fmtPct(row.bench, 2) }}</span></td>
-            <td class="r"><ui-delta [value]="row.port - row.bench" /></td>
-            <td><ui-bar [pct]="row.port - row.bench > 0 ? row.port - row.bench : 0" [max]="3" /></td>
-            <td class="r"><button class="btn sm ghost">Détails</button></td>
+            <td class="r">
+              @if (row.active) {
+                <span class="num" [class.pos]="row.pct >= 0" [class.neg]="row.pct < 0">{{ fmtPct(row.pct, 2) }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="r">
+              @if (row.active) {
+                <span class="pill gain"><span class="dot"></span>affichée</span>
+              } @else {
+                <span class="muted tiny">non chargée</span>
+              }
+            </td>
+            <td class="r">
+              <button class="btn sm" [class.ghost]="row.active" (click)="setPeriod(row.id)" [disabled]="loading()">
+                {{ row.active ? 'Active' : 'Charger' }}
+              </button>
+            </td>
           </tr>
         }
       </tbody>
     </table>
   </div>
 
-  <!-- BOTTOM 3 CARDS -->
-  <div class="grid cols-3" style="margin-top:24px">
+  <!-- BOTTOM 2 CARDS -->
+  <div class="grid cols-2" style="margin-top:24px">
 
-    <!-- Tracking difference -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Tracking <em>difference</em></div>
-        <span class="card-sub">par ETF, sur 1 an</span>
-      </div>
-      @for (r of tdData; track r.ticker) {
-        <div class="row" style="padding:7px 0;border-bottom:1px solid var(--rule-soft)">
-          <span class="pill solid" style="min-width:48px;justify-content:center">{{ r.ticker }}</span>
-          <span style="margin-left:auto" class="num small" [class.pos]="r.td >= 0" [class.neg]="r.td < 0">
-            {{ fmtPct(r.td, 2) }}
-          </span>
-          <span class="muted tiny num">±{{ fmtNum(r.te, 2) }}</span>
-        </div>
-      }
-    </div>
-
-    <!-- Fees -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Frais <em>cumulés</em></div>
-        <span class="card-sub">2025</span>
-      </div>
-      <div class="display-num" style="font-size:34px;margin-bottom:8px">68,42 <small>€</small></div>
-      <div class="kv"><dt>Courtage</dt><dd>11,88 €</dd></div>
-      <div class="kv"><dt>Gestion (TER)</dt><dd>52,18 €</dd></div>
-      <div class="kv"><dt>Change</dt><dd>4,36 €</dd></div>
-      <div class="divider-soft"></div>
-      <div class="kv"><dt>Coût annuel moy.</dt><dd>0,17 % du capital</dd></div>
-    </div>
-
-    <!-- Drawdowns -->
+    <!-- Drawdowns (placeholder) -->
     <div class="card">
       <div class="card-head">
         <div class="card-title">Drawdowns</div>
-        <span class="card-sub">depuis création</span>
+        <span class="card-sub">historiques (mock)</span>
       </div>
+      <p class="muted tiny" style="margin-bottom:10px">
+        L'analyse temps-fond des drawdowns nécessite encore un walker dédié côté backend.
+        Les valeurs ci-dessous sont indicatives.
+      </p>
       @for (dd of ddData; track dd.date) {
         <div style="padding:9px 0;border-bottom:1px solid var(--rule-soft)">
           <div class="row">
@@ -110,6 +111,21 @@
           <div class="muted tiny" style="margin-top:3px">{{ dd.dur }} drawdown · récupéré en {{ dd.recov }}</div>
         </div>
       }
+    </div>
+
+    <!-- Methodology note -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Méthodologie</div>
+        <span class="card-sub">comment on calcule</span>
+      </div>
+      <ul style="margin:0 0 0 18px;padding:0;font-size:13px;line-height:1.55;color:var(--ink-2)">
+        <li><b>Source des cours</b> : Yahoo Finance, mis en cache 24 h côté backend.</li>
+        <li><b>Quantité à chaque date</b> : reconstituée en marchant les transactions BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
+        <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
+        <li><b>Benchmark</b> : pas encore branché. Une série MSCI World (CW8) sera ajoutée prochainement.</li>
+        <li><b>Frais et fiscalité</b> : hors valorisation pour le moment. Les frais de courtage sont déjà inscrits dans les transactions BUY.</li>
+      </ul>
     </div>
 
   </div>
