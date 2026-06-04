@@ -8,8 +8,8 @@ Guide pour faire tourner l'app en local, de zéro.
 
 | Outil | Version min | Vérifier | Installer |
 |---|---|---|---|
-| **Node.js** | 22 LTS | `node --version` | [nodejs.org](https://nodejs.org) ou `nvm install --lts` |
-| **npm** | 10+ | `npm --version` | Inclus avec Node |
+| **Node.js** | 24 LTS | `node --version` | [nodejs.org](https://nodejs.org) ou `nvm install 24` |
+| **npm** | 11+ | `npm --version` | Inclus avec Node |
 | **Docker Desktop** | 4.30+ | `docker --version` | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
 | **Git** | 2.40+ | `git --version` | [git-scm.com](https://git-scm.com) |
 
