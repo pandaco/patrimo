@@ -3,13 +3,13 @@
 Clickable HTML/JSX prototype handed off from Claude Design (claude.ai/design). Source of truth for visual design, layout, copy and interactions until the Angular implementation lands.
 
 > ⚠️ **This is a design prototype, not production code.**
-> React + Babel are used in the browser only as a render engine to make the screens clickable. The real implementation target is **Angular 21.2 (standalone, signals, SCSS) with Angular Material 21.2**. Port plan (prototype → Angular component map, Material usage rules) in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md).
+> React + Babel are used in the browser only as a render engine to make the screens clickable. The real implementation target is **Angular 21.2** (standalone, signals, SCSS) — already shipped in `apps/web`. See the root [`README.md`](../README.md) for the live stack.
 >
-> 📱 **Responsive scope.** The prototype is **fixed to 1440 px wide** (`<meta name="viewport" content="width=1440">`) on purpose — it's the desktop design source of truth. The Angular implementation must adapt down to **360 px** and up to wide desktops following the breakpoint strategy in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md) §9 (5 breakpoints: 360 / 600 / 900 / 1200 / 1440, mobile-first with bottom navigation under 900 px).
+> 📱 **Responsive scope.** The prototype is **fixed to 1440 px wide** (`<meta name="viewport" content="width=1440">`) on purpose — it's the desktop design source of truth. The Angular implementation adapts down to **360 px** and up to wide desktops (5 breakpoints: 360 / 600 / 900 / 1200 / 1440, mobile-first with bottom navigation under 900 px).
 >
-> 🏷️ **Brand name.** `shell.jsx` still shows `Patrimo<em>nia</em>` (old name). The project was renamed **Patrimo** (see git history). The Angular shell must use `Patrimo` — or keep the italic suffix as `Patrimo<em> nia</em>` if the design intent is to keep the stylised two-part name. Decide before `ShellComponent` is built.
+> 🏷️ **Brand name.** `shell.jsx` still shows `Patrimo<em>nia</em>` (old name). The project was renamed **Patrimo**. The Angular shell uses `Patrimo`.
 >
-> ⚙️ **Angular Material note.** The prototype uses fully custom CSS (no Material). When porting to Angular, Material is used for **behavior and a11y only** (dialogs, tables, form fields, overlays, CDK). Visual identity comes from `app.css` CSS custom properties — Material's theme system does not drive colors, fonts, or spacing. See [`../tmp/best-practices.md`](../tmp/best-practices.md) §2.8 and [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md) §10 for the full component map.
+> ⚙️ **Angular Material note.** The prototype uses fully custom CSS (no Material). In the Angular implementation, Material is used for **behavior and a11y only** (dialogs, tables, form fields, overlays, CDK). Visual identity comes from `app.css` CSS custom properties — Material's theme system does not drive colors, fonts, or spacing.
 
 ## Files
 
@@ -105,11 +105,7 @@ Mock data is centralised in `data.jsx` and exposed on `window` for cross-module 
 
 Two screens are **not** part of this prototype (they would have hidden the logged-in flow that the prototype focuses on) and will be designed directly in Angular following the same design tokens (`app.css`):
 
-- **`LoginComponent`** — single-CTA "Continue with Google" centered card. Full spec in [`../tmp/auth.md`](../tmp/auth.md) §5.2.
+- **`LoginComponent`** — single-CTA "Continue with Google" centered card.
 - **`AuthCallbackComponent`** — invisible safety-net route, only reached on edge cases.
 
-The topbar will gain an **avatar dropdown** on the right (logout, profile, settings) — see [`../tmp/auth.md`](../tmp/auth.md) §5.4.
-
-## When Angular bootstrap is done
-
-Move on to the Angular port. The mapping prototype ↔ Angular standalone components is in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md).
+The topbar has an **avatar dropdown** on the right (logout, profile, settings).
