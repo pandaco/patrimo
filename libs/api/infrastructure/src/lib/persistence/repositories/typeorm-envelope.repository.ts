@@ -4,6 +4,12 @@ import type { Envelope, EnvelopeRepository, EnvelopeSeed } from 'api-domain';
 import { Repository } from 'typeorm';
 import { EnvelopeOrmEntity } from '../orm-entities/envelope.orm-entity';
 
+// pg returns `date` columns as `YYYY-MM-DD` strings; coerce to Date so the
+// domain entity stays honest about its type signature.
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
 function toDomain(row: EnvelopeOrmEntity): Envelope {
   return {
     id: row.id,
@@ -15,7 +21,7 @@ function toDomain(row: EnvelopeOrmEntity): Envelope {
     value: row.value,
     invested: row.invested,
     cash: row.cash,
-    openedAt: row.openedAt,
+    openedAt: toDate(row.openedAt),
     plafond: row.plafond,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

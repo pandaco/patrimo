@@ -4,6 +4,12 @@ import type { Transaction, TransactionRepository, TransactionSeed, TxType } from
 import { Repository } from 'typeorm';
 import { TransactionOrmEntity } from '../orm-entities/transaction.orm-entity';
 
+// pg returns `date` columns as `YYYY-MM-DD` strings; coerce to Date so the
+// domain entity stays honest about its type signature.
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(value);
+}
+
 function toDomain(row: TransactionOrmEntity): Transaction {
   return {
     id: row.id,
@@ -11,7 +17,7 @@ function toDomain(row: TransactionOrmEntity): Transaction {
     envelopeId: row.envelopeId,
     etfIsin: row.etfIsin,
     type: row.type as TxType,
-    date: row.date,
+    date: toDate(row.date),
     quantity: row.quantity,
     price: row.price,
     fees: row.fees,

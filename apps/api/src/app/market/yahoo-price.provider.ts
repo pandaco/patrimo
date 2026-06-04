@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import yahooFinance from 'yahoo-finance2';
+import YahooFinance from 'yahoo-finance2';
 import { Quote } from './price-cache.service';
+
+// yahoo-finance2 v3 dropped the default singleton in favour of an explicit
+// instance. Re-create one at module load so the provider keeps a single
+// pooled HTTP client across requests.
+const yahooFinance = new YahooFinance();
 
 function pickNumber(record: unknown, key: string): number | null {
   if (typeof record !== 'object' || record === null) return null;
