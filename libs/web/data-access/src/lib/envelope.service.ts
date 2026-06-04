@@ -3,7 +3,9 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { CreateEnvelopeDto, UpdateEnvelopeDto } from 'contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { EtfService } from './etf.service';
 import { Envelope } from './models';
+import { TransactionService } from './transaction.service';
 
 const BOURSE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
 const LIVRET_GLYPHS = new Set(['livret']);
@@ -12,6 +14,8 @@ const LIVRET_GLYPHS = new Set(['livret']);
 export class EnvelopeService {
   private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+  private readonly txs     = inject(TransactionService);
+  private readonly etfs    = inject(EtfService);
 
   private readonly _all = signal<Envelope[]>([]);
   readonly all = this._all.asReadonly();
@@ -54,5 +58,10 @@ export class EnvelopeService {
       this.http.delete<void>(`${this.baseUrl}/envelopes/${id}`, { withCredentials: true }),
     );
     this._all.update(list => list.filter(e => e.id !== id));
+    // Backend cascades the delete to the linked transactions; refresh both
+    // signals so the dashboard recent-tx, the sidebar badge and the portfolio
+    // positions follow without anyone reloading the page.
+    this.txs.reload().catch(() => undefined);
+    this.etfs.reload().catch(() => undefined);
   }
 }

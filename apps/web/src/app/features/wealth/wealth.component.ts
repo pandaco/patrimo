@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, Envelope, EtfService, TransactionService } from 'data-access';
+import { EnvelopeService, Envelope } from 'data-access';
 import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw } from 'ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
@@ -34,8 +34,6 @@ export interface FamilyRow {
 })
 export class WealthComponent {
   private readonly envSvc = inject(EnvelopeService);
-  private readonly txSvc  = inject(TransactionService);
-  private readonly etfSvc = inject(EtfService);
   private readonly dialog = inject(MatDialog);
 
   protected readonly total    = this.envSvc.total;
@@ -94,10 +92,9 @@ export class WealthComponent {
       `enregistrées sur cette enveloppe.`,
     )) return;
     try {
+      // EnvelopeService.remove() fans the cascade reload (transactions + positions)
+      // out internally — the component does not need to chain them itself.
       await this.envSvc.remove(env.id);
-      // Backend cascades to transactions (and positions derive from them) — refresh
-      // both signals so the dashboard and the sidebar badge follow immediately.
-      await Promise.allSettled([this.txSvc.reload(), this.etfSvc.reload()]);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Suppression impossible');
     }
