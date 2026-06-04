@@ -2,16 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import YahooFinance from 'yahoo-finance2';
 import { Quote } from './price-cache.service';
 
-// yahoo-finance2 v3 dropped the default singleton in favour of an explicit
-// instance. Re-create one at module load so the provider keeps a single
-// pooled HTTP client across requests. `suppressNotices` silences the
-// one-off survey banner the SDK prints to stdout on first use.
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 function pickNumber(record: unknown, key: string): number | null {
   if (typeof record !== 'object' || record === null) return null;
   const value = (record as Record<string, unknown>)[key];
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+export interface HistoricalPoint {
+  /** ISO `YYYY-MM-DD`. */
+  date:  string;
+  close: number;
 }
 
 @Injectable()
@@ -29,6 +31,34 @@ export class YahooPriceProvider {
     } catch (err) {
       this.logger.warn(`Yahoo Finance lookup failed for ${symbol}: ${(err as Error).message}`);
       return { price: null, prevClose: null };
+    }
+  }
+
+  /**
+   * Daily close history over the last `days` days, oldest first. Empty array
+   * on lookup failure so the caller can choose to degrade gracefully.
+   */
+  async fetchHistorical(symbol: string, days: number): Promise<HistoricalPoint[]> {
+    try {
+      const now = new Date();
+      const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+      const chart = await yahooFinance.chart(symbol, {
+        period1:  since,
+        period2:  now,
+        interval: '1d',
+      });
+      const quotes = Array.isArray(chart?.quotes) ? chart.quotes : [];
+      const out: HistoricalPoint[] = [];
+      for (const q of quotes) {
+        const close = typeof q?.close === 'number' && Number.isFinite(q.close) ? q.close : null;
+        const date  = q?.date instanceof Date ? q.date : null;
+        if (close === null || date === null) continue;
+        out.push({ date: date.toISOString().slice(0, 10), close });
+      }
+      return out;
+    } catch (err) {
+      this.logger.warn(`Yahoo Finance history failed for ${symbol}: ${(err as Error).message}`);
+      return [];
     }
   }
 }

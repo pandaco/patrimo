@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type {
-  Envelope,
   EnvelopeRepository,
   EtfRepository,
-  Transaction,
   TransactionRepository,
 } from 'api-domain';
 import { AlertDto, AlertSeverity, AlertType } from 'contracts';
@@ -17,6 +15,11 @@ const PLAFOND_NEAR   = 0.8;
 const RECENT_DIV_DAYS = 7;
 const PEA_AGE_WINDOW_DAYS = 90;
 const USD_CONC_THRESHOLD  = 0.7;
+// NBSP (U+00A0) and narrow-NBSP (U+202F) are the FR-locale separators Intl
+// emits; collapse both to a regular space so the output is portable across
+// ICU builds. RegExp is built from escape sequences to keep the source ASCII
+// clean (the `no-irregular-whitespace` ESLint rule was otherwise triggered).
+const NBSP_RE = new RegExp('[\\u00A0\\u202F]', 'g');
 
 function daysSince(date: Date, ref = new Date()): number {
   return Math.floor((ref.getTime() - date.getTime()) / MS_PER_DAY);
@@ -32,7 +35,7 @@ function humanDate(days: number): string {
 function fmtEur(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 })
     .format(n)
-    .replace(/ | /g, ' ');
+    .replace(NBSP_RE, ' ');
 }
 
 @Injectable()
@@ -55,7 +58,6 @@ export class AlertService {
     const alerts: AlertDto[] = [];
     const now = new Date();
 
-    // Index transactions by envelope for fast lookups.
     const lastDepositByEnv = new Map<string, Date>();
     for (const tx of txs) {
       if (tx.type !== 'DEPOSIT') continue;
@@ -63,7 +65,6 @@ export class AlertService {
       if (!existing || tx.date > existing) lastDepositByEnv.set(tx.envelopeId, tx.date);
     }
 
-    // 1) CASH_IDLE — envelope cash > €100 that hasn't moved for ≥ 30 days.
     for (const env of envelopes) {
       if (env.cash < CASH_IDLE_MIN) continue;
       const lastDeposit = lastDepositByEnv.get(env.id);
@@ -80,7 +81,6 @@ export class AlertService {
       ));
     }
 
-    // 2) PLAFOND_NEAR — envelope value reaching its statutory plafond.
     for (const env of envelopes) {
       if (!env.plafond) continue;
       const ratio = env.value / env.plafond;
@@ -92,12 +92,11 @@ export class AlertService {
         ratio >= 0.95 ? 'warn' : 'info',
         `Plafond ${env.code} proche`,
         `${Math.round(ratio * 100)} % du plafond atteints. Reste ${fmtEur(Math.max(0, remaining))} avant blocage des versements.`,
-        'Voir l\'enveloppe',
+        "Voir l'enveloppe",
         'info',
       ));
     }
 
-    // 3) DIVIDEND_RECENT — dividends received in the last 7 days.
     const recentDivs = txs.filter(t => t.type === 'DIVIDEND' && daysSince(t.date, now) <= RECENT_DIV_DAYS);
     for (const div of recentDivs) {
       const env = envelopes.find(e => e.id === div.envelopeId);
@@ -114,7 +113,6 @@ export class AlertService {
       ));
     }
 
-    // 4) PEA_AGE_NEAR — PEA / PEA-PME approaching or just past their 5-year cliff.
     for (const env of envelopes) {
       if (env.code !== 'PEA' && env.code !== 'PEA-PME') continue;
       const fiveYears = new Date(env.openedAt);
@@ -135,7 +133,6 @@ export class AlertService {
       ));
     }
 
-    // 5) USD_CONCENTRATION — > 70 % of portfolio value priced in USD.
     if (positions.length > 0) {
       const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
       const usdValue = positions.reduce((a, p) => {
@@ -158,7 +155,6 @@ export class AlertService {
       }
     }
 
-    // Sort by severity (warn first, then gain, then info) for the UI.
     const order: Record<AlertSeverity, number> = { warn: 0, gain: 1, info: 2 };
     alerts.sort((a, b) => order[a.severity] - order[b.severity]);
     return alerts;
@@ -176,8 +172,3 @@ function buildAlert(
 ): AlertDto {
   return { id, type, severity, title, body, cta, date };
 }
-
-// Silence the no-unused-vars rule for the `Envelope` / `Transaction` types
-// imported only for narrowing — they are part of the public domain surface
-// and tree-shaken away at build time.
-type _Used = Envelope | Transaction;

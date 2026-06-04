@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PriceCacheService, Quote } from './price-cache.service';
-import { YahooPriceProvider } from './yahoo-price.provider';
+import { HistoricalPoint, YahooPriceProvider } from './yahoo-price.provider';
 import { toYahooSymbol } from './yahoo-symbol';
 
 @Injectable()
@@ -20,6 +20,16 @@ export class PriceService {
   /** Bypass the cache, fetch a fresh quote from Yahoo and overwrite the cached entry. */
   async refreshQuote(isin: string, ticker: string): Promise<Quote> {
     return this.refresh(toYahooSymbol(isin, ticker));
+  }
+
+  /** Daily close history for the last `days` days. Cached in Redis 24 h. */
+  async getHistorical(isin: string, ticker: string, days: number): Promise<HistoricalPoint[]> {
+    const symbol = toYahooSymbol(isin, ticker);
+    const hit = await this.cache.getHistory(symbol, days);
+    if (hit) return hit;
+    const fresh = await this.provider.fetchHistorical(symbol, days);
+    if (fresh.length > 0) await this.cache.setHistory(symbol, days, fresh);
+    return fresh;
   }
 
   private async refresh(symbol: string): Promise<Quote> {

@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { EnvelopeModule } from './envelopes/envelope.module';
 import { EtfModule } from './etfs/etf.module';
 import { MarketModule } from './market/market.module';
+import { PerformanceModule } from './performance/performance.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { TransactionModule } from './transactions/transaction.module';
 import { validateEnv } from './env.validation';
@@ -28,6 +29,7 @@ import { validateEnv } from './env.validation';
     TransactionModule,
     MarketModule,
     PortfolioModule,
+    PerformanceModule,
     AlertModule,
   ],
   controllers: [AppController],
