@@ -19,7 +19,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "domain": ["./libs/api/domain/src/index.ts"],
+      "api-domain": ["./libs/api/domain/src/index.ts"],
       "application": ["./libs/api/application/src/index.ts"],
       "infrastructure": ["./libs/api/infrastructure/src/index.ts"],
       "shared": ["./libs/api/shared/src/index.ts"],
