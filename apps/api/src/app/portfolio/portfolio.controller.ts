@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { PositionDto } from 'contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
@@ -13,5 +13,16 @@ export class PortfolioController {
   @Get()
   list(@SessionUser() user: AuthUser): Promise<PositionDto[]> {
     return this.portfolio.listForUser(user.id);
+  }
+
+  /**
+   * Bypass the Redis quote cache and re-fetch every held ETF's price from
+   * Yahoo. Returns the refreshed `PositionDto[]` so the client only needs a
+   * single round-trip to re-render the dashboard.
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@SessionUser() user: AuthUser): Promise<PositionDto[]> {
+    return this.portfolio.refreshForUser(user.id);
   }
 }

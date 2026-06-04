@@ -105,13 +105,23 @@
       <div style="display:flex;gap:24px;align-items:center">
         <ui-donut [data]="donutData()" [size]="150" [thickness]="22" />
         <div style="flex:1;font-size:12.5px">
-          @for (env of envPreview(); track env.id) {
-            <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
-              <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
-                [style.background]="donutData()[$index]?.color"></span>
-              <span style="flex:1">{{ env.label }}</span>
-              <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
-            </div>
+          @if (envPreview().length === 0 && envLoading()) {
+            @for (i of [1,2,3,4,5,6]; track i) {
+              <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
+                <span class="skeleton" style="width:8px;height:8px;border-radius:2px"></span>
+                <span class="skeleton" style="flex:1;height:12px"></span>
+                <span class="skeleton" style="width:36px;height:12px"></span>
+              </div>
+            }
+          } @else {
+            @for (env of envPreview(); track env.id) {
+              <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
+                <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
+                  [style.background]="donutData()[$index]?.color"></span>
+                <span style="flex:1">{{ env.label }}</span>
+                <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
+              </div>
+            }
           }
           <a class="btn sm ghost" routerLink="/wealth" style="margin-top:6px;padding:0;color:var(--ink-3)">
             Tout voir →

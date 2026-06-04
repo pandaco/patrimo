@@ -27,6 +27,13 @@
       <span class="kbd" aria-hidden="true">⌘K</span>
     </label>
 
+    <button class="btn ghost" (click)="refresh()" [disabled]="refreshing()"
+            aria-label="Rafraîchir les prix" title="Rafraîchir les prix (bypass cache)">
+      <span aria-hidden="true"
+            style="display:inline-flex;font-size:18px;line-height:1"
+            [style.animation]="refreshing() ? 'rotate 0.8s linear infinite' : null">↻</span>
+    </button>
+
     <button class="btn ghost" aria-label="Notifications (3 non lues)" title="Notifications">
       <span aria-hidden="true" style="display:inline-flex">
         <app-ico name="bell" />

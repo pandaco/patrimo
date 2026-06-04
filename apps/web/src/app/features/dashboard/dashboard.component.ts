@@ -25,6 +25,7 @@ export class DashboardComponent {
   private readonly perfSvc    = inject(PerformanceService);
 
   protected readonly envAll       = this.envelopes.all;
+  protected readonly envLoading   = this.envelopes.loading;
   protected readonly totalValue   = this.envelopes.total;
   protected readonly totalBourse  = this.envelopes.totalBourse;
   protected readonly totalLivret  = this.envelopes.totalLivret;

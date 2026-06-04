@@ -1,6 +1,7 @@
-import { httpResource } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { EtfDto, PositionDto } from 'contracts';
+import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 import { MOCK_SPARKS } from './mock-data';
@@ -52,6 +53,7 @@ function mergePosition(etf: Etf, position: PositionDto | undefined): Etf {
 
 @Injectable({ providedIn: 'root' })
 export class EtfService {
+  private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly auth    = inject(AuthService);
 
@@ -82,5 +84,17 @@ export class EtfService {
   reload(): void {
     this.catalogResource.reload();
     this.portfolioResource.reload();
+  }
+
+  /**
+   * Forces a fresh Yahoo fetch for every held ETF via
+   * `POST /api/portfolio/refresh`, then reloads the local resources so the
+   * dashboard reflects the new prices instead of the 15-min-cached ones.
+   */
+  async forceRefresh(): Promise<void> {
+    await firstValueFrom(
+      this.http.post<PositionDto[]>(`${this.baseUrl}/portfolio/refresh`, null),
+    );
+    this.reload();
   }
 }

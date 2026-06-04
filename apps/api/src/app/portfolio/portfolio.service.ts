@@ -76,4 +76,29 @@ export class PortfolioService {
       .filter((p): p is PositionDto => p !== null)
       .sort((a, b) => b.invested - a.invested);
   }
+
+  /**
+   * Same as `listForUser`, but force a fresh Yahoo fetch for every held ETF
+   * before computing the response. The Redis 15 min TTL is bypassed via
+   * `PriceService.refreshQuote` so the next regular `GET /portfolio` (still
+   * cached) also benefits from the refreshed values.
+   */
+  async refreshForUser(userId: string): Promise<PositionDto[]> {
+    const [txs, etfs] = await Promise.all([
+      this.txRepo.findByUserId(userId),
+      this.etfRepo.findAll(),
+    ]);
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const heldIsins = new Set(
+      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
+         .map(t => t.etfIsin as string),
+    );
+    await Promise.allSettled(
+      Array.from(heldIsins).map(isin => {
+        const etf = etfByIsin.get(isin);
+        return etf ? this.priceService.refreshQuote(isin, etf.ticker) : Promise.resolve();
+      }),
+    );
+    return this.listForUser(userId);
+  }
 }
