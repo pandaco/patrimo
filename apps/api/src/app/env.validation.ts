@@ -23,9 +23,8 @@ class EnvVars {
   @IsString()
   DATABASE_URL!: string;
 
-  @IsOptional()
   @IsString()
-  REDIS_URL?: string;
+  REDIS_URL!: string;
 
   @IsString()
   @MinLength(32, { message: 'JWT_SECRET must be at least 32 characters' })

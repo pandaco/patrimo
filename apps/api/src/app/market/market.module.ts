@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
+import { PersistenceModule } from 'infrastructure';
 import { PriceCacheService } from './price-cache.service';
 import { PriceService } from './price.service';
+import { PriceWarmerCron } from './price-warmer.cron';
 import { YahooPriceProvider } from './yahoo-price.provider';
 
 @Module({
-  providers: [PriceCacheService, YahooPriceProvider, PriceService],
+  imports: [PersistenceModule],
+  providers: [PriceCacheService, YahooPriceProvider, PriceService, PriceWarmerCron],
   exports: [PriceService],
 })
 export class MarketModule {}
