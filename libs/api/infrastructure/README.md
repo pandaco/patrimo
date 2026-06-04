@@ -1,7 +1,3 @@
-# infrastructure
+# api-infrastructure
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build infrastructure` to build the library.
+Infrastructure layer (hexagonal) : TypeORM adapters, Google OAuth strategy, Redis cache, Yahoo Finance provider. Implements ports defined in `api-domain`.

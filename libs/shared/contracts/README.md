@@ -1,11 +1,3 @@
-# contracts
+# shared-contracts
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build contracts` to build the library.
-
-## Running unit tests
-
-Run `nx test contracts` to execute the unit tests via [Jest](https://jestjs.io).
+DTOs shared between web (Angular) and api (NestJS) : `EnvelopeDto`, `EtfDto`, `TransactionDto`, `PositionDto`, `AlertDto`, `PerformanceSeriesDto`, `UserPreferencesDto`, etc.

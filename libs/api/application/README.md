@@ -1,7 +1,3 @@
-# application
+# api-application
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build application` to build the library.
+Application layer (hexagonal) : use-cases orchestrating domain ports. Currently empty — orchestration happens directly in `apps/api` controllers.

@@ -1,7 +1,3 @@
-# features
+# web-features
 
-This library was generated with [Nx](https://nx.dev).
-
-## Running unit tests
-
-Run `nx test features` to execute the unit tests.
+Business-screen components (envelope detail, allocation editor, …). Currently empty — feature components live in `apps/web/src/app/features/`.

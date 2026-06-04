@@ -1,7 +1,3 @@
-# shared
+# api-shared
 
-This library was generated with [Nx](https://nx.dev).
-
-## Building
-
-Run `nx build shared` to build the library.
+Cross-cutting backend helpers shared by domain / application / infrastructure layers.
