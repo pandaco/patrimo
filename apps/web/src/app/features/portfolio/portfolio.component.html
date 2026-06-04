@@ -27,14 +27,21 @@ qty       = Σ qty BUY − Σ qty SELL
 PRU       = Σ (qty × prix d'achat + frais) / Σ qty BUY
 invested  = qty × PRU
 value     = qty × cours actuel (Yahoo Finance, mis à jour ≤ 15 min)
-PnL       = value − invested
+PnL       = value − invested                    (Profit & Loss = plus-value latente)
 PnL %     = (cours actuel / PRU − 1) × 100</pre>
+      <p style="margin:0 0 10px">
+        <b><abbr title="Profit and Loss — gain ou perte latente, en €">PnL</abbr></b>
+        (anglais pour <em>Profit and Loss</em>) = la plus-value (ou moins-value) <em>latente</em>
+        sur ta position. Tant que tu n'as pas vendu, ce gain n'est pas réalisé.
+        Positive = tu gagnerais en vendant maintenant. Négative = tu perdrais.
+      </p>
       <p style="margin:0 0 10px"><b>Exemple — seed ESE :</b></p>
       <ul style="margin:0 0 10px 18px;padding:0">
         <li>22/03/2026 : achat 10 unités à 38,50 € → invested = 385 €</li>
         <li>12/05/2026 : achat 12 unités à 39,30 € → invested cumulé = 856,60 €</li>
         <li>→ qty = 22, PRU = 856,60 / 22 = <b>38,94 €</b></li>
-        <li>Cours Yahoo aujourd'hui (ex. 39,42 €) → value = 22 × 39,42 = <b>867,24 €</b>, PnL = +10,64 € (+1,24 %)</li>
+        <li>Cours Yahoo aujourd'hui (ex. 39,42 €) → value = 22 × 39,42 = <b>867,24 €</b>,
+          <abbr title="Profit and Loss — plus-value latente">PnL</abbr> = +10,64 € (+1,24 %)</li>
       </ul>
       <p style="margin:0;color:var(--ink-3);font-size:12.5px">
         Les DEPOSIT / WITHDRAWAL / DIVIDEND / INTEREST n'affectent <b>pas</b> la position —
