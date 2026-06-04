@@ -67,8 +67,9 @@
 
       <div class="divider"></div>
 
-      @if (pea()) {
-        <div class="kv"><dt>Cash dispo PEA</dt><dd>{{ fmtEur(pea()!.cash, 2) }}</dd></div>
+      @if (selectedEnvelope(); as env) {
+        <div class="kv"><dt>Cash dispo {{ env.code }}</dt><dd>{{ fmtEur(env.cash, 2) }}</dd></div>
+        <div class="kv"><dt>Cash après DCA</dt><dd [class.neg]="cashAfter() < 0">{{ fmtEur(cashAfter(), 2) }}</dd></div>
       }
       <div class="kv"><dt>Frais estimés (Fortuneo)</dt><dd>{{ fmtEur(normalized().length * 0.99, 2) }}</dd></div>
       <div class="kv"><dt>Net investi</dt><dd>{{ fmtNum(amount() - normalized().length * 0.99, 2) }} €</dd></div>

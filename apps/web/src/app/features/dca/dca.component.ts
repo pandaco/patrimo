@@ -1,8 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { AllocationService, EnvelopeService, EtfService, etfValue } from 'data-access';
 import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw } from 'ui';
+
+// Glyphs eligible as a DCA destination — securities-bearing envelopes only
+// (livret / crypto / immo / metal cannot host an ETF buy).
+const INVESTABLE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
 
 @Component({
   selector: 'app-dca',
@@ -19,32 +23,47 @@ export class DcaComponent {
 
   protected readonly amount     = signal(800);
   protected readonly correction = signal(true);
-  protected readonly envelopeId = signal('pea');
+  protected readonly envelopeId = signal('');
 
   protected readonly presets    = [300, 500, 800, 1000, 1500, 2000];
-  protected readonly envelopes  = computed(() =>
-    this.envSvc.all().filter(e => ['pea','peapme','cto','av','per'].includes(e.id))
+
+  protected readonly envelopes = computed(() =>
+    this.envSvc.all().filter(e => INVESTABLE_GLYPHS.has(e.glyph)),
   );
 
+  protected readonly selectedEnvelope = computed(() => {
+    const list = this.envelopes();
+    return list.find(e => e.id === this.envelopeId()) ?? list[0];
+  });
+
+  constructor() {
+    // Auto-pick the first investable envelope once the list hydrates.
+    effect(() => {
+      if (!this.envelopeId() && this.envelopes().length > 0) {
+        this.envelopeId.set(this.envelopes()[0].id);
+      }
+    });
+  }
+
   private readonly etfsWithTargets = computed(() =>
-    this.etfSvc.all().filter(e => this.allocSvc.targets().etf[e.ticker] != null)
+    this.etfSvc.all().filter(e => this.allocSvc.targets().etf[e.ticker] != null),
   );
 
   private readonly total = computed(() =>
-    this.etfsWithTargets().reduce((a, e) => a + etfValue(e), 0)
+    this.etfsWithTargets().reduce((a, e) => a + etfValue(e), 0),
   );
 
   protected readonly rows = computed(() => {
-    const etfs = this.etfsWithTargets();
-    const total = this.total();
-    const amount = this.amount();
+    const etfs       = this.etfsWithTargets();
+    const total      = this.total();
+    const amount     = this.amount();
     const correction = this.correction();
-    const targets = this.allocSvc.targets().etf;
+    const targets    = this.allocSvc.targets().etf;
 
     return etfs.map(e => {
-      const target   = targets[e.ticker];
-      const realPct  = etfValue(e) / total * 100;
-      const drift    = realPct - target;
+      const target  = targets[e.ticker];
+      const realPct = total ? (etfValue(e) / total) * 100 : 0;
+      const drift   = realPct - target;
       let weight: number;
       if (correction) {
         const targetValue = (target / 100) * (total + amount);
@@ -64,23 +83,22 @@ export class DcaComponent {
   });
 
   protected readonly totalSpent = computed(() =>
-    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price) * r.e.price, 0)
+    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price) * r.e.price, 0),
   );
   protected readonly totalQty = computed(() =>
-    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price), 0)
+    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price), 0),
   );
 
-  protected readonly pea = computed(() => this.envSvc.all().find(e => e.id === 'pea'));
   protected readonly cashAfter = computed(() => {
-    const pea = this.pea();
-    return pea ? pea.cash - this.totalSpent() : 0;
+    const env = this.selectedEnvelope();
+    return env ? env.cash - this.totalSpent() : 0;
   });
 
   protected readonly fmtEur    = fmtEur;
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 
-  protected qty(eur: number, price: number) { return Math.floor(eur / price); }
+  protected qty(eur: number, price: number)  { return price > 0 ? Math.floor(eur / price) : 0; }
   protected cost(eur: number, price: number) { return this.qty(eur, price) * price; }
 
   protected async openNewTx(): Promise<void> {
