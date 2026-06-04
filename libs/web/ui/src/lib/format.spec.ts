@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from './format';
 
-// `Intl.NumberFormat` in Node renders FR-locale separators with NBSP ( )
-// or narrow-NBSP ( ) depending on the ICU build. The helpers normalise
-// both to a regular space so the assertions stay stable across runtimes.
+// Intl.NumberFormat renders FR-locale separators with either NBSP (U+00A0)
+// or narrow-NBSP (U+202F) depending on the Node ICU build. The helpers
+// normalise both to a regular space, so the assertions below use plain
+// spaces and regexes for the locale-variable bits.
 
 describe('fmtEur', () => {
   it('renders a positive number with two decimals and a euro sign', () => {
@@ -55,11 +56,9 @@ describe('fmtPctRaw', () => {
 
 describe('fmtDate', () => {
   it('renders an ISO date in the FR short-month format', () => {
-    // Locale strings vary slightly across ICU versions — assert on the
-    // stable parts: day, year, and that a month abbreviation is present.
     const out = fmtDate('2026-05-12');
     expect(out).toContain('12');
     expect(out).toContain('2026');
-    expect(out).toMatch(/[a-zéû]+\.?/i); // some flavour of "mai" or "mai."
+    expect(out).toMatch(/[a-zéû]+\.?/i);
   });
 });

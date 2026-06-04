@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { EtfDto, PositionDto } from 'contracts';
-import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { AuthService } from './auth.service';
 import { MOCK_SPARKS } from './mock-data';
 import { Etf } from './models';
 
@@ -15,13 +15,6 @@ export const etfPnlPct = (e: Etf) => {
 };
 export const etfDayPct = (e: Etf) => (e.prev ? e.price / e.prev - 1 : 0);
 
-/**
- * Catalog rows are baseline ETFs with zeroed position + market fields. The
- * `mergePosition()` helper layers per-user qty/pru on top, and a future
- * market-data feed will fill in `price`, `prev`, `perf1y`, `perfYtd`.
- * Until the market feed lands, `price` is set to `pru` so cost basis and
- * current value match (PnL = 0) instead of inventing prices.
- */
 function fromCatalog(d: EtfDto): Etf {
   return {
     isin: d.isin,
@@ -46,9 +39,6 @@ function fromCatalog(d: EtfDto): Etf {
 
 function mergePosition(etf: Etf, position: PositionDto | undefined): Etf {
   if (!position) return etf;
-  // Market data is best-effort: when Yahoo returns null we fall back to the
-  // PRU so cost basis and current value match (PnL = 0) instead of inventing
-  // numbers.
   const price = position.currentPrice ?? position.avgPrice;
   const prev  = position.prevClose    ?? price;
   return {
@@ -62,23 +52,35 @@ function mergePosition(etf: Etf, position: PositionDto | undefined): Etf {
 
 @Injectable({ providedIn: 'root' })
 export class EtfService {
-  private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+  private readonly auth    = inject(AuthService);
 
-  private readonly _all = signal<Etf[]>([]);
-  readonly all    = this._all.asReadonly();
+  // Two `httpResource`s wired against the same auth gate. Both auto-fetch
+  // when `isAuthenticated()` flips from false to true, and re-run on every
+  // `reload()` (called by transaction / envelope mutations).
+  private readonly catalogResource = httpResource<EtfDto[]>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/etfs` : undefined),
+    { defaultValue: [] },
+  );
+
+  private readonly portfolioResource = httpResource<PositionDto[]>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/portfolio` : undefined),
+    { defaultValue: [] },
+  );
+
+  readonly all = computed<Etf[]>(() => {
+    const catalog = this.catalogResource.value();
+    const byIsin  = new Map(this.portfolioResource.value().map(p => [p.etfIsin, p]));
+    return catalog.map(c => mergePosition(fromCatalog(c), byIsin.get(c.isin)));
+  });
+
+  readonly loading = computed(() => this.catalogResource.isLoading() || this.portfolioResource.isLoading());
+  readonly error   = computed(() => this.catalogResource.error() ?? this.portfolioResource.error());
+
   readonly sparks = signal<Record<string, number[]>>(MOCK_SPARKS);
 
-  async reload(): Promise<void> {
-    const [catalog, positions] = await Promise.all([
-      firstValueFrom(
-        this.http.get<EtfDto[]>(`${this.baseUrl}/etfs`, { withCredentials: true }),
-      ),
-      firstValueFrom(
-        this.http.get<PositionDto[]>(`${this.baseUrl}/portfolio`, { withCredentials: true }),
-      ),
-    ]);
-    const positionByIsin = new Map(positions.map(p => [p.etfIsin, p]));
-    this._all.set(catalog.map(c => mergePosition(fromCatalog(c), positionByIsin.get(c.isin))));
+  reload(): void {
+    this.catalogResource.reload();
+    this.portfolioResource.reload();
   }
 }

@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
-import { AuthService, EnvelopeService, EtfService, TransactionService } from 'data-access';
+import { AuthService } from 'data-access';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './shared/auth/auth.interceptor';
 
@@ -29,25 +29,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
-    provideAppInitializer(() => {
-      // All inject() calls MUST happen synchronously before any await —
-      // the runInInjectionContext active during provideAppInitializer is
-      // torn down at the first microtask boundary.
-      const auth         = inject(AuthService);
-      const envelopes    = inject(EnvelopeService);
-      const etfs         = inject(EtfService);
-      const transactions = inject(TransactionService);
-
-      return (async () => {
-        await auth.loadCurrentUser();
-        if (!auth.isAuthenticated()) return;
-        // Non-fatal: feature pages render their empty state if any of these fail.
-        await Promise.allSettled([
-          envelopes.reload(),
-          etfs.reload(),
-          transactions.reload(),
-        ]);
-      })();
-    }),
+    // The data-access services back their list signals with `httpResource`s
+    // gated on `AuthService.isAuthenticated()`, so the only thing we still
+    // have to do at bootstrap is resolve the auth state once. The resources
+    // then auto-fetch as soon as the gate flips true.
+    provideAppInitializer(() => inject(AuthService).loadCurrentUser()),
   ],
 };

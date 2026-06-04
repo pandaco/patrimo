@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Injectable, NgZone, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 
@@ -28,7 +28,6 @@ function isEditingTarget(target: EventTarget | null): boolean {
 export class KeyboardShortcutService {
   private readonly router   = inject(Router);
   private readonly dialog   = inject(MatDialog);
-  private readonly zone     = inject(NgZone);
   private readonly document = inject(DOCUMENT);
 
   readonly gMode = signal(false);
@@ -45,8 +44,14 @@ export class KeyboardShortcutService {
   }
 
   private onKey(e: KeyboardEvent): void {
+    // Zoneless app: there is no NgZone to re-enter — signal writes and
+    // Router.navigate already schedule change detection on their own. The
+    // `keydown` listener does run outside Angular (Document is a real DOM
+    // node, not an NgZone-patched one) but with `provideZonelessChangeDetection`
+    // that does not matter: only signal/reactivity APIs drive the renderer.
     if (e.key === 'Escape') {
-      this.zone.run(() => { this.dialog.closeAll(); this.clearGMode(); });
+      this.dialog.closeAll();
+      this.clearGMode();
       return;
     }
 
@@ -60,21 +65,19 @@ export class KeyboardShortcutService {
 
     if (e.key === '?' || (e.shiftKey && e.key === '/')) {
       e.preventDefault();
-      this.zone.run(() => this.openShortcuts());
+      this.openShortcuts();
       return;
     }
 
     if (e.key.toLowerCase() === 'n' && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
-      this.zone.run(() => this.openTx());
+      this.openTx();
       return;
     }
 
     if (e.key.toLowerCase() === 'g' && !this.gMode()) {
-      this.zone.run(() => {
-        this.gMode.set(true);
-        this.gTimer = setTimeout(() => this.clearGMode(), G_MODE_TIMEOUT_MS);
-      });
+      this.gMode.set(true);
+      this.gTimer = setTimeout(() => this.clearGMode(), G_MODE_TIMEOUT_MS);
       return;
     }
 
@@ -82,7 +85,8 @@ export class KeyboardShortcutService {
       const route = NAV_MAP[e.key.toLowerCase()];
       if (route) {
         e.preventDefault();
-        this.zone.run(() => { this.router.navigate([route]); this.clearGMode(); });
+        this.router.navigate([route]);
+        this.clearGMode();
       }
     }
   }
