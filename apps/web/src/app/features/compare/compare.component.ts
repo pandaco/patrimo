@@ -1,15 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { EtfService } from 'data-access';
-import { fmtPct, fmtPctRaw } from 'ui';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { Etf, EtfService } from 'data-access';
+import { fmtNum, fmtPctRaw } from 'ui';
 
-const COMPARE_TICKERS = ['ESE', 'CW8', 'PCEU', 'IWDA'];
-
-const TRACKING = [
-  { ticker:'ESE',   td:-0.02, te:0.08, fees:'0,99 €', boursoFees:'1,99 €', spread:'0,04 %', size:'12,8 Mds €', since:'2010', tco:'228 €' },
-  { ticker:'CW8',   td:-0.18, te:0.21, fees:'0,99 €', boursoFees:'1,99 €', spread:'0,09 %', size:'2,1 Mds €',  since:'2015', tco:'412 €' },
-  { ticker:'PCEU',  td: 0.04, te:0.06, fees:'0,99 €', boursoFees:'1,99 €', spread:'0,07 %', size:'1,4 Mds €',  since:'2018', tco:'268 €' },
-  { ticker:'IWDA',  td:-0.06, te:0.12, fees:'—',       boursoFees:'1,99 €', spread:'0,03 %', size:'52,4 Mds €', since:'2009', tco:'318 €' },
-];
+const MAX_SELECTION = 4;
 
 @Component({
   selector: 'app-compare',
@@ -21,13 +14,67 @@ const TRACKING = [
 export class CompareComponent {
   private readonly etfSvc = inject(EtfService);
 
-  protected readonly candidates = computed(() =>
-    this.etfSvc.all().filter(e => COMPARE_TICKERS.includes(e.ticker))
-  );
-  protected readonly tracking = TRACKING;
+  /** ISINs the user has put on the comparator. Capped at `MAX_SELECTION`. */
+  protected readonly selectedIsins = signal<string[]>([]);
 
-  protected readonly fmtPct    = fmtPct;
+  protected readonly catalog    = computed(() => this.etfSvc.all());
+  protected readonly candidates = computed(() => {
+    const selected = new Set(this.selectedIsins());
+    return this.catalog().filter(e => selected.has(e.isin));
+  });
+
+  protected readonly canAddMore = computed(() => this.selectedIsins().length < MAX_SELECTION);
+
+  constructor() {
+    // Seed the comparator with the first three catalog rows as soon as it
+    // hydrates — gives the page some content on first paint without forcing
+    // the user to click.
+    effect(() => {
+      if (this.selectedIsins().length === 0 && this.catalog().length > 0) {
+        this.selectedIsins.set(this.catalog().slice(0, 3).map(e => e.isin));
+      }
+    });
+  }
+
+  protected isSelected(isin: string): boolean {
+    return this.selectedIsins().includes(isin);
+  }
+
+  protected toggle(etf: Etf): void {
+    const current = this.selectedIsins();
+    if (current.includes(etf.isin)) {
+      this.selectedIsins.set(current.filter(i => i !== etf.isin));
+    } else if (current.length < MAX_SELECTION) {
+      this.selectedIsins.set([...current, etf.isin]);
+    }
+  }
+
+  /**
+   * Approximate 5-year total cost of ownership on a 500 €/month DCA, with the
+   * usual 7 %/year market return assumption. The drag is the average AUM each
+   * year times the ETF TER:
+   *
+   *     avgAUM_y = invested(0..y-1) + invested(0..y) / 2
+   *     drag     = Σ_{y=1..5} avgAUM_y × ter
+   *
+   * Brokerage / spread costs are intentionally left out — they are envelope-
+   * and instrument-dependent, the user already sees the monthly fee in the
+   * DCA helper, and Yahoo Finance does not provide them. The number stays a
+   * directional cost-of-management comparator rather than a precise TCO.
+   */
+  protected tco5y(ter: number, monthly = 500, annualReturn = 0.07): number {
+    let aum = 0;
+    let drag = 0;
+    for (let y = 1; y <= 5; y++) {
+      const aumStart = aum;
+      const yearContrib = monthly * 12;
+      aum = (aum + yearContrib) * (1 + annualReturn);
+      const aumEnd = aum;
+      drag += ((aumStart + aumEnd) / 2) * ter;
+    }
+    return drag;
+  }
+
+  protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
-
-  protected tdRow(ticker: string) { return TRACKING.find(t => t.ticker === ticker); }
 }
