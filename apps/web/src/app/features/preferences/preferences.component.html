@@ -4,13 +4,17 @@
     <div class="page-eyebrow">Paramètres</div>
     <h1 class="page-title">Tes <em>préférences</em></h1>
     <p class="page-sub">
-      Profil de risque, horizon d'investissement, objectif mensuel et devise
-      d'affichage. Ces réglages sont stockés côté serveur et reflètent partout
-      dans l'app (sidebar, dashboard, DCA helper, allocation).
+      Profil de risque, horizon, objectif mensuel, devise et cible
+      d'allocation. Stockés côté serveur, reflétés partout (sidebar,
+      dashboard, DCA helper, page Allocation).
     </p>
   </div>
 
-  <div class="card" style="max-width:720px;padding:24px">
+  <!-- SCALAR PREFS -->
+  <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
+    <div class="card-head">
+      <div class="card-title">Profil <em>investisseur</em></div>
+    </div>
 
     <div class="field-row">
       <div class="field">
@@ -20,9 +24,6 @@
             <option [value]="p">{{ p }}</option>
           }
         </select>
-        <div class="field-help">
-          Indicatif. Sert d'étiquette dans la sidebar et de guide pour la cible d'allocation.
-        </div>
       </div>
       <div class="field">
         <label for="pref-currency">Devise d'affichage</label>
@@ -31,15 +32,13 @@
             <option [value]="c">{{ c }}</option>
           }
         </select>
-        <div class="field-help">
-          Conversion FX pas encore appliquée — l'app affiche pour l'instant tout en EUR brut.
-        </div>
+        <div class="field-help">Conversion FX pas encore appliquée — affichage en EUR brut.</div>
       </div>
     </div>
 
     <div class="field-row">
       <div class="field">
-        <label for="pref-horizon">Horizon d'investissement (années)</label>
+        <label for="pref-horizon">Horizon (années)</label>
         <input id="pref-horizon" type="number" min="0" max="100" step="1" class="num-input"
                [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set(+$event)" />
       </div>
@@ -47,37 +46,111 @@
         <label for="pref-monthly">Objectif mensuel (€)</label>
         <input id="pref-monthly" type="number" min="0" step="50" class="num-input"
                [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set(+$event)" />
-        <div class="field-help">
-          Sert de base au DCA helper. 0 = pas d'objectif.
-        </div>
       </div>
     </div>
-
-    @if (error()) {
-      <div role="alert" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px">
-        {{ error() }}
-      </div>
-    }
-    @if (success()) {
-      <div role="status" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--gain-soft);color:var(--gain);font-size:13px">
-        Préférences enregistrées.
-      </div>
-    }
-
-    <div class="row" style="margin-top:24px;gap:12px;justify-content:flex-end">
-      <button type="button" class="btn ghost" (click)="back()" [disabled]="submitting()">Annuler</button>
-      <button type="button" class="btn primary" (click)="save()" [disabled]="submitting() || loading()">
-        {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
-      </button>
-    </div>
-
   </div>
 
-  <p class="muted small" style="margin-top:18px;max-width:720px">
-    La cible d'allocation (stratégique / tactique / par ETF) reste pour le moment celle du
-    catalogue de référence. Une interface d'édition arrivera dans une prochaine itération —
-    une fois persistée, elle remplacera les valeurs de référence sur les pages Allocation et
-    DCA helper.
-  </p>
+  <!-- ALLOCATION TARGETS -->
+  <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
+    <div class="card-head">
+      <div class="card-title">Cible <em>d'allocation</em></div>
+      <span class="card-sub">stratégique / tactique / par ETF</span>
+    </div>
+
+    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
+      Stratégique
+      <span class="num small" [class.pos]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
+            style="margin-left:8px">Σ = {{ strategicSum() }} %</span>
+    </h3>
+    <div class="field-row">
+      <div class="field">
+        <label for="pref-stocks">Actions (%)</label>
+        <input id="pref-stocks" type="number" min="0" max="100" step="1" class="num-input"
+               [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set(+$event)" />
+      </div>
+      <div class="field">
+        <label for="pref-bonds-strat">Obligations (%)</label>
+        <input id="pref-bonds-strat" type="number" min="0" max="100" step="1" class="num-input"
+               [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set(+$event)" />
+      </div>
+    </div>
+
+    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
+      Tactique
+      <span class="num small" [class.pos]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
+            style="margin-left:8px">Σ = {{ tacticSum() }} %</span>
+    </h3>
+    <div class="field-row">
+      <div class="field">
+        <label for="pref-core">Core (%)</label>
+        <input id="pref-core" type="number" min="0" max="100" step="1" class="num-input"
+               [ngModel]="corePct()" (ngModelChange)="corePct.set(+$event)" />
+      </div>
+      <div class="field">
+        <label for="pref-sat">Satellite (%)</label>
+        <input id="pref-sat" type="number" min="0" max="100" step="1" class="num-input"
+               [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set(+$event)" />
+      </div>
+      <div class="field">
+        <label for="pref-bonds-tac">Obligations (%)</label>
+        <input id="pref-bonds-tac" type="number" min="0" max="100" step="1" class="num-input"
+               [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set(+$event)" />
+      </div>
+    </div>
+
+    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
+      Par ETF
+      <span class="num small" [class.pos]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
+            style="margin-left:8px">Σ = {{ etfSum() }} %</span>
+      <span class="muted tiny" style="margin-left:8px">(laisse vide pour ignorer)</span>
+    </h3>
+
+    @if (etfTargets().length === 0) {
+      <p class="muted small">Aucun ETF dans le catalogue.</p>
+    } @else {
+      <table class="tbl" style="font-size:13px">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th class="r" style="width:120px">Cible %</th>
+            <th class="r" style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of etfTargets(); track row.ticker) {
+            <tr>
+              <td><span class="pill solid">{{ row.ticker }}</span></td>
+              <td class="r">
+                <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
+                       [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
+              </td>
+              <td class="r">
+                <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
+                        (click)="removeEtf(row.ticker)" aria-label="Retirer cet ETF" title="Retirer">×</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  @if (error()) {
+    <div role="alert" style="margin-bottom:12px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px;max-width:720px">
+      {{ error() }}
+    </div>
+  }
+  @if (success()) {
+    <div role="status" style="margin-bottom:12px;padding:10px 12px;border-radius:8px;background:var(--gain-soft);color:var(--gain);font-size:13px;max-width:720px">
+      Préférences enregistrées.
+    </div>
+  }
+
+  <div class="row" style="max-width:720px;gap:12px;justify-content:flex-end">
+    <button type="button" class="btn ghost" (click)="back()" [disabled]="submitting()">Retour au dashboard</button>
+    <button type="button" class="btn primary" (click)="save()" [disabled]="submitting() || loading()">
+      {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </div>
 
 </div>
