@@ -64,9 +64,10 @@ export class TransactionDialogComponent {
   protected readonly showAsset    = computed(() => ['BUY','SELL','DIVIDEND'].includes(this.type()));
   protected readonly showQtyPrice = computed(() => ['BUY','SELL'].includes(this.type()));
 
-  protected readonly selectedEnv = computed(() =>
-    this.envelopes().find(e => e.id === this.envelopeId()) ?? this.envelopes()[0]
-  );
+  protected readonly selectedEnv = computed(() => {
+    const list = this.envelopes();
+    return list.find(e => e.id === this.envelopeId()) ?? list[0] ?? undefined;
+  });
   protected readonly selectedEtf = computed(() =>
     this.etfs().find(e => e.isin === this.etfIsin())
   );
