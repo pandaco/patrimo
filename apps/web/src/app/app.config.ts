@@ -29,19 +29,25 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
-    provideAppInitializer(async () => {
-      const auth = inject(AuthService);
-      await auth.loadCurrentUser();
-      if (!auth.isAuthenticated()) return;
+    provideAppInitializer(() => {
+      // All inject() calls MUST happen synchronously before any await —
+      // the runInInjectionContext active during provideAppInitializer is
+      // torn down at the first microtask boundary.
+      const auth         = inject(AuthService);
       const envelopes    = inject(EnvelopeService);
       const etfs         = inject(EtfService);
       const transactions = inject(TransactionService);
-      // Non-fatal: feature pages render their empty state if any of these fail.
-      await Promise.allSettled([
-        envelopes.reload(),
-        etfs.reload(),
-        transactions.reload(),
-      ]);
+
+      return (async () => {
+        await auth.loadCurrentUser();
+        if (!auth.isAuthenticated()) return;
+        // Non-fatal: feature pages render their empty state if any of these fail.
+        await Promise.allSettled([
+          envelopes.reload(),
+          etfs.reload(),
+          transactions.reload(),
+        ]);
+      })();
     }),
   ],
 };
