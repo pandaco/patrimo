@@ -35,11 +35,22 @@
 
   @if (user(); as u) {
   <div class="sidebar-footer">
-    <div class="avatar" aria-hidden="true">{{ u.initials }}</div>
+    <a routerLink="/settings/preferences" class="avatar" aria-label="Éditer mes préférences"
+       title="Mes préférences" style="text-decoration:none;color:inherit;cursor:pointer"
+       aria-hidden="false">{{ u.initials }}</a>
     <div class="user-meta" style="flex:1">
       <div class="user-name">{{ u.firstName }} {{ u.lastName }}</div>
       <div class="user-role">{{ u.riskProfile }}</div>
     </div>
+    <button
+      class="btn ghost sm"
+      routerLink="/settings/preferences"
+      aria-label="Éditer mes préférences"
+      title="Préférences"
+      style="padding:4px 8px"
+    >
+      ⚙
+    </button>
     <button
       class="btn ghost sm"
       (click)="openShortcuts.emit()"

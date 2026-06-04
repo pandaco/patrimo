@@ -98,6 +98,13 @@ export const appRoutes: Route[] = [
             (m) => m.GlossaryComponent,
           ),
       },
+      {
+        path: 'settings/preferences',
+        loadComponent: () =>
+          import('./features/preferences/preferences.component').then(
+            (m) => m.PreferencesComponent,
+          ),
+      },
     ],
   },
 ];
