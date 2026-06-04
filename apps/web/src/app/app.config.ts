@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
-import { AuthService } from 'data-access';
+import { AuthService, EnvelopeService } from 'data-access';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './shared/auth/auth.interceptor';
 
@@ -29,6 +29,15 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     { provide: LOCALE_ID, useValue: 'fr-FR' },
-    provideAppInitializer(() => inject(AuthService).loadCurrentUser()),
+    provideAppInitializer(async () => {
+      const auth = inject(AuthService);
+      await auth.loadCurrentUser();
+      if (!auth.isAuthenticated()) return;
+      try {
+        await inject(EnvelopeService).reload();
+      } catch {
+        // Non-fatal: the dashboard will render with empty envelope state.
+      }
+    }),
   ],
 };
