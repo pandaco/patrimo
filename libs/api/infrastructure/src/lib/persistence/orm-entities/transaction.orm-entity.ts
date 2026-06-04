@@ -8,7 +8,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TxType } from 'api-domain';
 import { decimalTransformer } from '../decimal.transformer';
 import { EnvelopeOrmEntity } from './envelope.orm-entity';
 import { EtfOrmEntity } from './etf.orm-entity';
@@ -41,8 +40,11 @@ export class TransactionOrmEntity {
   @JoinColumn({ name: 'etf_isin' })
   etf?: EtfOrmEntity | null;
 
+  // Domain narrows this to the TxType union; persistence keeps it loose so the
+  // CLI tools (migrations, seed) do not need to resolve the api-domain alias
+  // through ts-node. Validation happens at the DTO boundary.
   @Column({ type: 'varchar', length: 16 })
-  type!: TxType;
+  type!: string;
 
   @Column({ type: 'date' })
   date!: Date;

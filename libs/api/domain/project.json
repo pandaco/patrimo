@@ -1,20 +1,7 @@
 {
-  "name": "domain",
+  "name": "api-domain",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/api/domain/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:api", "layer:domain"],
-  "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/libs/api/domain",
-        "tsConfig": "libs/api/domain/tsconfig.lib.json",
-        "packageJson": "libs/api/domain/package.json",
-        "main": "libs/api/domain/src/index.ts",
-        "assets": ["libs/api/domain/*.md"]
-      }
-    }
-  }
+  "tags": ["type:lib", "scope:api", "layer:domain"]
 }

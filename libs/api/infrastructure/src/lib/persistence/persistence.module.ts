@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ORM_ENTITIES, buildDataSourceOptions } from './data-source-options';
 import {
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
   USER_REPOSITORY,
-} from 'api-domain';
-import { ORM_ENTITIES, buildDataSourceOptions } from './data-source-options';
+} from './repository-tokens';
 import { TypeOrmEnvelopeRepository } from './repositories/typeorm-envelope.repository';
 import { TypeOrmEtfRepository } from './repositories/typeorm-etf.repository';
 import { TypeOrmTransactionRepository } from './repositories/typeorm-transaction.repository';

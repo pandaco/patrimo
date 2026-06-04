@@ -2,8 +2,8 @@
 // Not loaded by Nest at runtime — runtime config goes through PersistenceModule.
 import 'reflect-metadata';
 import { config as loadEnv } from 'dotenv';
-import { buildDataSourceOptions } from 'infrastructure';
 import { DataSource } from 'typeorm';
+import { buildDataSourceOptions } from './data-source-options';
 
 loadEnv();
 
