@@ -17,7 +17,7 @@ export class PerformanceService {
       ? `${this.baseUrl}/performance/series?period=${this.period()}`
       : undefined),
     {
-      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null },
+      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, drawdowns: [] },
     },
   );
 

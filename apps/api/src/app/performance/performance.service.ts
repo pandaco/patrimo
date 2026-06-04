@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
-import { PerformancePeriod, PerformanceSeriesDto } from 'contracts';
+import { DrawdownDto, PerformancePeriod, PerformanceSeriesDto } from 'contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -104,6 +104,7 @@ export class PerformanceService {
     }
 
     const benchmark = this.buildBenchmark(labels, portfolio, benchmarkHistory);
+    const drawdowns = this.buildDrawdowns(labels, portfolio);
 
     return {
       period,
@@ -111,7 +112,90 @@ export class PerformanceService {
       labels,
       portfolio,
       benchmark,
+      drawdowns,
     };
+  }
+
+  /**
+   * Walk the portfolio series, identify every peak-to-trough drawdown, and
+   * return the top 3 by absolute depth.
+   *
+   * A drawdown is opened when the curve dips below the running max, the
+   * trough is the lowest point reached while still below that max, and it
+   * closes either when a new value matches/exceeds the previous max
+   * (recovery) or when the window ends (open drawdown — `recoveryDate` /
+   * `recoveryDays` stay `null`).
+   *
+   * Plateaus inside a drawdown (e.g. weekend carry-forward) do not split
+   * the drawdown — the walker only triggers a close on the *recovery* edge.
+   */
+  private buildDrawdowns(labels: string[], series: number[]): DrawdownDto[] {
+    if (series.length < 2) return [];
+
+    // Skip leading zeros (cold portfolio before the first BUY).
+    let firstIdx = 0;
+    while (firstIdx < series.length && series[firstIdx] === 0) firstIdx++;
+    if (firstIdx >= series.length - 1) return [];
+
+    const drawdowns: DrawdownDto[] = [];
+    let peakIdx   = firstIdx;
+    let peakValue = series[firstIdx];
+    let troughIdx = -1;
+    let troughValue = peakValue;
+    let inDrawdown = false;
+
+    const dayDiff = (aIdx: number, bIdx: number) => bIdx - aIdx;
+
+    for (let i = firstIdx + 1; i < series.length; i++) {
+      const v = series[i];
+      if (v >= peakValue) {
+        // Recovery (or higher high). If we were under water, close the
+        // drawdown; otherwise just bump the running peak.
+        if (inDrawdown) {
+          drawdowns.push({
+            peakDate:     labels[peakIdx],
+            troughDate:   labels[troughIdx],
+            recoveryDate: labels[i],
+            pct:          ((troughValue - peakValue) / peakValue) * 100,
+            durationDays: dayDiff(peakIdx, troughIdx),
+            recoveryDays: dayDiff(troughIdx, i),
+          });
+          inDrawdown = false;
+        }
+        peakIdx     = i;
+        peakValue   = v;
+        troughIdx   = -1;
+        troughValue = v;
+        continue;
+      }
+
+      // Below the running peak.
+      if (!inDrawdown) {
+        inDrawdown  = true;
+        troughIdx   = i;
+        troughValue = v;
+      } else if (v < troughValue) {
+        troughIdx   = i;
+        troughValue = v;
+      }
+    }
+
+    // Flush an open drawdown at the end of the window.
+    if (inDrawdown && troughIdx !== -1) {
+      drawdowns.push({
+        peakDate:     labels[peakIdx],
+        troughDate:   labels[troughIdx],
+        recoveryDate: null,
+        pct:          ((troughValue - peakValue) / peakValue) * 100,
+        durationDays: dayDiff(peakIdx, troughIdx),
+        recoveryDays: null,
+      });
+    }
+
+    return drawdowns
+      .sort((a, b) => a.pct - b.pct) // most negative first
+      .slice(0, 3)
+      .map(d => ({ ...d, pct: Number(d.pct.toFixed(2)) }));
   }
 
   /**

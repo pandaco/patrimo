@@ -111,24 +111,34 @@
   <!-- BOTTOM 2 CARDS -->
   <div class="grid cols-2" style="margin-top:24px">
 
-    <!-- Drawdowns (placeholder) -->
+    <!-- Drawdowns -->
     <div class="card">
       <div class="card-head">
         <div class="card-title">Drawdowns</div>
-        <span class="card-sub">historiques (mock)</span>
+        <span class="card-sub">top 3 sur la période</span>
       </div>
-      <p class="muted tiny" style="margin-bottom:10px">
-        L'analyse temps-fond des drawdowns nécessite encore un walker dédié côté backend.
-        Les valeurs ci-dessous sont indicatives.
-      </p>
-      @for (dd of ddData; track dd.date) {
-        <div style="padding:9px 0;border-bottom:1px solid var(--rule-soft)">
-          <div class="row">
-            <span style="font-size:13px">{{ dd.date }}</span>
-            <span class="num neg" style="margin-left:auto">{{ fmtPct(dd.pct, 1) }}</span>
+      @if (drawdowns().length === 0) {
+        <p class="muted small" style="margin:0">
+          Aucun drawdown sur la période sélectionnée — le portefeuille n'a pas dépassé
+          son plus haut local à la baisse.
+        </p>
+      } @else {
+        @for (dd of drawdowns(); track dd.peakDate) {
+          <div style="padding:10px 0;border-bottom:1px solid var(--rule-soft)">
+            <div class="row">
+              <span style="font-size:13px">{{ dd.peakLabel }} → {{ dd.troughLabel }}</span>
+              <span class="num neg" style="margin-left:auto">{{ fmtPct(dd.pct, 1) }}</span>
+            </div>
+            <div class="muted tiny" style="margin-top:3px">
+              {{ dd.durationDays }} j de baisse ·
+              @if (dd.recoveryDate) {
+                récupéré en {{ dd.recoveryDays }} j ({{ dd.recoveryLabel }})
+              } @else {
+                <span class="warn">en cours</span>
+              }
+            </div>
           </div>
-          <div class="muted tiny" style="margin-top:3px">{{ dd.dur }} drawdown · récupéré en {{ dd.recov }}</div>
-        </div>
+        }
       }
     </div>
 

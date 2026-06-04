@@ -14,11 +14,12 @@ const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
 
 interface PeriodRow { id: PerformancePeriod; label: string; pct: number; active: boolean }
 
-const DD_DATA = [
-  { date: 'oct. 2022', pct: -18.2, dur: '47 j', recov: '92 j' },
-  { date: 'août 2023', pct:  -6.4, dur: '12 j', recov: '22 j' },
-  { date: 'avr. 2024', pct:  -4.1, dur:  '9 j', recov: '14 j' },
-];
+const MONTH_FR = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+
+function shortFr(iso: string): string {
+  const d = new Date(iso);
+  return `${MONTH_FR[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 @Component({
   selector: 'app-performance',
@@ -34,8 +35,8 @@ export class PerformanceComponent {
   protected readonly activePeriod  = this.perfSvc.period;
   protected readonly loading       = this.perfSvc.loading;
 
-  protected readonly portfolio = computed(() => this.perfSvc.series().portfolio);
-  protected readonly benchmark = computed(() => this.perfSvc.series().benchmark);
+  protected readonly portfolio    = computed(() => this.perfSvc.series().portfolio);
+  protected readonly benchmark    = computed(() => this.perfSvc.series().benchmark);
   protected readonly hasBenchmark = computed(() => this.benchmark().length > 0);
 
   private static totalReturn(series: number[]): number {
@@ -58,7 +59,14 @@ export class PerformanceComponent {
     })),
   );
 
-  protected readonly ddData = DD_DATA;
+  protected readonly drawdowns = computed(() =>
+    this.perfSvc.raw().drawdowns.map(d => ({
+      ...d,
+      peakLabel:     shortFr(d.peakDate),
+      troughLabel:   shortFr(d.troughDate),
+      recoveryLabel: d.recoveryDate ? shortFr(d.recoveryDate) : 'ongoing',
+    })),
+  );
 
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;
