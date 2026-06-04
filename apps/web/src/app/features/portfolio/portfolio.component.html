@@ -1,0 +1,149 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Toutes enveloppes confondues</div>
+    <h1 class="page-title">Portefeuille <em>boursier</em></h1>
+    <p class="page-sub">
+      {{ allEtfs().length }} lignes, {{ fmtEur(total(), 0) }} valorisés. PRU et plus-values
+      calculés à partir de tes mouvements — aucune saisie manuelle de position.
+    </p>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="card" style="padding:0;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
+      <div class="stat">
+        <div class="label">Valeur portefeuille</div>
+        <div class="value">{{ fmtEur(total(), 2) }}</div>
+        <div class="sub"><ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui</div>
+      </div>
+      <div class="stat">
+        <div class="label">Coût total (PRU)</div>
+        <div class="value">{{ fmtEur(totalCost(), 2) }}</div>
+        <div class="sub">prix de revient</div>
+      </div>
+      <div class="stat">
+        <div class="label">PV latente</div>
+        <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
+        <div class="sub"><span class="pos">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">PV réalisée YTD</div>
+        <div class="value">{{ fmtEur(542.10, 2) }}</div>
+        <div class="sub">ventes 2026</div>
+      </div>
+      <div class="stat">
+        <div class="label">Dividendes 12M</div>
+        <div class="value">{{ fmtEur(184.66, 2) }}</div>
+        <div class="sub">14 paiements</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITIONS TABLE -->
+  <div class="section-head">
+    <h2 class="section-title">Positions</h2>
+    <span class="section-sub">{{ allEtfs().length }} lignes</span>
+    <div class="section-right">
+      <div class="tabs">
+        @for (tab of allocTabs; track tab) {
+          <button [class.active]="allocFilter() === tab" (click)="allocFilter.set(tab)">{{ tab }}</button>
+        }
+      </div>
+      <button class="btn sm">Exporter</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:4px 12px">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>ETF</th>
+          <th>Allocation</th>
+          <th>Enveloppes</th>
+          <th class="r">Qté</th>
+          <th class="r">PRU</th>
+          <th class="r">Cours</th>
+          <th class="r">Jour</th>
+          <th class="r">Valeur</th>
+          <th class="r">PV latente</th>
+          <th>Tendance 1A</th>
+          <th>Poids</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (etf of filtered(); track etf.isin) {
+          <tr>
+            <td>
+              <div>
+                <div class="row gap-12">
+                  <span class="pill solid" style="min-width:48px;justify-content:center">{{ etf.ticker }}</span>
+                  <span class="serif-italic" style="font-size:15px">{{ etf.name }}</span>
+                </div>
+                <div class="muted tiny" style="margin-top:3px">
+                  {{ etf.isin }} · {{ etf.issuer }} · TER {{ fmtNum(etf.ter * 100, 2) }} %
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="pill"
+                [class.olive]="etf.alloc === 'Core'"
+                [class.soft]="etf.alloc === 'Obligations'">{{ etf.alloc }}</span>
+            </td>
+            <td>
+              <span class="pill soft" style="font-size:10px">{{ etf.pea ? 'PEA' : 'CTO' }}</span>
+            </td>
+            <td class="r num">{{ fmtNum(etf.qty, 0) }}</td>
+            <td class="r num">{{ fmtNum(etf.pru, 2) }} €</td>
+            <td class="r num">{{ fmtNum(etf.price, 2) }} €</td>
+            <td class="r"><ui-delta [value]="eD(etf)" /></td>
+            <td class="r num">{{ fmtNum(eV(etf), 0) }} €</td>
+            <td class="r">
+              <div class="num" [class.pos]="eP(etf) >= 0" [class.neg]="eP(etf) < 0">
+                {{ eP(etf) >= 0 ? '+' : '' }}{{ fmtNum(eP(etf), 0) }} €
+              </div>
+              <div class="num tiny" [style.color]="ePP(etf) >= 0 ? 'var(--gain)' : 'var(--loss)'">
+                {{ fmtPctRaw(ePP(etf), 2) }}
+              </div>
+            </td>
+            <td><ui-sparkline [data]="sparks()[etf.ticker] || []" [fill]="true" /></td>
+            <td style="min-width:100px">
+              <div class="row gap-12">
+                <ui-bar [pct]="wt(etf)" [max]="40" />
+                <span class="num tiny" style="min-width:36px">{{ fmtNum(wt(etf), 1) }}%</span>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- EXPOSURE -->
+  <div class="section-head">
+    <h2 class="section-title">Exposition <em>réelle</em></h2>
+    <span class="section-sub">au-delà des noms d'indice</span>
+  </div>
+  <div class="grid cols-3">
+    @for (card of [{ title: 'Géographique', data: geo() }, { title: 'Sectorielle', data: sector() }, { title: 'Devises', data: curr() }]; track card.title) {
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">{{ card.title }}</div>
+          <span class="card-sub">{{ card.data.length }} catégories</span>
+        </div>
+        <div>
+          @for (row of card.data; track row.key; let i = $index) {
+            <div style="margin-bottom:9px">
+              <div class="row" style="margin-bottom:4px">
+                <span style="font-size:13px">{{ row.key }}</span>
+                <span class="num tiny" style="margin-left:auto;color:var(--ink-3)">{{ fmtPctRaw(row.pct, 1) }}</span>
+              </div>
+              <ui-bar [pct]="row.pct" [max]="maxExp(card.data)" />
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

@@ -1,0 +1,36 @@
+<div class="app">
+  <app-sidebar (openShortcuts)="onOpenShortcuts()" />
+  <div class="main">
+    <app-topbar [crumbs]="crumbs()" (newTransaction)="onNewTransaction()" />
+    <main id="main" tabindex="-1" [attr.aria-label]="crumbs().join(', ')">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<nav class="bottom-nav" aria-label="Navigation principale">
+  <a routerLink="/dashboard"    routerLinkActive="active" aria-label="Tableau de bord">
+    <span class="ico" aria-hidden="true"><app-ico name="dashboard" /></span>
+    <span>Aperçu</span>
+  </a>
+  <a routerLink="/portfolio"    routerLinkActive="active" aria-label="Portefeuille">
+    <span class="ico" aria-hidden="true"><app-ico name="portfolio" /></span>
+    <span>Portef.</span>
+  </a>
+  <a routerLink="/transactions" routerLinkActive="active" aria-label="Transactions">
+    <span class="ico" aria-hidden="true"><app-ico name="tx" /></span>
+    <span>Tx</span>
+  </a>
+  <a routerLink="/allocation"   routerLinkActive="active" aria-label="Allocation">
+    <span class="ico" aria-hidden="true"><app-ico name="alloc" /></span>
+    <span>Alloc.</span>
+  </a>
+  <a routerLink="/tools/alerts" routerLinkActive="active" aria-label="Alertes">
+    <span class="ico" aria-hidden="true"><app-ico name="alert" /></span>
+    <span>Alertes</span>
+  </a>
+</nav>
+
+@if (kb.gMode()) {
+  <app-gmode-badge />
+}

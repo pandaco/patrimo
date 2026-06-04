@@ -1,0 +1,214 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Stratégie</div>
+    <h1 class="page-title">Allocation <em>cible</em> vs réel</h1>
+    <p class="page-sub">
+      Trois niveaux : la décision Actions/Obligations (stratégique), la décomposition
+      Core/Satellite (tactique), puis le poids cible par ETF. Les écarts sont
+      chiffrés et colorés — vert ≤ 2 pts, orange ≤ 5 pts, rouge au-delà.
+    </p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+
+    <!-- Strategic -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Stratégique <em>— Actions / Obligations</em></div>
+        <span class="card-sub">Σ = 100%</span>
+      </div>
+      <div class="row" style="gap:24px">
+        <ui-donut [data]="strategicDonut()" [size]="160" [thickness]="22" />
+        <div style="flex:1">
+          @for (row of [
+            { label: 'Actions',     target: targets().strategic.stocks, real: 92.6 },
+            { label: 'Obligations', target: targets().strategic.bonds,  real: 7.4  }
+          ]; track row.label) {
+            <div style="margin-bottom:8px">
+              <div class="row" style="margin-bottom:4px">
+                <span style="font-size:13.5px">{{ row.label }}</span>
+                <span class="num small" style="margin-left:auto">{{ fmtNum(row.real, 1) }} %</span>
+                <span class="muted tiny">cible {{ fmtNum(row.target, 0) }} %</span>
+                <ui-delta [value]="row.real - row.target" suffix=" pts" [digits]="1" />
+              </div>
+              <!-- DriftBar -->
+              <div style="position:relative;height:6px">
+                <div class="bar" style="height:6px">
+                  <span [style.width]="driftBarW(row.real, row.target, row.real)"
+                    style="background:var(--brand)"></span>
+                </div>
+                <span style="position:absolute;top:-3px;height:12px;width:1px;background:var(--ink)"
+                  [style.left]="driftBarW(row.target, row.target, row.real)"></span>
+              </div>
+            </div>
+          }
+          <div class="divider-soft"></div>
+          <div class="kv"><dt>Drift max</dt><dd>+2,6 pts</dd></div>
+          <div class="kv"><dt>Statut</dt><dd><span class="pill gain"><span class="dot"></span>Aligné</span></dd></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tactic -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Tactique <em>— Core / Satellite / Oblig</em></div>
+        <span class="card-sub">Σ = 100%</span>
+      </div>
+      <div class="row" style="gap:24px">
+        <ui-donut [data]="tacticDonut()" [size]="160" [thickness]="22" />
+        <div style="flex:1">
+          @for (row of [
+            { label: 'Core',        target: targets().tactic.core,      real: 71.2 },
+            { label: 'Satellite',   target: targets().tactic.satellite, real: 21.4 },
+            { label: 'Obligations', target: targets().tactic.bonds,     real: 7.4  }
+          ]; track row.label) {
+            <div style="margin-bottom:8px">
+              <div class="row" style="margin-bottom:4px">
+                <span style="font-size:13.5px">{{ row.label }}</span>
+                <span class="num small" style="margin-left:auto">{{ fmtNum(row.real, 1) }} %</span>
+                <span class="muted tiny">cible {{ fmtNum(row.target, 0) }} %</span>
+                <ui-delta [value]="row.real - row.target" suffix=" pts" [digits]="1" />
+              </div>
+              <div style="position:relative;height:6px">
+                <div class="bar" style="height:6px">
+                  <span [style.width]="driftBarW(row.real, row.target, row.real)"
+                    style="background:var(--brand)"></span>
+                </div>
+                <span style="position:absolute;top:-3px;height:12px;width:1px;background:var(--ink)"
+                  [style.left]="driftBarW(row.target, row.target, row.real)"></span>
+              </div>
+            </div>
+          }
+          <div class="divider-soft"></div>
+          <div class="kv"><dt>Drift max</dt><dd>+3,4 pts</dd></div>
+          <div class="kv"><dt>Statut</dt><dd><span class="pill warn"><span class="dot"></span>Drift léger</span></dd></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ETF ALLOCATION TABLE -->
+  <div class="section-head">
+    <h2 class="section-title">Par <em>ETF</em></h2>
+    <span class="section-sub">poids cible dans le portefeuille global</span>
+    <div class="section-right">
+      <button class="btn sm">Modifier la cible</button>
+      <button class="btn sm primary">Plan de rebalancing</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:4px 12px">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>ETF</th>
+          <th class="r">Cible</th>
+          <th class="r">Réel</th>
+          <th class="r">Drift</th>
+          <th style="width:40%">Visualisation</th>
+          <th class="r">Action suggérée</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (etf of etfsWithTargets(); track etf.isin) {
+          @let tgt  = targets().etf[etf.ticker];
+          @let real = realPct()[etf.ticker];
+          @let d    = drift(etf.ticker);
+          <tr>
+            <td>
+              <div class="row gap-12">
+                <span class="pill solid">{{ etf.ticker }}</span>
+                <span class="muted small">{{ etf.alloc }}</span>
+              </div>
+            </td>
+            <td class="r num">{{ fmtNum(tgt, 0) }} %</td>
+            <td class="r num">{{ fmtNum(real, 1) }} %</td>
+            <td class="r">
+              <span class="num" [class.pos]="d > 0" [class.neg]="d < 0">
+                {{ d >= 0 ? '+' : '' }}{{ fmtNum(d, 1) }} pts
+              </span>
+            </td>
+            <td>
+              <div style="position:relative;height:6px;margin:4px 0">
+                <div class="bar" style="height:6px">
+                  <span [style.width]="driftBarW(real, tgt, real)" style="background:var(--brand)"></span>
+                </div>
+                <span style="position:absolute;top:-3px;height:12px;width:1px;background:var(--ink)"
+                  [style.left]="driftBarW(tgt, tgt, real)"></span>
+              </div>
+            </td>
+            <td class="r">
+              <span class="pill" [class.gain]="driftSev(d)==='gain'" [class.warn]="driftSev(d)==='warn'" [class.loss]="driftSev(d)==='loss'">{{ action(d) }}</span>
+              @if (action(d) !== 'Tenir') {
+                <div class="num tiny muted" style="margin-top:3px">
+                  ≈ {{ fmtEur(abs(d) / 100 * total(), 0) }}
+                </div>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM GRID -->
+  <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:24px">
+
+    <!-- Version history -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Versions <em>de stratégie</em></div>
+        <span class="card-sub">historique</span>
+      </div>
+      @for (v of [
+        { date: '14 mars 2026',  v: 'v3', desc: 'Core 72% / Satellite 18% / Oblig 10%', current: true  },
+        { date: '02 janv. 2025', v: 'v2', desc: 'Core 70% / Satellite 20% / Oblig 10%', current: false },
+        { date: '20 août 2024',  v: 'v1', desc: 'Core 60% / Satellite 30% / Oblig 10%', current: false },
+      ]; track v.v) {
+        <div class="row" style="padding:10px 0;border-bottom:1px solid var(--rule-soft)">
+          <span class="serif-italic" style="font-size:16px;min-width:30px">{{ v.v }}</span>
+          <div class="grow">
+            <div style="font-size:13px">{{ v.desc }}</div>
+            <div class="muted tiny">{{ v.date }}</div>
+          </div>
+          @if (v.current) {
+            <span class="pill olive">Active</span>
+          } @else {
+            <button class="btn sm ghost">Voir</button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Consistency checks -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Cohérence</div>
+        <span class="card-sub">vérifications auto</span>
+      </div>
+      @for (c of [
+        { ok: true,  warn: false, label: 'Somme stratégique = 100 %',      detail: '90 + 10'                  },
+        { ok: true,  warn: false, label: 'Somme tactique = 100 %',          detail: '72 + 18 + 10'             },
+        { ok: true,  warn: false, label: 'Somme ETF = 100 %',               detail: '32 + 18 + 12 + 10 + 10 + 10 + 8' },
+        { ok: false, warn: true,  label: 'Drift S&P 500 modéré',            detail: '+6,1 pts (seuil 5 pts)'   },
+        { ok: true,  warn: false, label: 'Tous les ETF PEA sont éligibles', detail: '6 / 6'                    },
+      ]; track c.label) {
+        <div class="row" style="padding:9px 0;border-bottom:1px solid var(--rule-soft)">
+          <span class="pill" [class.gain]="c.ok" [class.warn]="c.warn && !c.ok" [class.loss]="!c.ok && !c.warn"
+            style="min-width:20px;justify-content:center">
+            {{ c.ok ? '✓' : c.warn ? '!' : '✗' }}
+          </span>
+          <div class="grow">
+            <div style="font-size:13px">{{ c.label }}</div>
+            <div class="muted tiny num">{{ c.detail }}</div>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+
+</div>

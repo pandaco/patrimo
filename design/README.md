@@ -3,9 +3,13 @@
 Clickable HTML/JSX prototype handed off from Claude Design (claude.ai/design). Source of truth for visual design, layout, copy and interactions until the Angular implementation lands.
 
 > ⚠️ **This is a design prototype, not production code.**
-> React + Babel are used in the browser only as a render engine to make the screens clickable. The real implementation target is **Angular 21.2 (standalone, signals, SCSS)**. Port plan in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md).
+> React + Babel are used in the browser only as a render engine to make the screens clickable. The real implementation target is **Angular 21.2 (standalone, signals, SCSS) with Angular Material 21.2**. Port plan (prototype → Angular component map, Material usage rules) in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md).
 >
 > 📱 **Responsive scope.** The prototype is **fixed to 1440 px wide** (`<meta name="viewport" content="width=1440">`) on purpose — it's the desktop design source of truth. The Angular implementation must adapt down to **360 px** and up to wide desktops following the breakpoint strategy in [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md) §9 (5 breakpoints: 360 / 600 / 900 / 1200 / 1440, mobile-first with bottom navigation under 900 px).
+>
+> 🏷️ **Brand name.** `shell.jsx` still shows `Patrimo<em>nia</em>` (old name). The project was renamed **Patrimo** (see git history). The Angular shell must use `Patrimo` — or keep the italic suffix as `Patrimo<em> nia</em>` if the design intent is to keep the stylised two-part name. Decide before `ShellComponent` is built.
+>
+> ⚙️ **Angular Material note.** The prototype uses fully custom CSS (no Material). When porting to Angular, Material is used for **behavior and a11y only** (dialogs, tables, form fields, overlays, CDK). Visual identity comes from `app.css` CSS custom properties — Material's theme system does not drive colors, fonts, or spacing. See [`../tmp/best-practices.md`](../tmp/best-practices.md) §2.8 and [`../tmp/angular-port-plan.md`](../tmp/angular-port-plan.md) §10 for the full component map.
 
 ## Files
 

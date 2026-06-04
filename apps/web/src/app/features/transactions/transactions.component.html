@@ -1,0 +1,112 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="row">
+      <div class="grow">
+        <div class="page-eyebrow">Journal — {{ totalCount() }} mouvements</div>
+        <h1 class="page-title">Toutes les <em>opérations</em></h1>
+        <p class="page-sub">
+          Une seule source de vérité. PRU, cash, positions, plus-values latentes —
+          tout est recalculé à la volée depuis cette table.
+        </p>
+      </div>
+      <button class="btn primary" (click)="openNewTx()">+ Nouvelle transaction</button>
+    </div>
+  </div>
+
+  <!-- FILTER PILLS -->
+  <div class="row" style="margin-bottom:16px;gap:6px;flex-wrap:wrap">
+    @for (f of filters; track f.id) {
+      <button
+        class="pill"
+        [class.solid]="activeFilter() === f.id"
+        style="cursor:pointer;padding:5px 12px;font-size:12px"
+        (click)="activeFilter.set(f.id)"
+      >{{ f.label }}</button>
+    }
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn sm">Import CSV</button>
+      <button class="btn sm">Exporter</button>
+    </div>
+  </div>
+
+  <!-- CONSISTENCY BANNER -->
+  <div class="card" style="margin-bottom:20px;padding:14px 18px;background:var(--paper-2);border:1px dashed var(--rule)">
+    <div class="row">
+      <span class="pill gain"><span class="dot"></span>Cohérence OK</span>
+      <span class="muted small">Solde cash recalculé = somme des mouvements · Aucun écart détecté</span>
+      <button class="btn sm ghost" style="margin-left:auto">Détails ↓</button>
+    </div>
+  </div>
+
+  <!-- TX GROUPS -->
+  @for (group of groups(); track group.month) {
+    <div style="margin-bottom:22px">
+      <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
+        <span class="serif-italic" style="font-size:18px;text-transform:capitalize">{{ group.label }}</span>
+        <span class="muted small">{{ group.txs.length }} mouvement{{ group.txs.length > 1 ? 's' : '' }}</span>
+        <span style="margin-left:auto" class="num" [class.pos]="group.total >= 0" [class.neg]="group.total < 0">
+          {{ group.total >= 0 ? '+' : '−' }} {{ fmtEur(abs(group.total), 2) }}
+        </span>
+      </div>
+      <table class="tbl tbl-compact">
+        <tbody>
+          @for (tx of group.txs; track tx.id) {
+            @let env = getEnv(tx.envelope);
+            @let etf = getEtf(tx.etf);
+            @let lbl = labels[tx.type];
+            <tr>
+              <td style="width:80px">
+                <div class="num small">{{ fmtDate(tx.date) }}</div>
+              </td>
+              <td style="width:36px">
+                <span class="env-glyph" style="width:24px;height:24px;font-size:11px"
+                  [style.background]="typeSymBg(tx.type)">{{ lbl.sym }}</span>
+              </td>
+              <td>
+                <div style="font-size:14px">
+                  {{ lbl.label }}
+                  @if (etf) { <span class="serif-italic"> — {{ etf.ticker }}</span> }
+                </div>
+                <div class="muted tiny">
+                  @if (etf) { {{ etf.name }} }
+                  @else if (env) { {{ env.label }} · {{ env.broker }} }
+                </div>
+              </td>
+              <td style="width:110px">
+                @if (env) {
+                  <div class="row gap-12">
+                    <ui-env-glyph [env]="env" [size]="18" />
+                    <span class="small">{{ env.code }}</span>
+                  </div>
+                }
+              </td>
+              <td class="r" style="width:70px">
+                @if (tx.etf) { <span class="num small">{{ fmtNum(tx.qty, 0) }}</span> }
+              </td>
+              <td class="r" style="width:90px">
+                @if (tx.price) { <span class="num small">{{ fmtNum(tx.price, 2) }} €</span> }
+              </td>
+              <td class="r" style="width:70px">
+                @if (tx.fees > 0) { <span class="num small muted">{{ fmtNum(tx.fees, 2) }} €</span> }
+              </td>
+              <td class="r" style="width:130px">
+                <span class="num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">
+                  {{ lbl.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
+                </span>
+              </td>
+              <td style="width:30px" class="r">
+                <button class="btn sm ghost" style="padding:3px 8px">···</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="row" style="justify-content:center;margin-top:24px">
+    <button class="btn">Charger 30 mouvements de plus</button>
+  </div>
+
+</div>

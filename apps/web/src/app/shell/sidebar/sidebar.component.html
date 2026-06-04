@@ -1,0 +1,53 @@
+<aside class="sidebar" aria-label="Navigation principale">
+  <a href="#main" class="skip-link">Aller au contenu principal</a>
+
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">P</div>
+    <div>
+      <div class="brand-name">Patrimo</div>
+      <div class="brand-sub">Tracker · v0.1</div>
+    </div>
+  </div>
+
+  @for (group of nav; track group.label) {
+    <nav class="nav-group" [attr.aria-label]="group.label">
+      <div class="nav-label">{{ group.label }}</div>
+      @for (item of group.items; track item.id) {
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [attr.aria-keyshortcuts]="item.shortcut ? 'g ' + item.shortcut.toLowerCase() : null"
+          [attr.title]="item.shortcut ? 'Raccourci : G puis ' + item.shortcut : null"
+        >
+          <span class="ico" aria-hidden="true">
+            <app-ico [name]="item.icon" />
+          </span>
+          {{ item.label }}
+          @if (item.badge) {
+            <span class="badge" [attr.aria-label]="item.badge + ' en attente'">{{ item.badge }}</span>
+          }
+        </a>
+      }
+    </nav>
+  }
+
+  @if (user(); as u) {
+  <div class="sidebar-footer">
+    <div class="avatar" aria-hidden="true">{{ u.initials }}</div>
+    <div class="user-meta" style="flex:1">
+      <div class="user-name">{{ u.firstName }} {{ u.lastName }}</div>
+      <div class="user-role">{{ u.riskProfile }}</div>
+    </div>
+    <button
+      class="btn ghost sm"
+      (click)="openShortcuts.emit()"
+      aria-label="Afficher les raccourcis clavier"
+      title="Raccourcis (?)"
+      style="padding:4px 8px"
+    >
+      <kbd class="kbd">?</kbd>
+    </button>
+  </div>
+  }
+</aside>

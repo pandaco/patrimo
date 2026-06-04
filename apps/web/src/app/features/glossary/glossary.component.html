@@ -1,0 +1,47 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Glossaire</div>
+    <h1 class="page-title">Le vocabulaire <em>essentiel</em>.</h1>
+    <p class="page-sub">
+      Tout terme utilisé dans l'app — défini, expliqué et illustré par un
+      exemple concret tiré de ton portefeuille.
+    </p>
+  </div>
+
+  <div class="grid cols-2">
+    @for (g of entries(); track g.term) {
+      <div class="card">
+        <div class="row" style="margin-bottom:10px">
+          <span class="pill solid">{{ g.term }}</span>
+          <span class="serif-italic" style="font-size:18px;margin-left:8px">{{ g.title }}</span>
+        </div>
+        <p style="margin:0 0 12px;font-size:13.5px;color:var(--ink-2)">{{ g.body }}</p>
+        <div class="recap">
+          <span class="muted tiny" style="text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;display:block">Exemple</span>
+          {{ g.example }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="section-head">
+    <h2 class="section-title">Enveloppes <em>fiscales</em></h2>
+    <span class="section-sub">{{ envelopes.length }} grandes familles</span>
+  </div>
+
+  <div class="grid cols-3">
+    @for (e of envelopes; track e.code) {
+      <div class="card tight">
+        <div class="row" style="margin-bottom:8px">
+          <span class="pill solid">{{ e.code }}</span>
+          <span class="serif-italic small" style="margin-left:6px">{{ e.desc }}</span>
+        </div>
+        <div class="kv"><dt>Plafond</dt><dd class="small">{{ e.plaf }}</dd></div>
+        <div class="kv"><dt>Blocage</dt><dd class="small">{{ e.blocking }}</dd></div>
+        <div class="kv"><dt>Fiscalité</dt><dd class="small" style="text-align:right;max-width:60%">{{ e.tax }}</dd></div>
+      </div>
+    }
+  </div>
+
+</div>

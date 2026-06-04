@@ -1,0 +1,146 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Comparateur ETF</div>
+    <h1 class="page-title">Trouve l'ETF <em>le plus efficace</em><br>pour ton objectif.</h1>
+    <p class="page-sub">
+      Côte à côte : TER, taille du fonds, tracking difference, éligibilité PEA,
+      frais de courtage chez ton broker, et le coût total estimé sur 5 ans avec
+      ton DCA mensuel.
+    </p>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="row" style="margin-bottom:16px;gap:8px;flex-wrap:wrap">
+    <span class="pill soft">MSCI World</span>
+    <span class="pill soft">Capitalisant</span>
+    <span class="pill soft">Éligibilité PEA</span>
+    <span class="pill soft">TER &lt; 0,30 %</span>
+    <button class="btn sm ghost" style="margin-left:auto">+ Filtre</button>
+  </div>
+
+  <!-- CARDS GRID -->
+  <div class="grid cols-4">
+    @for (etf of candidates(); track etf.isin) {
+      <div class="card" [style.border-color]="etf.ticker === 'CW8' ? 'var(--brand)' : null"
+        [style.border-width]="etf.ticker === 'CW8' ? '2px' : null">
+        <div class="row" style="margin-bottom:14px">
+          <span class="pill solid">{{ etf.ticker }}</span>
+          <span class="muted small">{{ etf.issuer }}</span>
+          @if (etf.ticker === 'CW8') {
+            <span class="pill olive" style="margin-left:auto">Recommandé</span>
+          }
+        </div>
+        <div class="serif-italic" style="font-size:16px;line-height:1.2;margin-bottom:6px">{{ etf.name }}</div>
+        <div class="muted tiny num" style="margin-bottom:14px">{{ etf.isin }}</div>
+        <div class="kv"><dt>TER</dt><dd>{{ fmtPctRaw(etf.ter * 100, 2) }}</dd></div>
+        <div class="kv"><dt>Réplication</dt><dd>{{ etf.repli }}</dd></div>
+        <div class="kv"><dt>Distribution</dt><dd>{{ etf.distrib }}</dd></div>
+        <div class="kv"><dt>PEA</dt><dd>{{ etf.pea ? '✓ éligible' : '✗ CTO seul' }}</dd></div>
+        <div class="kv"><dt>Devise</dt><dd>{{ etf.currency }}</dd></div>
+        <div class="divider-soft"></div>
+        <div class="kv"><dt>Perf 1A</dt><dd class="pos">{{ fmtPct(etf.perf1y, 1) }}</dd></div>
+        <div class="kv"><dt>Perf YTD</dt><dd class="pos">{{ fmtPct(etf.perfYtd, 1) }}</dd></div>
+      </div>
+    }
+  </div>
+
+  <!-- DETAIL TABLE -->
+  <div class="section-head">
+    <h2 class="section-title">Critères <em>détaillés</em></h2>
+    <span class="section-sub">comparaison ligne par ligne</span>
+  </div>
+
+  <div class="card" style="padding:4px 12px">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Critère</th>
+          @for (etf of candidates(); track etf.isin) {
+            <th>{{ etf.ticker }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="muted small">TER annuel</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ fmtPctRaw(etf.ter * 100, 2) }}</td> }
+        </tr>
+        <tr><td class="muted small">Réplication</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.repli }}</td> }
+        </tr>
+        <tr><td class="muted small">Politique distribution</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.distrib }}</td> }
+        </tr>
+        <tr><td class="muted small">Éligibilité PEA</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.pea ? '✓' : '✗' }}</td> }
+        </tr>
+        <tr><td class="muted small">Émetteur</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.issuer }}</td> }
+        </tr>
+        <tr><td class="muted small">Indice répliqué</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.index }}</td> }
+        </tr>
+        <tr><td class="muted small">Devise cotation</td>
+          @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.currency }}</td> }
+        </tr>
+        <tr><td class="muted small">Tracking Diff. 1A</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small" [class.pos]="(td?.td ?? 0) >= 0" [class.neg]="(td?.td ?? 0) < 0">
+              {{ td ? fmtPct(td.td, 2) : '—' }}
+            </td>
+          }
+        </tr>
+        <tr><td class="muted small">Tracking Error 1A</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td ? fmtPctRaw(td.te, 2) : '—' }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">Frais Fortuneo (500 €)</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.fees ?? '—' }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">Frais Bourso (500 €)</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.boursoFees ?? '—' }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">Spread bid-ask moyen</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.spread ?? '—' }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">Taille du fonds</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.size ?? '—' }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">Date création</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.since ?? '—' }}</td>
+          }
+        </tr>
+        <tr>
+          <td class="muted small">Perf 1A</td>
+          @for (etf of candidates(); track etf.isin) {
+            <td class="num small pos" style="font-weight:500">{{ fmtPct(etf.perf1y, 1) }}</td>
+          }
+        </tr>
+        <tr><td class="muted small">TCO 5 ans (500 €/mois)</td>
+          @for (etf of candidates(); track etf.isin) {
+            @let td = tdRow(etf.ticker);
+            <td class="num small">{{ td?.tco ?? '—' }}</td>
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

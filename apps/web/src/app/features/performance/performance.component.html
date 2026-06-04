@@ -1,0 +1,117 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Performance</div>
+    <h1 class="page-title">Tu fais <em>+2,4 pts</em> mieux<br>que le MSCI World cette année.</h1>
+    <p class="page-sub">
+      Performances nettes de frais, brutes de fiscalité. Le benchmark est calculé
+      pondéré selon ta cible (90 % MSCI World + 10 % Bloomberg Euro Govt).
+    </p>
+  </div>
+
+  <!-- CHART -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Évolution <em>de la valeur</em></div>
+      <span class="card-sub">12 mois glissants</span>
+      <div class="card-right">
+        <div class="tabs">
+          @for (p of ['1M','3M','6M','YTD','1A','3A','5A','MAX']; track p) {
+            <button [class.active]="p === '1A'">{{ p }}</button>
+          }
+        </div>
+      </div>
+    </div>
+    <app-perf-chart [portfolio]="portfolio()" [benchmark]="benchmark()" />
+  </div>
+
+  <!-- MULTI-PERIOD TABLE -->
+  <div class="section-head">
+    <h2 class="section-title">Multi-périodes</h2>
+    <span class="section-sub">portefeuille vs benchmark</span>
+  </div>
+
+  <div class="card" style="padding:4px 12px">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Période</th>
+          <th class="r">Portefeuille</th>
+          <th class="r">Benchmark</th>
+          <th class="r">Alpha</th>
+          <th>Battue</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of periods; track row.p) {
+          <tr>
+            <td>
+              <span class="serif-italic" style="font-size:16px">{{ row.p }}</span>
+              @if (row.ann) { <span class="muted tiny" style="margin-left:6px">annualisé</span> }
+            </td>
+            <td class="r"><span class="num pos">{{ fmtPct(row.port, 2) }}</span></td>
+            <td class="r"><span class="num muted">{{ fmtPct(row.bench, 2) }}</span></td>
+            <td class="r"><ui-delta [value]="row.port - row.bench" /></td>
+            <td><ui-bar [pct]="row.port - row.bench > 0 ? row.port - row.bench : 0" [max]="3" /></td>
+            <td class="r"><button class="btn sm ghost">Détails</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- BOTTOM 3 CARDS -->
+  <div class="grid cols-3" style="margin-top:24px">
+
+    <!-- Tracking difference -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Tracking <em>difference</em></div>
+        <span class="card-sub">par ETF, sur 1 an</span>
+      </div>
+      @for (r of tdData; track r.ticker) {
+        <div class="row" style="padding:7px 0;border-bottom:1px solid var(--rule-soft)">
+          <span class="pill solid" style="min-width:48px;justify-content:center">{{ r.ticker }}</span>
+          <span style="margin-left:auto" class="num small" [class.pos]="r.td >= 0" [class.neg]="r.td < 0">
+            {{ fmtPct(r.td, 2) }}
+          </span>
+          <span class="muted tiny num">±{{ fmtNum(r.te, 2) }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Fees -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Frais <em>cumulés</em></div>
+        <span class="card-sub">2025</span>
+      </div>
+      <div class="display-num" style="font-size:34px;margin-bottom:8px">68,42 <small>€</small></div>
+      <div class="kv"><dt>Courtage</dt><dd>11,88 €</dd></div>
+      <div class="kv"><dt>Gestion (TER)</dt><dd>52,18 €</dd></div>
+      <div class="kv"><dt>Change</dt><dd>4,36 €</dd></div>
+      <div class="divider-soft"></div>
+      <div class="kv"><dt>Coût annuel moy.</dt><dd>0,17 % du capital</dd></div>
+    </div>
+
+    <!-- Drawdowns -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Drawdowns</div>
+        <span class="card-sub">depuis création</span>
+      </div>
+      @for (dd of ddData; track dd.date) {
+        <div style="padding:9px 0;border-bottom:1px solid var(--rule-soft)">
+          <div class="row">
+            <span style="font-size:13px">{{ dd.date }}</span>
+            <span class="num neg" style="margin-left:auto">{{ fmtPct(dd.pct, 1) }}</span>
+          </div>
+          <div class="muted tiny" style="margin-top:3px">{{ dd.dur }} drawdown · récupéré en {{ dd.recov }}</div>
+        </div>
+      }
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,85 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">8 alertes actives · 14 règles configurées</div>
+    <h1 class="page-title">Le tracker te <em>prévient</em><br>quand quelque chose bouge.</h1>
+    <p class="page-sub">
+      Tu décides quoi surveiller, avec quels seuils, et par quel canal. Évaluation toutes les heures.
+    </p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1.4fr 1fr">
+
+    <!-- INBOX -->
+    <div>
+      <div class="section-head" style="margin-top:0">
+        <h2 class="section-title">Boîte de réception</h2>
+        <span class="section-sub">{{ alerts().length }} alertes</span>
+        <div class="section-right">
+          <div class="tabs">
+            <button class="active">Toutes</button>
+            <button>Non lues</button>
+            <button>Archivées</button>
+          </div>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr">
+        @for (alert of alerts(); track alert.id) {
+          <div class="nba" [class]="sevClass(alert.severity)">
+            <div class="sev">{{ sevIcon(alert.severity) }}</div>
+            <div class="body">
+              <h4>{{ alert.title }}</h4>
+              <p>{{ alert.body }}</p>
+              <div class="meta">
+                <span>{{ alert.date }}</span>
+                <span>·</span>
+                <span>{{ alert.type.replace('_', ' ').toLowerCase() }}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn sm">Ignorer</button>
+              <button class="btn sm primary">{{ alert.cta }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- RULES -->
+    <div>
+      <div class="section-head" style="margin-top:0">
+        <h2 class="section-title">Règles</h2>
+        <span class="section-sub">configurables</span>
+        <div class="section-right">
+          <button class="btn sm">+ Nouvelle règle</button>
+        </div>
+      </div>
+      <div class="card" style="padding:4px 12px">
+        <table class="tbl tbl-compact">
+          <tbody>
+            @for (rule of rules; track rule.type) {
+              <tr>
+                <td style="width:18px">
+                  <div style="width:22px;height:12px;border-radius:999px;position:relative"
+                    [style.background]="rule.enabled ? 'var(--brand)' : 'var(--rule)'">
+                    <span style="position:absolute;top:1px;width:10px;height:10px;border-radius:50%;background:var(--paper);transition:left 0.2s"
+                      [style.left]="rule.enabled ? '11px' : '1px'"></span>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size:13px">{{ rule.label }}</div>
+                  <div class="muted tiny">{{ rule.channels }}</div>
+                </td>
+                <td class="r">
+                  <div class="num small muted">{{ rule.threshold }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>

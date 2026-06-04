@@ -1,0 +1,85 @@
+<div class="page">
+
+  <div class="page-head">
+    <div class="page-eyebrow">Calendrier · Mai → Septembre 2026</div>
+    <h1 class="page-title">Tout ce qui <em>arrive</em><br>dans les 5 prochains mois.</h1>
+  </div>
+
+  <!-- SUMMARY STATS -->
+  <div class="grid cols-4" style="margin-bottom:24px">
+    <div class="card tight">
+      <div class="eyebrow" style="margin-bottom:6px">Dividendes prévus</div>
+      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">{{ fmtEur(divTotal, 2) }}</div>
+      <div class="muted small" style="margin-top:4px">6 paiements</div>
+    </div>
+    <div class="card tight">
+      <div class="eyebrow" style="margin-bottom:6px">DCA programmés</div>
+      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">{{ fmtEur(dcaTotal, 0) }}</div>
+      <div class="muted small" style="margin-top:4px">6 exécutions</div>
+    </div>
+    <div class="card tight">
+      <div class="eyebrow" style="margin-bottom:6px">Dates clés</div>
+      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">3</div>
+      <div class="muted small" style="margin-top:4px">dont 5 ans PEA</div>
+    </div>
+    <div class="card tight">
+      <div class="eyebrow" style="margin-bottom:6px">Net cash entrée</div>
+      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">{{ fmtEur(divTotal - dcaTotal, 0) }}</div>
+      <div class="muted small" style="margin-top:4px">hors revalo</div>
+    </div>
+  </div>
+
+  <!-- 5-MONTH GRID -->
+  <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:12px">
+    @for (mo of months; track mo.m) {
+      <div class="card" style="padding:14px">
+        <div class="row" style="margin-bottom:10px">
+          <span class="serif-italic" style="font-size:16px">{{ mo.label }}</span>
+          <span class="muted tiny num" style="margin-left:auto">{{ mo.events.length }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:2px;font-size:10px">
+          @for (d of weekDays; track $index) {
+            <div style="text-align:center;color:var(--ink-4);padding:2px">{{ d }}</div>
+          }
+          @for (cell of mo.cells; track $index) {
+            <div
+              style="aspect-ratio:1;display:grid;place-items:center;font-size:10.5px;border-radius:3px;font-family:var(--font-mono)"
+              [style.color]="cell.day ? (cell.event ? 'var(--paper)' : 'var(--ink-2)') : 'var(--ink-4)'"
+              [style.background]="cell.event ? eventColor(cell.event.type) : 'transparent'"
+              [style.cursor]="cell.event ? 'pointer' : 'default'"
+              [title]="cell.event?.label ?? ''"
+            >{{ cell.day || '' }}</div>
+          }
+        </div>
+        <div class="divider-soft"></div>
+        <div style="font-size:11px">
+          @for (ev of mo.events.slice(0, 4); track $index) {
+            <div class="row" style="padding:3px 0;gap:6px">
+              <span style="width:6px;height:6px;border-radius:50%;flex-shrink:0"
+                [style.background]="eventColor(ev.type)"></span>
+              <span class="num muted" style="min-width:22px;font-size:10px">{{ ev.date.slice(8, 10) }}</span>
+              <span style="flex:1;font-size:11px;line-height:1.3">{{ ev.label }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- LEGEND -->
+  <div class="row" style="margin-top:16px;gap:14px;font-size:12px">
+    <span class="row gap-12">
+      <span style="width:10px;height:10px;border-radius:3px;background:var(--gain)"></span>
+      Dividende
+    </span>
+    <span class="row gap-12">
+      <span style="width:10px;height:10px;border-radius:3px;background:var(--brand)"></span>
+      DCA programmé
+    </span>
+    <span class="row gap-12">
+      <span style="width:10px;height:10px;border-radius:3px;background:var(--warn)"></span>
+      Date clé
+    </span>
+  </div>
+
+</div>

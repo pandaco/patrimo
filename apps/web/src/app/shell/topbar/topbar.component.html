@@ -1,0 +1,43 @@
+<header class="topbar" role="banner">
+  <nav aria-label="Fil d'Ariane" class="crumb">
+    @for (crumb of crumbs(); track crumb; let i = $index, last = $last) {
+      @if (i > 0) {
+        <span aria-hidden="true" style="margin:0 8px;opacity:.4">/</span>
+      }
+      @if (last) {
+        <b aria-current="page">{{ crumb }}</b>
+      } @else {
+        {{ crumb }}
+      }
+    }
+  </nav>
+
+  <div class="topbar-right">
+    <label class="search">
+      <span aria-hidden="true" style="display:inline-flex">
+        <app-ico name="search" />
+      </span>
+      <span class="sr-only">Recherche</span>
+      <input
+        type="search"
+        data-search
+        placeholder="Rechercher ETF, ISIN, transaction…"
+        aria-keyshortcuts="Meta+K Control+K"
+      />
+      <span class="kbd" aria-hidden="true">⌘K</span>
+    </label>
+
+    <button class="btn ghost" aria-label="Notifications (3 non lues)" title="Notifications">
+      <span aria-hidden="true" style="display:inline-flex">
+        <app-ico name="bell" />
+      </span>
+    </button>
+
+    <button class="btn primary" (click)="newTransaction.emit()" aria-keyshortcuts="n" title="Raccourci : N">
+      <span aria-hidden="true" style="display:inline-flex">
+        <app-ico name="plus" />
+      </span>
+      Nouvelle transaction
+    </button>
+  </div>
+</header>

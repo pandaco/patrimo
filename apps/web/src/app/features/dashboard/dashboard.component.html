@@ -1,0 +1,208 @@
+<div class="page">
+
+  <!-- PAGE HEAD -->
+  <div class="page-head">
+    <div class="page-eyebrow"><span class="dot"></span>Vendredi 16 mai 2026 · Marchés ouverts</div>
+    <h1 class="page-title">Bonjour <em>Antoine.</em></h1>
+    <p class="page-sub">
+      Ton patrimoine progresse de <span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span> aujourd'hui,
+      soit <span class="hl-soft">{{ fmtEur(dayValue(), 0) }}</span>.<br>
+      <b>3 actions concrètes</b> t'attendent plus bas — la première vaut probablement
+      <span class="hl"> quelques centaines d'euros</span>.
+    </p>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero-stats">
+    <div class="hero-main">
+      <div class="hero-money">
+        <div>
+          <div class="label">Patrimoine total</div>
+          <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
+            {{ fmtNum(totalValue(), 0) }}<small>,{{ fmtNum(totalValue(), 2).split(',')[1] }} €</small>
+          </div>
+        </div>
+        <div class="sub" style="flex-wrap:wrap">
+          <ui-delta [value]="dayPct()" [digits]="2" />
+          <span>aujourd'hui</span>
+          <span style="opacity:0.35">•</span>
+          <span style="color:#4ADE80" class="num bold">+{{ fmtNum(pnlPct(), 1) }} %</span>
+          <span>depuis l'achat</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">Investissements boursiers</div>
+        <div class="value">{{ fmtEur(totalBourse(), 0) }}</div>
+        <div class="sub" style="display:block">
+          <span class="num bold">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
+          <span class="muted"> du total</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">Épargne réglementée</div>
+        <div class="value">{{ fmtEur(totalLivret(), 0) }}</div>
+        <div class="sub" style="display:block">
+          <span class="num bold">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
+          <span class="muted"> du total</span>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="label">Cash dormant</div>
+        <div class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</div>
+        <div class="sub" style="display:block">
+          <span class="pill warn"><span class="dot"></span>à investir</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TWO COLUMN: PERF + REPARTITION -->
+  <div class="grid" style="grid-template-columns:1.6fr 1fr">
+
+    <!-- Performance chart -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Performance <em>vs benchmark</em></div>
+        <span class="card-sub">12 mois glissants</span>
+        <div class="card-right">
+          <div class="tabs">
+            <button>1M</button><button>3M</button><button>6M</button>
+            <button class="active">1A</button><button>YTD</button><button>MAX</button>
+          </div>
+        </div>
+      </div>
+      <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
+      <div class="grid cols-4" style="margin-top:18px">
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">YTD</div>
+          <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">
+            <span class="pos">+8,42 %</span>
+          </div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">1 an</div>
+          <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">
+            <span class="pos">+19,60 %</span>
+          </div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Volatilité 1A</div>
+          <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">11,4 %</div>
+        </div>
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">Sharpe</div>
+          <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">1,42</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Répartition donut -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Répartition</div>
+        <span class="card-sub">par enveloppe</span>
+      </div>
+      <div style="display:flex;gap:24px;align-items:center">
+        <ui-donut [data]="donutData()" [size]="150" [thickness]="22" />
+        <div style="flex:1;font-size:12.5px">
+          @for (env of envPreview(); track env.id) {
+            <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
+              <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
+                [style.background]="donutData()[$index]?.color"></span>
+              <span style="flex:1">{{ env.label }}</span>
+              <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
+            </div>
+          }
+          <a class="btn sm ghost" routerLink="/wealth" style="margin-top:6px;padding:0;color:var(--ink-3)">
+            Tout voir →
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NEXT BEST ACTIONS -->
+  <div class="nba-header">
+    <span class="count-chip">{{ topAlerts().length }}</span>
+    <h2>Prochaines <em>actions</em></h2>
+    <span class="desc">Recommandations triées par impact</span>
+    <div class="right">
+      <a class="btn sm" routerLink="/tools/alerts">Voir toutes les alertes →</a>
+    </div>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr">
+    @for (alert of topAlerts(); track alert.id) {
+      <div class="nba" [class]="sevClass(alert.severity)">
+        <div class="sev">{{ sevIcon(alert.severity) }}</div>
+        <div class="body">
+          <h4>{{ alert.title }}</h4>
+          <p>{{ alert.body }}</p>
+          <div class="meta">
+            <span>{{ alert.date }}</span>
+            <span>·</span>
+            <span>{{ alert.type.replace('_', ' ').toLowerCase() }}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn sm">Ignorer</button>
+          <button class="btn sm primary">{{ alert.cta }}</button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- RECENT TRANSACTIONS -->
+  <div class="section-head">
+    <h2 class="section-title">Mouvements <em>récents</em></h2>
+    <span class="section-sub">7 derniers jours</span>
+    <div class="section-right">
+      <a class="btn sm" routerLink="/transactions">Tout l'historique →</a>
+    </div>
+  </div>
+  <div class="card" style="padding:4px 12px">
+    <table class="tbl tbl-compact">
+      <thead>
+        <tr>
+          <th style="width:90px">Date</th>
+          <th style="width:140px">Type</th>
+          <th>Enveloppe</th>
+          <th>ETF</th>
+          <th class="r">Quantité</th>
+          <th class="r">Prix</th>
+          <th class="r">Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (tx of recentTx(); track tx.id) {
+          @let env = getEnv(tx.envelope);
+          @let lbl = txLabels[tx.type];
+          <tr>
+            <td class="muted small">{{ fmtDate(tx.date) }}</td>
+            <td>
+              <span class="pill soft">
+                <span class="serif-italic" style="font-size:13px">{{ lbl.sym }}</span>
+                {{ lbl.label }}
+              </span>
+            </td>
+            <td>
+              <div class="row gap-12">
+                @if (env) {
+                  <ui-env-glyph [env]="env" [size]="20" />
+                  <span>{{ env.label }}</span>
+                }
+              </div>
+            </td>
+            <td class="serif-italic">{{ tx.etf || '—' }}</td>
+            <td class="r num">{{ tx.etf ? fmtNum(tx.qty, 0) : '—' }}</td>
+            <td class="r num">{{ tx.price ? fmtEur(tx.price, 2) : '—' }}</td>
+            <td class="r num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">
+              {{ lbl.dir }}{{ fmtEur(tx.amount, 2).replace('€', '').trim() }} €
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
