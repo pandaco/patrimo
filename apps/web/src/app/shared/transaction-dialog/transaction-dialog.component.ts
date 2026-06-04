@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { CreateTransactionDto, TxTypeDto } from 'contracts';
-import { EnvelopeService, EtfService, TransactionService, TxType, etfValue } from 'data-access';
+import { Envelope, EnvelopeService, EtfService, TransactionService, TxType, etfValue } from 'data-access';
 import { fmtEur, fmtNum, fmtPctRaw } from 'ui';
 
 type TxTypeEntry = { id: TxType; label: string; sym: string };
@@ -64,9 +64,12 @@ export class TransactionDialogComponent {
   protected readonly showAsset    = computed(() => ['BUY','SELL','DIVIDEND'].includes(this.type()));
   protected readonly showQtyPrice = computed(() => ['BUY','SELL'].includes(this.type()));
 
-  protected readonly selectedEnv = computed(() => {
+  // Explicit `Envelope | undefined` return type: `noUncheckedIndexedAccess`
+  // is off, so without it `list[0]` would narrow back to `Envelope` and the
+  // template's `?.` guards would trigger NG8107 hints.
+  protected readonly selectedEnv = computed<Envelope | undefined>(() => {
     const list = this.envelopes();
-    return list.find(e => e.id === this.envelopeId()) ?? list[0] ?? undefined;
+    return list.find(e => e.id === this.envelopeId()) ?? list[0];
   });
   protected readonly selectedEtf = computed(() =>
     this.etfs().find(e => e.isin === this.etfIsin())
