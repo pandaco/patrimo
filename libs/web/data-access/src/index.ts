@@ -3,6 +3,7 @@ export * from './lib/models';
 export * from './lib/mock-data';
 export * from './lib/auth.models';
 export * from './lib/auth.service';
+export * from './lib/preferences.service';
 export * from './lib/user.service';
 export * from './lib/envelope.service';
 export * from './lib/etf.service';

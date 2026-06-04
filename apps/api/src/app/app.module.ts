@@ -11,6 +11,7 @@ import { EtfModule } from './etfs/etf.module';
 import { MarketModule } from './market/market.module';
 import { PerformanceModule } from './performance/performance.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
+import { PreferencesModule } from './preferences/preferences.module';
 import { TransactionModule } from './transactions/transaction.module';
 import { validateEnv } from './env.validation';
 
@@ -30,6 +31,7 @@ import { validateEnv } from './env.validation';
     MarketModule,
     PortfolioModule,
     PerformanceModule,
+    PreferencesModule,
     AlertModule,
   ],
   controllers: [AppController],

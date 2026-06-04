@@ -1,7 +1,7 @@
 import { Injectable, computed, inject } from '@angular/core';
 import { AuthService } from './auth.service';
-import { MOCK_USER } from './mock-data';
 import { User } from './models';
+import { PreferencesService } from './preferences.service';
 
 /** Derive [first, last] from a display name when Google omits `givenName`/`familyName`. */
 function splitName(displayName: string): [string, string] {
@@ -19,7 +19,8 @@ function computeInitials(firstName: string, lastName: string): string {
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private readonly auth = inject(AuthService);
+  private readonly auth        = inject(AuthService);
+  private readonly preferences = inject(PreferencesService);
 
   readonly currentUser = computed<User | null>(() => {
     const a = this.auth.user();
@@ -32,15 +33,16 @@ export class UserService {
       ? a.initials
       : computeInitials(firstName, lastName);
 
+    const prefs = this.preferences.current();
+
     return {
       firstName,
       lastName,
       initials,
-      // TODO Sprint 2: replace with values returned by /api/users/me/preferences.
-      riskProfile:     MOCK_USER.riskProfile,
-      horizonYears:    MOCK_USER.horizonYears,
-      monthlyTarget:   MOCK_USER.monthlyTarget,
-      displayCurrency: MOCK_USER.displayCurrency,
+      riskProfile:     prefs.riskProfile,
+      horizonYears:    prefs.horizonYears,
+      monthlyTarget:   prefs.monthlyTarget,
+      displayCurrency: prefs.displayCurrency,
     };
   });
 }

@@ -6,11 +6,13 @@ import {
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
+  USER_PREFERENCES_REPOSITORY,
   USER_REPOSITORY,
 } from './repository-tokens';
 import { TypeOrmEnvelopeRepository } from './repositories/typeorm-envelope.repository';
 import { TypeOrmEtfRepository } from './repositories/typeorm-etf.repository';
 import { TypeOrmTransactionRepository } from './repositories/typeorm-transaction.repository';
+import { TypeOrmUserPreferencesRepository } from './repositories/typeorm-user-preferences.repository';
 import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
 
 @Module({
@@ -24,11 +26,18 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     TypeOrmModule.forFeature([...ORM_ENTITIES]),
   ],
   providers: [
-    { provide: USER_REPOSITORY,        useClass: TypeOrmUserRepository },
-    { provide: ENVELOPE_REPOSITORY,    useClass: TypeOrmEnvelopeRepository },
-    { provide: ETF_REPOSITORY,         useClass: TypeOrmEtfRepository },
-    { provide: TRANSACTION_REPOSITORY, useClass: TypeOrmTransactionRepository },
+    { provide: USER_REPOSITORY,             useClass: TypeOrmUserRepository },
+    { provide: USER_PREFERENCES_REPOSITORY, useClass: TypeOrmUserPreferencesRepository },
+    { provide: ENVELOPE_REPOSITORY,         useClass: TypeOrmEnvelopeRepository },
+    { provide: ETF_REPOSITORY,              useClass: TypeOrmEtfRepository },
+    { provide: TRANSACTION_REPOSITORY,      useClass: TypeOrmTransactionRepository },
   ],
-  exports: [USER_REPOSITORY, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY],
+  exports: [
+    USER_REPOSITORY,
+    USER_PREFERENCES_REPOSITORY,
+    ENVELOPE_REPOSITORY,
+    ETF_REPOSITORY,
+    TRANSACTION_REPOSITORY,
+  ],
 })
 export class PersistenceModule {}
