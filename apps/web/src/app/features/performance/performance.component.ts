@@ -36,20 +36,18 @@ export class PerformanceComponent {
 
   protected readonly portfolio = computed(() => this.perfSvc.series().portfolio);
   protected readonly benchmark = computed(() => this.perfSvc.series().benchmark);
+  protected readonly hasBenchmark = computed(() => this.benchmark().length > 0);
 
-  /**
-   * Total return of the portfolio over the currently displayed series:
-   * (last / first - 1) × 100, using the first non-zero entry as base so a
-   * cold portfolio (qty = 0 at the start of the window) does not divide by
-   * zero and does not pollute the percentage with the ramp-up phase.
-   */
-  protected readonly portfolioPct = computed(() => {
-    const series = this.portfolio();
+  private static totalReturn(series: number[]): number {
     if (series.length < 2) return 0;
     const start = series.find(v => v > 0) ?? 0;
     const end   = series[series.length - 1];
     return start ? (end / start - 1) * 100 : 0;
-  });
+  }
+
+  protected readonly portfolioPct = computed(() => PerformanceComponent.totalReturn(this.portfolio()));
+  protected readonly benchmarkPct = computed(() => PerformanceComponent.totalReturn(this.benchmark()));
+  protected readonly alphaPct     = computed(() => this.portfolioPct() - this.benchmarkPct());
 
   protected readonly periodRows = computed<PeriodRow[]>(() =>
     PERIOD_OPTIONS.map(opt => ({

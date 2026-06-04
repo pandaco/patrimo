@@ -12,14 +12,18 @@ const PERIOD_DAYS: Record<PerformancePeriod, number> = {
   'YTD': 365, // capped at days since Jan 1 in `computeStart`
 };
 
+// MSCI World tracker used as the implicit benchmark: Amundi CW8 listed on
+// Euronext Paris. Hardcoded for now — the Allocation cible endpoint will let
+// the user pick another reference index later.
+const BENCHMARK_ISIN   = 'FR0010261198';
+const BENCHMARK_TICKER = 'CW8';
+
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
 function computeStart(period: PerformancePeriod, now: Date): Date {
-  if (period === 'YTD') {
-    return new Date(now.getFullYear(), 0, 1);
-  }
+  if (period === 'YTD') return new Date(now.getFullYear(), 0, 1);
   const start = new Date(now);
   start.setDate(start.getDate() - PERIOD_DAYS[period]);
   return start;
@@ -50,14 +54,14 @@ export class PerformanceService {
     const now    = new Date();
     const start  = computeStart(period, now);
     const labels = enumerateDates(start, now);
+    const days   = Math.max(30, PERIOD_DAYS[period]);
 
-    const [txs, etfs] = await Promise.all([
+    const [txs, etfs, benchmarkHistory] = await Promise.all([
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
+      this.priceService.getHistorical(BENCHMARK_ISIN, BENCHMARK_TICKER, days),
     ]);
 
-    // Sort transactions chronologically so the running-qty walk per day is
-    // O(N + T) instead of O(N × T).
     const sortedTxs = txs
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null)
       .filter(t => t.type === 'BUY' || t.type === 'SELL')
@@ -66,8 +70,6 @@ export class PerformanceService {
     const heldIsins = new Set(sortedTxs.map(t => t.etfIsin));
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
 
-    // Fetch historical closes for every held ETF in parallel.
-    const days = Math.max(30, PERIOD_DAYS[period]);
     const closesByIsin = new Map<string, Map<string, number>>();
     await Promise.all(
       Array.from(heldIsins).map(async isin => {
@@ -78,16 +80,12 @@ export class PerformanceService {
       }),
     );
 
-    // Walk forward, carrying the running qty per ISIN across days. For the
-    // dates Yahoo did not return (weekends, holidays), we hold the previous
-    // close so the line stays continuous instead of dropping to 0.
     const qtyByIsin   = new Map<string, number>();
     const lastClose   = new Map<string, number>();
     const portfolio: number[] = [];
     let txCursor = 0;
 
     for (const label of labels) {
-      // Apply every transaction whose date is ≤ `label`.
       while (txCursor < sortedTxs.length && isoDate(sortedTxs[txCursor].date) <= label) {
         const tx = sortedTxs[txCursor];
         const sign = tx.type === 'BUY' ? 1 : -1;
@@ -105,12 +103,54 @@ export class PerformanceService {
       portfolio.push(Number(value.toFixed(2)));
     }
 
+    const benchmark = this.buildBenchmark(labels, portfolio, benchmarkHistory);
+
     return {
       period,
-      count:    labels.length,
+      count: labels.length,
       labels,
       portfolio,
-      benchmark: null, // TODO: pick a free MSCI World tracker quote series
+      benchmark,
     };
+  }
+
+  /**
+   * Project the MSCI World benchmark on the same `labels` axis and scale it so
+   * the curve starts at the same euro value as the portfolio on the first
+   * non-zero sample. Returns `null` when Yahoo did not return any close (the
+   * controller still serves a valid response — only the benchmark line is
+   * dropped on the chart).
+   */
+  private buildBenchmark(
+    labels: string[],
+    portfolio: number[],
+    history: { date: string; close: number }[],
+  ): number[] | null {
+    if (history.length === 0) return null;
+
+    // Find the first label that has both a non-zero portfolio value AND a
+    // benchmark close — that becomes the anchor point.
+    const benchMap = new Map(history.map(p => [p.date, p.close]));
+    let lastClose: number | undefined;
+    const closeByLabel: (number | undefined)[] = labels.map(l => {
+      const c = benchMap.get(l) ?? lastClose;
+      if (c !== undefined) lastClose = c;
+      return c;
+    });
+
+    let anchorIndex = -1;
+    for (let i = 0; i < labels.length; i++) {
+      if (portfolio[i] > 0 && closeByLabel[i] !== undefined) { anchorIndex = i; break; }
+    }
+    if (anchorIndex === -1) return null;
+
+    const anchorClose     = closeByLabel[anchorIndex] as number;
+    const anchorPortfolio = portfolio[anchorIndex];
+
+    return labels.map((_, i) => {
+      const close = closeByLabel[i];
+      if (close === undefined) return 0;
+      return Number(((close / anchorClose) * anchorPortfolio).toFixed(2));
+    });
   }
 }
