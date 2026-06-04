@@ -9,6 +9,40 @@
     </p>
   </div>
 
+  <!-- INFO CALLOUT — Position 101 -->
+  <details class="card" style="margin-bottom:24px;padding:16px 20px;border-left:3px solid var(--brand)">
+    <summary style="cursor:pointer;font-weight:600;font-size:14px;list-style:none;display:flex;align-items:center;gap:10px">
+      <span aria-hidden="true" style="color:var(--brand);font-size:16px">ⓘ</span>
+      C'est quoi une « position » ? Comment Patrimo la calcule ?
+    </summary>
+    <div style="margin-top:14px;font-size:13.5px;line-height:1.55;color:var(--ink-2)">
+      <p style="margin:0 0 10px">
+        <b>Position</b> = ce que tu détiens d'un ETF à l'instant T :
+        sa <b>quantité</b> et son <b>PRU</b> (prix de revient unitaire).
+        Elle est <b>dérivée automatiquement</b> de tes transactions BUY/SELL — tu ne la saisis jamais.
+      </p>
+      <p style="margin:0 0 10px"><b>Math.</b></p>
+      <pre style="background:var(--paper-2);padding:10px 12px;border-radius:6px;font-size:12.5px;overflow-x:auto;margin:0 0 12px">
+qty       = Σ qty BUY − Σ qty SELL
+PRU       = Σ (qty × prix d'achat + frais) / Σ qty BUY
+invested  = qty × PRU
+value     = qty × cours actuel (Yahoo Finance, mis à jour ≤ 15 min)
+PnL       = value − invested
+PnL %     = (cours actuel / PRU − 1) × 100</pre>
+      <p style="margin:0 0 10px"><b>Exemple — seed ESE :</b></p>
+      <ul style="margin:0 0 10px 18px;padding:0">
+        <li>22/03/2026 : achat 10 unités à 38,50 € → invested = 385 €</li>
+        <li>12/05/2026 : achat 12 unités à 39,30 € → invested cumulé = 856,60 €</li>
+        <li>→ qty = 22, PRU = 856,60 / 22 = <b>38,94 €</b></li>
+        <li>Cours Yahoo aujourd'hui (ex. 39,42 €) → value = 22 × 39,42 = <b>867,24 €</b>, PnL = +10,64 € (+1,24 %)</li>
+      </ul>
+      <p style="margin:0;color:var(--ink-3);font-size:12.5px">
+        Les DEPOSIT / WITHDRAWAL / DIVIDEND / INTEREST n'affectent <b>pas</b> la position —
+        ils bougent uniquement le cash de l'enveloppe.
+      </p>
+    </div>
+  </details>
+
   <!-- STATS BAR -->
   <div class="card" style="padding:0;margin-bottom:24px">
     <div style="display:grid;grid-template-columns:repeat(5, 1fr)">

@@ -88,6 +88,7 @@ export const MOCK_DIVIDENDS: Dividend[] = [
 ];
 
 export const MOCK_GLOSSARY: GlossaryEntry[] = [
+  { term:'Position',    title:'Position sur un actif',       body:'Ce que tu détiens d\'un ETF à l\'instant T : la quantité d\'unités et leur prix moyen d\'achat (PRU). Une position est dérivée automatiquement de l\'historique des transactions — jamais saisie à la main. Seuls les BUY/SELL la font bouger ; les DEPOSIT, DIVIDEND et INTEREST n\'affectent que le cash de l\'enveloppe.', example:'2 achats ESE (10 à 38,50 € puis 12 à 39,30 €) → position 22 unités, PRU 38,94 €.' },
   { term:'PRU',         title:'Prix de Revient Unitaire',    body:'Coût moyen pondéré d\'achat d\'un titre. Σ (quantité × prix d\'achat + frais) / quantité totale achetée.', example:'10 ESE à 32 € + 5 ESE à 38 € = (320 + 190) / 15 = 34 € de PRU.' },
   { term:'PV latente',  title:'Plus-value latente',          body:'Gain non réalisé : différence entre la valeur actuelle de la position et son PRU.',                         example:'47 ESE × (39,42 − 32,18) = +340,28 €.' },
   { term:'TER',         title:'Total Expense Ratio',         body:'Frais de gestion annuels d\'un ETF, prélevés sur la performance.',                                           example:'TER 0,15% sur 10 000 € = 15 €/an, prélevés à la source.' },
