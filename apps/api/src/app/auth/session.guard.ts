@@ -11,7 +11,7 @@ export class SessionGuard implements CanActivate {
     private readonly users: UserStoreService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>();
     const sid = req.signedCookies?.[SESSION_COOKIE_NAME];
     if (typeof sid !== 'string') throw new UnauthorizedException();
@@ -19,7 +19,7 @@ export class SessionGuard implements CanActivate {
     const session = this.sessions.get(sid);
     if (!session) throw new UnauthorizedException();
 
-    const user = this.users.findById(session.userId);
+    const user = await this.users.findById(session.userId);
     if (!user) throw new UnauthorizedException();
 
     (req as Request & { user?: unknown }).user = user;

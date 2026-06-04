@@ -20,9 +20,8 @@ class EnvVars {
   @IsString()
   FRONTEND_URL = 'http://localhost:4200';
 
-  @IsOptional()
   @IsString()
-  DATABASE_URL?: string;
+  DATABASE_URL!: string;
 
   @IsOptional()
   @IsString()

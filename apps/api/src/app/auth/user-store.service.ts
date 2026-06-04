@@ -1,29 +1,57 @@
-import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
+import { Inject, Injectable } from '@nestjs/common';
+import { USER_REPOSITORY, UserRepository } from 'api-domain';
 import { AuthUser } from './types';
 
 type UserSeed = Omit<AuthUser, 'id'>;
 
+function toAuthUser(seed: UserSeed, id: string): AuthUser {
+  return { ...seed, id };
+}
+
 @Injectable()
 export class UserStoreService {
-  private readonly byGoogleId = new Map<string, AuthUser>();
+  constructor(
+    @Inject(USER_REPOSITORY) private readonly users: UserRepository,
+  ) {}
 
-  upsertFromGoogle(seed: UserSeed): AuthUser {
-    const existing = this.byGoogleId.get(seed.googleId);
-    if (existing) {
-      const updated: AuthUser = { ...existing, ...seed, id: existing.id };
-      this.byGoogleId.set(seed.googleId, updated);
-      return updated;
-    }
-    const created: AuthUser = { ...seed, id: randomUUID() };
-    this.byGoogleId.set(seed.googleId, created);
-    return created;
+  async upsertFromGoogle(seed: UserSeed): Promise<AuthUser> {
+    const saved = await this.users.upsertFromGoogle({
+      googleId: seed.googleId,
+      email: seed.email,
+      name: seed.name,
+      firstName: seed.firstName,
+      lastName: seed.lastName,
+      initials: seed.initials,
+      picture: seed.picture ?? null,
+    });
+    return toAuthUser(
+      {
+        googleId: saved.googleId,
+        email: saved.email,
+        name: saved.name,
+        firstName: saved.firstName,
+        lastName: saved.lastName,
+        initials: saved.initials,
+        picture: saved.picture ?? undefined,
+      },
+      saved.id,
+    );
   }
 
-  findById(id: string): AuthUser | undefined {
-    for (const user of this.byGoogleId.values()) {
-      if (user.id === id) return user;
-    }
-    return undefined;
+  async findById(id: string): Promise<AuthUser | undefined> {
+    const user = await this.users.findById(id);
+    if (!user) return undefined;
+    return toAuthUser(
+      {
+        googleId: user.googleId,
+        email: user.email,
+        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        initials: user.initials,
+        picture: user.picture ?? undefined,
+      },
+      user.id,
+    );
   }
 }

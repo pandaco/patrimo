@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { AuthUser } from './types';
 import { UserStoreService } from './user-store.service';
 
 function makeInitials(firstName: string, lastName: string): string {
@@ -28,12 +27,12 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     );
   }
 
-  validate(
+  async validate(
     _accessToken: string,
     _refreshToken: string,
     profile: Profile,
     done: VerifyCallback,
-  ): void {
+  ): Promise<void> {
     const email = profile.emails?.[0]?.value?.toLowerCase();
     if (!email) return done(new UnauthorizedException('No email on Google profile'));
 
@@ -43,15 +42,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     const firstName = profile.name?.givenName ?? '';
     const lastName  = profile.name?.familyName ?? '';
-    const user: AuthUser = this.users.upsertFromGoogle({
-      googleId: profile.id,
-      email,
-      name: profile.displayName || `${firstName} ${lastName}`.trim() || email,
-      firstName,
-      lastName,
-      initials: makeInitials(firstName, lastName),
-      picture: profile.photos?.[0]?.value,
-    });
-    done(null, user);
+    try {
+      const user = await this.users.upsertFromGoogle({
+        googleId: profile.id,
+        email,
+        name: profile.displayName || `${firstName} ${lastName}`.trim() || email,
+        firstName,
+        lastName,
+        initials: makeInitials(firstName, lastName),
+        picture: profile.photos?.[0]?.value,
+      });
+      done(null, user);
+    } catch (err) {
+      done(err as Error);
+    }
   }
 }
