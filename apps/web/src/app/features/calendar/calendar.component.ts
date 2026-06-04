@@ -1,31 +1,29 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { EnvelopeService, EtfService, TransactionService } from 'data-access';
 import { fmtEur } from 'ui';
 
-interface CalEvent { date: string; type: 'DIV' | 'DCA' | 'MARK'; label: string; env: string }
+type EventType = 'DIV' | 'MARK';
+
+interface CalEvent {
+  date: string;             // ISO YYYY-MM-DD
+  type: EventType;
+  label: string;
+  envCode: string;          // envelope code shown in the cell
+  amount: number | null;    // null for non-cash events (milestones)
+  past: boolean;            // event already happened
+}
+
 interface CalCell  { day?: number; event?: CalEvent }
 interface CalMonth { y: number; m: number; label: string; events: CalEvent[]; cells: CalCell[] }
 
-const EVENTS: CalEvent[] = [
-  { date:'2026-05-20', type:'DCA',  label:'DCA Core 500 €',                        env:'pea' },
-  { date:'2026-05-28', type:'DIV',  label:'Dividende IWDA · ~19,40 €',             env:'cto' },
-  { date:'2026-06-05', type:'DCA',  label:'DCA Core 500 €',                        env:'pea' },
-  { date:'2026-06-15', type:'DIV',  label:'Dividende IWDA · 19,40 €',              env:'cto' },
-  { date:'2026-06-28', type:'DIV',  label:'Dividende OBLI · 14,20 €',              env:'pea' },
-  { date:'2026-07-02', type:'DIV',  label:'Dividende IWDA · 20,10 €',              env:'cto' },
-  { date:'2026-07-05', type:'DCA',  label:'DCA Core 500 €',                        env:'pea' },
-  { date:'2026-07-15', type:'DCA',  label:'DCA Satellite 300 €',                   env:'cto' },
-  { date:'2026-08-05', type:'DCA',  label:'DCA Core 500 €',                        env:'pea' },
-  { date:'2026-08-12', type:'MARK', label:'PEA atteint 5 ans · retraits possibles',env:'pea' },
-  { date:'2026-08-15', type:'DIV',  label:'Dividende RS2K · 4,20 €',               env:'cto' },
-  { date:'2026-09-05', type:'DCA',  label:'DCA Core 500 €',                        env:'pea' },
-  { date:'2026-09-30', type:'DIV',  label:'Dividende IWDA · 21,60 €',              env:'cto' },
-];
+const MONTH_LABELS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 function eventColor(t: string): string {
-  return ({ DIV: 'var(--gain)', DCA: 'var(--brand)', MARK: 'var(--warn)' } as Record<string, string>)[t] ?? '#999';
+  return ({ DIV: 'var(--gain)', MARK: 'var(--warn)' } as Record<string, string>)[t] ?? '#999';
 }
 
 function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
+  // m is 1-based month. ISO weekday: Monday = 0.
   const firstDay = (new Date(y, m - 1, 1).getDay() + 6) % 7;
   const days     = new Date(y, m, 0).getDate();
   const cells: CalCell[] = Array.from({ length: firstDay }, () => ({}));
@@ -36,20 +34,6 @@ function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
   return cells;
 }
 
-function buildMonths(): CalMonth[] {
-  const defs = [
-    { y:2026, m:5, label:'Mai' }, { y:2026, m:6, label:'Juin' }, { y:2026, m:7, label:'Juillet' },
-    { y:2026, m:8, label:'Août' }, { y:2026, m:9, label:'Septembre' },
-  ];
-  return defs.map(({ y, m, label }) => {
-    const events = EVENTS.filter(e => {
-      const d = new Date(e.date);
-      return d.getFullYear() === y && d.getMonth() === m - 1;
-    });
-    return { y, m, label, events, cells: buildGrid(y, m, events) };
-  });
-}
-
 @Component({
   selector: 'app-calendar',
   standalone: true,
@@ -58,17 +42,120 @@ function buildMonths(): CalMonth[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarComponent {
-  protected readonly months   = buildMonths();
+  private readonly txSvc  = inject(TransactionService);
+  private readonly envSvc = inject(EnvelopeService);
+  private readonly etfSvc = inject(EtfService);
+
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 
-  protected readonly divTotal = EVENTS.filter(e => e.type === 'DIV').reduce((a, e) => {
-    const m = e.label.match(/([0-9,]+) €/);
-    return a + (m ? parseFloat(m[1].replace(',', '.')) : 0);
-  }, 0);
-  protected readonly dcaTotal = EVENTS.filter(e => e.type === 'DCA').reduce((a, e) => {
-    const m = e.label.match(/([0-9]+) €/);
-    return a + (m ? parseFloat(m[1]) : 0);
-  }, 0);
+  /**
+   * Window: past 3 months → next 3 months from today, on month boundaries.
+   * Re-derived as a computed so the user keeps seeing a relevant window even
+   * if the SPA stays open for days.
+   */
+  private readonly windowMonths = computed(() => {
+    const today = new Date();
+    const months: { y: number; m: number; label: string }[] = [];
+    for (let i = -3; i <= 3; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      const y = d.getFullYear();
+      const m = d.getMonth();
+      months.push({ y, m: m + 1, label: `${MONTH_LABELS_FR[m]} ${y === today.getFullYear() ? '' : y}`.trim() });
+    }
+    return months;
+  });
+
+  private readonly etfByIsin = computed(() => {
+    const map = new Map<string, string>();
+    for (const e of this.etfSvc.all()) map.set(e.isin, e.ticker);
+    return map;
+  });
+
+  private readonly envById = computed(() => {
+    const map = new Map<string, { code: string; openedAt: string }>();
+    for (const e of this.envSvc.all()) map.set(e.id, { code: e.code, openedAt: e.openedAt });
+    return map;
+  });
+
+  private readonly today = new Date().toISOString().slice(0, 10);
+
+  /** Past dividend events derived from the user's transaction history. */
+  private readonly dividendEvents = computed<CalEvent[]>(() => {
+    const tickers = this.etfByIsin();
+    const envs    = this.envById();
+    return this.txSvc.all()
+      .filter(tx => tx.type === 'DIVIDEND' && tx.etf)
+      .map(tx => {
+        const ticker = (tx.etf && tickers.get(tx.etf)) || (tx.etf ?? '');
+        const env    = envs.get(tx.envelope);
+        return {
+          date: tx.date,
+          type: 'DIV' as const,
+          label: `Dividende ${ticker} · ${fmtEur(tx.amount, 2)}`,
+          envCode: env?.code ?? '',
+          amount: tx.amount,
+          past: tx.date <= this.today,
+        };
+      });
+  });
+
+  /**
+   * Envelope milestones. For now, the only one we can derive automatically
+   * is the PEA / PEA-PME 5-year anniversary (after which withdrawals do not
+   * close the plan). Surface it inside the current window only.
+   */
+  private readonly milestoneEvents = computed<CalEvent[]>(() => {
+    const window = this.windowMonths();
+    const first  = window[0];
+    const last   = window[window.length - 1];
+    const lo     = `${first.y}-${String(first.m).padStart(2, '0')}-01`;
+    const hi     = `${last.y}-${String(last.m).padStart(2, '0')}-31`;
+
+    const events: CalEvent[] = [];
+    for (const env of this.envSvc.all()) {
+      if (env.code !== 'PEA' && env.code !== 'PEA-PME') continue;
+      const opened = new Date(env.openedAt);
+      const anniversary = new Date(opened);
+      anniversary.setFullYear(anniversary.getFullYear() + 5);
+      const iso = anniversary.toISOString().slice(0, 10);
+      if (iso >= lo && iso <= hi) {
+        events.push({
+          date: iso,
+          type: 'MARK',
+          label: `${env.code} atteint 5 ans · retraits possibles`,
+          envCode: env.code,
+          amount: null,
+          past: iso <= this.today,
+        });
+      }
+    }
+    return events;
+  });
+
+  private readonly allEvents = computed<CalEvent[]>(() => [
+    ...this.dividendEvents(),
+    ...this.milestoneEvents(),
+  ]);
+
+  protected readonly months = computed<CalMonth[]>(() =>
+    this.windowMonths().map(({ y, m, label }) => {
+      const events = this.allEvents().filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === y && d.getMonth() === m - 1;
+      });
+      return { y, m, label, events, cells: buildGrid(y, m, events) };
+    }),
+  );
+
+  protected readonly divTotalPast = computed(() =>
+    this.dividendEvents().filter(e => e.past).reduce((a, e) => a + (e.amount ?? 0), 0),
+  );
+
+  protected readonly divCount = computed(() =>
+    this.dividendEvents().filter(e => e.past).length,
+  );
+
+  protected readonly milestoneCount = computed(() => this.milestoneEvents().length);
 
   protected readonly fmtEur = fmtEur;
   protected readonly eventColor = eventColor;
