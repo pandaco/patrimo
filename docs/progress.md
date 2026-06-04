@@ -73,6 +73,18 @@
 | `selectedEnv()` typé `Envelope \| undefined` (NG8107 fix x2) | `74ba729` `975df28` | ✅ |
 | Zoneless audit : `NgZone` éliminé, services list migrés sur `httpResource`, app initializer simplifié | `80c63f3` | ✅ |
 
+## 7. Wire des features mock → real
+
+| Chantier | Commits | État |
+|---|---|---|
+| **Allocation** réel : `tacticReal` / `strategicReal` calculés depuis positions, card "Par devise" avec donut | `f745c18` | ✅ |
+| **DCA helper** : filtre enveloppes par glyph (UUID-safe), `selectedEnvelope` dynamique, cash après DCA | `a6903b3` | ✅ |
+| **Comparateur ETF** : sélection multi (4 max) sur catalogue réel, TCO 5A calculé depuis TER, drop des hardcoded tracking/spread/fees | `79d1ecd` | ✅ |
+| **Calendar** : dividendes passés depuis tx + jalons PEA 5 ans depuis `openedAt`, fenêtre ±3 mois glissante | `5e5db23` | ✅ |
+| **Alerts** : endpoint `/api/alerts` génère règles (CASH_IDLE / PLAFOND_NEAR / DIVIDEND_RECENT / PEA_AGE_NEAR / USD_CONCENTRATION). `AlertService` frontend → `httpResource` | `a87f76d` | ✅ |
+| **Performance** : endpoint `/api/performance/series?period=…` calcule valeur portfolio jour par jour (BUY/SELL walking + Yahoo `chart()` daily closes, cache 24 h) | `db4a9f8` | ✅ |
+| **Performance switcher** : tabs 1M/3M/6M/YTD/1A bound sur `setPeriod()`, table multi-périodes refactored, drop des hardcoded `TD_DATA` + `PERIODS` + fees, card Méthodologie | `85c432c` | ✅ |
+
 ---
 
 ## Stack vérifiée
@@ -80,10 +92,11 @@
 - ✅ **Zoneless** : `provideZonelessChangeDetection()` + zéro `NgZone`
 - ✅ **Signals partout** : `signal`, `computed`, `effect`, `inject()` — pas de `BehaviorSubject` / `EventEmitter` legacy
 - ✅ **OnPush partout** : tous les composants `standalone: true` + `ChangeDetectionStrategy.OnPush`
-- ✅ **`httpResource`** : `EnvelopeService`, `EtfService`, `TransactionService` exposent `value` + `isLoading` + `error` signals
+- ✅ **`httpResource`** : `EnvelopeService`, `EtfService`, `TransactionService`, `AlertService`, `PerformanceService` exposent `value` + `isLoading` + `error` signals
 - ✅ **Auth réactive** : `httpResource` gated sur `auth.isAuthenticated()` — auto-fetch dès que le gate flip true
 - ✅ **CRUD end-to-end** : Envelopes + Transactions (GET / POST / PATCH / DELETE) avec ownership scope au niveau repo
-- ✅ **Cache Redis** persistant + cron 9h Paris pré-chauffage Yahoo Finance
+- ✅ **Cache Redis** persistant + cron 9h Paris pré-chauffage Yahoo Finance + cache historical 24 h
+- ✅ **Toutes les pages principales sur données réelles** : Dashboard, Patrimoine, Portefeuille, Transactions, Allocation, Performance, DCA, Calendar, Comparateur, Alerts
 
 ## État runtime
 
@@ -100,25 +113,52 @@ npm run db:seed         # 1 dev user + 8 ETFs + 11 enveloppes + 13 transactions
 npm start               # nx run-many -t serve -p web api
 ```
 
+## Endpoints exposés
+
+| Méthode | URL | Garde |
+|---|---|---|
+| `GET`    | `/api/auth/google`                | — (redirect Google) |
+| `GET`    | `/api/auth/google/callback`       | `GoogleAuthFilter` |
+| `GET`    | `/api/auth/me`                    | `SessionGuard` |
+| `POST`   | `/api/auth/logout`                | — |
+| `GET`    | `/api/envelopes`                  | `SessionGuard` |
+| `POST`   | `/api/envelopes`                  | `SessionGuard` |
+| `PATCH`  | `/api/envelopes/:id`              | `SessionGuard` |
+| `DELETE` | `/api/envelopes/:id`              | `SessionGuard` |
+| `GET`    | `/api/etfs`                       | `SessionGuard` |
+| `GET`    | `/api/transactions`               | `SessionGuard` |
+| `POST`   | `/api/transactions`               | `SessionGuard` |
+| `PATCH`  | `/api/transactions/:id`           | `SessionGuard` |
+| `DELETE` | `/api/transactions/:id`           | `SessionGuard` |
+| `GET`    | `/api/portfolio`                  | `SessionGuard` |
+| `GET`    | `/api/alerts`                     | `SessionGuard` |
+| `GET`    | `/api/performance/series?period=` | `SessionGuard` |
+
 ## TODO — chantiers ouverts
 
 | Priorité | Chantier | Détails |
 |---|---|---|
-| 🟢 Haute | Wire features mock | Allocation, Performance, DCA, Calendar, Compare, Alerts — backend calculs (perf historique, dividendes projetés) + frontend pages |
-| 🟢 Haute | Tests étendus | Couvrir `AuthService`, guards, dialogs, `EnvelopeService.update`, repos TypeORM. Cible ≥ 70 %. E2E Playwright (login + créer tx) |
-| 🟡 Moyenne | PWA + offline | Service worker, manifest installable, mode offline degradant |
-| 🟡 Moyenne | i18n FR/EN | Angular Localize, language switcher |
-| 🟡 Moyenne | Refresh prix sur action | Bouton « refresh prix » manuel sur dashboard pour bypass cache 15 min |
-| 🔵 Basse | Audit log | Track des mutations user (création/suppression) |
-| 🔵 Basse | Multi-currency | Conversion EUR ↔ USD ↔ GBP via FX provider |
-| 🔵 Basse | Préférences user | Endpoint `/api/users/me/preferences` (riskProfile, horizon, monthlyTarget, displayCurrency) |
-| 🔵 Basse | Pagination transactions | Page Transactions → infinite scroll / "Charger 30 mouvements de plus" actif |
+| 🟢 Haute | Benchmark MSCI World | Backend récupère CW8.PA daily closes, rebase à 100, ajoute `benchmark[]` au `PerformanceSeriesDto`. Comparaison perf vs marché. |
+| 🟢 Haute | Drawdown walker | Backend calcule max drawdown + durée + récupération depuis la série portfolio. Remplace les mocks de la page Performance. |
+| 🟢 Haute | Tests étendus | Couvrir `AlertService` rules, `EnvelopeService.update` / `remove`, repos TypeORM, dialogs, guards. E2E Playwright (login + créer tx). Cible ≥ 70 %. |
+| 🟡 Moyenne | Refresh prix manuel + skeletons | Bouton refresh dashboard bypass cache 15 min. Skeletons pendant `loading()`. Toast erreur si `error()`. |
+| 🟡 Moyenne | PWA + offline | Service worker, manifest installable, mode offline degradant. |
+| 🟡 Moyenne | i18n FR/EN | Angular Localize, language switcher. |
+| 🟡 Moyenne | Préférences user | Endpoint `/api/users/me/preferences` (riskProfile, horizon, monthlyTarget, displayCurrency). Drop des `MOCK_USER.*` restants dans `UserService`. |
+| 🟡 Moyenne | Allocation targets | Endpoint pour persister cible utilisateur (actuellement `MOCK_TARGETS`). Permet d'éditer la cible depuis l'UI. |
+| 🔵 Basse | Audit log | Track des mutations user (création/suppression). |
+| 🔵 Basse | Multi-currency | Conversion EUR ↔ USD ↔ GBP via FX provider. |
+| 🔵 Basse | Pagination transactions | Page Transactions → infinite scroll / "Charger 30 mouvements de plus" actif. |
+| 🔵 Basse | DCA programmé | Persistance d'un plan DCA + exécution mensuelle. Calendar peut alors afficher les exécutions futures. |
+| 🔵 Basse | Versions de stratégie | Strategy versioning + persistance historique. Page Allocation a un mock "v1/v2/v3" prêt à recevoir. |
+| 🔵 Basse | Sparklines réelles | Stocker `MOCK_SPARKS` en DB ou les dériver de l'historique Yahoo (déjà cachées 24 h). |
 
 ## Limitations connues
 
-- **Sidebar badge Alertes** : encore mock (`AlertService` non branché API). Pas d'endpoint alerts pour l'instant.
-- **Sparklines** : encore mock (`MOCK_SPARKS`). Pas d'historique prix en DB.
-- **Performance historique** : page Performance reste mock — nécessite stocker `daily_prices` ou interroger Yahoo `historicalQuotes()`.
+- **Drawdowns** : page Performance affiche encore des valeurs mock dans la card dédiée (disclaimer en place).
+- **Benchmark** : `PerformanceSeriesDto.benchmark` toujours `null`. Chart trace uniquement le portefeuille.
+- **Sparklines** : encore mock (`MOCK_SPARKS`).
 - **Position fermées** : pas listées (`qty ≤ 0` skip). PV/MV réalisées non affichées.
 - **Yahoo overrides** : 8 ETFs seedés hardcodés. ETF user-créé avec ticker inconnu → fallback `<ticker>.PA`, peut échouer silencieusement.
 - **OAuth scope** : single-user MVP via `GOOGLE_ALLOWED_EMAILS`. Pas de gestion multi-user / signup ouvert.
+- **Préférences utilisateur** : `riskProfile`, `horizonYears`, `monthlyTarget`, `displayCurrency`, allocation targets restent dans `MOCK_USER` / `MOCK_TARGETS`.
