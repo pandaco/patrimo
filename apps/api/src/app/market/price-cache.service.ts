@@ -14,10 +14,11 @@ const SWEEP_INTERVAL_MS = 30 * 60 * 1000;
 
 @Injectable()
 export class PriceCacheService implements OnApplicationShutdown {
-  private readonly store = new Map<string, CacheEntry>();
+  private readonly store   = new Map<string, CacheEntry>();
+  private readonly ttlMs   = DEFAULT_TTL_MS;
   private readonly sweeper: NodeJS.Timeout;
 
-  constructor(private readonly ttlMs: number = DEFAULT_TTL_MS) {
+  constructor() {
     this.sweeper = setInterval(() => this.sweep(), SWEEP_INTERVAL_MS);
     this.sweeper.unref?.();
   }
