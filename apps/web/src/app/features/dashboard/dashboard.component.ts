@@ -72,6 +72,10 @@ export class DashboardComponent {
     return this.envelopes.all().find(e => e.id === id);
   }
 
+  protected getEtf(isin: string | null) {
+    return isin ? this.etfs.all().find(e => e.isin === isin) : null;
+  }
+
   protected sevClass(sev: string): string {
     return sev === 'warn' ? 'warn' : sev === 'gain' ? 'gain' : 'info';
   }

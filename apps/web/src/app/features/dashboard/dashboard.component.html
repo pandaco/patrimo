@@ -176,6 +176,7 @@
       <tbody>
         @for (tx of recentTx(); track tx.id) {
           @let env = getEnv(tx.envelope);
+          @let etf = getEtf(tx.etf);
           @let lbl = txLabels[tx.type];
           <tr>
             <td class="muted small">{{ fmtDate(tx.date) }}</td>
@@ -193,7 +194,7 @@
                 }
               </div>
             </td>
-            <td class="serif-italic">{{ tx.etf || '—' }}</td>
+            <td class="serif-italic">{{ etf?.ticker || '—' }}</td>
             <td class="r num">{{ tx.etf ? fmtNum(tx.qty, 0) : '—' }}</td>
             <td class="r num">{{ tx.price ? fmtEur(tx.price, 2) : '—' }}</td>
             <td class="r num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">

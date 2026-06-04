@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
-import { AuthService, EnvelopeService } from 'data-access';
+import { AuthService, EnvelopeService, EtfService, TransactionService } from 'data-access';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './shared/auth/auth.interceptor';
 
@@ -33,11 +33,15 @@ export const appConfig: ApplicationConfig = {
       const auth = inject(AuthService);
       await auth.loadCurrentUser();
       if (!auth.isAuthenticated()) return;
-      try {
-        await inject(EnvelopeService).reload();
-      } catch {
-        // Non-fatal: the dashboard will render with empty envelope state.
-      }
+      const envelopes    = inject(EnvelopeService);
+      const etfs         = inject(EtfService);
+      const transactions = inject(TransactionService);
+      // Non-fatal: feature pages render their empty state if any of these fail.
+      await Promise.allSettled([
+        envelopes.reload(),
+        etfs.reload(),
+        transactions.reload(),
+      ]);
     }),
   ],
 };

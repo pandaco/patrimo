@@ -86,8 +86,8 @@ export class TransactionsComponent {
     return this.envelopes().find(e => e.id === id);
   }
 
-  protected getEtf(ticker: string | null) {
-    return ticker ? this.etfs().find(e => e.ticker === ticker) : null;
+  protected getEtf(isin: string | null) {
+    return isin ? this.etfs().find(e => e.isin === isin) : null;
   }
 
   protected typeSymBg(type: TxType): string {
