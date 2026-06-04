@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { CreateEnvelopeDto } from 'contracts';
+import { CreateEnvelopeDto, UpdateEnvelopeDto } from 'contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { Envelope } from './models';
@@ -37,5 +37,22 @@ export class EnvelopeService {
     );
     this._all.update(list => [...list, created]);
     return created;
+  }
+
+  async update(id: string, input: UpdateEnvelopeDto): Promise<Envelope> {
+    const updated = await firstValueFrom(
+      this.http.patch<Envelope>(`${this.baseUrl}/envelopes/${id}`, input, {
+        withCredentials: true,
+      }),
+    );
+    this._all.update(list => list.map(e => e.id === id ? updated : e));
+    return updated;
+  }
+
+  async remove(id: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${this.baseUrl}/envelopes/${id}`, { withCredentials: true }),
+    );
+    this._all.update(list => list.filter(e => e.id !== id));
   }
 }

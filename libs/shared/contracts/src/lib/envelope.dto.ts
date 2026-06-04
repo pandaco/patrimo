@@ -21,3 +21,5 @@ export interface CreateEnvelopeDto {
   openedAt: string;
   plafond?: number | null;
 }
+
+export type UpdateEnvelopeDto = Partial<CreateEnvelopeDto>;

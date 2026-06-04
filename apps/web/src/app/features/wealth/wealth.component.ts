@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, Envelope } from 'data-access';
+import { EnvelopeService, Envelope, EtfService, TransactionService } from 'data-access';
 import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw } from 'ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
@@ -34,6 +34,8 @@ export interface FamilyRow {
 })
 export class WealthComponent {
   private readonly envSvc = inject(EnvelopeService);
+  private readonly txSvc  = inject(TransactionService);
+  private readonly etfSvc = inject(EtfService);
   private readonly dialog = inject(MatDialog);
 
   protected readonly total    = this.envSvc.total;
@@ -73,5 +75,31 @@ export class WealthComponent {
       maxWidth: '580px',
       width: '100%',
     });
+  }
+
+  protected async openEditEnvelope(env: Envelope): Promise<void> {
+    const { EnvelopeDialogComponent } = await import('../../shared/envelope-dialog/envelope-dialog.component');
+    this.dialog.open(EnvelopeDialogComponent, {
+      data: { envelope: env },
+      panelClass: 'tx-dialog-panel',
+      maxWidth: '580px',
+      width: '100%',
+    });
+  }
+
+  protected async deleteEnvelope(env: Envelope): Promise<void> {
+    if (!confirm(
+      `Supprimer l'enveloppe « ${env.label} » ?\n\n` +
+      `Cette action est irréversible et supprime AUSSI toutes les transactions ` +
+      `enregistrées sur cette enveloppe.`,
+    )) return;
+    try {
+      await this.envSvc.remove(env.id);
+      // Backend cascades to transactions (and positions derive from them) — refresh
+      // both signals so the dashboard and the sidebar badge follow immediately.
+      await Promise.allSettled([this.txSvc.reload(), this.etfSvc.reload()]);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Suppression impossible');
+    }
   }
 }

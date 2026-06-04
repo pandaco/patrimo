@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Envelope, EnvelopeRepository } from 'api-domain';
-import { CreateEnvelopeDto, EnvelopeDto } from 'contracts';
+import type { Envelope, EnvelopeRepository, EnvelopeSeed } from 'api-domain';
+import { CreateEnvelopeDto, EnvelopeDto, UpdateEnvelopeDto } from 'contracts';
 import { ENVELOPE_REPOSITORY } from 'infrastructure';
 
 function toDto(envelope: Envelope): EnvelopeDto {
@@ -16,6 +16,17 @@ function toDto(envelope: Envelope): EnvelopeDto {
     openedAt: envelope.openedAt.toISOString().slice(0, 10),
     plafond: envelope.plafond,
   };
+}
+
+function toPatch(input: UpdateEnvelopeDto): Partial<EnvelopeSeed> {
+  const patch: Partial<EnvelopeSeed> = {};
+  if (input.code     !== undefined) patch.code     = input.code;
+  if (input.glyph    !== undefined) patch.glyph    = input.glyph;
+  if (input.label    !== undefined) patch.label    = input.label;
+  if (input.broker   !== undefined) patch.broker   = input.broker;
+  if (input.openedAt !== undefined) patch.openedAt = new Date(input.openedAt);
+  if (input.plafond  !== undefined) patch.plafond  = input.plafond;
+  return patch;
 }
 
 @Injectable()
@@ -43,5 +54,14 @@ export class EnvelopeService {
       plafond: input.plafond ?? null,
     });
     return toDto(created);
+  }
+
+  async update(id: string, userId: string, input: UpdateEnvelopeDto): Promise<EnvelopeDto | null> {
+    const updated = await this.envelopes.updateForUser(id, userId, toPatch(input));
+    return updated ? toDto(updated) : null;
+  }
+
+  async delete(id: string, userId: string): Promise<boolean> {
+    return this.envelopes.deleteForUser(id, userId);
   }
 }

@@ -1,10 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CreateEnvelopeDto } from 'contracts';
-import { EnvelopeService } from 'data-access';
+import { Envelope, EnvelopeService } from 'data-access';
 
 interface GlyphOption { value: string; label: string }
+
+export interface EnvelopeDialogData {
+  envelope?: Envelope;
+}
 
 const GLYPHS: GlyphOption[] = [
   { value: 'pea',    label: 'PEA (compte boursier)' },
@@ -28,16 +32,20 @@ const GLYPHS: GlyphOption[] = [
 })
 export class EnvelopeDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<EnvelopeDialogComponent>);
+  private readonly data      = inject<EnvelopeDialogData>(MAT_DIALOG_DATA, { optional: true });
   private readonly envSvc    = inject(EnvelopeService);
+
+  protected readonly editing   = !!this.data?.envelope;
+  private readonly editingId   = this.data?.envelope?.id ?? null;
 
   protected readonly glyphs = GLYPHS;
 
-  protected code     = signal('');
-  protected glyph    = signal('pea');
-  protected label    = signal('');
-  protected broker   = signal('');
-  protected openedAt = signal(new Date().toISOString().slice(0, 10));
-  protected plafond  = signal<number | null>(null);
+  protected code     = signal(this.data?.envelope?.code ?? '');
+  protected glyph    = signal(this.data?.envelope?.glyph ?? 'pea');
+  protected label    = signal(this.data?.envelope?.label ?? '');
+  protected broker   = signal(this.data?.envelope?.broker ?? '');
+  protected openedAt = signal(this.data?.envelope?.openedAt ?? new Date().toISOString().slice(0, 10));
+  protected plafond  = signal<number | null>(this.data?.envelope?.plafond ?? null);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -69,10 +77,14 @@ export class EnvelopeDialogComponent {
 
     this.submitting.set(true);
     try {
-      await this.envSvc.create(payload);
+      if (this.editing && this.editingId) {
+        await this.envSvc.update(this.editingId, payload);
+      } else {
+        await this.envSvc.create(payload);
+      }
       this.dialogRef.close('saved');
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Erreur lors de la création');
+      this.error.set(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
     } finally {
       this.submitting.set(false);
     }
