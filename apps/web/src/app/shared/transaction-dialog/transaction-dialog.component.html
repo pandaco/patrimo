@@ -44,14 +44,14 @@
     @if (showAsset()) {
       <div class="field">
         <label for="tx-etf">ETF / Actif</label>
-        <select id="tx-etf" [ngModel]="etfTicker()" (ngModelChange)="etfTicker.set($event)">
+        <select id="tx-etf" [ngModel]="etfIsin()" (ngModelChange)="etfIsin.set($event)">
           @for (etf of etfs(); track etf.isin) {
-            <option [value]="etf.ticker">
-              {{ etf.ticker }} — {{ etf.name }}{{ (!etf.pea && envelopeId() === 'pea') ? '  · ⚠ non éligible PEA' : '' }}
+            <option [value]="etf.isin">
+              {{ etf.ticker }} — {{ etf.name }}{{ (!etf.pea && selectedEnv()?.code === 'PEA') ? '  · ⚠ non éligible PEA' : '' }}
             </option>
           }
         </select>
-        @if (selectedEtf() && envelopeId() === 'pea' && !selectedEtf()!.pea) {
+        @if (selectedEtf() && selectedEnv()?.code === 'PEA' && !selectedEtf()!.pea) {
           <div class="field-help" style="color:var(--loss)">
             ⚠ {{ selectedEtf()!.ticker }} n'est pas éligible PEA. Choisis CTO ou un ETF de substitution.
           </div>
@@ -103,7 +103,7 @@
       @if (showQtyPrice()) {
         <div style="font-size:14px;margin-bottom:8px">
           {{ type() === 'BUY' ? 'Achat' : 'Vente' }} de
-          <b>{{ qty() }} × {{ etfTicker() }}</b> à
+          <b>{{ qty() }} × {{ selectedEtf()?.ticker || '—' }}</b> à
           <b>{{ fmtEur(price(), 2) }}</b> =
           <b>{{ fmtEur(txAmount(), 2) }}</b>
           @if (type() === 'BUY') {
@@ -111,11 +111,11 @@
           }
         </div>
         <div class="recap-line">
-          <span>Cash {{ selectedEnv().code }} après</span>
+          <span>Cash {{ selectedEnv()?.code || '' }} après</span>
           <b>{{ fmtEur(cashAfter(), 2) }}</b>
         </div>
         <div class="recap-line">
-          <span>Poids {{ etfTicker() }} après</span>
+          <span>Poids {{ selectedEtf()?.ticker || '—' }} après</span>
           <span>
             <b>{{ fmtNum(newWeight(), 1) }} %</b>
             <span class="muted" style="margin-left:6px">(actuel {{ fmtNum(currentWeight(), 1) }} %)</span>
@@ -127,18 +127,26 @@
         </div>
       } @else {
         <div class="recap-line">
-          <span>{{ type() === 'DEPOSIT' ? 'Dépôt' : 'Mouvement' }} sur {{ selectedEnv().label }}</span>
+          <span>{{ type() === 'DEPOSIT' ? 'Dépôt' : 'Mouvement' }} sur {{ selectedEnv()?.label || '' }}</span>
           <b>{{ fmtEur(amount(), 2) }}</b>
         </div>
       }
     </div>
 
+    @if (error()) {
+      <div role="alert" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px">
+        {{ error() }}
+      </div>
+    }
+
   </div>
 
   <div class="modal-foot">
-    <button class="btn ghost" (click)="close()">Annuler</button>
-    <button class="btn" (click)="saveAndNew()">Enregistrer + saisir un autre</button>
-    <button class="btn primary" (click)="save()">Enregistrer →</button>
+    <button class="btn ghost" (click)="close()" [disabled]="submitting()">Annuler</button>
+    <button class="btn" (click)="saveAndNew()" [disabled]="submitting()">Enregistrer + saisir un autre</button>
+    <button class="btn primary" (click)="save()" [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement…' : 'Enregistrer →' }}
+    </button>
   </div>
 
 </div>
