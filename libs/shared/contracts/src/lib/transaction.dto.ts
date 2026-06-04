@@ -24,3 +24,5 @@ export interface CreateTransactionDto {
   fees: number;
   amount: number;
 }
+
+export type UpdateTransactionDto = Partial<CreateTransactionDto>;

@@ -103,4 +103,27 @@ export class TransactionsComponent {
       width: '100%',
     });
   }
+
+  protected async openEditTx(tx: Transaction): Promise<void> {
+    const { TransactionDialogComponent } = await import('../../shared/transaction-dialog/transaction-dialog.component');
+    this.dialog.open(TransactionDialogComponent, {
+      data: { transaction: tx },
+      panelClass: 'tx-dialog-panel',
+      maxWidth: '580px',
+      width: '100%',
+    });
+  }
+
+  protected async deleteTx(tx: Transaction): Promise<void> {
+    const env  = this.getEnv(tx.envelope);
+    const lbl  = this.labels[tx.type].label;
+    const date = fmtDate(tx.date);
+    const target = env ? `${lbl} sur ${env.code} du ${date}` : `${lbl} du ${date}`;
+    if (!confirm(`Supprimer la transaction « ${target} » ?`)) return;
+    try {
+      await this.txSvc.remove(tx.id);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Suppression impossible');
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { CreateTransactionDto, TransactionDto } from 'contracts';
+import { CreateTransactionDto, TransactionDto, UpdateTransactionDto } from 'contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { TX_LABELS } from './mock-data';
@@ -45,5 +45,23 @@ export class TransactionService {
     const tx = fromDto(dto);
     this._all.update(list => [tx, ...list]);
     return tx;
+  }
+
+  async update(id: string, input: UpdateTransactionDto): Promise<Transaction> {
+    const dto = await firstValueFrom(
+      this.http.patch<TransactionDto>(`${this.baseUrl}/transactions/${id}`, input, {
+        withCredentials: true,
+      }),
+    );
+    const tx = fromDto(dto);
+    this._all.update(list => list.map(x => x.id === id ? tx : x));
+    return tx;
+  }
+
+  async remove(id: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${this.baseUrl}/transactions/${id}`, { withCredentials: true }),
+    );
+    this._all.update(list => list.filter(x => x.id !== id));
   }
 }

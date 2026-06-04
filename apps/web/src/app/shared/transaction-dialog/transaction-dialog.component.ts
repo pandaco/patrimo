@@ -1,9 +1,21 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CreateTransactionDto, TxTypeDto } from 'contracts';
-import { Envelope, EnvelopeService, EtfService, TransactionService, TxType, etfValue } from 'data-access';
+import {
+  Envelope,
+  EnvelopeService,
+  EtfService,
+  Transaction,
+  TransactionService,
+  TxType,
+  etfValue,
+} from 'data-access';
 import { fmtEur, fmtNum, fmtPctRaw } from 'ui';
+
+export interface TransactionDialogData {
+  transaction?: Transaction;
+}
 
 type TxTypeEntry = { id: TxType; label: string; sym: string };
 
@@ -25,48 +37,50 @@ const TX_TYPES: TxTypeEntry[] = [
 })
 export class TransactionDialogComponent {
   private readonly dialogRef   = inject(MatDialogRef<TransactionDialogComponent>);
+  private readonly data        = inject<TransactionDialogData>(MAT_DIALOG_DATA, { optional: true });
   private readonly envService  = inject(EnvelopeService);
   private readonly etfService  = inject(EtfService);
   private readonly txService   = inject(TransactionService);
+
+  protected readonly editing   = !!this.data?.transaction;
+  private readonly editingId   = this.data?.transaction?.id ?? null;
 
   protected readonly types     = TX_TYPES;
   protected readonly envelopes = this.envService.all;
   protected readonly etfs      = this.etfService.all;
 
-  protected type       = signal<TxType>('BUY');
-  protected envelopeId = signal('');
-  protected etfIsin    = signal('');
-  protected qty        = signal(1);
-  protected price      = signal(0);
-  protected date       = signal(new Date().toISOString().slice(0, 10));
-  protected fees       = signal(0);
-  protected amount     = signal(0);
+  protected type       = signal<TxType>(this.data?.transaction?.type ?? 'BUY');
+  protected envelopeId = signal(this.data?.transaction?.envelope ?? '');
+  protected etfIsin    = signal(this.data?.transaction?.etf ?? '');
+  protected qty        = signal(this.data?.transaction?.qty ?? 1);
+  protected price      = signal(this.data?.transaction?.price ?? 0);
+  protected date       = signal(this.data?.transaction?.date ?? new Date().toISOString().slice(0, 10));
+  protected fees       = signal(this.data?.transaction?.fees ?? 0);
+  protected amount     = signal(this.data?.transaction?.amount ?? 0);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
 
   constructor() {
-    // Seed selects from the first available envelope / ETF once the
-    // signals are populated (auth-bound API hydration may complete after
-    // the component is constructed).
-    effect(() => {
-      if (!this.envelopeId() && this.envelopes().length > 0) {
-        this.envelopeId.set(this.envelopes()[0].id);
-      }
-    });
-    effect(() => {
-      if (!this.etfIsin() && this.etfs().length > 0) {
-        this.etfIsin.set(this.etfs()[0].isin);
-      }
-    });
+    // Only auto-seed selects when creating; an edit always pre-fills the
+    // identifiers from the source transaction.
+    if (!this.editing) {
+      effect(() => {
+        if (!this.envelopeId() && this.envelopes().length > 0) {
+          this.envelopeId.set(this.envelopes()[0].id);
+        }
+      });
+      effect(() => {
+        if (!this.etfIsin() && this.etfs().length > 0) {
+          this.etfIsin.set(this.etfs()[0].isin);
+        }
+      });
+    }
   }
 
   protected readonly showAsset    = computed(() => ['BUY','SELL','DIVIDEND'].includes(this.type()));
   protected readonly showQtyPrice = computed(() => ['BUY','SELL'].includes(this.type()));
 
-  // Explicit `Envelope | undefined` return type: `noUncheckedIndexedAccess`
-  // is off, so without it `list[0]` would narrow back to `Envelope` and the
-  // template's `?.` guards would trigger NG8107 hints.
   protected readonly selectedEnv = computed<Envelope | undefined>(() => {
     const list = this.envelopes();
     return list.find(e => e.id === this.envelopeId()) ?? list[0];
@@ -117,9 +131,9 @@ export class TransactionDialogComponent {
   }
 
   protected async saveAndNew(): Promise<void> {
+    if (this.editing) return; // "Save + new" is meaningless in edit mode.
     const saved = await this.submit();
     if (!saved) return;
-    // Keep the dialog open; reset only the fields that should not carry over.
     this.qty.set(1);
     this.price.set(0);
     this.amount.set(0);
@@ -152,10 +166,14 @@ export class TransactionDialogComponent {
 
     this.submitting.set(true);
     try {
-      await this.txService.create(payload);
+      if (this.editing && this.editingId) {
+        await this.txService.update(this.editingId, payload);
+      } else {
+        await this.txService.create(payload);
+      }
       return true;
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors de la création';
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde';
       this.error.set(msg);
       return false;
     } finally {

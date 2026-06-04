@@ -95,8 +95,13 @@
                   {{ lbl.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
                 </span>
               </td>
-              <td style="width:30px" class="r">
-                <button class="btn sm ghost" style="padding:3px 8px">···</button>
+              <td style="width:80px" class="r">
+                <div style="display:inline-flex;gap:4px">
+                  <button class="btn sm ghost" style="padding:3px 8px" (click)="openEditTx(tx)"
+                          aria-label="Modifier la transaction" title="Modifier">✎</button>
+                  <button class="btn sm ghost" style="padding:3px 8px;color:var(--loss)" (click)="deleteTx(tx)"
+                          aria-label="Supprimer la transaction" title="Supprimer">×</button>
+                </div>
               </td>
             </tr>
           }

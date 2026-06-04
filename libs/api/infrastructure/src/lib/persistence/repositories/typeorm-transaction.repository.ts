@@ -49,4 +49,21 @@ export class TypeOrmTransactionRepository implements TransactionRepository {
     const saved: TransactionOrmEntity  = await this.repo.save(entity);
     return toDomain(saved);
   }
+
+  async updateForUser(
+    id: string,
+    userId: string,
+    patch: Partial<TransactionSeed>,
+  ): Promise<Transaction | null> {
+    const existing = await this.repo.findOne({ where: { id, userId } });
+    if (!existing) return null;
+    Object.assign(existing, patch as Partial<TransactionOrmEntity>);
+    const saved: TransactionOrmEntity = await this.repo.save(existing);
+    return toDomain(saved);
+  }
+
+  async deleteForUser(id: string, userId: string): Promise<boolean> {
+    const result = await this.repo.delete({ id, userId });
+    return (result.affected ?? 0) > 0;
+  }
 }
