@@ -24,8 +24,9 @@
             <app-ico [name]="item.icon" />
           </span>
           {{ item.label }}
-          @if (item.badge) {
-            <span class="badge" [attr.aria-label]="item.badge + ' en attente'">{{ item.badge }}</span>
+          @let b = badge(item.id);
+          @if (b) {
+            <span class="badge" [attr.aria-label]="b + ' en attente'">{{ b }}</span>
           }
         </a>
       }
