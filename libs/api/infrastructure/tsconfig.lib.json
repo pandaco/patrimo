@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "../../../dist/out-tsc",
     "declaration": true,
+    "composite": true,
     "types": ["node"],
     "target": "es2021",
     "experimentalDecorators": true,
@@ -11,7 +12,13 @@
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "api-domain": ["dist/libs/api/domain/src/index"]
+    }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    { "path": "../domain/tsconfig.lib.json" }
+  ]
 }

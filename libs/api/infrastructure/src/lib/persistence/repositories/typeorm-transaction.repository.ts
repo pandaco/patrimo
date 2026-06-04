@@ -1,0 +1,46 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Transaction, TransactionRepository, TransactionSeed } from 'api-domain';
+import { Repository } from 'typeorm';
+import { TransactionOrmEntity } from '../orm-entities/transaction.orm-entity';
+
+function toDomain(row: TransactionOrmEntity): Transaction {
+  return {
+    id: row.id,
+    userId: row.userId,
+    envelopeId: row.envelopeId,
+    etfIsin: row.etfIsin,
+    type: row.type,
+    date: row.date,
+    quantity: row.quantity,
+    price: row.price,
+    fees: row.fees,
+    amount: row.amount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+@Injectable()
+export class TypeOrmTransactionRepository implements TransactionRepository {
+  constructor(
+    @InjectRepository(TransactionOrmEntity)
+    private readonly repo: Repository<TransactionOrmEntity>,
+  ) {}
+
+  async findById(id: string): Promise<Transaction | null> {
+    const row = await this.repo.findOne({ where: { id } });
+    return row ? toDomain(row) : null;
+  }
+
+  async findByUserId(userId: string): Promise<Transaction[]> {
+    const rows = await this.repo.find({ where: { userId }, order: { date: 'DESC' } });
+    return rows.map(toDomain);
+  }
+
+  async create(seed: TransactionSeed): Promise<Transaction> {
+    const entity: TransactionOrmEntity = this.repo.create(seed as Partial<TransactionOrmEntity>);
+    const saved: TransactionOrmEntity  = await this.repo.save(entity);
+    return toDomain(saved);
+  }
+}
