@@ -1,3 +1,4 @@
+export * from './lib/alert.dto';
 export * from './lib/envelope.dto';
 export * from './lib/etf.dto';
 export * from './lib/position.dto';
