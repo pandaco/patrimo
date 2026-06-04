@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EnvelopeModule } from './envelopes/envelope.module';
 import { EtfModule } from './etfs/etf.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 import { TransactionModule } from './transactions/transaction.module';
 import { validateEnv } from './env.validation';
 
@@ -21,6 +22,7 @@ import { validateEnv } from './env.validation';
     EnvelopeModule,
     EtfModule,
     TransactionModule,
+    PortfolioModule,
   ],
   controllers: [AppController],
   providers: [AppService],

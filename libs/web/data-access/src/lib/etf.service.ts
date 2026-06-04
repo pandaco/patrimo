@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { EtfDto } from 'contracts';
+import { EtfDto, PositionDto } from 'contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { MOCK_SPARKS } from './mock-data';
@@ -16,12 +16,13 @@ export const etfPnlPct = (e: Etf) => {
 export const etfDayPct = (e: Etf) => (e.prev ? e.price / e.prev - 1 : 0);
 
 /**
- * The catalog DTO carries no per-user position data (qty, pru) and no
- * market data (price, prev, perf1y, perfYtd). Zero them until the Position
- * projection and the market-data provider land — components render `0` /
- * `—` instead of fictional numbers.
+ * Catalog rows are baseline ETFs with zeroed position + market fields. The
+ * `mergePosition()` helper layers per-user qty/pru on top, and a future
+ * market-data feed will fill in `price`, `prev`, `perf1y`, `perfYtd`.
+ * Until the market feed lands, `price` is set to `pru` so cost basis and
+ * current value match (PnL = 0) instead of inventing prices.
  */
-function fromDto(d: EtfDto): Etf {
+function fromCatalog(d: EtfDto): Etf {
   return {
     isin: d.isin,
     ticker: d.ticker,
@@ -43,6 +44,17 @@ function fromDto(d: EtfDto): Etf {
   };
 }
 
+function mergePosition(etf: Etf, position: PositionDto | undefined): Etf {
+  if (!position) return etf;
+  return {
+    ...etf,
+    qty:   position.qty,
+    pru:   position.avgPrice,
+    price: position.avgPrice,
+    prev:  position.avgPrice,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class EtfService {
   private readonly http    = inject(HttpClient);
@@ -53,9 +65,15 @@ export class EtfService {
   readonly sparks = signal<Record<string, number[]>>(MOCK_SPARKS);
 
   async reload(): Promise<void> {
-    const list = await firstValueFrom(
-      this.http.get<EtfDto[]>(`${this.baseUrl}/etfs`, { withCredentials: true }),
-    );
-    this._all.set(list.map(fromDto));
+    const [catalog, positions] = await Promise.all([
+      firstValueFrom(
+        this.http.get<EtfDto[]>(`${this.baseUrl}/etfs`, { withCredentials: true }),
+      ),
+      firstValueFrom(
+        this.http.get<PositionDto[]>(`${this.baseUrl}/portfolio`, { withCredentials: true }),
+      ),
+    ]);
+    const positionByIsin = new Map(positions.map(p => [p.etfIsin, p]));
+    this._all.set(catalog.map(c => mergePosition(fromCatalog(c), positionByIsin.get(c.isin))));
   }
 }
