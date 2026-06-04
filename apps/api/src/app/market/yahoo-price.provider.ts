@@ -4,8 +4,9 @@ import { Quote } from './price-cache.service';
 
 // yahoo-finance2 v3 dropped the default singleton in favour of an explicit
 // instance. Re-create one at module load so the provider keeps a single
-// pooled HTTP client across requests.
-const yahooFinance = new YahooFinance();
+// pooled HTTP client across requests. `suppressNotices` silences the
+// one-off survey banner the SDK prints to stdout on first use.
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
 
 function pickNumber(record: unknown, key: string): number | null {
   if (typeof record !== 'object' || record === null) return null;

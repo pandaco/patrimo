@@ -6,11 +6,13 @@ import {
   Post,
   Req,
   Res,
+  UseFilters,
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import type { CookieOptions, Request, Response } from 'express';
+import { GoogleAuthFilter } from './google-auth.filter';
 import { SessionGuard } from './session.guard';
 import { SessionService } from './session.service';
 import { SessionUser } from './session-user.decorator';
@@ -37,12 +39,14 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
+  @UseFilters(GoogleAuthFilter)
   googleLogin(): void {
     // Guard initiates redirect to Google.
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
+  @UseFilters(GoogleAuthFilter)
   googleCallback(
     @Req() req: Request & { user: AuthUser },
     @Res() res: Response,

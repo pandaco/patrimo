@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'data-access';
 
 @Component({
@@ -10,6 +12,12 @@ import { AuthService } from 'data-access';
         <div class="brand-mark" style="margin:0 auto 20px" aria-hidden="true">P</div>
         <h1 class="page-title" style="font-size:32px;margin-bottom:8px">Patrimo</h1>
         <p class="muted" style="margin-bottom:32px">Ton tracker patrimonial personnel</p>
+        @if (errorMessage()) {
+          <div role="alert"
+               style="margin-bottom:20px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px">
+            {{ errorMessage() }}
+          </div>
+        }
         <button
           type="button"
           class="btn primary"
@@ -25,7 +33,23 @@ import { AuthService } from 'data-access';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
-  private readonly auth = inject(AuthService);
+  private readonly auth   = inject(AuthService);
+  private readonly route  = inject(ActivatedRoute);
+
+  private readonly params = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+
+  protected readonly errorMessage = computed(() => {
+    const error = this.params().get('error');
+    if (!error) return null;
+    switch (error) {
+      case 'oauth_failed':
+        return 'La connexion Google a échoué (code expiré ou réutilisé). Réessaye.';
+      default:
+        return 'Une erreur est survenue lors de la connexion.';
+    }
+  });
 
   protected login(): void {
     this.auth.loginWithGoogle();
