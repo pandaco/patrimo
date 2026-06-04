@@ -1,0 +1,69 @@
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="env-modal-title">
+
+  <div class="modal-head">
+    <div>
+      <div style="font-size:11.5px;font-weight:500;color:var(--ink-3);margin-bottom:4px">Nouvelle enveloppe</div>
+      <div class="modal-title" id="env-modal-title">Ajoute un <em>compte</em></div>
+    </div>
+    <button class="btn ghost sm" (click)="close()" style="margin-left:auto" aria-label="Fermer le dialogue">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="field-row">
+      <div class="field">
+        <label for="env-code">Code court</label>
+        <input id="env-code" type="text" maxlength="32" placeholder="ex. PEA"
+               [ngModel]="code()" (ngModelChange)="code.set($event)" />
+      </div>
+      <div class="field">
+        <label for="env-glyph">Type</label>
+        <select id="env-glyph" [ngModel]="glyph()" (ngModelChange)="glyph.set($event)">
+          @for (g of glyphs; track g.value) {
+            <option [value]="g.value">{{ g.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="env-label">Nom complet</label>
+      <input id="env-label" type="text" maxlength="64" placeholder="ex. PEA Boursorama"
+             [ngModel]="label()" (ngModelChange)="label.set($event)" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="env-broker">Courtier / Banque</label>
+        <input id="env-broker" type="text" maxlength="128" placeholder="ex. Boursorama"
+               [ngModel]="broker()" (ngModelChange)="broker.set($event)" />
+      </div>
+      <div class="field">
+        <label for="env-opened">Ouverture</label>
+        <input id="env-opened" type="date"
+               [ngModel]="openedAt()" (ngModelChange)="openedAt.set($event)" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="env-plafond">Plafond (€) <span class="muted tiny">— optionnel</span></label>
+      <input id="env-plafond" type="number" step="100" class="num-input" placeholder="ex. 150000"
+             [ngModel]="plafond()" (ngModelChange)="plafond.set($event === null || $event === '' ? null : +$event)" />
+    </div>
+
+    @if (error()) {
+      <div role="alert" style="margin-top:12px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px">
+        {{ error() }}
+      </div>
+    }
+
+  </div>
+
+  <div class="modal-foot">
+    <button class="btn ghost"  (click)="close()" [disabled]="submitting()">Annuler</button>
+    <button class="btn primary" (click)="save()"  [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement…' : 'Créer l\'enveloppe' }}
+    </button>
+  </div>
+
+</div>

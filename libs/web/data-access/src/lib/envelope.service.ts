@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { CreateEnvelopeDto } from 'contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { Envelope } from './models';
@@ -26,5 +27,15 @@ export class EnvelopeService {
       this.http.get<Envelope[]>(`${this.baseUrl}/envelopes`, { withCredentials: true }),
     );
     this._all.set(list);
+  }
+
+  async create(input: CreateEnvelopeDto): Promise<Envelope> {
+    const created = await firstValueFrom(
+      this.http.post<Envelope>(`${this.baseUrl}/envelopes`, input, {
+        withCredentials: true,
+      }),
+    );
+    this._all.update(list => [...list, created]);
+    return created;
   }
 }

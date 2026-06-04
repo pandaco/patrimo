@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Envelope, EnvelopeRepository } from 'api-domain';
-import { EnvelopeDto } from 'contracts';
+import { CreateEnvelopeDto, EnvelopeDto } from 'contracts';
 import { ENVELOPE_REPOSITORY } from 'infrastructure';
 
 function toDto(envelope: Envelope): EnvelopeDto {
@@ -27,5 +27,21 @@ export class EnvelopeService {
   async listForUser(userId: string): Promise<EnvelopeDto[]> {
     const rows = await this.envelopes.findByUserId(userId);
     return rows.map(toDto);
+  }
+
+  async create(userId: string, input: CreateEnvelopeDto): Promise<EnvelopeDto> {
+    const created = await this.envelopes.create({
+      userId,
+      code: input.code,
+      glyph: input.glyph,
+      label: input.label,
+      broker: input.broker,
+      value: 0,
+      invested: 0,
+      cash: 0,
+      openedAt: new Date(input.openedAt),
+      plafond: input.plafond ?? null,
+    });
+    return toDto(created);
   }
 }

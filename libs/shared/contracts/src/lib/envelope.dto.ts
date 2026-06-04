@@ -11,3 +11,13 @@ export interface EnvelopeDto {
   openedAt: string;
   plafond: number | null;
 }
+
+export interface CreateEnvelopeDto {
+  code: string;
+  glyph: string;
+  label: string;
+  broker: string;
+  /** ISO date (YYYY-MM-DD). */
+  openedAt: string;
+  plafond?: number | null;
+}
