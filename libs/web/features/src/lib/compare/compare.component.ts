@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Etf, EtfService } from '@patrimo/data-access';
 import { fmtNum, fmtPctRaw } from '@patrimo/ui';
 
@@ -7,7 +8,7 @@ const MAX_SELECTION = 4;
 @Component({
   selector: 'app-compare',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './compare.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -17,10 +18,47 @@ export class CompareComponent {
   /** ISINs the user has put on the comparator. Capped at `MAX_SELECTION`. */
   protected readonly selectedIsins = signal<string[]>([]);
 
-  protected readonly catalog    = computed(() => this.etfSvc.all());
+  protected readonly filterOpen    = signal(false);
+  protected readonly filterPea     = signal<'all' | 'yes' | 'no'>('all');
+  protected readonly filterDistrib = signal<'all' | 'Capitalisant' | 'Distribuant'>('all');
+  protected readonly filterTerMax  = signal<number | null>(null);
+  protected readonly filterAlloc   = signal<'all' | 'Core' | 'Satellite' | 'Obligations'>('all');
+
+  protected readonly activeFilterCount = computed(() => {
+    let n = 0;
+    if (this.filterPea()     !== 'all') n++;
+    if (this.filterDistrib() !== 'all') n++;
+    if (this.filterTerMax()  !== null)  n++;
+    if (this.filterAlloc()   !== 'all') n++;
+    return n;
+  });
+
+  protected resetFilters(): void {
+    this.filterPea.set('all');
+    this.filterDistrib.set('all');
+    this.filterTerMax.set(null);
+    this.filterAlloc.set('all');
+  }
+
+  protected readonly catalog = computed(() => {
+    const all = this.etfSvc.all();
+    const pea  = this.filterPea();
+    const dist = this.filterDistrib();
+    const ter  = this.filterTerMax();
+    const alloc = this.filterAlloc();
+    return all.filter(e => {
+      if (pea  === 'yes' && !e.pea)                    return false;
+      if (pea  === 'no'  && e.pea)                     return false;
+      if (dist !== 'all' && e.distrib !== dist)         return false;
+      if (ter  !== null  && e.ter * 100 > ter)          return false;
+      if (alloc !== 'all' && e.alloc !== alloc)         return false;
+      return true;
+    });
+  });
+
   protected readonly candidates = computed(() => {
     const selected = new Set(this.selectedIsins());
-    return this.catalog().filter(e => selected.has(e.isin));
+    return this.etfSvc.all().filter(e => selected.has(e.isin));
   });
 
   protected readonly canAddMore = computed(() => this.selectedIsins().length < MAX_SELECTION);

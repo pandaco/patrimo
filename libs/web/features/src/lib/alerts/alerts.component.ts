@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AlertService } from '@patrimo/data-access';
 import { AlertRuleDto, AlertType } from '@patrimo/contracts';
 
@@ -18,19 +19,23 @@ const METAS: RuleMeta[] = [
   { type: 'DIVIDEND_RECENT',   label: 'Dividende reçu',     desc: 'Alerte si reçu il y a moins de X jours', unit: 'j', defaultThreshold: 7 },
   { type: 'PEA_AGE_NEAR',      label: 'Anniversaire PEA',   desc: 'Alerte 5 ans approche', unit: '', defaultThreshold: 1 },
   { type: 'USD_CONCENTRATION', label: 'Concentration USD',  desc: 'Alerte si exposition USD > X %', unit: '%', defaultThreshold: 70 },
+  { type: 'DCA_PENDING',       label: 'DCA mensuel',        desc: 'Alerte si aucun achat ce mois-ci (objectif mensuel configuré)', unit: '', defaultThreshold: 0 },
 ];
 
 @Component({
   selector: 'app-alerts',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './alerts.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlertsComponent {
   private readonly alertSvc = inject(AlertService);
+  @ViewChild('rulesTable', { read: ElementRef }) private rulesTableRef?: ElementRef;
 
-  protected readonly activeTab = signal<Tab>('unread');
+  protected readonly activeTab      = signal<Tab>('unread');
+  protected readonly editingType    = signal<AlertType | null>(null);
+  protected readonly editingValue   = signal<number>(0);
 
   protected readonly filteredAlerts = computed(() => {
     const tab = this.activeTab();
@@ -82,22 +87,34 @@ export class AlertsComponent {
     }
   }
 
-  protected async editThreshold(m: any): Promise<void> {
-    const val = prompt(`Nouveau seuil pour ${m.meta.label} (${m.meta.unit}) ?`, String(m.threshold));
-    if (val === null) return;
-    const num = parseFloat(val);
-    if (isNaN(num)) return;
+  protected startEditThreshold(m: any): void {
+    this.editingType.set(m.meta.type);
+    this.editingValue.set(m.threshold);
+  }
 
+  protected cancelEdit(): void {
+    this.editingType.set(null);
+  }
+
+  protected async commitEdit(m: any): Promise<void> {
+    const num = this.editingValue();
+    if (isNaN(num) || num < 0) return;
+    this.editingType.set(null);
     if (m.id) {
       await this.alertSvc.updateRule(m.id, { threshold: num });
     } else {
-      await this.alertSvc.createRule({
-        type: m.meta.type,
-        threshold: num,
-        channels: ['WEB'],
-        enabled: true,
-      });
+      await this.alertSvc.createRule({ type: m.meta.type, threshold: num, channels: ['WEB'], enabled: true });
     }
+  }
+
+  protected async editThreshold(m: any): Promise<void> {
+    this.startEditThreshold(m);
+  }
+
+  protected focusNewRule(): void {
+    this.rulesTableRef?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const firstDisabled = this.rulesWithMeta().find(m => !m.enabled);
+    if (firstDisabled) this.startEditThreshold(firstDisabled);
   }
 
   protected sevIcon(sev: string): string {

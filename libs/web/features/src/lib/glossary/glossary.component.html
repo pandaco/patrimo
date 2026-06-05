@@ -9,8 +9,18 @@
     </p>
   </div>
 
+  <div style="margin-bottom:20px">
+    <input type="search" class="search-query" placeholder="Rechercher un terme…"
+           style="width:100%;max-width:360px"
+           [ngModel]="query()" (ngModelChange)="query.set($event)" />
+  </div>
+
+  @if (filteredEntries().length === 0) {
+    <p class="muted" style="padding:20px 0">Aucun terme ne correspond à « {{ query() }} ».</p>
+  }
+
   <div class="grid cols-2">
-    @for (g of entries(); track g.term) {
+    @for (g of filteredEntries(); track g.term) {
       <div class="card">
         <div class="row" style="margin-bottom:10px">
           <span class="pill solid">{{ g.term }}</span>

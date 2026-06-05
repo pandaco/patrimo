@@ -57,7 +57,7 @@ export class KeyboardShortcutService {
 
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      this.document.querySelector<HTMLInputElement>('input[data-search]')?.focus();
+      this.openSearch();
       return;
     }
 
@@ -94,6 +94,17 @@ export class KeyboardShortcutService {
   private clearGMode(): void {
     this.gMode.set(false);
     if (this.gTimer) { clearTimeout(this.gTimer); this.gTimer = null; }
+  }
+
+  async openSearch(): Promise<void> {
+    if (this.dialog.openDialogs.length > 0) return;
+    const { SearchDialogComponent } = await import('../search/search-dialog.component');
+    this.dialog.open(SearchDialogComponent, {
+      panelClass: 'search-dialog-panel',
+      maxWidth: '580px',
+      width: '100%',
+      position: { top: '80px' },
+    });
   }
 
   async openTx(): Promise<void> {

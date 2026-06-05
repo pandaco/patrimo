@@ -1,8 +1,16 @@
 <div class="page">
 
+  @if (toastMsg(); as t) {
+    <div role="status" style="position:fixed;bottom:24px;right:24px;z-index:1000;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.18)"
+      [style.background]="t.ok ? 'var(--gain)' : 'var(--loss)'"
+      style="color:#fff">
+      {{ t.text }}
+    </div>
+  }
+
   <div class="page-head">
     <div class="page-eyebrow">Dollar Cost Averaging</div>
-    <h1 class="page-title">Lance ton <em>DCA</em> du mois.</h1>
+    <h1 class="page-title">Lance ton <em><span data-tip="Dollar Cost Averaging — stratégie d'investissement régulier d'un montant fixe, quelle que soit la valorisation du marché. Lisse le risque d'entrer au mauvais moment.">DCA</span></em> du mois.</h1>
     <p class="page-sub">
       Indique un montant, l'app le répartit selon ta cible. Avec correction,
       elle privilégie les ETF sous-pondérés ; sans correction, elle applique
@@ -77,8 +85,7 @@
         <div class="kv"><dt>Cash dispo {{ env.code }}</dt><dd>{{ fmtEur(env.cash, 2) }}</dd></div>
         <div class="kv"><dt>Cash après DCA</dt><dd [class.neg]="cashAfter() < 0">{{ fmtEur(cashAfter(), 2) }}</dd></div>
       }
-      <div class="kv"><dt>Frais estimés (Fortuneo)</dt><dd>{{ fmtEur(normalized().length * 0.99, 2) }}</dd></div>
-      <div class="kv"><dt>Net investi</dt><dd>{{ fmtNum(amount() - normalized().length * 0.99, 2) }} €</dd></div>
+      <div class="kv"><dt>Net investi</dt><dd>{{ fmtEur(amount() - normalized().length * 0.99, 2) }}</dd></div>
     </div>
 
     <!-- RIGHT: computed split -->
@@ -87,7 +94,7 @@
         <div class="card-title">Répartition <em>suggérée</em></div>
         <span class="card-sub">{{ normalized().length }} lignes · arrondi entier</span>
         <div class="card-right">
-          <a routerLink="/settings/preferences" fragment="allocation" class="btn sm">Modifier la cible</a>
+          <a routerLink="/settings/allocation" class="btn sm">Modifier la cible</a>
         </div>
       </div>
 
@@ -97,7 +104,7 @@
             <th>ETF</th>
             <th class="r">Cible</th>
             <th class="r">Réel</th>
-            <th class="r">Drift</th>
+            <th class="r"><span data-tip="Drift — écart entre ton poids réel et ton poids cible. L'app achète en priorité les ETF dont le drift est le plus négatif (sous-pondérés).">Drift</span></th>
             <th class="r">À acheter</th>
             <th class="r">Qté</th>
             <th>%</th>
@@ -144,7 +151,8 @@
 
       <div class="recap" style="margin-top:16px">
         <div class="recap-line"><span>Cash après opération</span><b>{{ fmtEur(cashAfter(), 2) }}</b></div>
-        <div class="recap-line"><span>Drift global après</span><b>réduit de 3,4 à 1,2 pts</b></div>
+        <div class="recap-line"><span>Drift moy. avant → après</span>
+          <b>{{ fmtNum(avgDriftBefore(), 1) }} → {{ fmtNum(avgDriftAfter(), 1) }} pts</b></div>
         <div class="recap-line"><span>Frais courtage estimés</span><b>{{ fmtEur(normalized().length * 0.99, 2) }}</b></div>
         <div class="recap-line total"><span><b>Vérification cohérence</b></span><span class="pill gain"><span class="dot"></span>OK</span></div>
       </div>

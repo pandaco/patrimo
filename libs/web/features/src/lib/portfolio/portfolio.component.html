@@ -52,33 +52,40 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
 
   <!-- STATS BAR -->
   <div class="card" style="padding:0;margin-bottom:24px">
-    <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
-      <div class="stat">
-        <div class="label">Valeur portefeuille</div>
-        <div class="value">{{ fmtEur(total(), 2) }}</div>
-        <div class="sub"><ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui</div>
+    @if (loading()) {
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr)">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="stat">
+            <div class="skeleton" style="height:12px;width:80px;margin-bottom:10px;border-radius:4px"></div>
+            <div class="skeleton" style="height:28px;width:120px;margin-bottom:8px;border-radius:4px"></div>
+            <div class="skeleton" style="height:12px;width:60px;border-radius:4px"></div>
+          </div>
+        }
       </div>
-      <div class="stat">
-        <div class="label">Coût total (PRU)</div>
-        <div class="value">{{ fmtEur(totalCost(), 2) }}</div>
-        <div class="sub">prix de revient</div>
+    } @else {
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr)">
+        <div class="stat">
+          <div class="label">Valeur portefeuille</div>
+          <div class="value">{{ fmtEur(total(), 2) }}</div>
+          <div class="sub"><ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui</div>
+        </div>
+        <div class="stat">
+          <div class="label">Coût total (PRU)</div>
+          <div class="value">{{ fmtEur(totalCost(), 2) }}</div>
+          <div class="sub">prix de revient</div>
+        </div>
+        <div class="stat">
+          <div class="label">PV latente</div>
+          <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
+          <div class="sub"><span class="pos">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span></div>
+        </div>
+        <div class="stat">
+          <div class="label">Dividendes 12M</div>
+          <div class="value">{{ fmtEur(dividends12M().total, 2) }}</div>
+          <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
+        </div>
       </div>
-      <div class="stat">
-        <div class="label">PV latente</div>
-        <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
-        <div class="sub"><span class="pos">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span></div>
-      </div>
-      <div class="stat">
-        <div class="label">PV réalisée YTD</div>
-        <div class="value">{{ fmtEur(542.10, 2) }}</div>
-        <div class="sub">ventes 2026</div>
-      </div>
-      <div class="stat">
-        <div class="label">Dividendes 12M</div>
-        <div class="value">{{ fmtEur(184.66, 2) }}</div>
-        <div class="sub">14 paiements</div>
-      </div>
-    </div>
+    }
   </div>
 
   <!-- POSITIONS TABLE -->
@@ -91,7 +98,7 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
           <button [class.active]="allocFilter() === tab" (click)="allocFilter.set(tab)">{{ tab }}</button>
         }
       </div>
-      <button class="btn sm">Exporter</button>
+      <button class="btn sm" (click)="exportCsv()">Exporter</button>
     </div>
   </div>
 
@@ -103,11 +110,11 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
           <th>Allocation</th>
           <th>Enveloppes</th>
           <th class="r">Qté</th>
-          <th class="r">PRU</th>
+          <th class="r"><span data-tip="Prix de Revient Unitaire — ton coût moyen d'achat par part, frais inclus. Tu es en gain si le cours actuel est au-dessus, en perte en dessous.">PRU</span></th>
           <th class="r">Cours</th>
           <th class="r">Jour</th>
           <th class="r">Valeur</th>
-          <th class="r">PV latente</th>
+          <th class="r"><span data-tip="Plus-Value latente — ton gain (ou perte) si tu vendais maintenant. Pas encore réalisé tant que tu gardes les parts.">PV latente</span></th>
           <th>Tendance 1A</th>
           <th>Poids</th>
         </tr>
@@ -122,7 +129,9 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
                   <span class="serif-italic" style="font-size:15px">{{ etf.name }}</span>
                 </div>
                 <div class="muted tiny" style="margin-top:3px">
-                  {{ etf.isin }} · {{ etf.issuer }} · TER {{ fmtNum(etf.ter * 100, 2) }} %
+                  <span data-tip="International Securities Identification Number — code unique à 12 caractères qui identifie ce titre boursier dans le monde entier.">{{ etf.isin }}</span>
+                  · {{ etf.issuer }} ·
+                  <span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span> {{ fmtNum(etf.ter * 100, 2) }} %
                 </div>
               </div>
             </td>
@@ -186,5 +195,52 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
       </div>
     }
   </div>
+
+  <!-- POSITIONS FERMÉES -->
+  @if (closedPositions().length > 0) {
+    <div class="section-head" style="margin-top:32px">
+      <h2 class="section-title">Positions <em>fermées</em></h2>
+      <span class="section-sub">PV/MV réalisées · méthode coût moyen</span>
+    </div>
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>ETF</th>
+            <th class="r">Coût d'achat</th>
+            <th class="r">Produit de cession</th>
+            <th class="r">PV / MV réalisée</th>
+            <th class="r">Dernière vente</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of closedPositions(); track p.isin) {
+            <tr>
+              <td>
+                <span class="pill solid">{{ p.ticker }}</span>
+                <span class="muted small" style="margin-left:8px">{{ p.name }}</span>
+              </td>
+              <td class="r num muted">{{ fmtEur(p.buyCost, 2) }}</td>
+              <td class="r num">{{ fmtEur(p.sellProceeds, 2) }}</td>
+              <td class="r num" [class.pos]="p.realizedPnl >= 0" [class.neg]="p.realizedPnl < 0">
+                {{ p.realizedPnl >= 0 ? '+' : '' }}{{ fmtEur(p.realizedPnl, 2) }}
+              </td>
+              <td class="r muted small">{{ p.lastSell }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          @let closedTotal = closedPositions().reduce((a, p) => a + p.realizedPnl, 0);
+          <tr style="background:var(--paper-2)">
+            <td colspan="3" class="r"><b>Total réalisé</b></td>
+            <td class="r num" [class.pos]="closedTotal >= 0" [class.neg]="closedTotal < 0">
+              <b>{{ closedTotal >= 0 ? '+' : '' }}{{ fmtEur(closedTotal, 2) }}</b>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  }
 
 </div>

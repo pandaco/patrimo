@@ -101,9 +101,12 @@ export const appRoutes: Route[] = [
       {
         path: 'settings/preferences',
         loadComponent: () =>
-          import('@patrimo/features').then(
-            (m) => m.PreferencesComponent,
-          ),
+          import('@patrimo/features').then((m) => m.PreferencesComponent),
+      },
+      {
+        path: 'settings/allocation',
+        loadComponent: () =>
+          import('@patrimo/features').then((m) => m.AllocationSettingsComponent),
       },
     ],
   },

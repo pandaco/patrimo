@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { EnvelopeService, EtfService, TransactionService, DividendService, DcaPlanService } from '@patrimo/data-access';
 import { fmtEur } from '@patrimo/ui';
 
@@ -202,6 +202,15 @@ export class CalendarComponent {
   );
 
   protected readonly milestoneCount = computed(() => this.milestoneEvents().length);
+
+  protected readonly selectedEvent = signal<CalEvent | null>(null);
+
+  protected selectCell(event: CalEvent | undefined): void {
+    if (!event) return;
+    this.selectedEvent.update((prev: CalEvent | null) => prev?.date === event.date && prev?.label === event.label ? null : event);
+  }
+
+  protected closePopover(): void { this.selectedEvent.set(null); }
 
   protected readonly fmtEur = fmtEur;
   protected readonly eventColor = eventColor;

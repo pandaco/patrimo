@@ -1,8 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertService, EnvelopeService, EtfService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertType, PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
+
+const DASH_PERIODS: { id: PerformancePeriod; label: string }[] = [
+  { id: '1M', label: '1M' },
+  { id: '3M', label: '3M' },
+  { id: '6M', label: '6M' },
+  { id: '1Y', label: '1A' },
+  { id: 'YTD', label: 'YTD' },
+  { id: 'MAX', label: 'MAX' },
+];
 
 const GLYPH_COLORS: Record<string, string> = {
   pea:'#16A34A', peapme:'#15803D', cto:'#EA580C', av:'#7C3AED',
@@ -23,6 +33,15 @@ export class DashboardComponent {
   private readonly txService  = inject(TransactionService);
   private readonly alerts     = inject(AlertService);
   private readonly perfSvc    = inject(PerformanceService);
+  private readonly auth       = inject(AuthService);
+  protected readonly fx       = inject(FxService);
+
+  protected readonly firstName      = computed(() => this.auth.user()?.firstName ?? '');
+  protected readonly fxRate         = this.fx.rate;
+  protected readonly displayCurrency = this.fx.displayCurrency;
+  protected readonly todayLabel = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
 
   protected readonly envAll       = this.envelopes.all;
   protected readonly envLoading   = this.envelopes.loading;
@@ -54,8 +73,19 @@ export class DashboardComponent {
   protected readonly recentTx     = computed(() => this.txService.all().slice(0, 5));
   protected readonly txLabels     = this.txService.labels;
 
-  protected readonly perfPortfolio = computed(() => this.perfSvc.series().portfolio);
-  protected readonly perfBenchmark = computed(() => this.perfSvc.series().benchmark);
+  protected readonly perfPortfolio  = computed(() => this.perfSvc.series().portfolio);
+  protected readonly perfBenchmark  = computed(() => this.perfSvc.series().benchmark);
+  protected readonly dashPeriods    = DASH_PERIODS;
+  protected readonly dashPeriod     = this.perfSvc.period;
+  protected readonly annualized     = computed(() => this.perfSvc.raw().annualized);
+
+  protected readonly portfolioPct = computed(() => {
+    const pts = this.perfPortfolio();
+    if (pts.length < 2) return null;
+    const start = pts.find(v => v > 0) ?? 0;
+    const end   = pts[pts.length - 1];
+    return start ? (end / start - 1) * 100 : null;
+  });
 
   protected readonly donutData = computed(() =>
     this.envelopes.all().map(e => ({ value: e.value, color: GLYPH_COLORS[e.glyph] ?? '#999' }))
@@ -83,5 +113,25 @@ export class DashboardComponent {
 
   protected sevIcon(sev: string): string {
     return sev === 'warn' ? '!' : sev === 'gain' ? '✓' : 'i';
+  }
+
+  protected setPeriod(id: PerformancePeriod): void {
+    this.perfSvc.setPeriod(id);
+  }
+
+  protected async dismissAlert(id: string): Promise<void> {
+    await this.alerts.dismiss(id);
+  }
+
+  protected alertRoute(type: AlertType): string {
+    switch (type) {
+      case 'CASH_IDLE':         return '/tools/allocation';
+      case 'PLAFOND_NEAR':      return '/wealth';
+      case 'DIVIDEND_RECENT':   return '/transactions';
+      case 'PEA_AGE_NEAR':      return '/wealth';
+      case 'USD_CONCENTRATION': return '/tools/allocation';
+      case 'DCA_PENDING':       return '/transactions';
+      default:                  return '/tools/alerts';
+    }
   }
 }

@@ -37,6 +37,14 @@
               {{ fmtPct(portfolioPct(), 2) }}
             </span>
           </span>
+          @if (annualized() !== null) {
+            <span class="row" style="gap:6px">
+              <span class="muted tiny" data-tip="Taux de croissance annuel composé — rendement annuel moyen équivalent. Ex : +12 % CAGR sur 3 ans = comme si le portefeuille avait gagné 12 % chaque année.">CAGR</span>
+              <span class="num small" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
+                {{ fmtPct(annualized()!, 2) }}/an
+              </span>
+            </span>
+          }
           @if (hasBenchmark()) {
             <span class="row" style="gap:6px">
               <span style="width:14px;height:2px;background:var(--ink-3);display:inline-block;border-top:1px dashed var(--ink-3)"></span>
@@ -46,7 +54,7 @@
               </span>
             </span>
             <span class="row" style="gap:6px">
-              <span class="muted tiny">Alpha</span>
+              <span class="muted tiny" data-tip="Surperformance par rapport à l'indice MSCI World (CW8). +2 pts = ton portefeuille a gagné 2 % de plus que l'indice sur la période.">Alpha</span>
               <ui-delta [value]="alphaPct()" suffix=" pts" [digits]="2" />
             </span>
           }
@@ -73,6 +81,7 @@
         <tr>
           <th>Période</th>
           <th class="r">Portefeuille</th>
+          <th class="r"><span data-tip="Taux de croissance annuel composé — rendement annuel moyen équivalent. Affiché uniquement si la période dépasse 1 an.">CAGR</span></th>
           <th class="r">Statut</th>
           <th></th>
         </tr>
@@ -86,6 +95,13 @@
             <td class="r">
               @if (row.active) {
                 <span class="num" [class.pos]="row.pct >= 0" [class.neg]="row.pct < 0">{{ fmtPct(row.pct, 2) }}</span>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="r">
+              @if (row.active && annualized() !== null) {
+                <span class="num small" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">{{ fmtPct(annualized()!, 2) }}</span>
               } @else {
                 <span class="muted">—</span>
               }
@@ -108,13 +124,94 @@
     </table>
   </div>
 
+  <!-- PERIOD STATS -->
+  @if (periodStats(); as stats) {
+    <div class="section-head" style="margin-top:24px">
+      <h2 class="section-title">Statistiques <em>détaillées</em></h2>
+      <span class="section-sub">{{ activePeriod() }} · taux sans risque 2,5 %</span>
+    </div>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap;gap:20px 36px">
+        <div class="stat-block">
+          <div class="k"><span data-tip="Amplitude moyenne des variations quotidiennes extrapolée sur 1 an. 15 % = les fluctuations journalières représentent environ 15 % par an. Plus faible = portefeuille plus stable.">Volatilité ann.</span></div>
+          <div class="v">{{ fmtPct(stats.volatility, 1) }}</div>
+        </div>
+        <div class="stat-block">
+          <div class="k"><span data-tip="Rapport rendement/risque (Sharpe). Mesure combien de rendement tu obtiens par unité de risque pris. Au-dessus de 1 = bon, au-dessus de 2 = excellent.">Sharpe ratio</span></div>
+          <div class="v" [class.pos]="(stats.sharpe ?? 0) > 0" [class.neg]="(stats.sharpe ?? 0) < 0">
+            {{ stats.sharpe !== null ? fmtNum(stats.sharpe, 2) : '—' }}
+          </div>
+        </div>
+        <div class="stat-block">
+          <div class="k"><span data-tip="Rendement annualisé divisé par le pire drawdown. Mesure l'efficacité du portefeuille par rapport à sa pire perte observée. Plus élevé = mieux.">Calmar ratio</span></div>
+          <div class="v" [class.pos]="(stats.calmar ?? 0) > 0" [class.neg]="(stats.calmar ?? 0) < 0">
+            {{ stats.calmar !== null ? fmtNum(stats.calmar, 2) : '—' }}
+          </div>
+        </div>
+        <div class="stat-block">
+          <div class="k"><span data-tip="Part des séances où le portefeuille a progressé. 55 % = hausse 55 jours sur 100. Au-dessus de 50 % = plus de bons jours que de mauvais.">Win rate</span></div>
+          <div class="v">{{ fmtPct(stats.winRate, 0) }}</div>
+          <div class="sub">séances positives</div>
+        </div>
+        @if (stats.bestMonth) {
+          <div class="stat-block">
+            <div class="k">Meilleur mois</div>
+            <div class="v pos">{{ fmtPct(stats.bestMonth.pct, 1) }}</div>
+            <div class="sub">{{ stats.bestMonth.label }}</div>
+          </div>
+        }
+        @if (stats.worstMonth) {
+          <div class="stat-block">
+            <div class="k">Pire mois</div>
+            <div class="v neg">{{ fmtPct(stats.worstMonth.pct, 1) }}</div>
+            <div class="sub">{{ stats.worstMonth.label }}</div>
+          </div>
+        }
+      </div>
+
+      @if (stats.monthlyRows.length >= 2) {
+        <div style="margin-top:20px;overflow-x:auto">
+          <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Rendements mensuels</div>
+          <table class="tbl" style="font-size:11px;min-width:600px">
+            <thead>
+              <tr>
+                <th style="width:52px">Année</th>
+                @for (m of MONTHS_SHORT; track m) { <th class="r" style="width:48px">{{ m }}</th> }
+                <th class="r" style="width:58px">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of stats.monthlyRows; track row.year) {
+                <tr>
+                  <td class="muted">{{ row.year }}</td>
+                  @for (pct of row.months; track $index) {
+                    <td class="r" style="padding:3px 5px;border-radius:3px" [style.background]="heatmapBg(pct)">
+                      @if (pct !== null) {
+                        <span [class.pos]="pct >= 0" [class.neg]="pct < 0">{{ fmtPct(pct, 1) }}</span>
+                      } @else {
+                        <span class="muted tiny">—</span>
+                      }
+                    </td>
+                  }
+                  <td class="r num small" [class.pos]="(row.yearTotal ?? 0) >= 0" [class.neg]="(row.yearTotal ?? 0) < 0">
+                    {{ row.yearTotal !== null ? fmtPct(row.yearTotal, 1) : '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
   <!-- BOTTOM 2 CARDS -->
   <div class="grid cols-2" style="margin-top:24px">
 
     <!-- Drawdowns -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">Drawdowns</div>
+        <div class="card-title"><span data-tip="Chute maximale depuis un plus haut. Ex : -10 % = à son pire moment, le portefeuille avait perdu 10 % depuis son dernier sommet. Montre la perte 'dans le ventre' que tu aurais dû encaisser.">Drawdowns</span></div>
         <span class="card-sub">top 3 sur la période</span>
       </div>
       @if (drawdowns().length === 0) {
@@ -153,10 +250,98 @@
         <li><b>Quantité à chaque date</b> : reconstituée en marchant les transactions BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
         <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
         <li><b>Benchmark</b> : Amundi <code>CW8.PA</code> (MSCI World), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position est détenue. L'écart entre les deux courbes = ton alpha.</li>
-        <li><b>Frais et fiscalité</b> : hors valorisation pour le moment. Les frais de courtage sont déjà inscrits dans les transactions BUY.</li>
+        <li><b>TD</b> : return 1A ETF − return 1A CW8 (proxy). <b>TE</b> : écart-type annualisé des différences de rendements quotidiens vs CW8 (≈ std dev × √252).</li>
+        <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur transactions BUY/SELL de l'année.</li>
       </ul>
     </div>
 
+  </div>
+
+  <!-- TRACKING DIFFERENCE + FRAIS -->
+  <div class="grid cols-2" style="margin-top:24px">
+
+    <!-- ETF Stats (TD/TE) -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Tracking difference par ETF</div>
+        <span class="card-sub">vs CW8 MSCI World · 1 an</span>
+      </div>
+      @if (loadingStats()) {
+        <p class="muted small">Chargement…</p>
+      } @else if (etfStats().length === 0) {
+        <p class="muted small">Aucune position trouvée.</p>
+      } @else {
+        <table class="tbl" style="font-size:12px">
+          <thead>
+            <tr>
+              <th>ETF</th>
+              <th class="r">Return 1A</th>
+              <th class="r"><span data-tip="Tracking Difference — écart entre la performance de l'ETF et celle de son indice (CW8) sur 1 an. Un TD négatif (-0,1 %) signifie que l'ETF fait légèrement mieux que son indice. Idéalement proche de 0.">TD</span></th>
+              <th class="r"><span data-tip="Tracking Error — volatilité de l'écart de suivi au fil du temps. Plus faible = l'ETF réplique son indice de façon régulière et prévisible.">TE</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of etfStats(); track s.ticker) {
+              <tr>
+                <td><span class="pill solid">{{ s.ticker }}</span></td>
+                <td class="r num small" [class.pos]="(s.return1y ?? 0) >= 0" [class.neg]="(s.return1y ?? 0) < 0">
+                  {{ s.return1y !== null ? fmtPct(s.return1y, 1) : '—' }}
+                </td>
+                <td class="r num small" [class.pos]="(s.td ?? 0) >= 0" [class.neg]="(s.td ?? 0) < 0">
+                  {{ s.td !== null ? fmtPctRaw(s.td, 2) : '—' }}
+                </td>
+                <td class="r num small muted">
+                  {{ s.te !== null ? fmtPctRaw(s.te, 2) : '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Frais cumulés YTD -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Frais cumulés <em>YTD</em></div>
+        <span class="card-sub">TER drag + courtage depuis le 1er janv.</span>
+      </div>
+      @if (loadingFees()) {
+        <p class="muted small">Chargement…</p>
+      } @else {
+        <div class="row" style="gap:24px;margin-bottom:14px">
+          <div class="stat-block">
+            <div class="k"><span data-tip="Frottement des frais de gestion sur la valeur actuelle des positions. C'est le coût réel du TER depuis le 1er janvier — de l'argent qui quitte silencieusement le fonds chaque jour.">TER drag</span></div>
+            <div class="v neg">{{ fmtEur(fees().terDragYtd, 2) }}</div>
+          </div>
+          <div class="stat-block">
+            <div class="k">Courtage</div>
+            <div class="v neg">{{ fmtEur(fees().brokerageYtd, 2) }}</div>
+          </div>
+          <div class="stat-block">
+            <div class="k">Total</div>
+            <div class="v neg bold">{{ fmtEur(fees().totalYtd, 2) }}</div>
+          </div>
+        </div>
+        @if (fees().byEtf.length > 0) {
+          <table class="tbl" style="font-size:12px">
+            <thead>
+              <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1er janvier de l'année.">Drag YTD</span></th></tr>
+            </thead>
+            <tbody>
+              @for (r of fees().byEtf; track r.ticker) {
+                <tr>
+                  <td><span class="pill solid">{{ r.ticker }}</span></td>
+                  <td class="r muted small">{{ fmtPctRaw(r.ter, 2) }}</td>
+                  <td class="r num small">{{ fmtEur(r.value, 0) }}</td>
+                  <td class="r num small neg">{{ fmtEur(r.terDragYtd, 2) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+    </div>
   </div>
 
 </div>

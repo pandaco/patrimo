@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService } from '@patrimo/data-access';
-import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
+import { BarComponent, fmtEur, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -13,7 +13,7 @@ const INVESTABLE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
 @Component({
   selector: 'app-dca',
   standalone: true,
-  imports: [FormsModule, RouterLink, BarComponent, EnvGlyphComponent, DatePipe, KeyValuePipe],
+  imports: [FormsModule, RouterLink, BarComponent, DatePipe, KeyValuePipe],
   templateUrl: './dca.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -95,9 +95,34 @@ export class DcaComponent {
     this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price), 0),
   );
 
+  protected readonly toastMsg  = signal<{ text: string; ok: boolean } | null>(null);
+
+  protected showToast(text: string, ok = true): void {
+    this.toastMsg.set({ text, ok });
+    setTimeout(() => this.toastMsg.set(null), 3000);
+  }
+
   protected readonly cashAfter = computed(() => {
     const env = this.selectedEnvelope();
     return env ? env.cash - this.totalSpent() : 0;
+  });
+
+  protected readonly avgDriftBefore = computed(() => {
+    const rows = this.rows();
+    if (!rows.length) return 0;
+    return rows.reduce((a, r) => a + Math.abs(r.drift), 0) / rows.length;
+  });
+
+  protected readonly avgDriftAfter = computed(() => {
+    const newTotal = this.total() + this.totalSpent();
+    if (!newTotal) return 0;
+    const rows = this.normalized();
+    if (!rows.length) return 0;
+    return rows.reduce((a, r) => {
+      const spent  = this.qty(r.eur, r.e.price) * r.e.price;
+      const newPct = ((etfValue(r.e) + spent) / newTotal) * 100;
+      return a + Math.abs(newPct - r.target);
+    }, 0) / rows.length;
   });
 
   protected readonly fmtEur    = fmtEur;
@@ -132,10 +157,10 @@ export class DcaComponent {
         dayOfMonth: this.dayOfMonth(),
         allocations,
       });
-      alert('Plan DCA mensuel programmé avec succès.');
+      this.showToast('Plan DCA mensuel programmé.');
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la sauvegarde du plan.');
+      this.showToast('Erreur lors de la sauvegarde.', false);
     }
   }
 

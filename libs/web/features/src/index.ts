@@ -1,4 +1,5 @@
 export * from './lib/preferences/preferences.component';
+export * from './lib/preferences/allocation-settings.component';
 export * from './lib/wealth/wealth.component';
 export * from './lib/calendar/calendar.component';
 export * from './lib/alerts/alerts.component';

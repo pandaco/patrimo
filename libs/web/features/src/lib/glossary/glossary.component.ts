@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { GlossaryService } from '@patrimo/data-access';
 
 const ENVELOPE_DEFS = [
@@ -16,12 +17,22 @@ const ENVELOPE_DEFS = [
 @Component({
   selector: 'app-glossary',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './glossary.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GlossaryComponent {
   private readonly svc = inject(GlossaryService);
-  protected readonly entries = this.svc.all;
   protected readonly envelopes = ENVELOPE_DEFS;
+
+  protected readonly query          = signal('');
+  protected readonly filteredEntries = computed(() => {
+    const q = this.query().toLowerCase().trim();
+    if (!q) return this.svc.all();
+    return this.svc.all().filter(e =>
+      e.term.toLowerCase().includes(q) ||
+      e.title.toLowerCase().includes(q) ||
+      e.body.toLowerCase().includes(q),
+    );
+  });
 }

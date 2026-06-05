@@ -22,28 +22,66 @@
       <span class="card-sub">total {{ fmtEur(total(), 0) }}</span>
       <div class="card-right">
         <div class="segmented">
-          <button class="active">Par famille</button>
-          <button>Par devise</button>
-          <button>Par liquidité</button>
+          <button [class.active]="activeView() === 'famille'"   (click)="activeView.set('famille')">Par famille</button>
+          <button [class.active]="activeView() === 'devise'"    (click)="activeView.set('devise')">Par devise</button>
+          <button [class.active]="activeView() === 'liquidité'" (click)="activeView.set('liquidité')">Par liquidité</button>
         </div>
       </div>
     </div>
-    <div class="bar-stack" style="height:20px;margin-top:6px">
-      @for (row of families(); track row.family.label) {
-        <span [style.width.%]="row.pct" [style.background]="row.family.color"></span>
+    @if (activeView() === 'famille') {
+      <div class="bar-stack" style="height:20px;margin-top:6px">
+        @for (row of families(); track row.family.label) {
+          <span [style.width.%]="row.pct" [style.background]="row.family.color"></span>
+        }
+      </div>
+      <div style="display:flex;gap:32px;margin-top:14px;font-size:13px;flex-wrap:wrap">
+        @for (row of families(); track row.family.label) {
+          <div class="row gap-12">
+            <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.family.color"></span>
+            <span style="font-weight:500">{{ row.family.label }}</span>
+            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
+            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+          </div>
+        }
+      </div>
+    }
+    @if (activeView() === 'devise') {
+      <div class="bar-stack" style="height:20px;margin-top:6px">
+        @for (row of currencyRows(); track row.label) {
+          <span [style.width.%]="row.pct" [style.background]="row.color"></span>
+        }
+      </div>
+      <div style="display:flex;gap:32px;margin-top:14px;font-size:13px;flex-wrap:wrap">
+        @for (row of currencyRows(); track row.label) {
+          <div class="row gap-12">
+            <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.color"></span>
+            <span style="font-weight:500">{{ row.label }}</span>
+            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
+            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+          </div>
+        }
+      </div>
+      @if (currencyRows().length === 0) {
+        <p class="muted small" style="margin-top:12px">Aucune position de marché trouvée.</p>
       }
-    </div>
-    <div style="display:flex;gap:32px;margin-top:14px;font-size:13px;flex-wrap:wrap">
-      @for (row of families(); track row.family.label) {
-        <div class="row gap-12">
-          <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0"
-            [style.background]="row.family.color"></span>
-          <span style="font-weight:500">{{ row.family.label }}</span>
-          <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
-          <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
-        </div>
-      }
-    </div>
+    }
+    @if (activeView() === 'liquidité') {
+      <div class="bar-stack" style="height:20px;margin-top:6px">
+        @for (row of liquidityRows(); track row.label) {
+          <span [style.width.%]="row.pct" [style.background]="row.color"></span>
+        }
+      </div>
+      <div style="display:flex;gap:32px;margin-top:14px;font-size:13px;flex-wrap:wrap">
+        @for (row of liquidityRows(); track row.label) {
+          <div class="row gap-12">
+            <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.color"></span>
+            <span style="font-weight:500">{{ row.label }}</span>
+            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
+            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+          </div>
+        }
+      </div>
+    }
   </div>
 
   <!-- FAMILIES -->
@@ -76,7 +114,9 @@
           </div>
         </div>
         <div>
-          <button class="btn sm">+ Ajouter</button>
+          <button class="btn sm" (click)="openAddTx(row.envelopes[0])"
+                  [disabled]="row.envelopes.length === 0"
+                  title="Ajouter une transaction sur cette famille">+ Ajouter</button>
         </div>
       </div>
     </div>
@@ -120,6 +160,8 @@
               <span class="num" style="margin-left:auto">{{ fmtPctRaw(capPct(env)!, 0) }}</span>
             </div>
           }
+          <button class="btn sm ghost" style="margin-top:14px;width:100%"
+                  (click)="openAddTx(env)">+ Ajouter une transaction</button>
         </div>
       }
     </div>

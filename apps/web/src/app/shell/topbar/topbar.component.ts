@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AlertService, EtfService } from '@patrimo/data-access';
-import { AppIconComponent } from '@patrimo/ui';
+import { AppIconComponent, KeyboardShortcutService } from '@patrimo/ui';
 
 @Component({
   selector: 'app-topbar',
@@ -17,11 +17,14 @@ export class TopbarComponent {
 
   private readonly etfSvc   = inject(EtfService);
   private readonly alertSvc = inject(AlertService);
+  private readonly kb       = inject(KeyboardShortcutService);
 
   protected readonly refreshing  = signal(false);
   protected readonly notifOpen   = signal(false);
   protected readonly unreadCount = this.alertSvc.unreadCount;
   protected readonly alerts      = this.alertSvc.all;
+
+  protected openSearch(): void { this.kb.openSearch(); }
 
   protected async refresh(): Promise<void> {
     if (this.refreshing()) return;

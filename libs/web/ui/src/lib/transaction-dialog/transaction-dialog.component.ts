@@ -15,6 +15,7 @@ import { fmtEur, fmtNum, fmtPctRaw } from '../format';
 
 export interface TransactionDialogData {
   transaction?: Transaction;
+  presetEnvelopeId?: string;
 }
 
 type TxTypeEntry = { id: TxType; label: string; sym: string };
@@ -50,7 +51,7 @@ export class TransactionDialogComponent {
   protected readonly etfs      = this.etfService.all;
 
   protected type       = signal<TxType>(this.data?.transaction?.type ?? 'BUY');
-  protected envelopeId = signal(this.data?.transaction?.envelope ?? '');
+  protected envelopeId = signal(this.data?.transaction?.envelope ?? this.data?.presetEnvelopeId ?? '');
   protected etfIsin    = signal(this.data?.transaction?.etf ?? '');
   protected qty        = signal(this.data?.transaction?.qty ?? 1);
   protected price      = signal(this.data?.transaction?.price ?? 0);

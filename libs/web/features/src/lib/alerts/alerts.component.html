@@ -60,11 +60,11 @@
         <h2 class="section-title">Règles</h2>
         <span class="section-sub">configurables</span>
         <div class="section-right">
-          <button class="btn sm">+ Nouvelle règle</button>
+          <button class="btn sm" (click)="focusNewRule()">+ Nouvelle règle</button>
         </div>
       </div>
       <div class="card" style="padding:4px 12px">
-        <table class="tbl tbl-compact">
+        <table class="tbl tbl-compact" #rulesTable>
           <tbody>
             @for (m of rulesWithMeta(); track m.meta.type) {
               <tr [style.opacity]="m.enabled ? 1 : 0.5">
@@ -84,15 +84,26 @@
                   <div style="font-size:13px">{{ m.meta.label }}</div>
                   <div class="muted tiny">{{ m.meta.desc }}</div>
                 </td>
-                <td class="r">
-                  <div class="num small muted" 
-                       style="cursor:pointer;text-decoration:underline dashed"
-                       (click)="editThreshold(m)"
-                       (keydown.enter)="editThreshold(m)"
-                       tabindex="0"
-                       role="button">
-                    {{ m.threshold }} {{ m.meta.unit }}
-                  </div>
+                <td class="r" style="white-space:nowrap">
+                  @if (editingType() === m.meta.type) {
+                    <span style="display:inline-flex;align-items:center;gap:4px">
+                      <input type="number" class="num-input" style="width:70px;text-align:right"
+                             [ngModel]="editingValue()" (ngModelChange)="editingValue.set(+$event)"
+                             (keydown.enter)="commitEdit(m)" (keydown.escape)="cancelEdit()"
+                             #threshInput />
+                      <span class="muted tiny">{{ m.meta.unit }}</span>
+                      <button class="btn sm" (click)="commitEdit(m)">✓</button>
+                      <button class="btn ghost sm" (click)="cancelEdit()">✕</button>
+                    </span>
+                  } @else {
+                    <div class="num small muted"
+                         style="cursor:pointer;text-decoration:underline dashed"
+                         (click)="startEditThreshold(m)"
+                         (keydown.enter)="startEditThreshold(m)"
+                         tabindex="0" role="button">
+                      {{ m.threshold }} {{ m.meta.unit }}
+                    </div>
+                  }
                 </td>
               </tr>
             }

@@ -27,7 +27,7 @@
     <div style="margin-left:auto;display:flex;gap:6px">
       <input type="file" #fileInput hidden (change)="importFile($event)" accept=".csv">
       <button class="btn sm" (click)="fileInput.click()">Import CSV</button>
-      <button class="btn sm">Exporter</button>
+      <button class="btn sm" (click)="exportCsv()">Exporter</button>
     </div>
   </div>
 
@@ -36,12 +36,47 @@
     <div class="row">
       <span class="pill gain"><span class="dot"></span>Cohérence OK</span>
       <span class="muted small">Solde cash recalculé = somme des mouvements · Aucun écart détecté</span>
-      <button class="btn sm ghost" style="margin-left:auto">Détails ↓</button>
+      <button class="btn sm ghost" style="margin-left:auto" (click)="showCashDetails.set(!showCashDetails())">
+        {{ showCashDetails() ? 'Fermer ↑' : 'Détails ↓' }}
+      </button>
     </div>
+    @if (showCashDetails()) {
+      <div style="margin-top:14px;overflow-x:auto">
+        <table class="tbl" style="font-size:12px">
+          <thead>
+            <tr>
+              <th>Enveloppe</th>
+              <th class="r">Dépôts</th>
+              <th class="r">Retraits</th>
+              <th class="r">Achats</th>
+              <th class="r">Ventes</th>
+              <th class="r">Div/Int</th>
+              <th class="r">Solde cash</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of cashDetails(); track row.envId) {
+              @let env = getEnv(row.envId);
+              <tr>
+                <td>{{ env?.code ?? row.envId }}</td>
+                <td class="r num small pos">+{{ fmtEur(row.deposits, 0) }}</td>
+                <td class="r num small neg">−{{ fmtEur(row.withdrawals, 0) }}</td>
+                <td class="r num small neg">−{{ fmtEur(row.buys, 0) }}</td>
+                <td class="r num small pos">+{{ fmtEur(row.sells, 0) }}</td>
+                <td class="r num small pos">+{{ fmtEur(row.dividends, 0) }}</td>
+                <td class="r num" [class.pos]="row.cashBalance >= 0" [class.neg]="row.cashBalance < 0">
+                  {{ fmtEur(row.cashBalance, 2) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   </div>
 
   <!-- TX GROUPS -->
-  @for (group of groups(); track group.month) {
+  @for (group of pagedGroups(); track group.month) {
     <div style="margin-bottom:22px">
       <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
         <span class="serif-italic" style="font-size:18px;text-transform:capitalize">{{ group.label }}</span>
@@ -111,8 +146,10 @@
     </div>
   }
 
-  <div class="row" style="justify-content:center;margin-top:24px">
-    <button class="btn">Charger 30 mouvements de plus</button>
-  </div>
+  @if (hasMore()) {
+    <div class="row" style="justify-content:center;margin-top:24px">
+      <button class="btn" (click)="loadMore()">Charger 30 mouvements de plus</button>
+    </div>
+  }
 
 </div>

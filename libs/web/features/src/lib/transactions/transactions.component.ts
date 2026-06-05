@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, EtfService, TransactionService, Transaction, TxType } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, TransactionService, Transaction, TxType, API_BASE_URL } from '@patrimo/data-access';
 import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
+import { firstValueFrom } from 'rxjs';
 
 type FilterType = TxType | 'ALL';
 
@@ -31,9 +33,11 @@ export interface TxGroup {
 })
 export class TransactionsComponent {
   protected readonly txSvc  = inject(TransactionService);
-  private readonly envSvc = inject(EnvelopeService);
-  private readonly etfSvc = inject(EtfService);
-  private readonly dialog = inject(MatDialog);
+  private readonly envSvc  = inject(EnvelopeService);
+  private readonly etfSvc  = inject(EtfService);
+  private readonly dialog  = inject(MatDialog);
+  private readonly http    = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL);
 
   protected readonly filters   = FILTER_OPTIONS;
   protected readonly activeFilter = signal<FilterType>('ALL');
@@ -59,10 +63,7 @@ export class TransactionsComponent {
     for (const tx of filtered) {
       const key = tx.date.slice(0, 7);
       let bucket = map.get(key);
-      if (!bucket) {
-        bucket = [];
-        map.set(key, bucket);
-      }
+      if (!bucket) { bucket = []; map.set(key, bucket); }
       bucket.push(tx);
     }
 
@@ -75,6 +76,56 @@ export class TransactionsComponent {
         const total = sorted.reduce((a, t) => a + (lbls[t.type].dir === '+' ? 1 : -1) * t.amount, 0);
         return { month, label, total, txs: sorted };
       });
+  });
+
+  protected readonly displayCount = signal(30);
+
+  protected readonly pagedGroups = computed<TxGroup[]>(() => {
+    let remaining = this.displayCount();
+    const result: TxGroup[] = [];
+    for (const g of this.groups()) {
+      if (remaining <= 0) break;
+      if (g.txs.length <= remaining) {
+        result.push(g);
+        remaining -= g.txs.length;
+      } else {
+        result.push({ ...g, txs: g.txs.slice(0, remaining) });
+        remaining = 0;
+      }
+    }
+    return result;
+  });
+
+  protected readonly hasMore = computed(() =>
+    this.groups().reduce((a, g) => a + g.txs.length, 0) > this.displayCount(),
+  );
+
+  protected loadMore(): void { this.displayCount.update(c => c + 30); }
+
+  // Cash coherence details
+  protected readonly showCashDetails = signal(false);
+
+  protected readonly cashDetails = computed(() => {
+    const lbls = this.labels;
+    const envMap = new Map<string, { dep: number; wit: number; buy: number; sel: number; div: number }>();
+    for (const tx of this.txSvc.all()) {
+      const e = envMap.get(tx.envelope) ?? { dep: 0, wit: 0, buy: 0, sel: 0, div: 0 };
+      if (tx.type === 'DEPOSIT')    e.dep += tx.amount;
+      if (tx.type === 'WITHDRAWAL') e.wit += tx.amount;
+      if (tx.type === 'BUY')        e.buy += tx.amount;
+      if (tx.type === 'SELL')       e.sel += tx.amount;
+      if (tx.type === 'DIVIDEND' || tx.type === 'INTEREST') e.div += tx.amount;
+      envMap.set(tx.envelope, e);
+    }
+    return Array.from(envMap.entries()).map(([envId, f]) => ({
+      envId,
+      deposits:     f.dep,
+      withdrawals:  f.wit,
+      buys:         f.buy,
+      sells:        f.sel,
+      dividends:    f.div,
+      cashBalance:  f.dep - f.wit - f.buy + f.sel + f.div,
+    })).sort((a, b) => Math.abs(b.cashBalance) - Math.abs(a.cashBalance));
   });
 
   protected readonly fmtEur  = fmtEur;
@@ -123,6 +174,16 @@ export class TransactionsComponent {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Suppression impossible');
     }
+  }
+
+  protected async exportCsv(): Promise<void> {
+    const blob = await firstValueFrom(
+      this.http.get(`${this.baseUrl}/transactions/export`, { responseType: 'blob' }),
+    );
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href = url; a.download = 'transactions.csv'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   protected async importFile(event: Event): Promise<void> {

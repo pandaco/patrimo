@@ -13,19 +13,13 @@
   </nav>
 
   <div class="topbar-right">
-    <label class="search">
+    <button class="search search-trigger" (click)="openSearch()" aria-keyshortcuts="Meta+K Control+K" aria-label="Recherche globale (⌘K)">
       <span aria-hidden="true" style="display:inline-flex">
         <app-ico name="search" />
       </span>
-      <span class="sr-only">Recherche</span>
-      <input
-        type="search"
-        data-search
-        placeholder="Rechercher ETF, ISIN, transaction…"
-        aria-keyshortcuts="Meta+K Control+K"
-      />
+      <span class="search-placeholder">Rechercher ETF, ISIN, transaction…</span>
       <span class="kbd" aria-hidden="true">⌘K</span>
-    </label>
+    </button>
 
     <button class="btn ghost" (click)="refresh()" [disabled]="refreshing()"
             aria-label="Rafraîchir les prix" title="Rafraîchir les prix (bypass cache)">

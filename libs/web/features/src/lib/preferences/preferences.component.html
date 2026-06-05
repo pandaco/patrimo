@@ -4,13 +4,11 @@
     <div class="page-eyebrow">Paramètres</div>
     <h1 class="page-title">Tes <em>préférences</em></h1>
     <p class="page-sub">
-      Profil de risque, horizon, objectif mensuel, devise et cible
-      d'allocation. Stockés côté serveur, reflétés partout (sidebar,
-      dashboard, DCA helper, page Allocation).
+      Profil de risque, horizon, objectif mensuel et devise d'affichage.
+      Stockés côté serveur, reflétés dans le dashboard et le DCA helper.
     </p>
   </div>
 
-  <!-- SCALAR PREFS -->
   <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
     <div class="card-head">
       <div class="card-title">Profil <em>investisseur</em></div>
@@ -48,91 +46,16 @@
                [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set(+$event)" />
       </div>
     </div>
-  </div>
 
-  <!-- ALLOCATION TARGETS -->
-  <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
-    <div class="card-head">
-      <div class="card-title">Cible <em>d'allocation</em></div>
-      <span class="card-sub">stratégique / tactique / par ETF</span>
+    <div class="divider-soft" style="margin:20px 0 16px"></div>
+
+    <div class="row" style="align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13.5px;font-weight:500">Cibles d'allocation</div>
+        <div class="muted tiny" style="margin-top:2px">Stratégique · Tactique · Par ETF · Par enveloppe</div>
+      </div>
+      <a routerLink="/settings/allocation" class="btn sm">Modifier →</a>
     </div>
-
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
-      Stratégique
-      <span class="num small" [class.pos]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
-            style="margin-left:8px">Σ = {{ strategicSum() }} %</span>
-    </h3>
-    <div class="field-row">
-      <div class="field">
-        <label for="pref-stocks">Actions (%)</label>
-        <input id="pref-stocks" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set(+$event)" />
-      </div>
-      <div class="field">
-        <label for="pref-bonds-strat">Obligations (%)</label>
-        <input id="pref-bonds-strat" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set(+$event)" />
-      </div>
-    </div>
-
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
-      Tactique
-      <span class="num small" [class.pos]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
-            style="margin-left:8px">Σ = {{ tacticSum() }} %</span>
-    </h3>
-    <div class="field-row">
-      <div class="field">
-        <label for="pref-core">Core (%)</label>
-        <input id="pref-core" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="corePct()" (ngModelChange)="corePct.set(+$event)" />
-      </div>
-      <div class="field">
-        <label for="pref-sat">Satellite (%)</label>
-        <input id="pref-sat" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set(+$event)" />
-      </div>
-      <div class="field">
-        <label for="pref-bonds-tac">Obligations (%)</label>
-        <input id="pref-bonds-tac" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set(+$event)" />
-      </div>
-    </div>
-
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 10px">
-      Par ETF
-      <span class="num small" [class.pos]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
-            style="margin-left:8px">Σ = {{ etfSum() }} %</span>
-      <span class="muted tiny" style="margin-left:8px">(laisse vide pour ignorer)</span>
-    </h3>
-
-    @if (etfTargets().length === 0) {
-      <p class="muted small">Aucun ETF dans le catalogue.</p>
-    } @else {
-      <table class="tbl" style="font-size:13px">
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th class="r" style="width:120px">Cible %</th>
-            <th class="r" style="width:60px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of etfTargets(); track row.ticker) {
-            <tr>
-              <td><span class="pill solid">{{ row.ticker }}</span></td>
-              <td class="r">
-                <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
-                       [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
-              </td>
-              <td class="r">
-                <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
-                        (click)="removeEtf(row.ticker)" aria-label="Retirer cet ETF" title="Retirer">×</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    }
   </div>
 
   @if (error()) {
