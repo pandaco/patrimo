@@ -1,8 +1,15 @@
-import { Injectable, signal } from '@angular/core';
-import { Dividend } from './models';
-import { MOCK_DIVIDENDS } from './mock-data';
+import { inject, Injectable } from '@angular/core';
+import { httpResource } from '@angular/core/http';
+import { DividendDto } from 'contracts';
 
 @Injectable({ providedIn: 'root' })
 export class DividendService {
-  readonly calendarEvents = signal<Dividend[]>(MOCK_DIVIDENDS);
+  private readonly resource = httpResource<DividendDto[]>(() => '/api/portfolio/dividends');
+
+  readonly upcoming = this.resource.computed(() => this.resource.value() ?? []);
+
+  refresh() {
+    this.resource.reload();
+  }
 }
+

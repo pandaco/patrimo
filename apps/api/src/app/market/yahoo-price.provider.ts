@@ -37,7 +37,7 @@ export class YahooPriceProvider {
   async fetchMetadata(symbol: string): Promise<any> {
     try {
       const response = await yahooFinance.quoteSummary(symbol, {
-        modules: ['assetProfile', 'fundProfile', 'fundProfile'],
+        modules: ['assetProfile', 'fundProfile', 'summaryDetail', 'calendarEvents'],
       });
       return response;
     } catch (err) {

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
-import { PositionDto, PortfolioExposureDto, ExposureDto, RebalancePlanDto, RebalanceTransactionDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto, ExposureDto, RebalancePlanDto, RebalanceTransactionDto, DividendDto } from 'contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 import { PriceService } from '../market/price.service';
 import { PreferencesService } from '../preferences/preferences.service';
@@ -231,5 +231,46 @@ export class PortfolioService {
       totalValue,
       transactions: transactions.sort((a, b) => b.amount - a.amount),
     };
+  }
+
+  async getUpcomingDividends(userId: string): Promise<DividendDto[]> {
+    const positions = await this.listForUser(userId);
+    const etfs = await this.etfRepo.findAll();
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+
+    const dividends: DividendDto[] = [];
+
+    for (const p of positions) {
+      const etf = etfByIsin.get(p.etfIsin);
+      if (!etf) continue;
+
+      const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
+      if (!meta) continue;
+
+      const calendar = meta.calendarEvents;
+      const summary = meta.summaryDetail;
+
+      if (calendar?.dividendExDate) {
+        dividends.push({
+          date: new Date(calendar.dividendExDate).toISOString().slice(0, 10),
+          ticker: etf.ticker,
+          name: etf.name,
+          amount: calendar.dividendAmount ?? summary?.dividendRate ?? 0,
+          currency: etf.currency,
+          status: 'CONFIRMED',
+        });
+      } else if (summary?.exDividendDate) {
+        dividends.push({
+          date: new Date(summary.exDividendDate * 1000).toISOString().slice(0, 10),
+          ticker: etf.ticker,
+          name: etf.name,
+          amount: summary.dividendRate ?? 0,
+          currency: etf.currency,
+          status: 'ESTIMATED',
+        });
+      }
+    }
+
+    return dividends.sort((a, b) => a.date.localeCompare(b.date));
   }
 }

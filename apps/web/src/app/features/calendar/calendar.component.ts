@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { EnvelopeService, EtfService, TransactionService } from 'data-access';
+import { EnvelopeService, EtfService, TransactionService, DividendService } from 'data-access';
 import { fmtEur } from 'ui';
 
 type EventType = 'DIV' | 'MARK';
@@ -45,6 +45,7 @@ export class CalendarComponent {
   private readonly txSvc  = inject(TransactionService);
   private readonly envSvc = inject(EnvelopeService);
   private readonly etfSvc = inject(EtfService);
+  private readonly divSvc = inject(DividendService);
 
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 
@@ -79,11 +80,12 @@ export class CalendarComponent {
 
   private readonly today = new Date().toISOString().slice(0, 10);
 
-  /** Past dividend events derived from the user's transaction history. */
+  /** Past dividend events derived from the user's transaction history + upcoming from API. */
   private readonly dividendEvents = computed<CalEvent[]>(() => {
     const tickers = this.etfByIsin();
     const envs    = this.envById();
-    return this.txSvc.all()
+
+    const past = this.txSvc.all()
       .filter(tx => tx.type === 'DIVIDEND' && tx.etf)
       .map(tx => {
         const ticker = (tx.etf && tickers.get(tx.etf)) || (tx.etf ?? '');
@@ -94,9 +96,20 @@ export class CalendarComponent {
           label: `Dividende ${ticker} · ${fmtEur(tx.amount, 2)}`,
           envCode: env?.code ?? '',
           amount: tx.amount,
-          past: tx.date <= this.today,
+          past: true,
         };
       });
+
+    const upcoming = this.divSvc.upcoming().map(d => ({
+      date: d.date,
+      type: 'DIV' as const,
+      label: `Dividende ${d.ticker} · ${fmtEur(d.amount, 2)} (est.)`,
+      envCode: '?',
+      amount: d.amount,
+      past: false,
+    }));
+
+    return [...past, ...upcoming];
   });
 
   /**
