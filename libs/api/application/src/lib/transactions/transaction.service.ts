@@ -30,6 +30,25 @@ function toPatch(input: UpdateTransactionDto): Partial<TransactionSeed> {
   return patch;
 }
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result.map(val => val.replace(/^"|"$/g, '').trim());
+}
+
 @Injectable()
 export class TransactionService {
   constructor(
@@ -67,8 +86,24 @@ export class TransactionService {
     return this.transactions.deleteForUser(id, userId);
   }
 
+  async exportCsv(userId: string): Promise<string> {
+    const rows = await this.transactions.findByUserId(userId);
+    const header = 'Date,Type,Enveloppe ID,ISIN,Quantité,Prix (€),Frais (€),Montant (€)\n';
+    const lines = rows.map(tx => [
+      tx.date.toISOString().slice(0, 10),
+      tx.type,
+      tx.envelopeId,
+      tx.etfIsin ?? '',
+      tx.quantity,
+      tx.price ?? '',
+      tx.fees,
+      tx.amount,
+    ].join(','));
+    return header + lines.join('\n');
+  }
+
   async importCsv(userId: string, csv: string): Promise<{ count: number }> {
-    const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('date,'));
+    const lines = csv.split('\n').map(l => l.trim()).filter(Boolean);
     const [userEnvelopes, allEtfs] = await Promise.all([
       this.envelopes.findByUserId(userId),
       this.etfs.findAll(),
@@ -79,7 +114,10 @@ export class TransactionService {
 
     let count = 0;
     for (const line of lines) {
-      const [date, type, envCode, ticker, qty, price, fees, amount] = line.split(',');
+      const parsed = parseCsvLine(line);
+      if (parsed.length === 0 || parsed[0].toLowerCase() === 'date') continue;
+      
+      const [date, type, envCode, ticker, qty, price, fees, amount] = parsed;
       
       const envelopeId = envMap.get(envCode);
       if (!envelopeId) continue;

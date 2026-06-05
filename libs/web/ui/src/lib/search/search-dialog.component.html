@@ -1,0 +1,59 @@
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Recherche globale">
+  <div class="search-input-row">
+    <span class="search-icon" aria-hidden="true"><app-ico name="search" /></span>
+    <input
+      #queryInput
+      type="search"
+      class="search-query"
+      placeholder="Rechercher ETF, ISIN, enveloppe, transaction…"
+      autocomplete="off"
+      spellcheck="false"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event); onQueryChange()"
+      (keydown)="onKeydown($event)"
+      aria-label="Recherche"
+      aria-autocomplete="list"
+      [attr.aria-activedescendant]="results().length ? 'search-result-' + activeIdx() : null"
+    />
+    <button class="btn ghost sm search-close" (click)="close()" aria-label="Fermer">
+      <ui-kbd>Esc</ui-kbd>
+    </button>
+  </div>
+
+  @if (query().trim().length > 0 && query().trim().length < 2) {
+    <div class="search-hint">Tape au moins 2 caractères…</div>
+  } @else if (query().trim().length >= 2 && results().length === 0) {
+    <div class="search-hint">Aucun résultat pour « {{ query().trim() }} »</div>
+  } @else if (results().length > 0) {
+    <ul class="search-results" role="listbox" aria-label="Résultats">
+      @for (r of results(); track r.key; let i = $index) {
+        <li
+          [id]="'search-result-' + i"
+          class="search-result"
+          [class.active]="activeIdx() === i"
+          role="option"
+          [attr.aria-selected]="activeIdx() === i"
+          (click)="navigate(r)"
+          (mouseenter)="activeIdx.set(i)"
+        >
+          <span class="search-result-icon" aria-hidden="true">
+            <app-ico [name]="kindIcon(r.kind)" />
+          </span>
+          <span class="search-result-body">
+            <span class="search-result-primary">{{ r.primary }}</span>
+            <span class="search-result-secondary">{{ r.secondary }}</span>
+          </span>
+          <span class="pill solid search-result-badge">{{ r.badge }}</span>
+          <span class="search-result-arrow" aria-hidden="true">↵</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="search-hint search-hint--empty">
+      <span>Rechercher dans</span>
+      <span class="pill">ETF / ISIN</span>
+      <span class="pill">Enveloppes</span>
+      <span class="pill">Transactions</span>
+    </div>
+  }
+</div>
