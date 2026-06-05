@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { PositionDto, PortfolioExposureDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto, RebalancePlanDto } from 'contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -29,5 +29,10 @@ export class PortfolioController {
   @Get('exposure')
   getExposure(@SessionUser() user: AuthUser): Promise<PortfolioExposureDto> {
     return this.portfolio.calculateExposure(user.id);
+  }
+
+  @Get('rebalance')
+  getRebalance(@SessionUser() user: AuthUser): Promise<RebalancePlanDto> {
+    return this.portfolio.getRebalancePlan(user.id);
   }
 }

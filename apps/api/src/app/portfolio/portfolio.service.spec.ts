@@ -3,6 +3,7 @@ import type { Etf, Transaction, TxType } from 'api-domain';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 import { PriceService } from '../market/price.service';
 import { PortfolioService } from './portfolio.service';
+import { PreferencesService } from '../preferences/preferences.service';
 
 function tx(overrides: Partial<Transaction>): Transaction {
   return {
@@ -44,13 +45,15 @@ function etf(overrides: Partial<Etf>): Etf {
 describe('PortfolioService', () => {
   let service: PortfolioService;
   let txRepo:  { findByUserId: jest.Mock };
-  let etfRepo: { findAll:      jest.Mock };
-  let prices:  { getQuote:     jest.Mock };
+  let etfRepo: { findAll:      jest.Mock; updateExposure: jest.Mock };
+  let prices:  { getQuote:     jest.Mock; getMetadata: jest.Mock };
+  let prefs:   { get:          jest.Mock };
 
   beforeEach(async () => {
     txRepo  = { findByUserId: jest.fn() };
-    etfRepo = { findAll:      jest.fn() };
-    prices  = { getQuote:     jest.fn().mockResolvedValue({ price: null, prevClose: null }) };
+    etfRepo = { findAll:      jest.fn(), updateExposure: jest.fn() };
+    prices  = { getQuote:     jest.fn().mockResolvedValue({ price: null, prevClose: null }), getMetadata: jest.fn() };
+    prefs   = { get:          jest.fn() };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -58,6 +61,7 @@ describe('PortfolioService', () => {
         { provide: TRANSACTION_REPOSITORY, useValue: txRepo  },
         { provide: ETF_REPOSITORY,         useValue: etfRepo },
         { provide: PriceService,           useValue: prices  },
+        { provide: PreferencesService,     useValue: prefs   },
       ],
     }).compile();
 

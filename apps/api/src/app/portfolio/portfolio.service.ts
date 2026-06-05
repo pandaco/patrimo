@@ -1,8 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
-import { PositionDto, PortfolioExposureDto, ExposureDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto, ExposureDto, RebalancePlanDto, RebalanceTransactionDto } from 'contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 import { PriceService } from '../market/price.service';
+import { PreferencesService } from '../preferences/preferences.service';
 
 interface PositionAccumulator {
   qty:      number;
@@ -35,6 +36,7 @@ export class PortfolioService {
     @Inject(TRANSACTION_REPOSITORY) private readonly txRepo: TransactionRepository,
     @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
     private readonly priceService: PriceService,
+    private readonly preferences: PreferencesService,
   ) {}
 
   async listForUser(userId: string): Promise<PositionDto[]> {
@@ -181,5 +183,53 @@ export class PortfolioService {
     if (asset?.country) geo[asset.country] = 1;
 
     return { geo, sector, currency };
+  }
+
+  async getRebalancePlan(userId: string): Promise<RebalancePlanDto> {
+    const [positions, prefs] = await Promise.all([
+      this.listForUser(userId),
+      this.preferences.get(userId),
+    ]);
+
+    const targets = prefs.allocationTargets?.etf;
+    if (!targets || Object.keys(targets).length === 0) {
+      return { totalValue: 0, transactions: [] };
+    }
+
+    const totalValue = positions.reduce((sum, p) => sum + p.qty * (p.currentPrice ?? 0), 0);
+    if (totalValue === 0) return { totalValue: 0, transactions: [] };
+
+    const transactions: RebalanceTransactionDto[] = [];
+
+    for (const [isin, targetWeightPct] of Object.entries(targets)) {
+      const pos = positions.find(p => p.etfIsin === isin);
+      const currentPrice = pos?.currentPrice ?? 0;
+      if (currentPrice === 0) continue;
+
+      const currentWeight = (pos ? pos.qty * currentPrice : 0) / totalValue;
+      const targetWeight = targetWeightPct / 100;
+      const targetValue = totalValue * targetWeight;
+      const diffValue = targetValue - (pos ? pos.qty * currentPrice : 0);
+
+      const qtyDiff = Math.round(diffValue / currentPrice);
+      if (qtyDiff === 0) continue;
+
+      transactions.push({
+        etfIsin: isin,
+        ticker: pos?.ticker ?? '',
+        name: pos?.name ?? '',
+        action: qtyDiff > 0 ? 'BUY' : 'SELL',
+        qty: Math.abs(qtyDiff),
+        price: currentPrice,
+        amount: Math.abs(qtyDiff * currentPrice),
+        currentWeight,
+        targetWeight,
+      });
+    }
+
+    return {
+      totalValue,
+      transactions: transactions.sort((a, b) => b.amount - a.amount),
+    };
   }
 }
