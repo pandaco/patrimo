@@ -44,6 +44,13 @@ export class EtfOrmEntity {
   @Column({ type: 'varchar', length: 16 })
   alloc!: 'Core' | 'Satellite' | 'Obligations';
 
+  @Column({ type: 'jsonb', nullable: true })
+  exposure?: {
+    geo: Record<string, number>;
+    sector: Record<string, number>;
+    currency: Record<string, number>;
+  };
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

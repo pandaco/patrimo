@@ -12,7 +12,7 @@ export class PriceService {
 
   async getQuote(isin: string, ticker: string): Promise<Quote> {
     const symbol = toYahooSymbol(isin, ticker);
-    const hit = await this.cache.get(symbol);
+    const hit = await this.cache.getQuote(symbol);
     if (hit) return hit;
     return this.refresh(symbol);
   }
@@ -20,6 +20,17 @@ export class PriceService {
   /** Bypass the cache, fetch a fresh quote from Yahoo and overwrite the cached entry. */
   async refreshQuote(isin: string, ticker: string): Promise<Quote> {
     return this.refresh(toYahooSymbol(isin, ticker));
+  }
+
+  async getMetadata(isin: string, ticker: string): Promise<any> {
+    const symbol = toYahooSymbol(isin, ticker);
+    const key = `meta:${symbol}`;
+    const hit = await this.cache.get<any>(key);
+    if (hit) return hit;
+
+    const fresh = await this.provider.fetchMetadata(symbol);
+    if (fresh) await this.cache.set(key, fresh, 86400 * 7); // 1 week
+    return fresh;
   }
 
   /** Daily close history for the last `days` days. Cached in Redis 24 h. */
@@ -34,7 +45,7 @@ export class PriceService {
 
   private async refresh(symbol: string): Promise<Quote> {
     const fresh = await this.provider.fetch(symbol);
-    await this.cache.set(symbol, fresh);
+    await this.cache.setQuote(symbol, fresh);
     return fresh;
   }
 }

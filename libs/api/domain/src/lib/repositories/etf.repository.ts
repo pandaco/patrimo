@@ -6,4 +6,5 @@ export interface EtfRepository {
   findAll(): Promise<Etf[]>;
   findByIsin(isin: string): Promise<Etf | null>;
   upsert(seed: EtfSeed): Promise<Etf>;
+  updateExposure(isin: string, exposure: Etf['exposure']): Promise<void>;
 }

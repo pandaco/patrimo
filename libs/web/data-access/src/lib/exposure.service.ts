@@ -1,10 +1,20 @@
-import { Injectable, signal } from '@angular/core';
-import { Exposure } from './models';
-import { MOCK_EXPOSURE_GEO, MOCK_EXPOSURE_SECTOR, MOCK_EXPOSURE_CURR } from './mock-data';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { httpResource } from '@angular/core/http';
+import { PortfolioExposureDto } from 'contracts';
+import { map } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ExposureService {
-  readonly geo    = signal<Exposure[]>(MOCK_EXPOSURE_GEO);
-  readonly sector = signal<Exposure[]>(MOCK_EXPOSURE_SECTOR);
-  readonly curr   = signal<Exposure[]>(MOCK_EXPOSURE_CURR);
+  private readonly http = inject(HttpClient);
+
+  private readonly resource = httpResource<PortfolioExposureDto>(() => '/api/portfolio/exposure');
+
+  readonly geo    = this.resource.computed(() => this.resource.value()?.geo ?? []);
+  readonly sector = this.resource.computed(() => this.resource.value()?.sector ?? []);
+  readonly curr   = this.resource.computed(() => this.resource.value()?.currency ?? []);
+
+  refresh() {
+    this.resource.reload();
+  }
 }

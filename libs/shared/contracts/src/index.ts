@@ -5,3 +5,4 @@ export * from './lib/performance.dto';
 export * from './lib/position.dto';
 export * from './lib/transaction.dto';
 export * from './lib/user-preferences.dto';
+export * from './lib/exposure.dto';

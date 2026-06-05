@@ -5,12 +5,12 @@ import { YahooPriceProvider } from './yahoo-price.provider';
 
 describe('PriceService', () => {
   let service:  PriceService;
-  let cache:    { get: jest.Mock; set: jest.Mock; invalidate: jest.Mock };
-  let provider: { fetch: jest.Mock };
+  let cache:    { get: jest.Mock; set: jest.Mock; getQuote: jest.Mock; setQuote: jest.Mock; invalidate: jest.Mock };
+  let provider: { fetch: jest.Mock; fetchMetadata: jest.Mock };
 
   beforeEach(async () => {
-    cache    = { get: jest.fn(), set: jest.fn(), invalidate: jest.fn() };
-    provider = { fetch: jest.fn() };
+    cache    = { get: jest.fn(), set: jest.fn(), getQuote: jest.fn(), setQuote: jest.fn(), invalidate: jest.fn() };
+    provider = { fetch: jest.fn(), fetchMetadata: jest.fn() };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -25,17 +25,17 @@ describe('PriceService', () => {
 
   it('returns the cached quote and does not touch Yahoo on a hit', async () => {
     const cached: Quote = { price: 42, prevClose: 41 };
-    cache.get.mockResolvedValue(cached);
+    cache.getQuote.mockResolvedValue(cached);
 
     const result = await service.getQuote('ISIN-ESE', 'ESE');
 
     expect(result).toBe(cached);
     expect(provider.fetch).not.toHaveBeenCalled();
-    expect(cache.set).not.toHaveBeenCalled();
+    expect(cache.setQuote).not.toHaveBeenCalled();
   });
 
   it('fetches from Yahoo and writes through to the cache on a miss', async () => {
-    cache.get.mockResolvedValue(null);
+    cache.getQuote.mockResolvedValue(null);
     const fresh: Quote = { price: 50, prevClose: 49 };
     provider.fetch.mockResolvedValue(fresh);
 
@@ -43,7 +43,7 @@ describe('PriceService', () => {
 
     expect(result).toEqual(fresh);
     expect(provider.fetch).toHaveBeenCalledWith('ESE.PA');
-    expect(cache.set).toHaveBeenCalledWith('ESE.PA', fresh);
+    expect(cache.setQuote).toHaveBeenCalledWith('ESE.PA', fresh);
   });
 
   it('refreshQuote always bypasses the cache and writes the new value through', async () => {
@@ -53,8 +53,8 @@ describe('PriceService', () => {
     const result = await service.refreshQuote('ISIN-ESE', 'ESE');
 
     expect(result).toEqual(fresh);
-    expect(cache.get).not.toHaveBeenCalled();
+    expect(cache.getQuote).not.toHaveBeenCalled();
     expect(provider.fetch).toHaveBeenCalledWith('ESE.PA');
-    expect(cache.set).toHaveBeenCalledWith('ESE.PA', fresh);
+    expect(cache.setQuote).toHaveBeenCalledWith('ESE.PA', fresh);
   });
 });

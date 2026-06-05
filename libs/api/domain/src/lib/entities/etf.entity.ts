@@ -12,6 +12,11 @@ export interface Etf {
   distrib: string;
   pea: boolean;
   alloc: EtfAllocation;
+  exposure?: {
+    geo: Record<string, number>;
+    sector: Record<string, number>;
+    currency: Record<string, number>;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

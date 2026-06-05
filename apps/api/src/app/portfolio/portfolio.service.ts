@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
-import { PositionDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto, ExposureDto } from 'contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -100,5 +100,86 @@ export class PortfolioService {
       }),
     );
     return this.listForUser(userId);
+  }
+
+  async calculateExposure(userId: string): Promise<PortfolioExposureDto> {
+    const positions = await this.listForUser(userId);
+    const etfs = await this.etfRepo.findAll();
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+
+    const totalValue = positions.reduce((sum, p) => sum + p.qty * (p.currentPrice ?? 0), 0);
+    if (totalValue === 0) {
+      return { geo: [], sector: [], currency: [] };
+    }
+
+    const geoMap = new Map<string, number>();
+    const sectorMap = new Map<string, number>();
+    const currMap = new Map<string, number>();
+
+    for (const p of positions) {
+      const etf = etfByIsin.get(p.etfIsin);
+      if (!etf) continue;
+
+      const posValue = p.qty * (p.currentPrice ?? 0);
+      const weight = posValue / totalValue;
+
+      let exposure = etf.exposure;
+      if (!exposure || Object.keys(exposure.geo).length === 0) {
+        const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
+        if (meta) {
+          exposure = this.parseYahooExposure(meta);
+          this.etfRepo.updateExposure(etf.isin, exposure).catch(console.error);
+        }
+      }
+
+      if (exposure) {
+        this.accumulate(geoMap, exposure.geo, weight);
+        this.accumulate(sectorMap, exposure.sector, weight);
+        this.accumulate(currMap, exposure.currency, weight);
+      }
+    }
+
+    return {
+      geo: this.finalize(geoMap),
+      sector: this.finalize(sectorMap),
+      currency: this.finalize(currMap),
+    };
+  }
+
+  private accumulate(target: Map<string, number>, source: Record<string, number>, weight: number) {
+    for (const [key, val] of Object.entries(source)) {
+      target.set(key, (target.get(key) ?? 0) + val * weight);
+    }
+  }
+
+  private finalize(map: Map<string, number>): ExposureDto[] {
+    return Array.from(map.entries())
+      .map(([key, pct]) => ({ key, pct }))
+      .sort((a, b) => b.pct - a.pct);
+  }
+
+  private parseYahooExposure(meta: any) {
+    const geo: Record<string, number> = {};
+    const sector: Record<string, number> = {};
+    const currency: Record<string, number> = {};
+
+    const fund = meta?.fundProfile;
+    if (fund?.regionHoldings) {
+      for (const r of fund.regionHoldings) {
+        if (r.region && r.relativeWeight) geo[r.region] = r.relativeWeight;
+      }
+    }
+    if (fund?.sectorWeightings) {
+      for (const s of fund.sectorWeightings) {
+        const key = Object.keys(s)[0];
+        if (key && s[key]) sector[key] = s[key];
+      }
+    }
+
+    const asset = meta?.assetProfile;
+    if (asset?.sector) sector[asset.sector] = 1;
+    if (asset?.country) geo[asset.country] = 1;
+
+    return { geo, sector, currency };
   }
 }

@@ -31,22 +31,30 @@ export class PriceCacheService implements OnApplicationShutdown {
     this.redis.on('error', err => this.logger.warn(`Redis client error: ${err.message}`));
   }
 
-  async get(symbol: string): Promise<Quote | null> {
+  async get<T>(key: string): Promise<T | null> {
     try {
-      const raw = await this.redis.get(QUOTE_PREFIX + symbol);
-      return raw ? (JSON.parse(raw) as Quote) : null;
+      const raw = await this.redis.get(key);
+      return raw ? (JSON.parse(raw) as T) : null;
     } catch (err) {
-      this.logger.warn(`Cache get failed for ${symbol}: ${(err as Error).message}`);
+      this.logger.warn(`Cache get failed for ${key}: ${(err as Error).message}`);
       return null;
     }
   }
 
-  async set(symbol: string, quote: Quote): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds = this.ttlSeconds): Promise<void> {
     try {
-      await this.redis.set(QUOTE_PREFIX + symbol, JSON.stringify(quote), 'EX', this.ttlSeconds);
+      await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
     } catch (err) {
-      this.logger.warn(`Cache set failed for ${symbol}: ${(err as Error).message}`);
+      this.logger.warn(`Cache set failed for ${key}: ${(err as Error).message}`);
     }
+  }
+
+  async getQuote(symbol: string): Promise<Quote | null> {
+    return this.get<Quote>(QUOTE_PREFIX + symbol);
+  }
+
+  async setQuote(symbol: string, quote: Quote): Promise<void> {
+    return this.set(QUOTE_PREFIX + symbol, quote);
   }
 
   async invalidate(symbol: string): Promise<void> {

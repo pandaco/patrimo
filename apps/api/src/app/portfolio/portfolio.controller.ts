@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { PositionDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto } from 'contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -24,5 +24,10 @@ export class PortfolioController {
   @HttpCode(HttpStatus.OK)
   refresh(@SessionUser() user: AuthUser): Promise<PositionDto[]> {
     return this.portfolio.refreshForUser(user.id);
+  }
+
+  @Get('exposure')
+  getExposure(@SessionUser() user: AuthUser): Promise<PortfolioExposureDto> {
+    return this.portfolio.calculateExposure(user.id);
   }
 }

@@ -34,6 +34,18 @@ export class YahooPriceProvider {
     }
   }
 
+  async fetchMetadata(symbol: string): Promise<any> {
+    try {
+      const response = await yahooFinance.quoteSummary(symbol, {
+        modules: ['assetProfile', 'fundProfile', 'fundProfile'],
+      });
+      return response;
+    } catch (err) {
+      this.logger.warn(`Yahoo Finance metadata failed for ${symbol}: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   /**
    * Daily close history over the last `days` days, oldest first. Empty array
    * on lookup failure so the caller can choose to degrade gracefully.
