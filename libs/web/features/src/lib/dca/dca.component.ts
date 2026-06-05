@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { AllocationService, EnvelopeService, EtfService, etfValue } from '@patrimo/data-access';
+import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService } from '@patrimo/data-access';
 import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
@@ -19,13 +19,17 @@ export class DcaComponent {
   private readonly etfSvc   = inject(EtfService);
   private readonly allocSvc = inject(AllocationService);
   private readonly envSvc   = inject(EnvelopeService);
+  private readonly dcaPlanSvc = inject(DcaPlanService);
   private readonly dialog   = inject(MatDialog);
 
   protected readonly amount     = signal(800);
   protected readonly correction = signal(true);
   protected readonly envelopeId = signal('');
+  protected readonly dayOfMonth = signal(5);
 
   protected readonly presets    = [300, 500, 800, 1000, 1500, 2000];
+
+  protected readonly activePlans = this.dcaPlanSvc.all;
 
   protected readonly envelopes = computed(() =>
     this.envSvc.all().filter(e => INVESTABLE_GLYPHS.has(e.glyph)),
@@ -108,5 +112,38 @@ export class DcaComponent {
       maxWidth: '580px',
       width: '100%',
     });
+  }
+
+  protected async savePlan(): Promise<void> {
+    const env = this.selectedEnvelope();
+    if (!env) return;
+
+    const allocations: Record<string, number> = {};
+    for (const r of this.normalized()) {
+      if (r.eur > 0) allocations[r.e.isin] = r.eur;
+    }
+
+    try {
+      await this.dcaPlanSvc.create({
+        envelopeId: env.id,
+        amount: this.amount(),
+        frequency: 'MONTHLY',
+        dayOfMonth: this.dayOfMonth(),
+        allocations,
+      });
+      alert('Plan DCA mensuel programmé avec succès.');
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la sauvegarde du plan.');
+    }
+  }
+
+  protected async deletePlan(id: string): Promise<void> {
+    if (!confirm('Supprimer ce plan DCA ?')) return;
+    try {
+      await this.dcaPlanSvc.remove(id);
+    } catch (err) {
+      console.error(err);
+    }
   }
 }

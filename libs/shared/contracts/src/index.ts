@@ -9,3 +9,4 @@ export * from './lib/exposure.dto';
 export * from './lib/rebalance.dto';
 export * from './lib/dividend.dto';
 export * from './lib/alert-rule.dto';
+export * from './lib/dca.dto';

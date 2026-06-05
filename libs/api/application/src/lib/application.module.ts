@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AlertModule } from './alerts/alert.module';
 import { AuthModule } from './auth/auth.module';
+import { DcaModule } from './dca/dca.module';
 import { EnvelopeModule } from './envelopes/envelope.module';
 import { EtfModule } from './etfs/etf.module';
 import { MarketModule } from './market/market.module';
@@ -20,6 +21,7 @@ import { TransactionModule } from './transactions/transaction.module';
     PerformanceModule,
     PreferencesModule,
     AlertModule,
+    DcaModule,
   ],
   exports: [
     AuthModule,
@@ -31,6 +33,7 @@ import { TransactionModule } from './transactions/transaction.module';
     PerformanceModule,
     PreferencesModule,
     AlertModule,
+    DcaModule,
   ],
 })
 export class ApplicationModule {}

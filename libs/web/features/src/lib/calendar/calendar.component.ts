@@ -19,7 +19,7 @@ interface CalMonth { y: number; m: number; label: string; events: CalEvent[]; ce
 const MONTH_LABELS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 function eventColor(t: string): string {
-  return ({ DIV: 'var(--gain)', MARK: 'var(--warn)' } as Record<string, string>)[t] ?? '#999';
+  return ({ DIV: 'var(--gain)', MARK: 'var(--warn)', DCA: 'var(--brand)' } as Record<string, string>)[t] ?? '#999';
 }
 
 function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
@@ -145,10 +145,42 @@ export class CalendarComponent {
     return events;
   });
 
-  private readonly allEvents = computed<CalEvent[]>(() => [
-    ...this.dividendEvents(),
-    ...this.milestoneEvents(),
-  ]);
+  private readonly allEvents = computed<CalEvent[]>(() => {
+    const dcaEvents: CalEvent[] = [];
+    const envs = this.envById();
+    const plans = this.dcaPlanSvc.all().filter(p => p.active);
+    const window = this.windowMonths();
+    const first  = window[0];
+    const last   = window[window.length - 1];
+    const lo     = `${first.y}-${String(first.m).padStart(2, '0')}-01`;
+    const hi     = `${last.y}-${String(last.m).padStart(2, '0')}-31`;
+
+    for (const plan of plans) {
+      const d = new Date(plan.nextExecution);
+      const hiDate = new Date(hi);
+      while (d <= hiDate) {
+        const iso = d.toISOString().slice(0, 10);
+        if (iso >= lo && iso <= hi) {
+          const env = envs.get(plan.envelopeId);
+          dcaEvents.push({
+            date: iso,
+            type: 'DCA',
+            label: `DCA Mensuel`,
+            envCode: env?.code ?? '?',
+            amount: plan.amount,
+            past: false,
+          });
+        }
+        d.setMonth(d.getMonth() + 1);
+      }
+    }
+
+    return [
+      ...this.dividendEvents(),
+      ...this.milestoneEvents(),
+      ...dcaEvents,
+    ];
+  });
 
   protected readonly months = computed<CalMonth[]>(() =>
     this.windowMonths().map(({ y, m, label }) => {

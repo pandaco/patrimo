@@ -4,3 +4,4 @@ export * from './envelope.entity';
 export * from './etf.entity';
 export * from './transaction.entity';
 export * from './alert-rule.entity';
+export * from './dca-plan.entity';

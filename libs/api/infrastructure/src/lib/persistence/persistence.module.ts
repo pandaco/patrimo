@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ORM_ENTITIES, buildDataSourceOptions } from './data-source-options';
 import {
   ALERT_RULE_REPOSITORY,
+  DCA_PLAN_REPOSITORY,
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
@@ -11,6 +12,7 @@ import {
   USER_REPOSITORY,
 } from './repository-tokens';
 import { TypeOrmAlertRuleRepository } from './repositories/typeorm-alert-rule.repository';
+import { TypeOrmDcaPlanRepository } from './repositories/typeorm-dca-plan.repository';
 import { TypeOrmEnvelopeRepository } from './repositories/typeorm-envelope.repository';
 import { TypeOrmEtfRepository } from './repositories/typeorm-etf.repository';
 import { TypeOrmTransactionRepository } from './repositories/typeorm-transaction.repository';
@@ -34,6 +36,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     { provide: ETF_REPOSITORY,              useClass: TypeOrmEtfRepository },
     { provide: TRANSACTION_REPOSITORY,      useClass: TypeOrmTransactionRepository },
     { provide: ALERT_RULE_REPOSITORY,       useClass: TypeOrmAlertRuleRepository },
+    { provide: DCA_PLAN_REPOSITORY,         useClass: TypeOrmDcaPlanRepository },
   ],
   exports: [
     USER_REPOSITORY,
@@ -42,6 +45,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     ETF_REPOSITORY,
     TRANSACTION_REPOSITORY,
     ALERT_RULE_REPOSITORY,
+    DCA_PLAN_REPOSITORY,
   ],
 })
 export class PersistenceModule {}

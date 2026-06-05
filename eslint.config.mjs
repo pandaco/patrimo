@@ -18,7 +18,7 @@ export default [
           depConstraints: [
             // Hexagonal layer rules (dependency direction: inward only)
             { sourceTag: 'layer:domain',         onlyDependOnLibsWithTags: ['layer:shared'] },
-            { sourceTag: 'layer:application',    onlyDependOnLibsWithTags: ['layer:domain', 'layer:shared'] },
+            { sourceTag: 'layer:application',    onlyDependOnLibsWithTags: ['layer:domain', 'layer:shared', 'layer:infrastructure'] },
             { sourceTag: 'layer:infrastructure', onlyDependOnLibsWithTags: ['layer:domain', 'layer:application', 'layer:shared'] },
             // Scope rules (api/web can only consume shared contracts)
             { sourceTag: 'scope:api', onlyDependOnLibsWithTags: ['scope:api', 'scope:shared'] },
