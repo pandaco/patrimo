@@ -2,7 +2,6 @@ import { inject, Injectable, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { httpResource } from '@angular/common/http';
 import { PortfolioExposureDto } from '@patrimo/contracts';
-import { map } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ExposureService {

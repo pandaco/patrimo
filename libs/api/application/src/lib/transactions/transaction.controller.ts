@@ -68,7 +68,7 @@ export class TransactionController {
   @UseInterceptors(FileInterceptor('file'))
   import(
     @SessionUser() user: AuthUser,
-    @UploadedFile() file: any,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<{ count: number }> {
     return this.transactions.importCsv(user.id, file.buffer.toString());
   }

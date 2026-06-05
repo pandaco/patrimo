@@ -47,6 +47,7 @@ export class TypeOrmEtfRepository implements EtfRepository {
   }
 
   async updateExposure(isin: string, exposure: Etf['exposure']): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await this.repo.update({ isin }, { exposure: exposure as any });
   }
 }

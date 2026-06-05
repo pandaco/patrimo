@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '@patrimo/data-access';
-import { AlertRuleDto, AlertType } from '@patrimo/contracts';
+import { AlertType } from '@patrimo/contracts';
 
 type Tab = 'all' | 'unread' | 'archived';
 
@@ -11,6 +11,13 @@ interface RuleMeta {
   desc: string;
   unit: string;
   defaultThreshold: number;
+}
+
+interface RuleWithMeta {
+  meta: RuleMeta;
+  id?: string;
+  enabled: boolean;
+  threshold: number;
 }
 
 const METAS: RuleMeta[] = [
@@ -74,7 +81,7 @@ export class AlertsComponent {
     await this.alertSvc.dismiss(id);
   }
 
-  protected async toggleRule(m: any): Promise<void> {
+  protected async toggleRule(m: RuleWithMeta): Promise<void> {
     if (m.id) {
       await this.alertSvc.updateRule(m.id, { enabled: !m.enabled });
     } else {
@@ -87,7 +94,7 @@ export class AlertsComponent {
     }
   }
 
-  protected startEditThreshold(m: any): void {
+  protected startEditThreshold(m: RuleWithMeta): void {
     this.editingType.set(m.meta.type);
     this.editingValue.set(m.threshold);
   }
@@ -96,7 +103,7 @@ export class AlertsComponent {
     this.editingType.set(null);
   }
 
-  protected async commitEdit(m: any): Promise<void> {
+  protected async commitEdit(m: RuleWithMeta): Promise<void> {
     const num = this.editingValue();
     if (isNaN(num) || num < 0) return;
     this.editingType.set(null);
@@ -107,7 +114,7 @@ export class AlertsComponent {
     }
   }
 
-  protected async editThreshold(m: any): Promise<void> {
+  protected async editThreshold(m: RuleWithMeta): Promise<void> {
     this.startEditThreshold(m);
   }
 

@@ -1,4 +1,4 @@
-import { inject, Injectable, computed } from '@angular/core';
+import { Injectable, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { DividendDto } from '@patrimo/contracts';
 

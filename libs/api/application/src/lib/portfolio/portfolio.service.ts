@@ -160,6 +160,7 @@ export class PortfolioService {
       .sort((a, b) => b.pct - a.pct);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseYahooExposure(meta: any) {
     const geo: Record<string, number> = {};
     const sector: Record<string, number> = {};

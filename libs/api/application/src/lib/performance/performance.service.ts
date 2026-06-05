@@ -247,11 +247,7 @@ export class PerformanceService {
          .map(t => t.etfIsin as string),
     );
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
-    const benchMap  = new Map(benchHistory.map(p => [p.date, p.close]));
 
-    const benchReturns = benchHistory.length > 1
-      ? benchHistory.slice(1).map((p, i) => Math.log(p.close / benchHistory[i].close))
-      : [];
     const benchReturnMap = new Map(
       benchHistory.slice(1).map((p, i) => [p.date, Math.log(p.close / benchHistory[i].close)]),
     );

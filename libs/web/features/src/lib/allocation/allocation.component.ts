@@ -7,8 +7,7 @@ import { DeltaComponent, DonutComponent, fmtEur, fmtNum, fmtPct } from '@patrimo
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
 
-const ALLOC_BUCKETS = ['Core', 'Satellite', 'Obligations'] as const;
-type AllocBucket = (typeof ALLOC_BUCKETS)[number];
+type AllocBucket = 'Core' | 'Satellite' | 'Obligations';
 
 interface StrategyVersion { v: string; date: string; desc: string; current: boolean }
 const STRATEGY_VERSIONS: StrategyVersion[] = [

@@ -34,6 +34,7 @@ export class YahooPriceProvider {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async fetchMetadata(symbol: string): Promise<any> {
     try {
       const response = await yahooFinance.quoteSummary(symbol, {

@@ -33,7 +33,9 @@
           [class.active]="activeIdx() === i"
           role="option"
           [attr.aria-selected]="activeIdx() === i"
+          tabindex="0"
           (click)="navigate(r)"
+          (keydown.enter)="navigate(r)"
           (mouseenter)="activeIdx.set(i)"
         >
           <span class="search-result-icon" aria-hidden="true">

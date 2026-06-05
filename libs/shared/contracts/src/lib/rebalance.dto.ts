@@ -1,4 +1,3 @@
-import { PositionDto } from './position.dto';
 
 export interface RebalanceTransactionDto {
   etfIsin: string;

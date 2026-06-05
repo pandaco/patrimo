@@ -49,7 +49,10 @@
               [style.opacity]="cell.event && !cell.event.past ? 0.5 : 1"
               [style.cursor]="cell.event ? 'pointer' : 'default'"
               [title]="cell.event?.label ?? ''"
+              [attr.role]="cell.event ? 'button' : null"
+              [attr.tabindex]="cell.event ? 0 : null"
               (click)="selectCell(cell.event)"
+              (keydown.enter)="selectCell(cell.event)"
             >{{ cell.day || '' }}</div>
           }
         </div>

@@ -107,12 +107,13 @@ export class PerformanceComponent {
     const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / (returns.length - 1);
     const volatility = Math.sqrt(variance * annFactor) * 100;
 
-    const annRet = this.annualized() ?? this.portfolioPct();
+    const annVal = this.annualized();
+    const annRet = annVal ?? this.portfolioPct();
     const sharpe = volatility > 0 ? (annRet - 2.5) / volatility : null;
 
     const maxDD  = this.perfSvc.raw().drawdowns[0]?.pct ?? null;
-    const calmar = this.annualized() !== null && maxDD !== null && maxDD < 0
-      ? this.annualized()! / Math.abs(maxDD)
+    const calmar = annVal !== null && maxDD !== null && maxDD < 0
+      ? annVal / Math.abs(maxDD)
       : null;
 
     const winRate = (returns.filter(r => r > 0).length / returns.length) * 100;

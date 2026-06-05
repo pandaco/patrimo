@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { EnvelopeService, EtfService, TransactionService, DividendService, DcaPlanService } from '@patrimo/data-access';
 import { fmtEur } from '@patrimo/ui';
+import { DcaPlanDto, DividendDto } from '@patrimo/contracts';
 
 type EventType = 'DIV' | 'MARK' | 'DCA';
 
@@ -101,7 +102,7 @@ export class CalendarComponent {
         };
       });
 
-    const upcoming = this.divSvc.upcoming().map((d: any) => ({
+    const upcoming = this.divSvc.upcoming().map((d: DividendDto) => ({
       date: d.date,
       type: 'DIV' as const,
       label: `Dividende ${d.ticker} · ${fmtEur(d.amount, 2)} (est.)`,
@@ -149,14 +150,14 @@ export class CalendarComponent {
   private readonly allEvents = computed<CalEvent[]>(() => {
     const dcaEvents: CalEvent[] = [];
     const envs = this.envById();
-    const plans = this.dcaPlanSvc.all().filter((p: any) => p.active);
+    const plans = this.dcaPlanSvc.all().filter((p: DcaPlanDto) => p.active);
     const window = this.windowMonths();
     const first  = window[0];
     const last   = window[window.length - 1];
     const lo     = `${first.y}-${String(first.m).padStart(2, '0')}-01`;
     const hi     = `${last.y}-${String(last.m).padStart(2, '0')}-31`;
 
-    for (const plan of plans as any[]) {
+    for (const plan of plans as DcaPlanDto[]) {
       const d = new Date(plan.nextExecution);
       const hiDate = new Date(hi);
       while (d <= hiDate) {

@@ -106,7 +106,6 @@ export class TransactionsComponent {
   protected readonly showCashDetails = signal(false);
 
   protected readonly cashDetails = computed(() => {
-    const lbls = this.labels;
     const envMap = new Map<string, { dep: number; wit: number; buy: number; sel: number; div: number }>();
     for (const tx of this.txSvc.all()) {
       const e = envMap.get(tx.envelope) ?? { dep: 0, wit: 0, buy: 0, sel: 0, div: 0 };
