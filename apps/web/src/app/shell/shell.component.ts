@@ -2,10 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
-import { AppIconComponent } from 'ui';
+import { AppIconComponent } from '@patrimo/ui';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopbarComponent } from './topbar/topbar.component';
-import { GModeBadgeComponent, KeyboardShortcutService } from 'features';
+import { GModeBadgeComponent, KeyboardShortcutService } from '@patrimo/features';
 
 const CRUMB_MAP: Record<string, string[]> = {
   '/dashboard':      ['Aperçu',   'Tableau de bord'],

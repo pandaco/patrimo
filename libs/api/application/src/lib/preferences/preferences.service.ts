@@ -3,9 +3,9 @@ import type {
   AllocationTargets,
   UserPreferences,
   UserPreferencesRepository,
-} from 'api-domain';
-import { UpdateUserPreferencesDto, UserPreferencesDto } from 'contracts';
-import { USER_PREFERENCES_REPOSITORY } from 'infrastructure';
+} from '@patrimo/api-domain';
+import { UpdateUserPreferencesDto, UserPreferencesDto } from '@patrimo/contracts';
+import { USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 
 const DEFAULTS: UserPreferencesDto = {
   riskProfile:     'Équilibré dynamique',

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Envelope, EnvelopeRepository, EnvelopeSeed } from 'api-domain';
-import { CreateEnvelopeDto, EnvelopeDto, UpdateEnvelopeDto } from 'contracts';
-import { ENVELOPE_REPOSITORY } from 'infrastructure';
+import type { Envelope, EnvelopeRepository, EnvelopeSeed } from '@patrimo/api-domain';
+import { CreateEnvelopeDto, EnvelopeDto, UpdateEnvelopeDto } from '@patrimo/contracts';
+import { ENVELOPE_REPOSITORY } from '@patrimo/infrastructure';
 
 function toDto(envelope: Envelope): EnvelopeDto {
   return {

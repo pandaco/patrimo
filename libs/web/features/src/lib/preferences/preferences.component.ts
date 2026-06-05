@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AllocationTargetsDto, UpdateUserPreferencesDto } from 'contracts';
-import { EtfService, PreferencesService } from 'data-access';
+import { AllocationTargetsDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
+import { EtfService, PreferencesService } from '@patrimo/data-access';
 
 const RISK_PROFILES = [
   'Prudent',

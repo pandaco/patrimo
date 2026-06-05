@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AlertReadOrmEntity, PersistenceModule } from 'infrastructure';
+import { AlertReadOrmEntity, PersistenceModule } from '@patrimo/infrastructure';
 import { AuthModule } from '../auth/auth.module';
 import { MarketModule } from '../market/market.module';
 import { PortfolioModule } from '../portfolio/portfolio.module';

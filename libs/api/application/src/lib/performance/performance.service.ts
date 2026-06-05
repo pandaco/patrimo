@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { EtfRepository, Transaction, TransactionRepository } from 'api-domain';
-import { DrawdownDto, PerformancePeriod, PerformanceSeriesDto } from 'contracts';
-import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import type { EtfRepository, Transaction, TransactionRepository } from '@patrimo/api-domain';
+import { DrawdownDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {

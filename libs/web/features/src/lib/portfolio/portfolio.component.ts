@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { EtfService, ExposureService, Etf, etfValue, etfCost, etfPnl, etfPnlPct, etfDayPct } from 'data-access';
-import { BarComponent, DeltaComponent, SparklineComponent, fmtEur, fmtNum, fmtPctRaw } from 'ui';
+import { EtfService, ExposureService, Etf, etfValue, etfCost, etfPnl, etfPnlPct, etfDayPct } from '@patrimo/data-access';
+import { BarComponent, DeltaComponent, SparklineComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 

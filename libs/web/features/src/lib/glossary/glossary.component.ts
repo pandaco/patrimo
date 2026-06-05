@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { GlossaryService } from 'data-access';
+import { GlossaryService } from '@patrimo/data-access';
 
 const ENVELOPE_DEFS = [
   { code:'PEA',       desc:"Plan d'Épargne en Actions",           plaf:'150 000 €',              blocking:'5 ans',              tax:'Exo IR après 5 ans, PS 17,2 %' },

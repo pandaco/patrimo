@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PersistenceModule } from 'infrastructure';
+import { PersistenceModule } from '@patrimo/infrastructure';
 import { AuthModule } from '../auth/auth.module';
 import { TransactionController } from './transaction.controller';
 import { TransactionService } from './transaction.service';

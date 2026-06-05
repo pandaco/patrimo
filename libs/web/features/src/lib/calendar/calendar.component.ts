@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { EnvelopeService, EtfService, TransactionService, DividendService } from 'data-access';
-import { fmtEur } from 'ui';
+import { EnvelopeService, EtfService, TransactionService, DividendService } from '@patrimo/data-access';
+import { fmtEur } from '@patrimo/ui';
 
 type EventType = 'DIV' | 'MARK';
 

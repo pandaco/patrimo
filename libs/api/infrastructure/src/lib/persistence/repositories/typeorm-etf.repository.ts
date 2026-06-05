@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Etf, EtfRepository, EtfSeed } from 'api-domain';
+import type { Etf, EtfRepository, EtfSeed } from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { EtfOrmEntity } from '../orm-entities/etf.orm-entity';
 

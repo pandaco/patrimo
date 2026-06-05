@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertService, EnvelopeService, EtfService, PerformanceService, TransactionService, etfCost, etfValue } from 'data-access';
-import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from 'ui';
+import { AlertService, EnvelopeService, EtfService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 
 const GLYPH_COLORS: Record<string, string> = {

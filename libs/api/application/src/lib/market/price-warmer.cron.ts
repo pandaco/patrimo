@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import type { EtfRepository } from 'api-domain';
-import { ETF_REPOSITORY } from 'infrastructure';
+import type { EtfRepository } from '@patrimo/api-domain';
+import { ETF_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from './price.service';
 
 /**

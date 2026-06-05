@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { User, UserRepository, UserSeed } from 'api-domain';
+import type { User, UserRepository, UserSeed } from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { UserOrmEntity } from '../orm-entities/user.orm-entity';
 

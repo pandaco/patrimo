@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import { PersistenceModule } from 'infrastructure';
-import { ApplicationModule } from 'application';
+import { PersistenceModule } from '@patrimo/infrastructure';
+import { ApplicationModule } from '@patrimo/application';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './env.validation';

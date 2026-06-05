@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { PerformanceService } from 'data-access';
-import { PerformancePeriod } from 'contracts';
-import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from 'ui';
+import { PerformanceService } from '@patrimo/data-access';
+import { PerformancePeriod } from '@patrimo/contracts';
+import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [

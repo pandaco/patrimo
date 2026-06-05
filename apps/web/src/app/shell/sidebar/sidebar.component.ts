@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AlertService, AuthService, TransactionService, UserService } from 'data-access';
-import { AppIconComponent, AppIconName } from 'ui';
+import { AlertService, AuthService, TransactionService, UserService } from '@patrimo/data-access';
+import { AppIconComponent, AppIconName } from '@patrimo/ui';
 
 interface NavItem {
   id: string;

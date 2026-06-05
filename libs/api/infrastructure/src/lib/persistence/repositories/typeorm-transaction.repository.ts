@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Transaction, TransactionRepository, TransactionSeed, TxType } from 'api-domain';
+import type { Transaction, TransactionRepository, TransactionSeed, TxType } from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { TransactionOrmEntity } from '../orm-entities/transaction.orm-entity';
 

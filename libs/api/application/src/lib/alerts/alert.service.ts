@@ -4,9 +4,9 @@ import type {
   EnvelopeRepository,
   EtfRepository,
   TransactionRepository,
-} from 'api-domain';
-import { AlertDto, AlertSeverity, AlertType } from 'contracts';
-import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+} from '@patrimo/api-domain';
+import { AlertDto, AlertSeverity, AlertType } from '@patrimo/contracts';
+import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { Repository } from 'typeorm';
 import { PortfolioService } from '../portfolio/portfolio.service';
 

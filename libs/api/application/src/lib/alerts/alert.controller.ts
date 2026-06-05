@@ -1,5 +1,5 @@
 import { Controller, HttpCode, Param, Post, Get, UseGuards } from '@nestjs/common';
-import { AlertDto } from 'contracts';
+import { AlertDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';

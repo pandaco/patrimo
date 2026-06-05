@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from 'data-access';
+import { AuthService } from '@patrimo/data-access';
 
 @Component({
   selector: 'app-auth-callback',

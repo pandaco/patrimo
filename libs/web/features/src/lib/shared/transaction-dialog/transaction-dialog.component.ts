@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CreateTransactionDto, TxTypeDto } from 'contracts';
+import { CreateTransactionDto, TxTypeDto } from '@patrimo/contracts';
 import {
   Envelope,
   EnvelopeService,
@@ -10,8 +10,8 @@ import {
   TransactionService,
   TxType,
   etfValue,
-} from 'data-access';
-import { fmtEur, fmtNum, fmtPctRaw } from 'ui';
+} from '@patrimo/data-access';
+import { fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 export interface TransactionDialogData {
   transaction?: Transaction;

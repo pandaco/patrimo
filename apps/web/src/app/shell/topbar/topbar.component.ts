@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertService, EtfService } from 'data-access';
-import { AppIconComponent } from 'ui';
+import { AlertService, EtfService } from '@patrimo/data-access';
+import { AppIconComponent } from '@patrimo/ui';
 
 @Component({
   selector: 'app-topbar',

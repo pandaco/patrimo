@@ -5,7 +5,7 @@ import type {
   UserPreferences,
   UserPreferencesRepository,
   UserPreferencesSeed,
-} from 'api-domain';
+} from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { UserPreferencesOrmEntity } from '../orm-entities/user-preferences.orm-entity';
 

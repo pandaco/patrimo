@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, EtfService, TransactionService, Transaction, TxType } from 'data-access';
-import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum } from 'ui';
+import { EnvelopeService, EtfService, TransactionService, Transaction, TxType } from '@patrimo/data-access';
+import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum } from '@patrimo/ui';
 
 type FilterType = TxType | 'ALL';
 

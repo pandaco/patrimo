@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { AllocationService, EnvelopeService, EtfService, etfValue } from 'data-access';
-import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw } from 'ui';
+import { AllocationService, EnvelopeService, EtfService, etfValue } from '@patrimo/data-access';
+import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).

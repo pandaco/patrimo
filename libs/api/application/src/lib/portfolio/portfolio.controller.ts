@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto } from 'contracts';
+import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';

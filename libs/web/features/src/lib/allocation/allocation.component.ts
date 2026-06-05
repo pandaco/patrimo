@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { AllocationService, EtfService, etfValue } from 'data-access';
-import { DeltaComponent, DonutComponent, fmtEur, fmtNum } from 'ui';
+import { AllocationService, EtfService, etfValue } from '@patrimo/data-access';
+import { DeltaComponent, DonutComponent, fmtEur, fmtNum } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Etf, EtfRepository } from 'api-domain';
-import { EtfDto } from 'contracts';
-import { ETF_REPOSITORY } from 'infrastructure';
+import type { Etf, EtfRepository } from '@patrimo/api-domain';
+import { EtfDto } from '@patrimo/contracts';
+import { ETF_REPOSITORY } from '@patrimo/infrastructure';
 
 function toDto(etf: Etf): EtfDto {
   return {

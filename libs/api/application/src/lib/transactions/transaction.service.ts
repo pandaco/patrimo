@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TxType } from 'api-domain';
-import { CreateTransactionDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from 'contracts';
-import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TxType } from '@patrimo/api-domain';
+import { CreateTransactionDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
+import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 
 function toDto(tx: Transaction): TransactionDto {
   return {

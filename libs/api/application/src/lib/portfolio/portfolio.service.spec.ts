@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import type { Etf, Transaction, TxType } from 'api-domain';
-import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import type { Etf, Transaction, TxType } from '@patrimo/api-domain';
+import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 import { PortfolioService } from './portfolio.service';
 import { PreferencesService } from '../preferences/preferences.service';

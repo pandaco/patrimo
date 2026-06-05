@@ -1,6 +1,6 @@
 import { inject, Injectable, computed } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { DividendDto } from 'contracts';
+import { DividendDto } from '@patrimo/contracts';
 
 @Injectable({ providedIn: 'root' })
 export class DividendService {

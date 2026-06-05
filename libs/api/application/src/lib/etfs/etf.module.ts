@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PersistenceModule } from 'infrastructure';
+import { PersistenceModule } from '@patrimo/infrastructure';
 import { AuthModule } from '../auth/auth.module';
 import { EtfController } from './etf.controller';
 import { EtfService } from './etf.service';

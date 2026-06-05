@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Envelope, EnvelopeRepository, EnvelopeSeed } from 'api-domain';
+import type { Envelope, EnvelopeRepository, EnvelopeSeed } from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { EnvelopeOrmEntity } from '../orm-entities/envelope.orm-entity';
 

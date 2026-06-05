@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { PersistenceModule } from 'infrastructure';
+import { PersistenceModule } from '@patrimo/infrastructure';
 import { AuthController } from './auth.controller';
 import { GoogleAuthFilter } from './google-auth.filter';
 import { GoogleStrategy } from './google.strategy';

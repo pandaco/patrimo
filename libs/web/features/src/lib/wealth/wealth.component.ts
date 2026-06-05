@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, Envelope } from 'data-access';
-import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw } from 'ui';
+import { EnvelopeService, Envelope } from '@patrimo/data-access';
+import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { AuthService } from 'data-access';
+import { AuthService } from '@patrimo/data-access';
 
 @Component({
   selector: 'app-login',

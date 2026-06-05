@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { USER_REPOSITORY, UserRepository } from 'api-domain';
+import { USER_REPOSITORY, UserRepository } from '@patrimo/api-domain';
 import { AuthUser } from './types';
 
 type UserSeed = Omit<AuthUser, 'id'>;

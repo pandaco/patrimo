@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { AlertService } from 'data-access';
+import { AlertService } from '@patrimo/data-access';
 
 type Tab = 'all' | 'unread' | 'archived';
 

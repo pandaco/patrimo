@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { Etf, EtfService } from 'data-access';
-import { fmtNum, fmtPctRaw } from 'ui';
+import { Etf, EtfService } from '@patrimo/data-access';
+import { fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 

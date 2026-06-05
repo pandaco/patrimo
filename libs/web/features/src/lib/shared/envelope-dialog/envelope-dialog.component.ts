@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CreateEnvelopeDto } from 'contracts';
-import { Envelope, EnvelopeService } from 'data-access';
+import { CreateEnvelopeDto } from '@patrimo/contracts';
+import { Envelope, EnvelopeService } from '@patrimo/data-access';
 
 interface GlyphOption { value: string; label: string }
 

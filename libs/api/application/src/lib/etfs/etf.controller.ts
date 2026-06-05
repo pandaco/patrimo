@@ -1,5 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { EtfDto } from 'contracts';
+import { EtfDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { EtfService } from './etf.service';
 
