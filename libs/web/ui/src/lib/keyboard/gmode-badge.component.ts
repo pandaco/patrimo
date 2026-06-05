@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { KbdComponent } from '@patrimo/ui';
+import { KbdComponent } from '../kbd/kbd.component';
 
 @Component({
   selector: 'app-gmode-badge',

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, output, signal, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AlertService, AuthService, TransactionService, UserService } from '@patrimo/data-access';
 import { AppIconComponent, AppIconName } from '@patrimo/ui';
@@ -63,6 +63,7 @@ export class SidebarComponent {
 
   protected readonly nav  = NAV;
   protected readonly user = inject(UserService).currentUser;
+  protected readonly menuOpen = signal(false);
 
   private readonly txCount    = computed(() => this.txSvc.all().length);
   private readonly alertCount = this.alertSvc.unreadCount;
@@ -72,6 +73,17 @@ export class SidebarComponent {
                 : id === 'alerts'  ? this.alertCount()
                 : null;
     return value && value > 0 ? String(value) : null;
+  }
+
+  protected toggleMenu(event: Event): void {
+    event.stopPropagation();
+    this.menuOpen.set(!this.menuOpen());
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  closeMenu(): void {
+    this.menuOpen.set(false);
   }
 
   protected async logout(): Promise<void> {

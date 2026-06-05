@@ -11,7 +11,7 @@ import {
   TxType,
   etfValue,
 } from '@patrimo/data-access';
-import { fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { fmtEur, fmtNum, fmtPctRaw } from '../format';
 
 export interface TransactionDialogData {
   transaction?: Transaction;

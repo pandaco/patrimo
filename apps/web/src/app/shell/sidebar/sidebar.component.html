@@ -34,41 +34,32 @@
   }
 
   @if (user(); as u) {
-  <div class="sidebar-footer">
-    <a routerLink="/settings/preferences" class="avatar" aria-label="Éditer mes préférences"
-       title="Mes préférences" style="text-decoration:none;color:inherit;cursor:pointer"
-       aria-hidden="false">{{ u.initials }}</a>
-    <div class="user-meta" style="flex:1">
-      <div class="user-name">{{ u.firstName }} {{ u.lastName }}</div>
-      <div class="user-role">{{ u.riskProfile }}</div>
-    </div>
-    <button
-      class="btn ghost sm"
-      routerLink="/settings/preferences"
-      aria-label="Éditer mes préférences"
-      title="Préférences"
-      style="padding:4px 8px"
-    >
-      ⚙
+  <div class="sidebar-footer" style="position:relative">
+    <button class="user-trigger" (click)="toggleMenu($event)" aria-label="Menu utilisateur" [attr.aria-expanded]="menuOpen()">
+      <div class="avatar" aria-hidden="true">{{ u.initials }}</div>
+      <div class="user-meta" style="flex:1;text-align:left">
+        <div class="user-name">{{ u.firstName }} {{ u.lastName }}</div>
+        <div class="user-role">{{ u.riskProfile }}</div>
+      </div>
+      <span aria-hidden="true" style="opacity:.5;margin-left:8px">⋯</span>
     </button>
-    <button
-      class="btn ghost sm"
-      (click)="openShortcuts.emit()"
-      aria-label="Afficher les raccourcis clavier"
-      title="Raccourcis (?)"
-      style="padding:4px 8px"
-    >
-      <kbd class="kbd">?</kbd>
-    </button>
-    <button
-      class="btn ghost sm"
-      (click)="logout()"
-      aria-label="Se déconnecter"
-      title="Se déconnecter"
-      style="padding:4px 8px"
-    >
-      ⎋
-    </button>
+
+    @if (menuOpen()) {
+      <div class="user-dropdown">
+        <a routerLink="/settings/preferences" class="dropdown-item" (click)="menuOpen.set(false)">
+          <span class="ico" aria-hidden="true"><app-ico name="settings" /></span>
+          Mes préférences
+        </a>
+        <button class="dropdown-item" (click)="openShortcuts.emit(); menuOpen.set(false)">
+          <span class="ico" aria-hidden="true"><app-ico name="calendar" /></span>
+          Raccourcis clavier
+        </button>
+        <div class="divider"></div>
+        <button class="dropdown-item" (click)="logout()">
+          Déconnexion
+        </button>
+      </div>
+    }
   </div>
   }
 </aside>

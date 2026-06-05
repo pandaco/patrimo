@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { DatePipe, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService } from '@patrimo/data-access';
-import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { BarComponent, EnvGlyphComponent, fmtEur, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -11,7 +13,7 @@ const INVESTABLE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
 @Component({
   selector: 'app-dca',
   standalone: true,
-  imports: [FormsModule, BarComponent, EnvGlyphComponent],
+  imports: [FormsModule, RouterLink, BarComponent, EnvGlyphComponent, DatePipe, KeyValuePipe],
   templateUrl: './dca.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -106,7 +108,6 @@ export class DcaComponent {
   protected cost(eur: number, price: number) { return this.qty(eur, price) * price; }
 
   protected async openNewTx(): Promise<void> {
-    const { TransactionDialogComponent } = await import('@patrimo/ui');
     this.dialog.open(TransactionDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',

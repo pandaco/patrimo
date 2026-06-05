@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AllocationService, EtfService, etfValue } from '@patrimo/data-access';
 import { DeltaComponent, DonutComponent, fmtEur, fmtNum } from '@patrimo/ui';
 
@@ -16,7 +17,7 @@ const CURRENCY_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-allocation',
   standalone: true,
-  imports: [DeltaComponent, DonutComponent],
+  imports: [RouterLink, DeltaComponent, DonutComponent],
   templateUrl: './allocation.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

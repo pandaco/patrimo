@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { EnvelopeService, EtfService, TransactionService, Transaction, TxType } from '@patrimo/data-access';
-import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum } from '@patrimo/ui';
+import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
 
 type FilterType = TxType | 'ALL';
 
@@ -96,7 +96,6 @@ export class TransactionsComponent {
   }
 
   protected async openNewTx(): Promise<void> {
-    const { TransactionDialogComponent } = await import('@patrimo/ui');
     this.dialog.open(TransactionDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
@@ -105,7 +104,6 @@ export class TransactionsComponent {
   }
 
   protected async openEditTx(tx: Transaction): Promise<void> {
-    const { TransactionDialogComponent } = await import('@patrimo/ui');
     this.dialog.open(TransactionDialogComponent, {
       data: { transaction: tx },
       panelClass: 'tx-dialog-panel',

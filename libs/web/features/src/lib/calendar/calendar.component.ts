@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { EnvelopeService, EtfService, TransactionService, DividendService } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, TransactionService, DividendService, DcaPlanService } from '@patrimo/data-access';
 import { fmtEur } from '@patrimo/ui';
 
-type EventType = 'DIV' | 'MARK';
+type EventType = 'DIV' | 'MARK' | 'DCA';
 
 interface CalEvent {
   date: string;             // ISO YYYY-MM-DD
@@ -46,6 +46,7 @@ export class CalendarComponent {
   private readonly envSvc = inject(EnvelopeService);
   private readonly etfSvc = inject(EtfService);
   private readonly divSvc = inject(DividendService);
+  private readonly dcaPlanSvc = inject(DcaPlanService);
 
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 
@@ -148,14 +149,14 @@ export class CalendarComponent {
   private readonly allEvents = computed<CalEvent[]>(() => {
     const dcaEvents: CalEvent[] = [];
     const envs = this.envById();
-    const plans = this.dcaPlanSvc.all().filter(p => p.active);
+    const plans = this.dcaPlanSvc.all().filter((p: any) => p.active);
     const window = this.windowMonths();
     const first  = window[0];
     const last   = window[window.length - 1];
     const lo     = `${first.y}-${String(first.m).padStart(2, '0')}-01`;
     const hi     = `${last.y}-${String(last.m).padStart(2, '0')}-31`;
 
-    for (const plan of plans) {
+    for (const plan of plans as any[]) {
       const d = new Date(plan.nextExecution);
       const hiDate = new Date(hi);
       while (d <= hiDate) {

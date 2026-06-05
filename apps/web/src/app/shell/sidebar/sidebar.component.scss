@@ -40,3 +40,63 @@
     color: var(--ink-2);
   }
 }
+
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.12s;
+  color: inherit;
+  
+  &:hover {
+    background: var(--surface-2);
+  }
+}
+
+.user-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--rule-soft);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  padding: 4px;
+  margin-bottom: 8px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: calc(var(--r) - 2px);
+  font-size: 13px;
+  color: var(--ink);
+  text-decoration: none;
+  text-align: left;
+  
+  &:hover {
+    background: var(--surface-2);
+  }
+  
+  .ico {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+  }
+}

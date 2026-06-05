@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { EnvelopeService, Envelope } from '@patrimo/data-access';
-import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw, EnvelopeDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 
@@ -67,7 +67,6 @@ export class WealthComponent {
   protected capPct(env: Envelope) { return env.plafond  ? (env.value / env.plafond) * 100 : null; }
 
   protected async openNewEnvelope(): Promise<void> {
-    const { EnvelopeDialogComponent } = await import('@patrimo/ui');
     this.dialog.open(EnvelopeDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
@@ -76,7 +75,6 @@ export class WealthComponent {
   }
 
   protected async openEditEnvelope(env: Envelope): Promise<void> {
-    const { EnvelopeDialogComponent } = await import('@patrimo/ui');
     this.dialog.open(EnvelopeDialogComponent, {
       data: { envelope: env },
       panelClass: 'tx-dialog-panel',

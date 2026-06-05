@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import { KbdComponent } from '@patrimo/ui';
+import { KbdComponent } from '../kbd/kbd.component';
 
 const SHORTCUTS = [
   { keys: ['⌘', 'K'],  label: 'Recherche globale' },
