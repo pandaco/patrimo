@@ -1,5 +1,6 @@
 import {
   Controller,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -16,6 +17,7 @@ import { GoogleAuthFilter } from './google-auth.filter';
 import { SessionGuard } from './session.guard';
 import { SessionService } from './session.service';
 import { SessionUser } from './session-user.decorator';
+import { UserStoreService } from './user-store.service';
 import { AuthUser, SESSION_COOKIE_NAME } from './types';
 
 @Controller('auth')
@@ -24,6 +26,7 @@ export class AuthController {
 
   constructor(
     private readonly sessions: SessionService,
+    private readonly users: UserStoreService,
     config: ConfigService,
   ) {
     const isProd = config.get<string>('NODE_ENV') === 'production';
@@ -52,6 +55,31 @@ export class AuthController {
     @Res() res: Response,
   ): void {
     const sid = this.sessions.create(req.user.id);
+    res.cookie(SESSION_COOKIE_NAME, sid, this.cookieOptions);
+    const frontend = (req.app.get('frontend-url') as string) || 'http://localhost:4200';
+    res.redirect(`${frontend}/auth/callback`);
+  }
+
+  @Get('dev-login')
+  async devLogin(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new ForbiddenException('Not allowed in production');
+    }
+    let user = await this.users.findByGoogleId('seed-dev-user');
+    if (!user) {
+      user = await this.users.upsertFromGoogle({
+        googleId:  'seed-dev-user',
+        email:     'dev@patrimo.local',
+        name:      'Antoine Huet (seed)',
+        firstName: 'Antoine',
+        lastName:  'Huet',
+        initials:  'AH',
+      });
+    }
+    const sid = this.sessions.create(user.id);
     res.cookie(SESSION_COOKIE_NAME, sid, this.cookieOptions);
     const frontend = (req.app.get('frontend-url') as string) || 'http://localhost:4200';
     res.redirect(`${frontend}/auth/callback`);

@@ -54,4 +54,21 @@ export class UserStoreService {
       user.id,
     );
   }
+
+  async findByGoogleId(googleId: string): Promise<AuthUser | undefined> {
+    const user = await this.users.findByGoogleId(googleId);
+    if (!user) return undefined;
+    return toAuthUser(
+      {
+        googleId: user.googleId,
+        email: user.email,
+        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        initials: user.initials,
+        picture: user.picture ?? undefined,
+      },
+      user.id,
+    );
+  }
 }
