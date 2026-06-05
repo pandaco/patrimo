@@ -1,10 +1,9 @@
 import { HttpClient, httpResource } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
 import { EtfDto, PositionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
-import { MOCK_SPARKS } from './mock-data';
 import { Etf } from './models';
 
 export const etfValue  = (e: Etf) => e.qty * e.price;
@@ -79,7 +78,12 @@ export class EtfService {
   readonly loading = computed(() => this.catalogResource.isLoading() || this.portfolioResource.isLoading());
   readonly error   = computed(() => this.catalogResource.error() ?? this.portfolioResource.error());
 
-  readonly sparks = signal<Record<string, number[]>>(MOCK_SPARKS);
+  private readonly sparksResource = httpResource<Record<string, number[]>>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/portfolio/sparks` : undefined),
+    { defaultValue: {} },
+  );
+
+  readonly sparks = this.sparksResource.value;
 
   reload(): void {
     this.catalogResource.reload();

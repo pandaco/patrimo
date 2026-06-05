@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 
@@ -17,7 +17,7 @@ export class PerformanceService {
       ? `${this.baseUrl}/performance/series?period=${this.period()}`
       : undefined),
     {
-      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, drawdowns: [] },
+      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, drawdowns: [], annualized: null },
     },
   );
 
@@ -37,6 +37,21 @@ export class PerformanceService {
   readonly raw     = this.resource.value;
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
+
+  private readonly etfStatsResource = httpResource<EtfStatsDto[]>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/performance/etf-stats` : undefined),
+    { defaultValue: [] },
+  );
+
+  private readonly feesResource = httpResource<FeesYtdDto>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/performance/fees` : undefined),
+    { defaultValue: { brokerageYtd: 0, terDragYtd: 0, totalYtd: 0, byEtf: [] } },
+  );
+
+  readonly etfStats     = this.etfStatsResource.value;
+  readonly fees         = this.feesResource.value;
+  readonly loadingStats = this.etfStatsResource.isLoading;
+  readonly loadingFees  = this.feesResource.isLoading;
 
   setPeriod(period: PerformancePeriod): void { this.period.set(period); }
   reload(): void { this.resource.reload(); }
