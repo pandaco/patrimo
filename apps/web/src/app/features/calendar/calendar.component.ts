@@ -100,7 +100,7 @@ export class CalendarComponent {
         };
       });
 
-    const upcoming = this.divSvc.upcoming().map(d => ({
+    const upcoming = this.divSvc.upcoming().map((d: any) => ({
       date: d.date,
       type: 'DIV' as const,
       label: `Dividende ${d.ticker} · ${fmtEur(d.amount, 2)} (est.)`,

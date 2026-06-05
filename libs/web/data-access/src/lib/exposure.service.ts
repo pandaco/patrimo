@@ -1,6 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { httpResource } from '@angular/core/http';
+import { httpResource } from '@angular/common/http';
 import { PortfolioExposureDto } from 'contracts';
 import { map } from 'rxjs';
 
@@ -10,9 +10,9 @@ export class ExposureService {
 
   private readonly resource = httpResource<PortfolioExposureDto>(() => '/api/portfolio/exposure');
 
-  readonly geo    = this.resource.computed(() => this.resource.value()?.geo ?? []);
-  readonly sector = this.resource.computed(() => this.resource.value()?.sector ?? []);
-  readonly curr   = this.resource.computed(() => this.resource.value()?.currency ?? []);
+  readonly geo    = computed(() => this.resource.value()?.geo ?? []);
+  readonly sector = computed(() => this.resource.value()?.sector ?? []);
+  readonly curr   = computed(() => this.resource.value()?.currency ?? []);
 
   refresh() {
     this.resource.reload();
