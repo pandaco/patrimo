@@ -1,7 +1,7 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">{{ tabCounts().all }} alertes actives · {{ rules.length }} règles configurées</div>
+    <div class="page-eyebrow">{{ tabCounts().all }} alertes actives · {{ rulesWithMeta().length }} types de règles</div>
     <h1 class="page-title">Le tracker te <em>prévient</em><br>quand quelque chose bouge.</h1>
     <p class="page-sub">
       Tu décides quoi surveiller, avec quels seuils, et par quel canal. Évaluation toutes les heures.
@@ -66,21 +66,26 @@
       <div class="card" style="padding:4px 12px">
         <table class="tbl tbl-compact">
           <tbody>
-            @for (rule of rules; track rule.type) {
-              <tr>
+            @for (m of rulesWithMeta(); track m.meta.type) {
+              <tr [style.opacity]="m.enabled ? 1 : 0.5">
                 <td style="width:18px">
-                  <div style="width:22px;height:12px;border-radius:999px;position:relative"
-                    [style.background]="rule.enabled ? 'var(--brand)' : 'var(--rule)'">
+                  <div style="width:22px;height:12px;border-radius:999px;position:relative;cursor:pointer"
+                    [style.background]="m.enabled ? 'var(--brand)' : 'var(--rule)'"
+                    (click)="toggleRule(m)">
                     <span style="position:absolute;top:1px;width:10px;height:10px;border-radius:50%;background:var(--paper);transition:left 0.2s"
-                      [style.left]="rule.enabled ? '11px' : '1px'"></span>
+                      [style.left]="m.enabled ? '11px' : '1px'"></span>
                   </div>
                 </td>
                 <td>
-                  <div style="font-size:13px">{{ rule.label }}</div>
-                  <div class="muted tiny">{{ rule.channels }}</div>
+                  <div style="font-size:13px">{{ m.meta.label }}</div>
+                  <div class="muted tiny">{{ m.meta.desc }}</div>
                 </td>
                 <td class="r">
-                  <div class="num small muted">{{ rule.threshold }}</div>
+                  <div class="num small muted" 
+                       style="cursor:pointer;text-decoration:underline dashed"
+                       (click)="editThreshold(m)">
+                    {{ m.threshold }} {{ m.meta.unit }}
+                  </div>
                 </td>
               </tr>
             }

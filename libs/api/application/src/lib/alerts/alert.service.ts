@@ -1,26 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type {
+  AlertRuleRepository,
   EnvelopeRepository,
   EtfRepository,
   TransactionRepository,
 } from '@patrimo/api-domain';
+import { ALERT_RULE_REPOSITORY } from '@patrimo/api-domain';
 import { AlertDto, AlertSeverity, AlertType } from '@patrimo/contracts';
 import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { Repository } from 'typeorm';
 import { PortfolioService } from '../portfolio/portfolio.service';
 
 const MS_PER_DAY     = 24 * 60 * 60 * 1000;
-const CASH_IDLE_DAYS = 30;
-const CASH_IDLE_MIN  = 100;
-const PLAFOND_NEAR   = 0.8;
-const RECENT_DIV_DAYS = 7;
-const PEA_AGE_WINDOW_DAYS = 90;
-const USD_CONC_THRESHOLD  = 0.7;
-// NBSP (U+00A0) and narrow-NBSP (U+202F) are the FR-locale separators Intl
-// emits; collapse both to a regular space so the output is portable across
-// ICU builds. RegExp is built from escape sequences to keep the source ASCII
-// clean (the `no-irregular-whitespace` ESLint rule was otherwise triggered).
 const NBSP_RE = new RegExp('[\\u00A0\\u202F]', 'g');
 
 function daysSince(date: Date, ref = new Date()): number {
@@ -46,25 +38,30 @@ export class AlertService {
     @Inject(ENVELOPE_REPOSITORY)    private readonly envRepo: EnvelopeRepository,
     @Inject(TRANSACTION_REPOSITORY) private readonly txRepo:  TransactionRepository,
     @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
+    @Inject(ALERT_RULE_REPOSITORY)  private readonly ruleRepo: AlertRuleRepository,
     private readonly portfolio: PortfolioService,
     @InjectRepository(AlertReadOrmEntity)
     private readonly alertReadRepo: Repository<AlertReadOrmEntity>,
   ) {}
 
   async listForUser(userId: string): Promise<AlertDto[]> {
-    const [envelopes, txs, etfs, positions, readRows] = await Promise.all([
+    const [envelopes, txs, etfs, positions, readRows, rules] = await Promise.all([
       this.envRepo.findByUserId(userId),
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
       this.portfolio.listForUser(userId),
       this.alertReadRepo.findBy({ userId }),
+      this.ruleRepo.findByUserId(userId),
     ]);
 
+    const ruleMap = new Map(rules.filter(r => r.enabled).map(r => [r.type, r.threshold]));
     const readMap = new Map(readRows.map(r => [r.alertHash, r]));
 
     const alerts: AlertDto[] = [];
     const now = new Date();
 
+    // 1. CASH_IDLE
+    const cashIdleMin = ruleMap.get('CASH_IDLE') ?? 100;
     const lastDepositByEnv = new Map<string, Date>();
     for (const tx of txs) {
       if (tx.type !== 'DEPOSIT') continue;
@@ -73,10 +70,10 @@ export class AlertService {
     }
 
     for (const env of envelopes) {
-      if (env.cash < CASH_IDLE_MIN) continue;
+      if (env.cash < cashIdleMin) continue;
       const lastDeposit = lastDepositByEnv.get(env.id);
       const days = lastDeposit ? daysSince(lastDeposit, now) : Number.POSITIVE_INFINITY;
-      if (days < CASH_IDLE_DAYS) continue;
+      if (days < 30) continue; // fixed 30 days window for now
       alerts.push(buildAlert(
         `cash_idle:${env.id}`,
         'CASH_IDLE',
@@ -89,10 +86,12 @@ export class AlertService {
       ));
     }
 
+    // 2. PLAFOND_NEAR
+    const plafondNearThreshold = ruleMap.get('PLAFOND_NEAR') ?? 0.8;
     for (const env of envelopes) {
       if (!env.plafond) continue;
       const ratio = env.value / env.plafond;
-      if (ratio < PLAFOND_NEAR) continue;
+      if (ratio < plafondNearThreshold) continue;
       const remaining = env.plafond - env.value;
       alerts.push(buildAlert(
         `plafond:${env.id}`,
@@ -106,7 +105,9 @@ export class AlertService {
       ));
     }
 
-    const recentDivs = txs.filter(t => t.type === 'DIVIDEND' && daysSince(t.date, now) <= RECENT_DIV_DAYS);
+    // 3. DIVIDEND_RECENT
+    const recentDivDays = ruleMap.get('DIVIDEND_RECENT') ?? 7;
+    const recentDivs = txs.filter(t => t.type === 'DIVIDEND' && daysSince(t.date, now) <= recentDivDays);
     for (const div of recentDivs) {
       const env = envelopes.find(e => e.id === div.envelopeId);
       const etf = div.etfIsin ? etfs.find(e => e.isin === div.etfIsin) : undefined;
@@ -123,27 +124,32 @@ export class AlertService {
       ));
     }
 
-    for (const env of envelopes) {
-      if (env.code !== 'PEA' && env.code !== 'PEA-PME') continue;
-      const fiveYears = new Date(env.openedAt);
-      fiveYears.setFullYear(fiveYears.getFullYear() + 5);
-      const days = Math.round((fiveYears.getTime() - now.getTime()) / MS_PER_DAY);
-      if (Math.abs(days) > PEA_AGE_WINDOW_DAYS) continue;
-      const passed = days <= 0;
-      alerts.push(buildAlert(
-        `pea_age:${env.id}`,
-        'PEA_AGE_NEAR',
-        'info',
-        passed ? `${env.code} a passé 5 ans` : `${env.code} atteint 5 ans dans ${days} j`,
-        passed
-          ? `Au ${fiveYears.toISOString().slice(0, 10)}, les retraits ne ferment plus le plan.`
-          : `Au ${fiveYears.toISOString().slice(0, 10)}, retraits possibles sans clôturer le plan.`,
-        'En savoir plus',
-        passed ? humanDate(Math.abs(days)) : humanDate(days),
-        readMap,
-      ));
+    // 4. PEA_AGE_NEAR (Fixed 5 years milestone, enabled by default unless rule is explicitly disabled)
+    if (ruleMap.has('PEA_AGE_NEAR') || !rules.some(r => r.type === 'PEA_AGE_NEAR')) {
+      for (const env of envelopes) {
+        if (env.code !== 'PEA' && env.code !== 'PEA-PME') continue;
+        const fiveYears = new Date(env.openedAt);
+        fiveYears.setFullYear(fiveYears.getFullYear() + 5);
+        const days = Math.round((fiveYears.getTime() - now.getTime()) / MS_PER_DAY);
+        if (Math.abs(days) > 90) continue;
+        const passed = days <= 0;
+        alerts.push(buildAlert(
+          `pea_age:${env.id}`,
+          'PEA_AGE_NEAR',
+          'info',
+          passed ? `${env.code} a passé 5 ans` : `${env.code} atteint 5 ans dans ${days} j`,
+          passed
+            ? `Au ${fiveYears.toISOString().slice(0, 10)}, les retraits ne ferment plus le plan.`
+            : `Au ${fiveYears.toISOString().slice(0, 10)}, retraits possibles sans clôturer le plan.`,
+          'En savoir plus',
+          passed ? humanDate(Math.abs(days)) : humanDate(days),
+          readMap,
+        ));
+      }
     }
 
+    // 5. USD_CONCENTRATION
+    const usdConcThreshold = ruleMap.get('USD_CONCENTRATION') ?? 0.7;
     if (positions.length > 0) {
       const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
       const usdValue = positions.reduce((a, p) => {
@@ -153,13 +159,13 @@ export class AlertService {
       }, 0);
       const totalValue = positions.reduce((a, p) => a + p.qty * (p.currentPrice ?? p.avgPrice), 0);
       const ratio = totalValue ? usdValue / totalValue : 0;
-      if (ratio > USD_CONC_THRESHOLD) {
+      if (ratio > usdConcThreshold) {
         alerts.push(buildAlert(
           'usd_conc',
           'USD_CONCENTRATION',
           'warn',
           'Exposition USD élevée',
-          `${Math.round(ratio * 100)} % de tes positions sont libellées en USD. Au-delà de 70 %, diversifie géographiquement / par devise.`,
+          `${Math.round(ratio * 100)} % de tes positions sont libellées en USD. Au-delà de ${Math.round(usdConcThreshold * 100)} %, diversifie géographiquement / par devise.`,
           'Voir la répartition',
           'info',
           readMap,

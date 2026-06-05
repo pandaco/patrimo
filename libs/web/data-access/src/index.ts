@@ -8,6 +8,7 @@ export * from './lib/user.service';
 export * from './lib/envelope.service';
 export * from './lib/etf.service';
 export * from './lib/transaction.service';
+export * from './lib/auth.interceptor';
 export * from './lib/allocation.service';
 export * from './lib/alert.service';
 export * from './lib/dividend.service';

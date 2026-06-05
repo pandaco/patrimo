@@ -5,7 +5,7 @@ import { filter, map } from 'rxjs';
 import { AppIconComponent } from '@patrimo/ui';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopbarComponent } from './topbar/topbar.component';
-import { GModeBadgeComponent, KeyboardShortcutService } from '@patrimo/features';
+import { GModeBadgeComponent, KeyboardShortcutService } from '@patrimo/ui';
 
 const CRUMB_MAP: Record<string, string[]> = {
   '/dashboard':      ['Aperçu',   'Tableau de bord'],

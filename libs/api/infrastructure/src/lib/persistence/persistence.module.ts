@@ -3,12 +3,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ORM_ENTITIES, buildDataSourceOptions } from './data-source-options';
 import {
+  ALERT_RULE_REPOSITORY,
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
   USER_PREFERENCES_REPOSITORY,
   USER_REPOSITORY,
 } from './repository-tokens';
+import { TypeOrmAlertRuleRepository } from './repositories/typeorm-alert-rule.repository';
 import { TypeOrmEnvelopeRepository } from './repositories/typeorm-envelope.repository';
 import { TypeOrmEtfRepository } from './repositories/typeorm-etf.repository';
 import { TypeOrmTransactionRepository } from './repositories/typeorm-transaction.repository';
@@ -31,6 +33,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     { provide: ENVELOPE_REPOSITORY,         useClass: TypeOrmEnvelopeRepository },
     { provide: ETF_REPOSITORY,              useClass: TypeOrmEtfRepository },
     { provide: TRANSACTION_REPOSITORY,      useClass: TypeOrmTransactionRepository },
+    { provide: ALERT_RULE_REPOSITORY,       useClass: TypeOrmAlertRuleRepository },
   ],
   exports: [
     USER_REPOSITORY,
@@ -38,6 +41,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     ENVELOPE_REPOSITORY,
     ETF_REPOSITORY,
     TRANSACTION_REPOSITORY,
+    ALERT_RULE_REPOSITORY,
   ],
 })
 export class PersistenceModule {}

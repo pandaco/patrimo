@@ -12,11 +12,3 @@ export * from './lib/glossary/glossary.component';
 export * from './lib/performance/performance.component';
 export * from './lib/login/login.component';
 export * from './lib/allocation/allocation.component';
-
-// Shared components/services
-export * from './lib/shared/keyboard/gmode-badge.component';
-export * from './lib/shared/keyboard/keyboard-shortcut.service';
-export * from './lib/shared/keyboard/shortcuts-dialog.component';
-export * from './lib/shared/envelope-dialog/envelope-dialog.component';
-export * from './lib/shared/transaction-dialog/transaction-dialog.component';
-export * from './lib/shared/auth/auth.interceptor';

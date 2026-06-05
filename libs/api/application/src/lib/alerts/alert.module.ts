@@ -1,21 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AlertReadOrmEntity, PersistenceModule } from '@patrimo/infrastructure';
+import { PersistenceModule } from '@patrimo/infrastructure';
 import { AuthModule } from '../auth/auth.module';
-import { MarketModule } from '../market/market.module';
 import { PortfolioModule } from '../portfolio/portfolio.module';
 import { AlertController } from './alert.controller';
+import { AlertRuleService } from './alert-rule.service';
 import { AlertService } from './alert.service';
 
 @Module({
-  imports: [
-    PersistenceModule,
-    AuthModule,
-    MarketModule,
-    PortfolioModule,
-    TypeOrmModule.forFeature([AlertReadOrmEntity]),
-  ],
+  imports: [PersistenceModule, AuthModule, PortfolioModule],
   controllers: [AlertController],
-  providers: [AlertService],
+  providers: [AlertService, AlertRuleService],
+  exports: [AlertService],
 })
 export class AlertModule {}
