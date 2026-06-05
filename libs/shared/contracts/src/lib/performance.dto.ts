@@ -1,4 +1,4 @@
-export type PerformancePeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD';
+export type PerformancePeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | '3Y' | '5Y' | 'MAX';
 
 export interface DrawdownDto {
   /** ISO date of the most recent local peak before the dip. */
@@ -28,4 +28,26 @@ export interface PerformanceSeriesDto {
   benchmark: number[] | null;
   /** Top 3 drawdowns over the window, ranked by absolute depth. */
   drawdowns: DrawdownDto[];
+  /** CAGR (annualized return) in %. `null` for sub-1-year periods. */
+  annualized: number | null;
+}
+
+export interface EtfStatsDto {
+  ticker:    string;
+  name:      string;
+  /** Tracking difference (fund 1Y return − CW8 1Y return), in %. */
+  td:        number | null;
+  /** Tracking error (annualized std dev of daily return diff vs CW8), in %. */
+  te:        number | null;
+  /** Fund 1-year total return in %. */
+  return1y:  number | null;
+}
+
+export interface FeesYtdDto {
+  /** Sum of `fees` on all BUY/SELL transactions since Jan 1st. */
+  brokerageYtd: number;
+  /** TER × position_value × (days_elapsed / 365) for all held ETFs. */
+  terDragYtd:   number;
+  totalYtd:     number;
+  byEtf: { ticker: string; name: string; ter: number; value: number; terDragYtd: number }[];
 }

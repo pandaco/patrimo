@@ -5,10 +5,11 @@ import type {
   EnvelopeRepository,
   EtfRepository,
   TransactionRepository,
+  UserPreferencesRepository,
 } from '@patrimo/api-domain';
 import { ALERT_RULE_REPOSITORY } from '@patrimo/api-domain';
 import { AlertDto, AlertSeverity, AlertType } from '@patrimo/contracts';
-import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
+import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 import { Repository } from 'typeorm';
 import { PortfolioService } from '../portfolio/portfolio.service';
 
@@ -35,23 +36,25 @@ function fmtEur(n: number): string {
 @Injectable()
 export class AlertService {
   constructor(
-    @Inject(ENVELOPE_REPOSITORY)    private readonly envRepo: EnvelopeRepository,
-    @Inject(TRANSACTION_REPOSITORY) private readonly txRepo:  TransactionRepository,
-    @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
-    @Inject(ALERT_RULE_REPOSITORY)  private readonly ruleRepo: AlertRuleRepository,
+    @Inject(ENVELOPE_REPOSITORY)           private readonly envRepo:   EnvelopeRepository,
+    @Inject(TRANSACTION_REPOSITORY)        private readonly txRepo:    TransactionRepository,
+    @Inject(ETF_REPOSITORY)                private readonly etfRepo:   EtfRepository,
+    @Inject(ALERT_RULE_REPOSITORY)         private readonly ruleRepo:  AlertRuleRepository,
+    @Inject(USER_PREFERENCES_REPOSITORY)   private readonly prefsRepo: UserPreferencesRepository,
     private readonly portfolio: PortfolioService,
     @InjectRepository(AlertReadOrmEntity)
     private readonly alertReadRepo: Repository<AlertReadOrmEntity>,
   ) {}
 
   async listForUser(userId: string): Promise<AlertDto[]> {
-    const [envelopes, txs, etfs, positions, readRows, rules] = await Promise.all([
+    const [envelopes, txs, etfs, positions, readRows, rules, prefs] = await Promise.all([
       this.envRepo.findByUserId(userId),
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
       this.portfolio.listForUser(userId),
       this.alertReadRepo.findBy({ userId }),
       this.ruleRepo.findByUserId(userId),
+      this.prefsRepo.findByUserId(userId),
     ]);
 
     const ruleMap = new Map(rules.filter(r => r.enabled).map(r => [r.type, r.threshold]));
@@ -168,6 +171,26 @@ export class AlertService {
           `${Math.round(ratio * 100)} % de tes positions sont libellées en USD. Au-delà de ${Math.round(usdConcThreshold * 100)} %, diversifie géographiquement / par devise.`,
           'Voir la répartition',
           'info',
+          readMap,
+        ));
+      }
+    }
+
+    // 6. DCA_PENDING: monthly target set but no BUY this calendar month
+    const monthlyTarget = prefs?.monthlyTarget ?? 0;
+    if (monthlyTarget > 0) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const hasBuyThisMonth = txs.some(t => t.type === 'BUY' && t.date >= monthStart);
+      if (!hasBuyThisMonth) {
+        const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        alerts.push(buildAlert(
+          `dca_pending:${now.getFullYear()}-${now.getMonth()}`,
+          'DCA_PENDING',
+          'warn',
+          'Versement DCA en attente',
+          `Objectif de ${fmtEur(monthlyTarget)}/mois configuré, mais aucun achat passé en ${monthLabel}. Pense à investir pour ne pas perdre une mensualité.`,
+          'Passer un ordre',
+          'ce mois-ci',
           readMap,
         ));
       }

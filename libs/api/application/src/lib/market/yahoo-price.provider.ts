@@ -50,14 +50,14 @@ export class YahooPriceProvider {
    * Daily close history over the last `days` days, oldest first. Empty array
    * on lookup failure so the caller can choose to degrade gracefully.
    */
-  async fetchHistorical(symbol: string, days: number): Promise<HistoricalPoint[]> {
+  async fetchHistorical(symbol: string, days: number, interval: '1d' | '1wk' = '1d'): Promise<HistoricalPoint[]> {
     try {
       const now = new Date();
       const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
       const chart = await yahooFinance.chart(symbol, {
         period1:  since,
         period2:  now,
-        interval: '1d',
+        interval,
       });
       const quotes = Array.isArray(chart?.quotes) ? chart.quotes : [];
       const out: HistoricalPoint[] = [];

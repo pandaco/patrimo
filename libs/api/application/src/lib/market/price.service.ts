@@ -33,13 +33,13 @@ export class PriceService {
     return fresh;
   }
 
-  /** Daily close history for the last `days` days. Cached in Redis 24 h. */
-  async getHistorical(isin: string, ticker: string, days: number): Promise<HistoricalPoint[]> {
+  /** Close history for the last `days` days. Cached in Redis 24 h. */
+  async getHistorical(isin: string, ticker: string, days: number, interval: '1d' | '1wk' = '1d'): Promise<HistoricalPoint[]> {
     const symbol = toYahooSymbol(isin, ticker);
-    const hit = await this.cache.getHistory(symbol, days);
+    const hit = await this.cache.getHistory(symbol, days, interval);
     if (hit) return hit;
-    const fresh = await this.provider.fetchHistorical(symbol, days);
-    if (fresh.length > 0) await this.cache.setHistory(symbol, days, fresh);
+    const fresh = await this.provider.fetchHistorical(symbol, days, interval);
+    if (fresh.length > 0) await this.cache.setHistory(symbol, days, fresh, interval);
     return fresh;
   }
 

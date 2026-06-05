@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
@@ -39,5 +39,17 @@ export class PortfolioController {
   @Get('dividends')
   getDividends(@SessionUser() user: AuthUser): Promise<DividendDto[]> {
     return this.portfolio.getUpcomingDividends(user.id);
+  }
+
+  @Get('sparks')
+  getSparks(@SessionUser() user: AuthUser): Promise<Record<string, number[]>> {
+    return this.portfolio.getSparks(user.id);
+  }
+
+  @Get('export')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="positions.csv"')
+  exportCsv(@SessionUser() user: AuthUser): Promise<string> {
+    return this.portfolio.exportCsv(user.id);
   }
 }

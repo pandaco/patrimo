@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from '@patrimo/api-domain';
-import { DrawdownDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -10,7 +10,12 @@ const PERIOD_DAYS: Record<PerformancePeriod, number> = {
   '6M':  180,
   '1Y':  365,
   'YTD': 365, // capped at days since Jan 1 in `computeStart`
+  '3Y':  1095,
+  '5Y':  1825,
+  'MAX': 0,   // computed dynamically from earliest BUY transaction
 };
+
+const LONG_PERIODS: PerformancePeriod[] = ['3Y', '5Y', 'MAX'];
 
 // MSCI World tracker used as the implicit benchmark: Amundi CW8 listed on
 // Euronext Paris. Hardcoded for now — the Allocation cible endpoint will let
@@ -22,14 +27,15 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-function computeStart(period: PerformancePeriod, now: Date): Date {
+function computeStart(period: PerformancePeriod, now: Date, earliestTxDate?: Date): Date {
   if (period === 'YTD') return new Date(now.getFullYear(), 0, 1);
+  if (period === 'MAX') return earliestTxDate ?? new Date(now.getFullYear(), 0, 1);
   const start = new Date(now);
   start.setDate(start.getDate() - PERIOD_DAYS[period]);
   return start;
 }
 
-function enumerateDates(from: Date, to: Date): string[] {
+function enumerateDates(from: Date, to: Date, weekly = false): string[] {
   const out: string[] = [];
   const cursor = new Date(from);
   cursor.setHours(0, 0, 0, 0);
@@ -37,9 +43,18 @@ function enumerateDates(from: Date, to: Date): string[] {
   end.setHours(0, 0, 0, 0);
   while (cursor <= end) {
     out.push(isoDate(cursor));
-    cursor.setDate(cursor.getDate() + 1);
+    cursor.setDate(cursor.getDate() + (weekly ? 7 : 1));
   }
   return out;
+}
+
+function computeAnnualized(series: number[], days: number): number | null {
+  if (days < 365) return null;
+  const start = series.find(v => v > 0);
+  const end   = series[series.length - 1];
+  if (!start || start === 0) return null;
+  const years = days / 365.25;
+  return Number(((Math.pow(end / start, 1 / years) - 1) * 100).toFixed(2));
 }
 
 @Injectable()
@@ -52,15 +67,28 @@ export class PerformanceService {
 
   async getSeries(userId: string, period: PerformancePeriod): Promise<PerformanceSeriesDto> {
     const now    = new Date();
-    const start  = computeStart(period, now);
-    const labels = enumerateDates(start, now);
-    const days   = Math.max(30, PERIOD_DAYS[period]);
+    const isLong = LONG_PERIODS.includes(period);
+    const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
 
-    const [txs, etfs, benchmarkHistory] = await Promise.all([
+    const [txs, etfs] = await Promise.all([
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
-      this.priceService.getHistorical(BENCHMARK_ISIN, BENCHMARK_TICKER, days),
     ]);
+
+    const buyTxs = txs.filter(t => t.type === 'BUY' && t.etfIsin);
+    const earliestTxDate = buyTxs.length > 0
+      ? new Date(Math.min(...buyTxs.map(t => t.date.getTime())))
+      : undefined;
+
+    const start  = computeStart(period, now, earliestTxDate);
+    const labels = enumerateDates(start, now, isLong);
+    const days   = period === 'MAX'
+      ? Math.ceil((now.getTime() - (earliestTxDate?.getTime() ?? now.getTime())) / 86400000) + 1
+      : Math.max(30, PERIOD_DAYS[period]);
+
+    const benchmarkHistory = await this.priceService.getHistorical(
+      BENCHMARK_ISIN, BENCHMARK_TICKER, days, interval,
+    );
 
     const sortedTxs = txs
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null)
@@ -75,7 +103,7 @@ export class PerformanceService {
       Array.from(heldIsins).map(async isin => {
         const etf = etfByIsin.get(isin);
         if (!etf) return;
-        const history = await this.priceService.getHistorical(isin, etf.ticker, days);
+        const history = await this.priceService.getHistorical(isin, etf.ticker, days, interval);
         closesByIsin.set(isin, new Map(history.map(p => [p.date, p.close])));
       }),
     );
@@ -103,8 +131,9 @@ export class PerformanceService {
       portfolio.push(Number(value.toFixed(2)));
     }
 
-    const benchmark = this.buildBenchmark(labels, portfolio, benchmarkHistory);
-    const drawdowns = this.buildDrawdowns(labels, portfolio);
+    const benchmark  = this.buildBenchmark(labels, portfolio, benchmarkHistory);
+    const drawdowns  = this.buildDrawdowns(labels, portfolio);
+    const annualized = computeAnnualized(portfolio, days);
 
     return {
       period,
@@ -113,6 +142,7 @@ export class PerformanceService {
       portfolio,
       benchmark,
       drawdowns,
+      annualized,
     };
   }
 
@@ -205,6 +235,111 @@ export class PerformanceService {
    * controller still serves a valid response — only the benchmark line is
    * dropped on the chart).
    */
+  async getEtfStats(userId: string): Promise<EtfStatsDto[]> {
+    const [txs, etfs, benchHistory] = await Promise.all([
+      this.txRepo.findByUserId(userId),
+      this.etfRepo.findAll(),
+      this.priceService.getHistorical(BENCHMARK_ISIN, BENCHMARK_TICKER, 365),
+    ]);
+
+    const heldIsins = new Set(
+      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
+         .map(t => t.etfIsin as string),
+    );
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const benchMap  = new Map(benchHistory.map(p => [p.date, p.close]));
+
+    const benchReturns = benchHistory.length > 1
+      ? benchHistory.slice(1).map((p, i) => Math.log(p.close / benchHistory[i].close))
+      : [];
+    const benchReturnMap = new Map(
+      benchHistory.slice(1).map((p, i) => [p.date, Math.log(p.close / benchHistory[i].close)]),
+    );
+
+    const results: EtfStatsDto[] = [];
+    await Promise.allSettled(
+      Array.from(heldIsins).map(async isin => {
+        const etf = etfByIsin.get(isin);
+        if (!etf) return;
+        const history = await this.priceService.getHistorical(isin, etf.ticker, 365);
+        if (history.length < 10) {
+          results.push({ ticker: etf.ticker, name: etf.name, td: null, te: null, return1y: null });
+          return;
+        }
+        const etfReturns = history.slice(1).map((p, i) => Math.log(p.close / history[i].close));
+        const return1y = history.length >= 2
+          ? (history[history.length - 1].close / history[0].close - 1) * 100
+          : null;
+        const benchReturn1y = benchHistory.length >= 2
+          ? (benchHistory[benchHistory.length - 1].close / benchHistory[0].close - 1) * 100
+          : null;
+        const td = (return1y !== null && benchReturn1y !== null) ? return1y - benchReturn1y : null;
+
+        const diffs: number[] = [];
+        for (const p of history.slice(1)) {
+          const er = benchReturnMap.get(p.date);
+          const fr = etfReturns[history.slice(1).findIndex(h => h.date === p.date)];
+          if (er !== undefined && fr !== undefined) diffs.push(fr - er);
+        }
+        let te: number | null = null;
+        if (diffs.length > 5) {
+          const mean  = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+          const variance = diffs.reduce((a, d) => a + (d - mean) ** 2, 0) / (diffs.length - 1);
+          te = Math.sqrt(variance * 252) * 100;
+        }
+        results.push({ ticker: etf.ticker, name: etf.name, td, te, return1y });
+      }),
+    );
+    return results.sort((a, b) => a.ticker.localeCompare(b.ticker));
+  }
+
+  async getFeesYtd(userId: string): Promise<FeesYtdDto> {
+    const now     = new Date();
+    const jan1    = new Date(now.getFullYear(), 0, 1);
+    const elapsed = (now.getTime() - jan1.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+
+    const [txs, etfs] = await Promise.all([
+      this.txRepo.findByUserId(userId),
+      this.etfRepo.findAll(),
+    ]);
+
+    const brokerageYtd = txs
+      .filter(t => t.date >= jan1 && (t.type === 'BUY' || t.type === 'SELL'))
+      .reduce((a, t) => a + (t.fees ?? 0), 0);
+
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const qtyMap    = new Map<string, number>();
+    for (const t of txs) {
+      if (!t.etfIsin || (t.type !== 'BUY' && t.type !== 'SELL')) continue;
+      qtyMap.set(t.etfIsin, (qtyMap.get(t.etfIsin) ?? 0) + (t.type === 'BUY' ? t.quantity : -t.quantity));
+    }
+
+    const byEtf: FeesYtdDto['byEtf'] = [];
+    await Promise.allSettled(
+      Array.from(qtyMap.entries())
+        .filter(([, qty]) => qty > 0)
+        .map(async ([isin, qty]) => {
+          const etf  = etfByIsin.get(isin);
+          if (!etf) return;
+          const quote = await this.priceService.getQuote(isin, etf.ticker);
+          const price = quote.price ?? 0;
+          const value = qty * price;
+          const ter   = etf.ter ?? 0;
+          byEtf.push({
+            ticker:    etf.ticker,
+            name:      etf.name,
+            ter:       ter * 100,
+            value,
+            terDragYtd: Number((ter * value * elapsed).toFixed(2)),
+          });
+        }),
+    );
+
+    byEtf.sort((a, b) => b.terDragYtd - a.terDragYtd);
+    const terDragYtd = byEtf.reduce((a, r) => a + r.terDragYtd, 0);
+    return { brokerageYtd, terDragYtd, totalYtd: brokerageYtd + terDragYtd, byEtf };
+  }
+
   private buildBenchmark(
     labels: string[],
     portfolio: number[],

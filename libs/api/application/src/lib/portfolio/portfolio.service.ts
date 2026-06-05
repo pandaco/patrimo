@@ -233,6 +233,47 @@ export class PortfolioService {
     };
   }
 
+  async getSparks(userId: string): Promise<Record<string, number[]>> {
+    const [txs, etfs] = await Promise.all([
+      this.txRepo.findByUserId(userId),
+      this.etfRepo.findAll(),
+    ]);
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const heldIsins = new Set(
+      txs
+        .filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
+        .map(t => t.etfIsin as string),
+    );
+    const results: Record<string, number[]> = {};
+    await Promise.allSettled(
+      Array.from(heldIsins).map(async isin => {
+        const etf = etfByIsin.get(isin);
+        if (!etf) return;
+        const history = await this.priceService.getHistorical(isin, etf.ticker, 30);
+        if (history.length === 0) return;
+        const closes = history.map(p => p.close);
+        const base = closes[0];
+        results[etf.ticker] = closes.map(c => +(c / base * 100).toFixed(2));
+      }),
+    );
+    return results;
+  }
+
+  async exportCsv(userId: string): Promise<string> {
+    const positions = await this.listForUser(userId);
+    const header = 'Ticker,Nom,Quantité,PRU (€),Prix actuel (€),Valeur (€),PnL (€),PnL (%)\n';
+    const rows = positions.map(p => {
+      const price  = p.currentPrice ?? p.avgPrice;
+      const value  = p.qty * price;
+      const cost   = p.qty * p.avgPrice;
+      const pnl    = value - cost;
+      const pnlPct = cost > 0 ? ((value / cost - 1) * 100).toFixed(2) : '0.00';
+      return [p.ticker, `"${p.name}"`, p.qty, p.avgPrice.toFixed(4), price.toFixed(4),
+              value.toFixed(2), pnl.toFixed(2), pnlPct].join(',');
+    });
+    return header + rows.join('\n');
+  }
+
   async getUpcomingDividends(userId: string): Promise<DividendDto[]> {
     const positions = await this.listForUser(userId);
     const etfs = await this.etfRepo.findAll();

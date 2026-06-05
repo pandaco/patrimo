@@ -1,11 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
 import { PerformanceService } from './performance.service';
 
-const ALLOWED: PerformancePeriod[] = ['1M', '3M', '6M', '1Y', 'YTD'];
+const ALLOWED: PerformancePeriod[] = ['1M', '3M', '6M', '1Y', 'YTD', '3Y', '5Y', 'MAX'];
 
 @Controller('performance')
 @UseGuards(SessionGuard)
@@ -21,5 +21,15 @@ export class PerformanceController {
       ? (period as PerformancePeriod)
       : '6M';
     return this.performance.getSeries(user.id, safe);
+  }
+
+  @Get('etf-stats')
+  etfStats(@SessionUser() user: AuthUser): Promise<EtfStatsDto[]> {
+    return this.performance.getEtfStats(user.id);
+  }
+
+  @Get('fees')
+  feesYtd(@SessionUser() user: AuthUser): Promise<FeesYtdDto> {
+    return this.performance.getFeesYtd(user.id);
   }
 }

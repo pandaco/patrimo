@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -70,5 +71,12 @@ export class TransactionController {
     @UploadedFile() file: any,
   ): Promise<{ count: number }> {
     return this.transactions.importCsv(user.id, file.buffer.toString());
+  }
+
+  @Get('export')
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header('Content-Disposition', 'attachment; filename="transactions.csv"')
+  exportCsv(@SessionUser() user: AuthUser): Promise<string> {
+    return this.transactions.exportCsv(user.id);
   }
 }
