@@ -10,8 +10,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { TransactionDto } from 'contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
@@ -58,5 +61,14 @@ export class TransactionController {
   ): Promise<void> {
     const removed = await this.transactions.delete(id, user.id);
     if (!removed) throw new NotFoundException('Transaction not found');
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  import(
+    @SessionUser() user: AuthUser,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ count: number }> {
+    return this.transactions.importCsv(user.id, file.buffer.toString());
   }
 }

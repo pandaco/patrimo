@@ -126,4 +126,19 @@ export class TransactionsComponent {
       alert(err instanceof Error ? err.message : 'Suppression impossible');
     }
   }
+
+  protected async importFile(event: Event): Promise<void> {
+    const el   = event.target as HTMLInputElement;
+    const file = el.files?.[0];
+    if (!file) return;
+
+    try {
+      const { count } = await this.txSvc.importCsv(file);
+      alert(`${count} transactions importées avec succès.`);
+      el.value = '';
+    } catch (err) {
+      console.error('Import failed', err);
+      alert('Erreur lors de l\'import CSV. Vérifiez le format du fichier.');
+    }
+  }
 }

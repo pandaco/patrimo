@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Transaction, TransactionRepository, TransactionSeed, TxType } from 'api-domain';
+import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TxType } from 'api-domain';
 import { CreateTransactionDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from 'contracts';
-import { TRANSACTION_REPOSITORY } from 'infrastructure';
+import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
 
 function toDto(tx: Transaction): TransactionDto {
   return {
@@ -34,6 +34,8 @@ function toPatch(input: UpdateTransactionDto): Partial<TransactionSeed> {
 export class TransactionService {
   constructor(
     @Inject(TRANSACTION_REPOSITORY) private readonly transactions: TransactionRepository,
+    @Inject(ENVELOPE_REPOSITORY)    private readonly envelopes:    EnvelopeRepository,
+    @Inject(ETF_REPOSITORY)         private readonly etfs:         EtfRepository,
   ) {}
 
   async listForUser(userId: string): Promise<TransactionDto[]> {
@@ -63,5 +65,41 @@ export class TransactionService {
 
   async delete(id: string, userId: string): Promise<boolean> {
     return this.transactions.deleteForUser(id, userId);
+  }
+
+  async importCsv(userId: string, csv: string): Promise<{ count: number }> {
+    const lines = csv.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('date,'));
+    const [userEnvelopes, allEtfs] = await Promise.all([
+      this.envelopes.findByUserId(userId),
+      this.etfs.findAll(),
+    ]);
+
+    const envMap = new Map(userEnvelopes.map(e => [e.code, e.id]));
+    const etfMap = new Map(allEtfs.map(e => [e.ticker, e.isin]));
+
+    let count = 0;
+    for (const line of lines) {
+      const [date, type, envCode, ticker, qty, price, fees, amount] = line.split(',');
+      
+      const envelopeId = envMap.get(envCode);
+      if (!envelopeId) continue;
+
+      const etfIsin = ticker ? etfMap.get(ticker) : null;
+
+      await this.transactions.create({
+        userId,
+        envelopeId,
+        etfIsin: etfIsin ?? null,
+        type: type as TxType,
+        date: new Date(date),
+        quantity: parseFloat(qty) || 0,
+        price: price ? parseFloat(price) : null,
+        fees: parseFloat(fees) || 0,
+        amount: parseFloat(amount) || 0,
+      });
+      count++;
+    }
+
+    return { count };
   }
 }

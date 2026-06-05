@@ -75,4 +75,15 @@ export class TransactionService {
     this.resource.update(list => list.filter(x => x.id !== id));
     this.refreshPositions();
   }
+
+  async importCsv(file: File): Promise<{ count: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const result = await firstValueFrom(
+      this.http.post<{ count: number }>(`${this.baseUrl}/transactions/import`, formData),
+    );
+    this.reload();
+    this.refreshPositions();
+    return result;
+  }
 }

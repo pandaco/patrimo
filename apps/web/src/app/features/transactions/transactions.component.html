@@ -25,7 +25,8 @@
       >{{ f.label }}</button>
     }
     <div style="margin-left:auto;display:flex;gap:6px">
-      <button class="btn sm">Import CSV</button>
+      <input type="file" #fileInput hidden (change)="importFile($event)" accept=".csv">
+      <button class="btn sm" (click)="fileInput.click()">Import CSV</button>
       <button class="btn sm">Exporter</button>
     </div>
   </div>
