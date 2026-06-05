@@ -23,6 +23,24 @@ function codeToChar(code: string): string {
       [style]="sizeStyle()"
     >{{ char() }}</div>
   `,
+  styles: `
+    .env-glyph {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 12px; color: #fff;
+      background: var(--ink); flex-shrink: 0; letter-spacing: -0.02em;
+      &.pea    { background: #16A34A; }
+      &.peapme { background: #15803D; }
+      &.cto    { background: #EA580C; }
+      &.av     { background: #7C3AED; }
+      &.per    { background: #475569; }
+      &.pee    { background: #0284C7; }
+      &.livret { background: #CA8A04; }
+      &.crypto { background: #18181B; }
+      &.immo   { background: #DC2626; }
+      &.metal  { background: #B45309; }
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnvGlyphComponent {

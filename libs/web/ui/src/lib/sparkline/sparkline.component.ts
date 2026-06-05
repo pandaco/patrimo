@@ -22,6 +22,9 @@ interface Point { x: string; y: string }
       </svg>
     }
   `,
+  styles: `
+    .spark { width: 80px; height: 24px; vertical-align: middle; }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SparklineComponent {
