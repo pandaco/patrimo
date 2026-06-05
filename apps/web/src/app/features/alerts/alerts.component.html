@@ -1,7 +1,7 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">8 alertes actives · 14 règles configurées</div>
+    <div class="page-eyebrow">{{ tabCounts().all }} alertes actives · {{ rules.length }} règles configurées</div>
     <h1 class="page-title">Le tracker te <em>prévient</em><br>quand quelque chose bouge.</h1>
     <p class="page-sub">
       Tu décides quoi surveiller, avec quels seuils, et par quel canal. Évaluation toutes les heures.
@@ -14,18 +14,21 @@
     <div>
       <div class="section-head" style="margin-top:0">
         <h2 class="section-title">Boîte de réception</h2>
-        <span class="section-sub">{{ alerts().length }} alertes</span>
+        <span class="section-sub">{{ filteredAlerts().length }} alertes</span>
         <div class="section-right">
           <div class="tabs">
-            <button class="active">Toutes</button>
-            <button>Non lues</button>
-            <button>Archivées</button>
+            <button [class.active]="activeTab() === 'all'"
+                    (click)="setTab('all')">Toutes ({{ tabCounts().all }})</button>
+            <button [class.active]="activeTab() === 'unread'"
+                    (click)="setTab('unread')">Non lues ({{ tabCounts().unread }})</button>
+            <button [class.active]="activeTab() === 'archived'"
+                    (click)="setTab('archived')">Archivées ({{ tabCounts().archived }})</button>
           </div>
         </div>
       </div>
       <div class="grid" style="grid-template-columns:1fr">
-        @for (alert of alerts(); track alert.id) {
-          <div class="nba" [class]="sevClass(alert.severity)">
+        @for (alert of filteredAlerts(); track alert.id) {
+          <div class="nba" [class]="sevClass(alert.severity)" [style.opacity]="alert.read ? 0.75 : 1">
             <div class="sev">{{ sevIcon(alert.severity) }}</div>
             <div class="body">
               <h4>{{ alert.title }}</h4>
@@ -37,9 +40,15 @@
               </div>
             </div>
             <div class="actions">
-              <button class="btn sm">Ignorer</button>
+              <button class="btn sm" (click)="dismiss(alert.id)">Ignorer</button>
               <button class="btn sm primary">{{ alert.cta }}</button>
             </div>
+          </div>
+        } @empty {
+          <div class="muted" style="padding:24px 0;text-align:center;font-size:13px">
+            @if (activeTab() === 'unread') { Aucune alerte non lue. }
+            @else if (activeTab() === 'archived') { Aucune alerte archivée. }
+            @else { Aucune alerte active. }
           </div>
         }
       </div>

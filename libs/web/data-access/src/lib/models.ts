@@ -76,6 +76,8 @@ export interface Alert {
   body: string;
   cta: string;
   date: string;
+  read: boolean;
+  dismissed: boolean;
 }
 
 export interface Dividend {

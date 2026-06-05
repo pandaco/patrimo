@@ -71,11 +71,11 @@ export const MOCK_TARGETS: Targets = {
 };
 
 export const MOCK_ALERTS: Alert[] = [
-  { id:'a1', type:'CASH_IDLE',     severity:'warn', title:'Cash dormant — PEA',        body:'1 145,78 € disponibles depuis 32 jours. Tu pourrais lancer un DCA et combler 3 sous-pondérations.', cta:'Lancer le DCA',        date:'il y a 2 j' },
-  { id:'a2', type:'DRIFT_ETF',     severity:'info', title:'S&P 500 sur-pondéré',        body:'ESE pèse 38,1% du portefeuille (cible 32%). Drift +6,1pts — neutre pour l\'instant, surveille.',  cta:'Voir l\'allocation',    date:'il y a 4 j' },
-  { id:'a3', type:'DIVIDEND',      severity:'gain', title:'Dividende reçu — IWDA',      body:'+18,42 € crédités sur CTO Boursorama. Pense à réinvestir pour conserver l\'effet boule de neige.',  cta:'Réinvestir',            date:'hier'       },
-  { id:'a4', type:'PEA_AGE',       severity:'info', title:'PEA atteint 5 ans dans 84 j',body:'Au 12/08/2026, retraits possibles sans clôturer le plan. Garde-le si tu n\'en as pas besoin.',      cta:'En savoir plus',        date:'info'       },
-  { id:'a5', type:'CONCENTRATION', severity:'warn', title:'Exposition USA élevée',      body:'68% de tes actifs sont exposés au marché américain. Au-delà de 70%, diversifie géographiquement.',  cta:'Voir la répartition',   date:'il y a 6 j' },
+  { id:'a1', type:'CASH_IDLE',     severity:'warn', title:'Cash dormant — PEA',        body:'1 145,78 € disponibles depuis 32 jours. Tu pourrais lancer un DCA et combler 3 sous-pondérations.', cta:'Lancer le DCA',        date:'il y a 2 j', read:false, dismissed:false },
+  { id:'a2', type:'DRIFT_ETF',     severity:'info', title:'S&P 500 sur-pondéré',        body:'ESE pèse 38,1% du portefeuille (cible 32%). Drift +6,1pts — neutre pour l\'instant, surveille.',  cta:'Voir l\'allocation',    date:'il y a 4 j', read:false, dismissed:false },
+  { id:'a3', type:'DIVIDEND',      severity:'gain', title:'Dividende reçu — IWDA',      body:'+18,42 € crédités sur CTO Boursorama. Pense à réinvestir pour conserver l\'effet boule de neige.',  cta:'Réinvestir',            date:'hier',        read:false, dismissed:false },
+  { id:'a4', type:'PEA_AGE',       severity:'info', title:'PEA atteint 5 ans dans 84 j',body:'Au 12/08/2026, retraits possibles sans clôturer le plan. Garde-le si tu n\'en as pas besoin.',      cta:'En savoir plus',        date:'info',        read:false, dismissed:false },
+  { id:'a5', type:'CONCENTRATION', severity:'warn', title:'Exposition USA élevée',      body:'68% de tes actifs sont exposés au marché américain. Au-delà de 70%, diversifie géographiquement.',  cta:'Voir la répartition',   date:'il y a 6 j', read:false, dismissed:false },
 ];
 
 export const MOCK_DIVIDENDS: Dividend[] = [

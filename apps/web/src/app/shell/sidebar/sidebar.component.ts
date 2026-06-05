@@ -65,7 +65,7 @@ export class SidebarComponent {
   protected readonly user = inject(UserService).currentUser;
 
   private readonly txCount    = computed(() => this.txSvc.all().length);
-  private readonly alertCount = computed(() => this.alertSvc.all().length);
+  private readonly alertCount = this.alertSvc.unreadCount;
 
   protected badge(id: string): string | null {
     const value = id === 'tx'      ? this.txCount()

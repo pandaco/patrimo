@@ -1,11 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import type {
   EnvelopeRepository,
   EtfRepository,
   TransactionRepository,
 } from 'api-domain';
 import { AlertDto, AlertSeverity, AlertType } from 'contracts';
-import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import { AlertReadOrmEntity, ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from 'infrastructure';
+import { Repository } from 'typeorm';
 import { PortfolioService } from '../portfolio/portfolio.service';
 
 const MS_PER_DAY     = 24 * 60 * 60 * 1000;
@@ -45,15 +47,20 @@ export class AlertService {
     @Inject(TRANSACTION_REPOSITORY) private readonly txRepo:  TransactionRepository,
     @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
     private readonly portfolio: PortfolioService,
+    @InjectRepository(AlertReadOrmEntity)
+    private readonly alertReadRepo: Repository<AlertReadOrmEntity>,
   ) {}
 
   async listForUser(userId: string): Promise<AlertDto[]> {
-    const [envelopes, txs, etfs, positions] = await Promise.all([
+    const [envelopes, txs, etfs, positions, readRows] = await Promise.all([
       this.envRepo.findByUserId(userId),
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
       this.portfolio.listForUser(userId),
+      this.alertReadRepo.findBy({ userId }),
     ]);
+
+    const readMap = new Map(readRows.map(r => [r.alertHash, r]));
 
     const alerts: AlertDto[] = [];
     const now = new Date();
@@ -78,6 +85,7 @@ export class AlertService {
         `${fmtEur(env.cash)} disponibles depuis ${Number.isFinite(days) ? `${days} jours` : 'longtemps'} sur ${env.label}. Pense à investir pour ne pas rater le compounding.`,
         'Lancer le DCA',
         Number.isFinite(days) ? humanDate(days) : 'info',
+        readMap,
       ));
     }
 
@@ -94,6 +102,7 @@ export class AlertService {
         `${Math.round(ratio * 100)} % du plafond atteints. Reste ${fmtEur(Math.max(0, remaining))} avant blocage des versements.`,
         "Voir l'enveloppe",
         'info',
+        readMap,
       ));
     }
 
@@ -110,6 +119,7 @@ export class AlertService {
         `+${fmtEur(div.amount)} crédités sur ${env?.code ?? 'ton compte'}. Pense à réinvestir pour conserver l'effet boule de neige.`,
         'Réinvestir',
         humanDate(daysSince(div.date, now)),
+        readMap,
       ));
     }
 
@@ -130,6 +140,7 @@ export class AlertService {
           : `Au ${fiveYears.toISOString().slice(0, 10)}, retraits possibles sans clôturer le plan.`,
         'En savoir plus',
         passed ? humanDate(Math.abs(days)) : humanDate(days),
+        readMap,
       ));
     }
 
@@ -151,6 +162,7 @@ export class AlertService {
           `${Math.round(ratio * 100)} % de tes positions sont libellées en USD. Au-delà de 70 %, diversifie géographiquement / par devise.`,
           'Voir la répartition',
           'info',
+          readMap,
         ));
       }
     }
@@ -158,6 +170,30 @@ export class AlertService {
     const order: Record<AlertSeverity, number> = { warn: 0, gain: 1, info: 2 };
     alerts.sort((a, b) => order[a.severity] - order[b.severity]);
     return alerts;
+  }
+
+  async markRead(userId: string, alertHash: string): Promise<void> {
+    await this.alertReadRepo.upsert(
+      { userId, alertHash, readAt: new Date() },
+      { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
+    );
+  }
+
+  async dismiss(userId: string, alertHash: string): Promise<void> {
+    await this.alertReadRepo.upsert(
+      { userId, alertHash, readAt: new Date(), dismissedAt: new Date() },
+      { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
+    );
+  }
+
+  async readAll(userId: string): Promise<void> {
+    const alerts = await this.listForUser(userId);
+    if (alerts.length === 0) return;
+    const now = new Date();
+    await this.alertReadRepo.upsert(
+      alerts.map(a => ({ userId, alertHash: a.id, readAt: now })),
+      { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
+    );
   }
 }
 
@@ -169,6 +205,12 @@ function buildAlert(
   body: string,
   cta: string,
   date: string,
+  readMap: Map<string, AlertReadOrmEntity>,
 ): AlertDto {
-  return { id, type, severity, title, body, cta, date };
+  const row = readMap.get(id);
+  return {
+    id, type, severity, title, body, cta, date,
+    read: row?.readAt != null,
+    dismissed: row?.dismissedAt != null,
+  };
 }

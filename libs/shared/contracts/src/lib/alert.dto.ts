@@ -15,4 +15,6 @@ export interface AlertDto {
   body: string;
   cta: string;
   date: string;                  // human label e.g. "il y a 3 j"
+  read: boolean;
+  dismissed: boolean;
 }

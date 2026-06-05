@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { AlertService } from 'data-access';
+
+type Tab = 'all' | 'unread' | 'archived';
 
 const RULES = [
   { type:'CASH_IDLE',      label:'Cash dormant',         threshold:'500 € / 30 j',  enabled: true,  channels:'In-app · Email' },
@@ -23,8 +25,32 @@ const RULES = [
 })
 export class AlertsComponent {
   private readonly alertSvc = inject(AlertService);
-  protected readonly alerts = this.alertSvc.all;
-  protected readonly rules  = RULES;
+
+  protected readonly activeTab = signal<Tab>('all');
+  protected readonly rules = RULES;
+
+  protected readonly filteredAlerts = computed(() => {
+    const tab = this.activeTab();
+    return this.alertSvc.all().filter(a => {
+      if (tab === 'archived') return a.dismissed;
+      if (tab === 'unread')   return !a.read && !a.dismissed;
+      return !a.dismissed;
+    });
+  });
+
+  protected readonly tabCounts = computed(() => ({
+    all:      this.alertSvc.all().filter(a => !a.dismissed).length,
+    unread:   this.alertSvc.all().filter(a => !a.read && !a.dismissed).length,
+    archived: this.alertSvc.all().filter(a => a.dismissed).length,
+  }));
+
+  protected setTab(tab: Tab): void {
+    this.activeTab.set(tab);
+  }
+
+  protected async dismiss(id: string): Promise<void> {
+    await this.alertSvc.dismiss(id);
+  }
 
   protected sevIcon(sev: string): string {
     return sev === 'warn' ? '!' : sev === 'gain' ? '✓' : sev === 'loss' ? '✗' : 'i';

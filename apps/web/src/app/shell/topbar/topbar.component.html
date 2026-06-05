@@ -34,11 +34,52 @@
             [style.animation]="refreshing() ? 'rotate 0.8s linear infinite' : null">↻</span>
     </button>
 
-    <button class="btn ghost" aria-label="Notifications (3 non lues)" title="Notifications">
-      <span aria-hidden="true" style="display:inline-flex">
-        <app-ico name="bell" />
-      </span>
-    </button>
+    <div class="notif-wrap" [class.open]="notifOpen()">
+      <button class="btn ghost notif-btn"
+              (click)="toggleNotif()"
+              [attr.aria-expanded]="notifOpen()"
+              [attr.aria-label]="unreadCount() > 0 ? (unreadCount() + ' notifications non lues') : 'Notifications'"
+              title="Notifications">
+        <span aria-hidden="true" style="display:inline-flex">
+          <app-ico name="bell" />
+        </span>
+        @if (unreadCount() > 0) {
+          <span class="notif-badge" aria-hidden="true">{{ unreadCount() }}</span>
+        }
+      </button>
+
+      @if (notifOpen()) {
+        <div class="notif-panel" role="dialog" aria-label="Notifications">
+          <div class="notif-panel-head">
+            <span class="notif-panel-title">Notifications</span>
+            <a routerLink="/tools/alerts" class="notif-panel-link" (click)="notifOpen.set(false)">
+              Tout voir
+            </a>
+          </div>
+
+          @if (alerts().length === 0) {
+            <div class="notif-empty">Aucune alerte active.</div>
+          } @else {
+            <ul class="notif-list">
+              @for (alert of alerts().slice(0, 5); track alert.id) {
+                @if (!alert.dismissed) {
+                  <li class="notif-item" [class]="sevClass(alert.severity)" [class.notif-read]="alert.read">
+                    <div class="notif-item-body">
+                      <div class="notif-item-title">{{ alert.title }}</div>
+                      <div class="notif-item-date">{{ alert.date }}</div>
+                    </div>
+                    <button class="notif-dismiss"
+                            (click)="dismiss(alert.id, $event)"
+                            title="Ignorer"
+                            aria-label="Ignorer cette alerte">×</button>
+                  </li>
+                }
+              }
+            </ul>
+          }
+        </div>
+      }
+    </div>
 
     <button class="btn primary" (click)="newTransaction.emit()" aria-keyshortcuts="n" title="Raccourci : N">
       <span aria-hidden="true" style="display:inline-flex">
