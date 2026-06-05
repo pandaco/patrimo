@@ -2,17 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PersistenceModule } from 'infrastructure';
-import { AlertModule } from './alerts/alert.module';
+import { ApplicationModule } from 'application';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { EnvelopeModule } from './envelopes/envelope.module';
-import { EtfModule } from './etfs/etf.module';
-import { MarketModule } from './market/market.module';
-import { PerformanceModule } from './performance/performance.module';
-import { PortfolioModule } from './portfolio/portfolio.module';
-import { PreferencesModule } from './preferences/preferences.module';
-import { TransactionModule } from './transactions/transaction.module';
 import { validateEnv } from './env.validation';
 
 @Module({
@@ -24,15 +16,7 @@ import { validateEnv } from './env.validation';
     }),
     ScheduleModule.forRoot(),
     PersistenceModule,
-    AuthModule,
-    EnvelopeModule,
-    EtfModule,
-    TransactionModule,
-    MarketModule,
-    PortfolioModule,
-    PerformanceModule,
-    PreferencesModule,
-    AlertModule,
+    ApplicationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

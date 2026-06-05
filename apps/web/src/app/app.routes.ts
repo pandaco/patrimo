@@ -8,12 +8,12 @@ export const appRoutes: Route[] = [
     path: 'login',
     canActivate: [loggedOutGuard],
     loadComponent: () =>
-      import('./features/login/login.component').then((m) => m.LoginComponent),
+      import('features').then((m) => m.LoginComponent),
   },
   {
     path: 'auth/callback',
     loadComponent: () =>
-      import('./features/auth-callback/auth-callback.component').then(
+      import('features').then(
         (m) => m.AuthCallbackComponent,
       ),
   },
@@ -26,82 +26,82 @@ export const appRoutes: Route[] = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(
+          import('features').then(
             (m) => m.DashboardComponent,
           ),
       },
       {
         path: 'wealth',
         loadComponent: () =>
-          import('./features/wealth/wealth.component').then(
+          import('features').then(
             (m) => m.WealthComponent,
           ),
       },
       {
         path: 'portfolio',
         loadComponent: () =>
-          import('./features/portfolio/portfolio.component').then(
+          import('features').then(
             (m) => m.PortfolioComponent,
           ),
       },
       {
         path: 'transactions',
         loadComponent: () =>
-          import('./features/transactions/transactions.component').then(
+          import('features').then(
             (m) => m.TransactionsComponent,
           ),
       },
       {
         path: 'allocation',
         loadComponent: () =>
-          import('./features/allocation/allocation.component').then(
+          import('features').then(
             (m) => m.AllocationComponent,
           ),
       },
       {
         path: 'performance',
         loadComponent: () =>
-          import('./features/performance/performance.component').then(
+          import('features').then(
             (m) => m.PerformanceComponent,
           ),
       },
       {
         path: 'tools/dca',
         loadComponent: () =>
-          import('./features/dca/dca.component').then((m) => m.DcaComponent),
+          import('features').then((m) => m.DcaComponent),
       },
       {
         path: 'tools/calendar',
         loadComponent: () =>
-          import('./features/calendar/calendar.component').then(
+          import('features').then(
             (m) => m.CalendarComponent,
           ),
       },
       {
         path: 'tools/compare',
         loadComponent: () =>
-          import('./features/compare/compare.component').then(
+          import('features').then(
             (m) => m.CompareComponent,
           ),
       },
       {
         path: 'tools/alerts',
         loadComponent: () =>
-          import('./features/alerts/alerts.component').then(
+          import('features').then(
             (m) => m.AlertsComponent,
           ),
       },
       {
         path: 'tools/glossary',
         loadComponent: () =>
-          import('./features/glossary/glossary.component').then(
+          import('features').then(
             (m) => m.GlossaryComponent,
           ),
       },
       {
         path: 'settings/preferences',
         loadComponent: () =>
-          import('./features/preferences/preferences.component').then(
+          import('features').then(
             (m) => m.PreferencesComponent,
           ),
       },

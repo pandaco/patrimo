@@ -96,7 +96,7 @@ export class TransactionsComponent {
   }
 
   protected async openNewTx(): Promise<void> {
-    const { TransactionDialogComponent } = await import('../../shared/transaction-dialog/transaction-dialog.component');
+    const { TransactionDialogComponent } = await import('../shared/transaction-dialog/transaction-dialog.component');
     this.dialog.open(TransactionDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
@@ -105,7 +105,7 @@ export class TransactionsComponent {
   }
 
   protected async openEditTx(tx: Transaction): Promise<void> {
-    const { TransactionDialogComponent } = await import('../../shared/transaction-dialog/transaction-dialog.component');
+    const { TransactionDialogComponent } = await import('../shared/transaction-dialog/transaction-dialog.component');
     this.dialog.open(TransactionDialogComponent, {
       data: { transaction: tx },
       panelClass: 'tx-dialog-panel',

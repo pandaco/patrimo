@@ -13,7 +13,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { AuthService } from 'data-access';
 import { appRoutes } from './app.routes';
-import { authInterceptor } from './shared/auth/auth.interceptor';
+import { authInterceptor } from 'features';
 
 registerLocaleData(localeFr, 'fr-FR');
 

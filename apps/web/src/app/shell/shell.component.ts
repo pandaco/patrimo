@@ -5,8 +5,7 @@ import { filter, map } from 'rxjs';
 import { AppIconComponent } from 'ui';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { TopbarComponent } from './topbar/topbar.component';
-import { GModeBadgeComponent } from '../shared/keyboard/gmode-badge.component';
-import { KeyboardShortcutService } from '../shared/keyboard/keyboard-shortcut.service';
+import { GModeBadgeComponent, KeyboardShortcutService } from 'features';
 
 const CRUMB_MAP: Record<string, string[]> = {
   '/dashboard':      ['Aperçu',   'Tableau de bord'],

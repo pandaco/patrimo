@@ -67,7 +67,7 @@ export class WealthComponent {
   protected capPct(env: Envelope) { return env.plafond  ? (env.value / env.plafond) * 100 : null; }
 
   protected async openNewEnvelope(): Promise<void> {
-    const { EnvelopeDialogComponent } = await import('../../shared/envelope-dialog/envelope-dialog.component');
+    const { EnvelopeDialogComponent } = await import('../shared/envelope-dialog/envelope-dialog.component');
     this.dialog.open(EnvelopeDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
@@ -76,7 +76,7 @@ export class WealthComponent {
   }
 
   protected async openEditEnvelope(env: Envelope): Promise<void> {
-    const { EnvelopeDialogComponent } = await import('../../shared/envelope-dialog/envelope-dialog.component');
+    const { EnvelopeDialogComponent } = await import('../shared/envelope-dialog/envelope-dialog.component');
     this.dialog.open(EnvelopeDialogComponent, {
       data: { envelope: env },
       panelClass: 'tx-dialog-panel',

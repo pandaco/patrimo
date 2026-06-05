@@ -102,7 +102,7 @@ export class DcaComponent {
   protected cost(eur: number, price: number) { return this.qty(eur, price) * price; }
 
   protected async openNewTx(): Promise<void> {
-    const { TransactionDialogComponent } = await import('../../shared/transaction-dialog/transaction-dialog.component');
+    const { TransactionDialogComponent } = await import('../shared/transaction-dialog/transaction-dialog.component');
     this.dialog.open(TransactionDialogComponent, {
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
