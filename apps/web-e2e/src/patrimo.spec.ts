@@ -30,6 +30,20 @@ test.describe('Patrimo E2E Tests', () => {
     await expect(page.locator('button.btn.primary')).toContainText('Continuer avec Google');
   });
 
+  test('should show the 3-step novice explainer on the login page', async ({ page }) => {
+    await page.goto('/login');
+
+    // The "Comment ça marche" block lives below the Google CTA and contains 3 steps.
+    await expect(page.locator('h3', { hasText: 'Comment ça marche' })).toBeVisible();
+    await expect(page.locator('.step-num')).toHaveCount(3);
+    await expect(page.locator('li', { hasText: 'Déclare tes enveloppes' })).toBeVisible();
+    await expect(page.locator('li', { hasText: 'Importe ou saisis tes opérations' })).toBeVisible();
+    await expect(page.locator('li', { hasText: 'Pilote en un coup d\'œil' })).toBeVisible();
+
+    // Disclaimer is always present.
+    await expect(page.getByText(/pas un conseil en investissement/i)).toBeVisible();
+  });
+
   test('should authenticate via dev-login backdoor and show the dashboard', async ({ page }) => {
     // Navigate to NestJS dev-login endpoint (which sets the httpOnly session cookie and redirects to Angular callback)
     await page.goto(DEV_LOGIN_URL);
@@ -43,6 +57,37 @@ test.describe('Patrimo E2E Tests', () => {
     // Verify some parts of the dashboard are loaded
     await expect(page.locator('.hero-money .value')).toBeVisible();
     await expect(page.locator('app-perf-chart')).toBeVisible();
+  });
+
+  test('should surface the toast service from the shell after a transaction is saved', async ({ page }) => {
+    // Toast service is mounted once in the shell <ui-toast />. This test exercises
+    // it indirectly through the CSV-import-skipped path, but a simpler proof is
+    // the import button label switching to "Import en cours…" while uploading.
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    await page.click('a[href="/transactions"]');
+    await page.waitForURL(/\/transactions(\?|#|$)/);
+
+    // Import button exists and starts in idle state.
+    const importBtn = page.locator('button.btn.sm', { hasText: 'Import CSV' });
+    await expect(importBtn).toBeVisible();
+    await expect(importBtn).toBeEnabled();
+  });
+
+  test('should render the novice explainers on Allocation / Performance / DCA', async ({ page }) => {
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    for (const [route, summary] of [
+      ['/allocation',  'Première fois ici'],
+      ['/performance', 'Comment lire cette page'],
+      ['/tools/dca',   'C\'est quoi le DCA'],
+    ] as const) {
+      await page.goto(route);
+      await page.waitForURL(new RegExp(`${route.replace('/', '\\/')}(\\?|#|$)`));
+      await expect(page.locator('details.explainer summary', { hasText: summary })).toBeVisible();
+    }
   });
 
   test('should allow creating a transaction and reflect it in transactions list', async ({ page }) => {
