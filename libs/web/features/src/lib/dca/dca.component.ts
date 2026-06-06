@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService } from '@patrimo/data-access';
+import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService, ToastService } from '@patrimo/data-access';
 import { BarComponent, fmtEur, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
@@ -95,12 +95,7 @@ export class DcaComponent {
     this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price), 0),
   );
 
-  protected readonly toastMsg  = signal<{ text: string; ok: boolean } | null>(null);
-
-  protected showToast(text: string, ok = true): void {
-    this.toastMsg.set({ text, ok });
-    setTimeout(() => this.toastMsg.set(null), 3000);
-  }
+  private readonly toasts = inject(ToastService);
 
   protected readonly cashAfter = computed(() => {
     const env = this.selectedEnvelope();
@@ -157,10 +152,10 @@ export class DcaComponent {
         dayOfMonth: this.dayOfMonth(),
         allocations,
       });
-      this.showToast('Plan DCA mensuel programmé.');
+      this.toasts.success('Plan DCA mensuel programmé.');
     } catch (err) {
       console.error(err);
-      this.showToast('Erreur lors de la sauvegarde.', false);
+      this.toasts.error('Erreur lors de la sauvegarde.');
     }
   }
 

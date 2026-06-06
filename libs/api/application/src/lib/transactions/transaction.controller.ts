@@ -70,7 +70,7 @@ export class TransactionController {
     @SessionUser() user: AuthUser,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     @UploadedFile() file: any,
-  ): Promise<{ count: number }> {
+  ): Promise<{ count: number; skipped: number }> {
     return this.transactions.importCsv(user.id, file.buffer.toString());
   }
 

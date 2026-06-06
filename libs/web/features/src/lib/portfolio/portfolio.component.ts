@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { EtfService, ExposureService, TransactionService, Etf, etfValue, etfCost, etfPnl, etfPnlPct, etfDayPct, API_BASE_URL } from '@patrimo/data-access';
 import { BarComponent, DeltaComponent, SparklineComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
+import { computeRealized, startOfYearISO } from './realized-pnl';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 
@@ -40,69 +41,31 @@ export class PortfolioComponent {
   protected readonly totalPnl  = computed(() => this.total() - this.totalCost());
   protected readonly totalDay  = computed(() => this.allEtfs().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0));
 
-  // FIFO realized P&L since the start of the calendar year.
-  // We replay every BUY/SELL chronologically per ETF, popping units from the oldest
-  // lots first. Only the realized leg of a SELL that lands in the current year is
-  // counted — partial sells (the previous closed-positions card ignored them) and
-  // mixed-cost-basis lots are now handled correctly.
-  protected readonly realizedYtd = computed(() => {
-    const startOfYear = `${new Date().getFullYear()}-01-01`;
-    const lots = new Map<string, { qty: number; pricePerUnit: number }[]>();
-    let realized = 0;
+  // Cost-basis-aware FIFO replay of every BUY/SELL, scoped to the current
+  // calendar year. The pure function and its spec live in `realized-pnl.ts`.
+  private readonly realizedReport = computed(() =>
+    computeRealized(this.txSvc.all(), startOfYearISO()),
+  );
+  protected readonly realizedYtd      = computed(() => this.realizedReport().realizedSince);
+  protected readonly orphanSellCount  = computed(() => this.realizedReport().orphanSellCount);
+  protected readonly orphanSellUnits  = computed(() => this.realizedReport().orphanSellUnits);
 
-    const sorted = this.txSvc.all()
-      .filter(t => t.etf && (t.type === 'BUY' || t.type === 'SELL'))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    for (const t of sorted) {
-      const isin = t.etf;
-      if (!isin) continue;
-      const queue = lots.get(isin) ?? [];
-      if (queue.length === 0) lots.set(isin, queue);
-
-      if (t.type === 'BUY') {
-        queue.push({ qty: t.qty, pricePerUnit: t.amount / t.qty });
-        continue;
-      }
-
-      let remaining = t.qty;
-      const sellPerUnit = t.amount / t.qty;
-      while (remaining > 0 && queue.length > 0) {
-        const lot = queue[0];
-        const take = Math.min(remaining, lot.qty);
-        if (t.date >= startOfYear) {
-          realized += take * (sellPerUnit - lot.pricePerUnit);
-        }
-        lot.qty -= take;
-        remaining -= take;
-        if (lot.qty < 1e-9) queue.shift();
-      }
-    }
-    return realized;
-  });
-
+  // Sourced from the same FIFO walk as `realizedYtd` so both cards on the page
+  // share one cost-basis model (drift-free) and a single tx-list traversal.
   protected readonly closedPositions = computed(() => {
-    const txs  = this.txSvc.all();
-    const etfs = this.etfSvc.all();
-    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
-
-    const map = new Map<string, { buyQty: number; sellQty: number; buyCost: number; sellProceeds: number; lastSell: string }>();
-    for (const t of txs) {
-      if (!t.etf || (t.type !== 'BUY' && t.type !== 'SELL')) continue;
-      const e = map.get(t.etf) ?? { buyQty: 0, sellQty: 0, buyCost: 0, sellProceeds: 0, lastSell: '' };
-      if (t.type === 'BUY')  { e.buyQty += t.qty; e.buyCost += t.amount; }
-      if (t.type === 'SELL') { e.sellQty += t.qty; e.sellProceeds += t.amount; e.lastSell = t.date > e.lastSell ? t.date : e.lastSell; }
-      map.set(t.etf, e);
-    }
-
-    return Array.from(map.entries())
-      .filter(([, e]) => e.sellQty > 0 && Math.abs(e.buyQty - e.sellQty) < 0.001)
-      .map(([isin, e]) => {
-        const etf = etfByIsin.get(isin);
-        const realizedPnl = e.sellProceeds - e.buyCost;
-        return { isin, ticker: etf?.ticker ?? isin, name: etf?.name ?? isin, realizedPnl, sellProceeds: e.sellProceeds, buyCost: e.buyCost, lastSell: e.lastSell };
-      })
-      .sort((a, b) => b.lastSell.localeCompare(a.lastSell));
+    const etfByIsin = new Map(this.etfSvc.all().map(e => [e.isin, e]));
+    return this.realizedReport().closedPositions.map(p => {
+      const etf = etfByIsin.get(p.isin);
+      return {
+        isin:         p.isin,
+        ticker:       etf?.ticker ?? p.isin,
+        name:         etf?.name   ?? p.isin,
+        realizedPnl:  p.realizedPnl,
+        sellProceeds: p.sellProceeds,
+        buyCost:      p.buyCost,
+        lastSell:     p.lastSell,
+      };
+    });
   });
 
   protected readonly dividends12M = computed(() => {

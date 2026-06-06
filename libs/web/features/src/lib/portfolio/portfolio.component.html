@@ -81,12 +81,21 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
         </div>
         <div class="stat">
           <div class="label">
-            <span data-tip="Plus-Value réalisée depuis le 1er janvier. Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF.">PV réalisée YTD</span>
+            <span data-tip="Plus-Value réalisée depuis le 1er janvier. Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF. Frais d'achat et de vente inclus dans le coût.">PV réalisée YTD</span>
           </div>
           <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
             {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 2) }}
           </div>
-          <div class="sub">depuis le 1er janv.</div>
+          @if (orphanSellCount() > 0) {
+            <div class="sub">
+              <span class="pill warn"
+                    [attr.title]="orphanSellUnits() + ' parts vendues sans achat antérieur dans Patrimo — ces ventes ne contribuent pas au calcul.'">
+                {{ orphanSellCount() }} vente{{ orphanSellCount() > 1 ? 's' : '' }} orpheline{{ orphanSellCount() > 1 ? 's' : '' }}
+              </span>
+            </div>
+          } @else {
+            <div class="sub">depuis le 1er janv.</div>
+          }
         </div>
         <div class="stat">
           <div class="label">Dividendes 12M</div>
@@ -100,7 +109,12 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
   <!-- POSITIONS TABLE -->
   <div class="section-head">
     <h2 class="section-title">Positions</h2>
-    <span class="section-sub">{{ allEtfs().length }} lignes</span>
+    <span class="section-sub">
+      {{ allEtfs().length }} lignes
+      @if (loading() && allEtfs().length > 0) {
+        <span class="muted tiny" aria-live="polite">· mise à jour…</span>
+      }
+    </span>
     <div class="section-right">
       <div class="tabs">
         @for (tab of allocTabs; track tab) {

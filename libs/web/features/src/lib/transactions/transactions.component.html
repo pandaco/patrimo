@@ -1,13 +1,14 @@
 <div class="page">
 
-  @if (toastMsg(); as t) {
-    <div class="ui-toast" role="status" [class.ok]="t.ok" [class.err]="!t.ok">{{ t.text }}</div>
-  }
-
   <div class="page-head">
     <div class="row">
       <div class="grow">
-        <div class="page-eyebrow">Journal — {{ totalCount() }} mouvements</div>
+        <div class="page-eyebrow">
+          Journal — {{ totalCount() }} mouvements
+          @if (loading() && totalCount() > 0) {
+            <span class="muted tiny" aria-live="polite" style="margin-left:8px">· mise à jour…</span>
+          }
+        </div>
         <h1 class="page-title">Toutes les <em>opérations</em></h1>
         <p class="page-sub">
           Une seule source de vérité. PRU, cash, positions, plus-values latentes —

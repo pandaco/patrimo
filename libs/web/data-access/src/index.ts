@@ -18,3 +18,4 @@ export * from './lib/dca-plan.service';
 export * from './lib/broker.service';
 export * from './lib/glossary.service';
 export * from './lib/fx.service';
+export * from './lib/toast.service';

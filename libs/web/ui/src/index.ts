@@ -5,6 +5,7 @@ export * from './lib/sparkline/sparkline.component';
 export * from './lib/bar/bar.component';
 export * from './lib/donut/donut.component';
 export * from './lib/kbd/kbd.component';
+export * from './lib/toast/toast.component';
 export * from './lib/format';
 
 export * from './lib/keyboard/gmode-badge.component';

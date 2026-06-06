@@ -76,11 +76,11 @@ export class TransactionService {
     this.refreshPositions();
   }
 
-  async importCsv(file: File): Promise<{ count: number }> {
+  async importCsv(file: File): Promise<{ count: number; skipped: number }> {
     const formData = new FormData();
     formData.append('file', file);
     const result = await firstValueFrom(
-      this.http.post<{ count: number }>(`${this.baseUrl}/transactions/import`, formData),
+      this.http.post<{ count: number; skipped: number }>(`${this.baseUrl}/transactions/import`, formData),
     );
     this.reload();
     this.refreshPositions();

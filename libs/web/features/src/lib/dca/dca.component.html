@@ -1,13 +1,5 @@
 <div class="page">
 
-  @if (toastMsg(); as t) {
-    <div role="status" style="position:fixed;bottom:24px;right:24px;z-index:1000;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.18)"
-      [style.background]="t.ok ? 'var(--gain)' : 'var(--loss)'"
-      style="color:#fff">
-      {{ t.text }}
-    </div>
-  }
-
   <div class="page-head">
     <div class="page-eyebrow">Dollar Cost Averaging</div>
     <h1 class="page-title">Lance ton <em><span data-tip="Dollar Cost Averaging — stratégie d'investissement régulier d'un montant fixe, quelle que soit la valorisation du marché. Lisse le risque d'entrer au mauvais moment.">DCA</span></em> du mois.</h1>

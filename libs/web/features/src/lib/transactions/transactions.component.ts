@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, EtfService, TransactionService, Transaction, TxType, API_BASE_URL } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, TransactionService, Transaction, ToastService, TxType, API_BASE_URL } from '@patrimo/data-access';
 import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
@@ -82,12 +82,7 @@ export class TransactionsComponent {
   protected readonly displayCount = signal(30);
 
   protected readonly importing = signal(false);
-  protected readonly toastMsg  = signal<{ text: string; ok: boolean } | null>(null);
-
-  private showToast(text: string, ok = true): void {
-    this.toastMsg.set({ text, ok });
-    setTimeout(() => this.toastMsg.set(null), 3500);
-  }
+  private readonly toasts = inject(ToastService);
 
   protected readonly pagedGroups = computed<TxGroup[]>(() => {
     let remaining = this.displayCount();
@@ -201,11 +196,12 @@ export class TransactionsComponent {
 
     this.importing.set(true);
     try {
-      const { count } = await this.txSvc.importCsv(file);
-      this.showToast(`${count} transactions importées.`);
+      const { count, skipped } = await this.txSvc.importCsv(file);
+      const skipNote = skipped > 0 ? ` (${skipped} ligne${skipped > 1 ? 's' : ''} ignorée${skipped > 1 ? 's' : ''})` : '';
+      this.toasts.success(`${count} transactions importées${skipNote}.`);
     } catch (err) {
       console.error('Import failed', err);
-      this.showToast('Erreur lors de l\'import CSV. Vérifie le format.', false);
+      this.toasts.error('Erreur lors de l\'import CSV. Vérifie le format.');
     } finally {
       this.importing.set(false);
       el.value = '';

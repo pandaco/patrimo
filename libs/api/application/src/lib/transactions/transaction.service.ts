@@ -102,7 +102,7 @@ export class TransactionService {
     return header + lines.join('\n');
   }
 
-  async importCsv(userId: string, csv: string): Promise<{ count: number }> {
+  async importCsv(userId: string, csv: string): Promise<{ count: number; skipped: number }> {
     const lines = csv.split('\n').map(l => l.trim()).filter(Boolean);
     const [userEnvelopes, allEtfs] = await Promise.all([
       this.envelopes.findByUserId(userId),
@@ -112,32 +112,51 @@ export class TransactionService {
     const envMap = new Map(userEnvelopes.map(e => [e.code, e.id]));
     const etfMap = new Map(allEtfs.map(e => [e.ticker, e.isin]));
 
+    const positionTypes = new Set<TxType>(['BUY', 'SELL']);
     let count = 0;
+    let skipped = 0;
     for (const line of lines) {
       const parsed = parseCsvLine(line);
       if (parsed.length === 0 || parsed[0].toLowerCase() === 'date') continue;
-      
-      const [date, type, envCode, ticker, qty, price, fees, amount] = parsed;
-      
-      const envelopeId = envMap.get(envCode);
-      if (!envelopeId) continue;
 
-      const etfIsin = ticker ? etfMap.get(ticker) : null;
+      const [date, type, envCode, ticker, qty, price, fees, amount] = parsed;
+
+      const envelopeId = envMap.get(envCode);
+      if (!envelopeId) { skipped++; continue; }
+
+      const etfIsin   = ticker ? etfMap.get(ticker) : null;
+      const txType    = type as TxType;
+      const quantity  = parseFloat(qty)    || 0;
+      const fee       = parseFloat(fees)   || 0;
+      const amt       = parseFloat(amount) || 0;
+      const parsedDate = new Date(date);
+
+      // For BUY/SELL the qty and amount must both be strictly positive — a
+      // zero-qty or zero-amount row would produce an undefined cost basis
+      // when downstream FIFO math divides by qty. Other types (DEPOSIT,
+      // WITHDRAWAL, DIVIDEND, INTEREST) only need a positive amount.
+      const needsLot = positionTypes.has(txType);
+      const invalid =
+        Number.isNaN(parsedDate.getTime()) ||
+        amt <= 0 ||
+        (needsLot && quantity <= 0) ||
+        (needsLot && !etfIsin);
+      if (invalid) { skipped++; continue; }
 
       await this.transactions.create({
         userId,
         envelopeId,
         etfIsin: etfIsin ?? null,
-        type: type as TxType,
-        date: new Date(date),
-        quantity: parseFloat(qty) || 0,
+        type: txType,
+        date: parsedDate,
+        quantity,
         price: price ? parseFloat(price) : null,
-        fees: parseFloat(fees) || 0,
-        amount: parseFloat(amount) || 0,
+        fees: fee,
+        amount: amt,
       });
       count++;
     }
 
-    return { count };
+    return { count, skipped };
   }
 }
