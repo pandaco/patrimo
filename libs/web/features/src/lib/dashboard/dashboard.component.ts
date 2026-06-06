@@ -78,6 +78,13 @@ export class DashboardComponent {
   protected readonly totalCash    = this.envelopes.totalCash;
   protected readonly totalInvested = this.envelopes.totalInvested;
 
+  // True when the user has not yet declared any envelope nor a single
+  // transaction. The dashboard then swaps the noisy hero for an onboarding
+  // card pointing at the three first steps.
+  protected readonly isEmpty = computed(() =>
+    this.totalValue() <= 0 && this.envelopes.all().length === 0
+  );
+
   protected readonly portfolioValue = computed(() =>
     this.etfs.all().reduce((a, e) => a + etfValue(e), 0)
   );

@@ -7,17 +7,24 @@ import { AuthService } from '@patrimo/data-access';
   selector: 'app-login',
   standalone: true,
   template: `
-    <div style="display:grid;place-items:center;min-height:100vh;background:var(--paper)">
-      <div class="card" style="max-width:400px;width:100%;text-align:center;padding:40px 32px">
-        <div class="brand-mark" style="margin:0 auto 20px" aria-hidden="true">P</div>
-        <h1 class="page-title" style="font-size:32px;margin-bottom:8px">Patrimo</h1>
-        <p class="muted" style="margin-bottom:32px">Ton tracker patrimonial personnel</p>
+    <div style="display:grid;place-items:center;min-height:100vh;background:var(--paper);padding:24px">
+      <div class="card" style="max-width:460px;width:100%;padding:40px 32px">
+        <div style="text-align:center">
+          <div class="brand-mark" style="margin:0 auto 20px" aria-hidden="true">P</div>
+          <h1 class="page-title" style="font-size:32px;margin-bottom:8px">Patrimo</h1>
+          <p class="muted" style="margin-bottom:28px">
+            Le tableau de bord patrimonial pour suivre toutes tes enveloppes
+            (PEA, CTO, AV…), tes ETF et ton cash en un seul endroit.
+          </p>
+        </div>
+
         @if (errorMessage()) {
           <div role="alert"
                style="margin-bottom:20px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px">
             {{ errorMessage() }}
           </div>
         }
+
         <button
           type="button"
           class="btn primary"
@@ -26,9 +33,68 @@ import { AuthService } from '@patrimo/data-access';
         >
           Continuer avec Google
         </button>
-        <p class="muted tiny" style="margin-top:16px">Connexion sécurisée OAuth2 · Aucun mot de passe</p>
+        <p class="muted tiny" style="margin-top:12px;text-align:center">
+          Connexion sécurisée OAuth2 · Aucun mot de passe
+        </p>
+
+        <div class="divider-soft" style="margin:28px 0 20px"></div>
+
+        <h3 style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 14px">
+          Comment ça marche
+        </h3>
+        <ol style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px">
+          <li style="display:flex;gap:14px;align-items:flex-start">
+            <span class="step-num">1</span>
+            <div>
+              <div style="font-size:13.5px;font-weight:500;color:var(--ink)">Déclare tes enveloppes</div>
+              <div class="muted tiny" style="margin-top:2px">
+                Saisis tes comptes (PEA, CTO, AV, Livret A…) — nom du courtier
+                et solde de départ. Tu peux modifier à tout moment.
+              </div>
+            </div>
+          </li>
+          <li style="display:flex;gap:14px;align-items:flex-start">
+            <span class="step-num">2</span>
+            <div>
+              <div style="font-size:13.5px;font-weight:500;color:var(--ink)">Importe ou saisis tes opérations</div>
+              <div class="muted tiny" style="margin-top:2px">
+                CSV depuis ton broker ou saisie manuelle. Achats, ventes, dividendes,
+                versements — chaque mouvement nourrit le calcul automatique.
+              </div>
+            </div>
+          </li>
+          <li style="display:flex;gap:14px;align-items:flex-start">
+            <span class="step-num">3</span>
+            <div>
+              <div style="font-size:13.5px;font-weight:500;color:var(--ink)">Pilote en un coup d'œil</div>
+              <div class="muted tiny" style="margin-top:2px">
+                Performance vs benchmark, drift d'allocation, alertes de rebalancing,
+                PV réalisée YTD pour la fiscalité… tout y passe.
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <p class="muted tiny" style="margin-top:24px;text-align:center">
+          Patrimo est un outil de suivi personnel — pas un conseil
+          en investissement.
+        </p>
       </div>
     </div>
+  `,
+  styles: `
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

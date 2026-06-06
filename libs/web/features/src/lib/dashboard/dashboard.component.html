@@ -7,59 +7,118 @@
       {{ todayLabel() }} · {{ marketLabel() }}
     </div>
     <h1 class="page-title">Bonjour <em>{{ firstName() || '…' }}.</em></h1>
-    <p class="page-sub">
-      Ton patrimoine progresse de <span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span> aujourd'hui,
-      soit <span class="hl-soft">{{ fmtEur(dayValue(), 0) }}</span>.
-      @if (topAlerts().length > 0) {
-        <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
-      }
-    </p>
+    @if (!isEmpty()) {
+      <p class="page-sub">
+        Ton patrimoine progresse de <span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span> aujourd'hui,
+        soit <span class="hl-soft">{{ fmtEur(dayValue(), 0) }}</span>.
+        @if (topAlerts().length > 0) {
+          <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
+        }
+      </p>
+    } @else {
+      <p class="page-sub">
+        Bienvenue sur Patrimo. Trois étapes suffisent pour voir ton patrimoine
+        apparaître ici en temps réel.
+      </p>
+    }
   </div>
 
-  <!-- HERO STATS -->
-  <div class="hero-stats">
-    <div class="hero-main">
-      <div class="hero-money">
-        <div>
-          <div class="label">Patrimoine total @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }</div>
-          <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
-            {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fx.symbol() }}</small>
+  @if (isEmpty()) {
+    <!-- ONBOARDING — premier login, pas encore d'enveloppe -->
+    <div class="card" style="padding:28px;margin-bottom:28px;background:var(--paper-2)">
+      <div class="row" style="gap:16px;margin-bottom:18px;align-items:baseline">
+        <h2 style="font-size:18px;margin:0">Premiers pas</h2>
+        <span class="muted small">5 minutes</span>
+      </div>
+      <ol style="list-style:none;padding:0;margin:0 0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+        <li class="onboarding-step">
+          <span class="onboarding-num">1</span>
+          <h3>Crée tes enveloppes</h3>
+          <p>PEA, CTO, AV, Livret A — décris où ton argent dort déjà.</p>
+          <a class="btn sm primary" routerLink="/wealth">Ouvrir Patrimoine →</a>
+        </li>
+        <li class="onboarding-step">
+          <span class="onboarding-num">2</span>
+          <h3>Importe tes opérations</h3>
+          <p>CSV depuis ton broker ou saisie manuelle. PRU, cash, positions
+            sont recalculés automatiquement.</p>
+          <a class="btn sm" routerLink="/transactions">Ouvrir Transactions →</a>
+        </li>
+        <li class="onboarding-step">
+          <span class="onboarding-num">3</span>
+          <h3>Définis ta cible</h3>
+          <p>Actions vs obligations, Core vs Satellite — un wizard te guide
+            niveau par niveau.</p>
+          <a class="btn sm" routerLink="/settings/allocation">Ouvrir Allocation →</a>
+        </li>
+      </ol>
+      <p class="muted tiny" style="margin:0">
+        Pas sûr du vocabulaire ?
+        <a routerLink="/tools/glossary" style="color:var(--ink)">Le glossaire</a>
+        explique PRU, PnL, TER, capitalisant, drift, et la fiscalité enveloppe par enveloppe.
+      </p>
+    </div>
+  } @else {
+    <!-- HERO STATS -->
+    <div class="hero-stats">
+      <div class="hero-main">
+        <div class="hero-money">
+          <div>
+            <div class="label">Patrimoine total @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }</div>
+            <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
+              {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fx.symbol() }}</small>
+            </div>
+          </div>
+          <div class="sub" style="flex-wrap:wrap">
+            <ui-delta [value]="dayPct()" [digits]="2" />
+            <span>aujourd'hui</span>
+            <span style="opacity:0.35">•</span>
+            <span style="color:#4ADE80" class="num bold">+{{ fmtNum(pnlPct(), 1) }} %</span>
+            <span>depuis l'achat</span>
           </div>
         </div>
-        <div class="sub" style="flex-wrap:wrap">
-          <ui-delta [value]="dayPct()" [digits]="2" />
-          <span>aujourd'hui</span>
-          <span style="opacity:0.35">•</span>
-          <span style="color:#4ADE80" class="num bold">+{{ fmtNum(pnlPct(), 1) }} %</span>
-          <span>depuis l'achat</span>
+        <div class="stat">
+          <div class="label">Investissements boursiers</div>
+          <div class="value">{{ fmtEur(totalBourse(), 0) }}</div>
+          <div class="sub" style="display:block">
+            @if (totalValue() > 0) {
+              <span class="num bold">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
+              <span class="muted"> du total</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </div>
         </div>
-      </div>
-      <div class="stat">
-        <div class="label">Investissements boursiers</div>
-        <div class="value">{{ fmtEur(totalBourse(), 0) }}</div>
-        <div class="sub" style="display:block">
-          <span class="num bold">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
-          <span class="muted"> du total</span>
+        <div class="stat">
+          <div class="label">Épargne réglementée</div>
+          <div class="value">{{ fmtEur(totalLivret(), 0) }}</div>
+          <div class="sub" style="display:block">
+            @if (totalValue() > 0) {
+              <span class="num bold">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
+              <span class="muted"> du total</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </div>
         </div>
-      </div>
-      <div class="stat">
-        <div class="label">Épargne réglementée</div>
-        <div class="value">{{ fmtEur(totalLivret(), 0) }}</div>
-        <div class="sub" style="display:block">
-          <span class="num bold">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
-          <span class="muted"> du total</span>
-        </div>
-      </div>
-      <div class="stat">
-        <div class="label">Cash dormant</div>
-        <div class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</div>
-        <div class="sub" style="display:block">
-          <span class="pill warn"><span class="dot"></span>à investir</span>
+        <div class="stat">
+          <div class="label">
+            <span data-tip="Le cash hors livrets — il dort sur tes comptes courants et perd de la valeur face à l'inflation. Le DCA mensuel permet de le placer progressivement.">Cash dormant</span>
+          </div>
+          <div class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</div>
+          <div class="sub" style="display:block">
+            @if (totalCash() - totalLivret() > 0) {
+              <span class="pill warn"><span class="dot"></span>à investir</span>
+            } @else {
+              <span class="muted small">aucun cash hors livrets</span>
+            }
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  }
 
+  @if (!isEmpty()) {
   <!-- TWO COLUMN: PERF + REPARTITION -->
   <div class="grid" style="grid-template-columns:1.6fr 1fr">
 
@@ -220,5 +279,6 @@
       </tbody>
     </table>
   </div>
+  }
 
 </div>

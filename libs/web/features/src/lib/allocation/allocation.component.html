@@ -16,6 +16,36 @@
     </div>
   </div>
 
+  <details class="explainer">
+    <summary>Première fois ici ? À quoi sert cette page</summary>
+    <div class="explainer-body">
+      <p>
+        Une <b>allocation cible</b> est la répartition idéale de ton portefeuille
+        — décidée à froid, indépendamment du marché du moment. Tant que ta
+        répartition <em>réelle</em> reste proche de la cible, tu n'as rien à
+        faire. Quand elle dérive trop, tu rééquilibres.
+      </p>
+      <p><b>Les trois niveaux, du général au précis :</b></p>
+      <ul>
+        <li><b>Stratégique</b> — Actions vs Obligations. La décision la plus
+          structurante. 80/20 ≈ profil dynamique, 50/50 ≈ équilibré, 20/80 ≈ prudent.</li>
+        <li><b>Tactique</b> — Core (MSCI World, S&amp;P 500) vs Satellite
+          (thématiques, régions) vs Obligations. Décompose la poche actions.</li>
+        <li><b>Par ETF</b> — quel poids exact pour chaque ligne de ton catalogue.</li>
+      </ul>
+      <p>
+        Le <b>drift</b> est l'écart en points entre réel et cible. Au-delà de
+        5 pts on parle de <em>drift important</em> → le bouton
+        <b>Plan de rebalancing</b> calcule les achats/ventes pour revenir à la cible.
+      </p>
+      <p style="color:var(--ink-3);font-size:12.5px;margin:0">
+        Pas encore de cible ? Lance le wizard
+        <a routerLink="/settings/allocation" style="color:var(--ink)">Modifier les cibles</a>
+        — 4 étapes guidées, Σ = 100 % vérifiée à chaque pas.
+      </p>
+    </div>
+  </details>
+
   @if (rebalancePlan(); as plan) {
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">
