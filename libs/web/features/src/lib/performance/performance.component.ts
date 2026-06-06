@@ -1,9 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PerformanceService } from '@patrimo/data-access';
+import { EtfService, PerformanceService, etfValue } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
+
+interface StressScenario {
+  id: string;
+  label: string;
+  drawdownPct: number;
+  blurb: string;
+}
+
+// Pic-à-creux historiques de l'indice MSCI World en €. Sources :
+// MSCI factsheet & investing.com (2000, 2008, 2020, 2022).
+const STRESS_SCENARIOS: StressScenario[] = [
+  { id: '2000', label: 'Krach dot-com (2000–2002)', drawdownPct: -49,
+    blurb: 'Éclatement de la bulle tech. ~3 ans de baisse, lente reprise — l\'indice ne retrouve son plus haut qu\'en 2007.' },
+  { id: '2008', label: 'Crise financière (2008–2009)', drawdownPct: -44,
+    blurb: 'Faillite Lehman, contagion bancaire. Creux atteint en mars 2009 — récupération en ~2,5 ans.' },
+  { id: '2020', label: 'Choc COVID (févr.–mars 2020)', drawdownPct: -34,
+    blurb: 'Chute la plus rapide de l\'histoire moderne. Récupération en ~5 mois grâce aux relances massives.' },
+  { id: '2022', label: 'Inflation + hausse des taux (2022)', drawdownPct: -20,
+    blurb: 'Resserrement monétaire post-COVID. Drawdown lent et étalé, sortie en 2023.' },
+];
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
   { id: '1M',  label: '1M'  },
@@ -45,10 +65,29 @@ function shortFr(iso: string): string {
 })
 export class PerformanceComponent {
   private readonly perfSvc = inject(PerformanceService);
+  private readonly etfSvc  = inject(EtfService);
 
   protected readonly periodOptions = PERIOD_OPTIONS;
   protected readonly activePeriod  = this.perfSvc.period;
   protected readonly loading       = this.perfSvc.loading;
+
+  // Stress test — apply a historical-drawdown shock to the current
+  // boursier book. Livrets and cash dormant are not exposed to market risk
+  // so they're excluded from the shock.
+  protected readonly stressScenarios = STRESS_SCENARIOS;
+  protected readonly activeStress    = signal<StressScenario>(STRESS_SCENARIOS[2]);
+
+  protected readonly stressBaseValue = computed(() =>
+    this.etfSvc.all().reduce((a, e) => a + etfValue(e), 0),
+  );
+  protected readonly stressLoss = computed(() =>
+    this.stressBaseValue() * (this.activeStress().drawdownPct / 100),
+  );
+  protected readonly stressAfter = computed(() =>
+    this.stressBaseValue() + this.stressLoss(),
+  );
+
+  protected selectStress(s: StressScenario): void { this.activeStress.set(s); }
 
   protected readonly portfolio    = computed(() => this.perfSvc.series().portfolio);
   protected readonly benchmark    = computed(() => this.perfSvc.series().benchmark);
