@@ -69,15 +69,16 @@
             @for (m of rulesWithMeta(); track m.meta.type) {
               <tr [style.opacity]="m.enabled ? 1 : 0.5">
                 <td style="width:18px">
-                  <div style="width:22px;height:12px;border-radius:999px;position:relative;cursor:pointer"
+                  <div class="ui-switch"
                     [style.background]="m.enabled ? 'var(--brand)' : 'var(--rule)'"
                     (click)="toggleRule(m)"
-                    (keydown.enter)="toggleRule(m)"
+                    (keydown.enter)="toggleRule(m); $event.preventDefault()"
+                    (keydown.space)="toggleRule(m); $event.preventDefault()"
                     tabindex="0"
                     role="switch"
-                    [attr.aria-checked]="m.enabled">
-                    <span style="position:absolute;top:1px;width:10px;height:10px;border-radius:50%;background:var(--paper);transition:left 0.2s"
-                      [style.left]="m.enabled ? '11px' : '1px'"></span>
+                    [attr.aria-checked]="m.enabled"
+                    [attr.aria-label]="m.meta.label">
+                    <span class="ui-switch-thumb" [style.left]="m.enabled ? '11px' : '1px'"></span>
                   </div>
                 </td>
                 <td>

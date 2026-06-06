@@ -185,11 +185,12 @@
                 <tr>
                   <td class="muted">{{ row.year }}</td>
                   @for (pct of row.months; track $index) {
-                    <td class="r" style="padding:3px 5px;border-radius:3px" [style.background]="heatmapBg(pct)">
+                    <td class="r heat-cell" [class.heat-empty]="pct === null"
+                        [style.background]="heatmapBg(pct)"
+                        [attr.title]="pct === null ? 'Pas de donnée pour ' + MONTHS_SHORT[$index] + ' ' + row.year : null"
+                        [attr.aria-label]="pct === null ? 'Pas de donnée' : null">
                       @if (pct !== null) {
                         <span [class.pos]="pct >= 0" [class.neg]="pct < 0">{{ fmtPct(pct, 1) }}</span>
-                      } @else {
-                        <span class="muted tiny">—</span>
                       }
                     </td>
                   }
