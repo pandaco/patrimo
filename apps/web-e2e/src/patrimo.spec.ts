@@ -21,8 +21,8 @@ test.describe('Patrimo E2E Tests', () => {
     // Navigate to root (which requires auth)
     await page.goto('/');
 
-    // Wait for redirect to /login
-    await page.waitForURL(url => url.pathname.endsWith('/login'));
+    // Wait for redirect to /login (strict path equality to avoid matching `/admin/login` etc.)
+    await page.waitForURL(url => url.pathname === '/login');
 
     // Check that we see the login card and brand mark
     await expect(page.locator('.brand-mark')).toContainText('P');
@@ -35,7 +35,7 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto(DEV_LOGIN_URL);
 
     // Wait for the redirects to complete and land on /dashboard
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
 
     // Verify page content shows the seeded user first name "Antoine"
     await expect(page.locator('h1.page-title')).toContainText('Bonjour Antoine.');
@@ -48,19 +48,19 @@ test.describe('Patrimo E2E Tests', () => {
   test('should allow creating a transaction and reflect it in transactions list', async ({ page }) => {
     // Authenticate
     await page.goto(DEV_LOGIN_URL);
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
 
     // Navigate to transactions view using sidebar navigation link
     await page.click('a[href="/transactions"]');
-    await page.waitForURL('**/transactions');
+    await page.waitForURL(/\/transactions(\?|#|$)/);
 
     // Wait for the journal header to render (signals data hydrated from API).
     // The eyebrow text `Journal — N mouvements` is the single source of truth
     // for total transaction count, independent of pagination.
     const initialCount = await readTotalTxCount(page);
 
-    // Open transaction dialog (raccourci clavier 'T' ou clic bouton '+ Transaction')
-    await page.click('button:has-text("+ Nouvelle transaction"), button:has-text("+ Ordre"), button:has-text("+ Opération")');
+    // Open transaction dialog via stable test-id (not relying on French button label).
+    await page.click('[data-testid="open-tx-dialog"]');
 
     // Wait for dialog overlay to open
     await expect(page.locator('.tx-dialog-panel')).toBeVisible();
@@ -71,8 +71,8 @@ test.describe('Patrimo E2E Tests', () => {
     // Fill in amount
     await page.fill('#tx-amount', '1250');
 
-    // Click "Enregistrer"
-    await page.click('button.btn.primary:has-text("Enregistrer"), button.btn.primary:has-text("Sauvegarder")');
+    // Click save via stable test-id (not relying on French label which carries a `→` suffix).
+    await page.click('[data-testid="tx-save"]');
 
     // Dialog should close
     await expect(page.locator('.tx-dialog-panel')).toBeHidden();

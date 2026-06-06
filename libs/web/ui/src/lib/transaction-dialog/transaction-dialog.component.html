@@ -150,7 +150,7 @@
     @if (!editing) {
       <button class="btn" (click)="saveAndNew()" [disabled]="submitting()">Enregistrer + saisir un autre</button>
     }
-    <button class="btn primary" (click)="save()" [disabled]="submitting()">
+    <button class="btn primary" data-testid="tx-save" (click)="save()" [disabled]="submitting()">
       {{ submitting() ? 'Enregistrement…' : (editing ? 'Mettre à jour' : 'Enregistrer →') }}
     </button>
   </div>
