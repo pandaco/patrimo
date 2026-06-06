@@ -1,4 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+const API_URL = process.env['API_URL'] ?? 'http://localhost:3333';
+const DEV_LOGIN_URL = `${API_URL}/api/auth/dev-login`;
+
+/**
+ * Reads the total transaction count from the journal eyebrow text.
+ * Waits for the text to render so callers don't race the async signal hydration.
+ */
+async function readTotalTxCount(page: Page): Promise<number> {
+  const eyebrow = page.locator('.page-eyebrow');
+  await expect(eyebrow).toContainText(/Journal — \d+ mouvement/);
+  const text = (await eyebrow.textContent()) ?? '';
+  const match = /Journal — (\d+)/.exec(text);
+  return match ? Number(match[1]) : 0;
+}
 
 test.describe('Patrimo E2E Tests', () => {
 
@@ -8,7 +23,7 @@ test.describe('Patrimo E2E Tests', () => {
 
     // Wait for redirect to /login
     await page.waitForURL(url => url.pathname.endsWith('/login'));
-    
+
     // Check that we see the login card and brand mark
     await expect(page.locator('.brand-mark')).toContainText('P');
     await expect(page.locator('.page-title')).toContainText('Patrimo');
@@ -17,8 +32,7 @@ test.describe('Patrimo E2E Tests', () => {
 
   test('should authenticate via dev-login backdoor and show the dashboard', async ({ page }) => {
     // Navigate to NestJS dev-login endpoint (which sets the httpOnly session cookie and redirects to Angular callback)
-    // Note: NestJS runs on port 3333 in development
-    await page.goto('http://localhost:3333/api/auth/dev-login');
+    await page.goto(DEV_LOGIN_URL);
 
     // Wait for the redirects to complete and land on /dashboard
     await page.waitForURL('**/dashboard');
@@ -33,15 +47,17 @@ test.describe('Patrimo E2E Tests', () => {
 
   test('should allow creating a transaction and reflect it in transactions list', async ({ page }) => {
     // Authenticate
-    await page.goto('http://localhost:3333/api/auth/dev-login');
+    await page.goto(DEV_LOGIN_URL);
     await page.waitForURL('**/dashboard');
 
     // Navigate to transactions view using sidebar navigation link
     await page.click('a[href="/transactions"]');
     await page.waitForURL('**/transactions');
 
-    // Get initial transaction count
-    const initialTxCount = await page.locator('.tbl tbody tr').count();
+    // Wait for the journal header to render (signals data hydrated from API).
+    // The eyebrow text `Journal — N mouvements` is the single source of truth
+    // for total transaction count, independent of pagination.
+    const initialCount = await readTotalTxCount(page);
 
     // Open transaction dialog (raccourci clavier 'T' ou clic bouton '+ Transaction')
     await page.click('button:has-text("+ Nouvelle transaction"), button:has-text("+ Ordre"), button:has-text("+ Opération")');
@@ -61,10 +77,7 @@ test.describe('Patrimo E2E Tests', () => {
     // Dialog should close
     await expect(page.locator('.tx-dialog-panel')).toBeHidden();
 
-    // Verify new transaction appears in the list (row count increases by 1)
-    await expect(async () => {
-      const currentTxCount = await page.locator('.tbl tbody tr').count();
-      expect(currentTxCount).toBe(initialTxCount + 1);
-    }).toPass();
+    // Eyebrow count must increment by exactly one
+    await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} mouvement`);
   });
 });
