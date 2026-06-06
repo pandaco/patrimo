@@ -8,8 +8,13 @@ import { AppModule } from './app/app.module';
 
 const GLOBAL_PREFIX = 'api';
 
-function parseOrigins(raw: string | undefined): string[] {
-  if (!raw) return ['http://localhost:4200'];
+function parseOrigins(raw: string | undefined, isProd: boolean): string[] {
+  if (!raw) {
+    if (isProd) {
+      throw new Error('FRONTEND_URL must be set in production — refusing to fall back to localhost.');
+    }
+    return ['http://localhost:4200'];
+  }
   const out: string[] = [];
   for (const fragment of raw.split(',')) {
     const trimmed = fragment.trim();
@@ -24,7 +29,13 @@ function parseOrigins(raw: string | undefined): string[] {
       Logger.warn(`Ignoring malformed FRONTEND_URL origin: "${trimmed}"`, 'Bootstrap');
     }
   }
-  return out.length > 0 ? out : ['http://localhost:4200'];
+  if (out.length === 0) {
+    if (isProd) {
+      throw new Error(`FRONTEND_URL contained no valid origin (got: "${raw}") — refusing to fall back to localhost.`);
+    }
+    return ['http://localhost:4200'];
+  }
+  return out;
 }
 
 async function bootstrap() {
@@ -49,7 +60,8 @@ async function bootstrap() {
     }),
   );
 
-  const origins = parseOrigins(config.get<string>('FRONTEND_URL'));
+  const isProd  = config.get<string>('NODE_ENV') === 'production';
+  const origins = parseOrigins(config.get<string>('FRONTEND_URL'), isProd);
   app.enableCors({ origin: origins, credentials: true });
   app.set('frontend-url', origins[0]);
   app.set('trust proxy', 1);

@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Request, Response } from 'express';
 import { GoogleAuthFilter } from './google-auth.filter';
 import { SessionGuard } from './session.guard';
@@ -48,6 +49,7 @@ export class AuthController {
   }
 
   @Get('google')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @UseGuards(AuthGuard('google'))
   @UseFilters(GoogleAuthFilter)
   googleLogin(): void {
@@ -55,6 +57,7 @@ export class AuthController {
   }
 
   @Get('google/callback')
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @UseGuards(AuthGuard('google'))
   @UseFilters(GoogleAuthFilter)
   googleCallback(
@@ -68,6 +71,7 @@ export class AuthController {
   }
 
   @Get('dev-login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   async devLogin(
     @Req() req: Request,
     @Res() res: Response,

@@ -16,6 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { TransactionDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
@@ -65,6 +66,7 @@ export class TransactionController {
   }
 
   @Post('import')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @UseInterceptors(FileInterceptor('file'))
   import(
     @SessionUser() user: AuthUser,
