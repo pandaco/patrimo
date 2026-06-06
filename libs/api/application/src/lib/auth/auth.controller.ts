@@ -23,6 +23,7 @@ import { AuthUser, SESSION_COOKIE_NAME } from './types';
 @Controller('auth')
 export class AuthController {
   private readonly cookieOptions: CookieOptions;
+  private readonly devLoginEnabled: boolean;
 
   constructor(
     private readonly sessions: SessionService,
@@ -38,6 +39,11 @@ export class AuthController {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     };
+    // Dev-login is a known backdoor. Refuse to enable it unless BOTH
+    // `NODE_ENV !== production` AND `ALLOW_DEV_LOGIN=true` are set, so a
+    // single mis-set env can never silently expose the backdoor in prod.
+    this.devLoginEnabled =
+      !isProd && config.get<string>('ALLOW_DEV_LOGIN') === 'true';
   }
 
   @Get('google')
@@ -65,8 +71,8 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
-    if (process.env['NODE_ENV'] === 'production') {
-      throw new ForbiddenException('Not allowed in production');
+    if (!this.devLoginEnabled) {
+      throw new ForbiddenException('dev-login not enabled');
     }
     let user = await this.users.findByGoogleId('seed-dev-user');
     if (!user) {

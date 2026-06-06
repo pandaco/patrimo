@@ -50,6 +50,16 @@ class EnvVars {
   @IsOptional()
   @IsString()
   GOOGLE_ALLOWED_EMAILS?: string;
+
+  /**
+   * Opt-in flag for the `/api/auth/dev-login` backdoor. Must be the literal
+   * string `'true'` AND `NODE_ENV !== 'production'` for the endpoint to be
+   * served. Belt + suspenders: a single mis-set env can never silently
+   * expose the backdoor in production.
+   */
+  @IsOptional()
+  @IsString()
+  ALLOW_DEV_LOGIN?: string;
 }
 
 export function validateEnv(raw: Record<string, unknown>): EnvVars {
