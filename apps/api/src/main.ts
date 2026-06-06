@@ -3,13 +3,28 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app/app.module';
 
 const GLOBAL_PREFIX = 'api';
 
 function parseOrigins(raw: string | undefined): string[] {
   if (!raw) return ['http://localhost:4200'];
-  return raw.split(',').map(s => s.trim()).filter(Boolean);
+  const out: string[] = [];
+  for (const fragment of raw.split(',')) {
+    const trimmed = fragment.trim();
+    if (!trimmed) continue;
+    try {
+      // Throws if not a valid absolute URL. We keep the original string in the
+      // whitelist because that is what `cors()` compares against — but we
+      // refuse to silently include typo'd values like 'http//foo.com'.
+      new URL(trimmed);
+      out.push(trimmed);
+    } catch {
+      Logger.warn(`Ignoring malformed FRONTEND_URL origin: "${trimmed}"`, 'Bootstrap');
+    }
+  }
+  return out.length > 0 ? out : ['http://localhost:4200'];
 }
 
 async function bootstrap() {
@@ -18,6 +33,12 @@ async function bootstrap() {
 
   app.setGlobalPrefix(GLOBAL_PREFIX);
   app.use(cookieParser(config.getOrThrow<string>('SESSION_SECRET')));
+
+  // Security headers — disable the bundled CSP because we have no inline
+  // assets to whitelist yet and an unscoped CSP would silently break the
+  // Yahoo Finance price fetches. Everything else (X-Frame-Options, HSTS,
+  // X-Content-Type-Options, Referrer-Policy, etc.) ships with defaults.
+  app.use(helmet({ contentSecurityPolicy: false }));
 
   app.useGlobalPipes(
     new ValidationPipe({
