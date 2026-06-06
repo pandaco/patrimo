@@ -64,21 +64,26 @@
       <div class="hero-main">
         <div class="hero-money">
           <div>
-            <div class="label">Patrimoine total @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }</div>
+            <div class="label">
+              <span data-tip="Somme de toutes tes enveloppes — comptes boursiers, livrets et cash. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine total</span>
+              @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
+            </div>
             <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
               {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fx.symbol() }}</small>
             </div>
           </div>
           <div class="sub" style="flex-wrap:wrap">
             <ui-delta [value]="dayPct()" [digits]="2" />
-            <span>aujourd'hui</span>
+            <span data-tip="Variation de la valorisation de tes ETF depuis la clôture de la veille — uniquement la part boursière, livrets exclus.">aujourd'hui</span>
             <span style="opacity:0.35">•</span>
             <span style="color:#4ADE80" class="num bold">+{{ fmtNum(pnlPct(), 1) }} %</span>
-            <span>depuis l'achat</span>
+            <span data-tip="Plus-value latente totale en % — (valeur actuelle / coût total − 1) × 100. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">depuis l'achat</span>
           </div>
         </div>
         <div class="stat">
-          <div class="label">Investissements boursiers</div>
+          <div class="label">
+            <span data-tip="Total des enveloppes PEA, CTO, PER, etc. — la partie de ton patrimoine exposée au marché actions/obligations. Évolue chaque jour avec les cours.">Investissements boursiers</span>
+          </div>
           <div class="value">{{ fmtEur(totalBourse(), 0) }}</div>
           <div class="sub" style="display:block">
             @if (totalValue() > 0) {
@@ -90,7 +95,9 @@
           </div>
         </div>
         <div class="stat">
-          <div class="label">Épargne réglementée</div>
+          <div class="label">
+            <span data-tip="Livret A, LDDS, LEP — comptes capital garanti, intérêts exonérés d'impôt et de prélèvements sociaux. Plafonds fixés par l'État.">Épargne réglementée</span>
+          </div>
           <div class="value">{{ fmtEur(totalLivret(), 0) }}</div>
           <div class="sub" style="display:block">
             @if (totalValue() > 0) {
@@ -125,7 +132,7 @@
     <!-- Performance chart -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">Performance <em>vs benchmark</em></div>
+        <div class="card-title">Performance <em><span data-tip="Comparaison avec l'indice MSCI World (CW8) — l'étalon de référence pour les actions monde diversifiées. Au-dessus de la courbe gris = tu surperformes l'indice ; en-dessous = sous-performance.">vs benchmark</span></em></div>
         <span class="card-sub">{{ dashPeriod() === 'YTD' ? 'depuis le 1er janv.' : dashPeriod() }}</span>
         <div class="card-right">
           <div class="tabs">

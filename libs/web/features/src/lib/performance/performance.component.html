@@ -106,8 +106,12 @@
         </div>
       </div>
     } @else {
-      <div class="muted" style="text-align:center;padding:60px 0">
-        Aucune position sur la période sélectionnée. Crée une transaction pour démarrer la courbe.
+      <div style="text-align:center;padding:48px 0">
+        <p class="muted" style="margin:0 0 16px">
+          Aucune position sur la période sélectionnée. Crée une transaction
+          pour démarrer la courbe.
+        </p>
+        <a class="btn primary" routerLink="/transactions">+ Nouvelle transaction</a>
       </div>
     }
   </div>

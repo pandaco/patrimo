@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { PerformanceService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
@@ -38,7 +39,7 @@ function shortFr(iso: string): string {
 @Component({
   selector: 'app-performance',
   standalone: true,
-  imports: [DeltaComponent, PerfChartComponent],
+  imports: [RouterLink, DeltaComponent, PerfChartComponent],
   templateUrl: './performance.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

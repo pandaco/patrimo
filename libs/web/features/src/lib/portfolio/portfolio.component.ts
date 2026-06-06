@@ -90,6 +90,30 @@ export class PortfolioComponent {
 
   protected maxExp(data: { pct: number }[]) { return Math.max(...data.map(d => d.pct)); }
 
+  // Coarse risk classifier for the per-line badge. Volatility data isn't on
+  // `Etf` yet, so we lean on the user-declared `alloc` bucket and a few
+  // heuristics: Obligations are defensive, Core MSCI/S&P-style is balanced,
+  // and Satellite (thematic, regional, levered) is aggressive by definition.
+  protected riskLevel(etf: Etf): 'defensive' | 'balanced' | 'aggressive' {
+    if (etf.alloc === 'Obligations') return 'defensive';
+    if (etf.alloc === 'Satellite')   return 'aggressive';
+    return 'balanced';
+  }
+  protected riskLabel(etf: Etf): string {
+    switch (this.riskLevel(etf)) {
+      case 'defensive':  return 'Défensif';
+      case 'balanced':   return 'Équilibré';
+      case 'aggressive': return 'Agressif';
+    }
+  }
+  protected riskTip(etf: Etf): string {
+    switch (this.riskLevel(etf)) {
+      case 'defensive':  return 'Profil défensif — obligations ou produits monétaires. Volatilité faible (< 5 %/an typique), gains modestes mais drawdown limité. Stabilise le portefeuille en cas de krach actions.';
+      case 'balanced':   return 'Profil équilibré — actions monde diversifiées (Core MSCI / S&P 500). Volatilité ~15 %/an, drawdowns historiques jusqu\'à −35 % (2008, 2020). Le moteur long terme du portefeuille.';
+      case 'aggressive': return 'Profil agressif — thématiques, régions concentrées, sectoriels. Volatilité > 20 %/an, drawdowns possibles > −50 %. Espérance de surperformance compensée par un risque accru — à doser dans la poche Satellite.';
+    }
+  }
+
   protected async exportCsv(): Promise<void> {
     const blob = await firstValueFrom(
       this.http.get(`${this.baseUrl}/portfolio/export`, { responseType: 'blob' }),

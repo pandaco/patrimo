@@ -130,16 +130,16 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
       <thead>
         <tr>
           <th>ETF</th>
-          <th>Allocation</th>
+          <th><span data-tip="Catégorie de l'ETF dans ta stratégie : Core = base diversifiée (MSCI World, S&amp;P 500), Satellite = poche tactique (thématiques, régions), Obligations = stabilité.">Allocation</span></th>
           <th>Enveloppes</th>
-          <th class="r">Qté</th>
+          <th class="r"><span data-tip="Nombre de parts détenues — somme des achats moins les ventes.">Qté</span></th>
           <th class="r"><span data-tip="Prix de Revient Unitaire — ton coût moyen d'achat par part, frais inclus. Tu es en gain si le cours actuel est au-dessus, en perte en dessous.">PRU</span></th>
-          <th class="r">Cours</th>
-          <th class="r">Jour</th>
-          <th class="r">Valeur</th>
+          <th class="r"><span data-tip="Dernier cours connu côté Yahoo Finance (≤ 15 min de retard). Met à jour la valeur de tes positions en quasi temps réel.">Cours</span></th>
+          <th class="r"><span data-tip="Variation en € depuis la clôture de la veille pour cette ligne — qty × (cours actuel − cours veille).">Jour</span></th>
+          <th class="r"><span data-tip="Valeur de marché actuelle = qty × cours. C'est le montant que tu encaisserais en vendant maintenant, hors frais et fiscalité.">Valeur</span></th>
           <th class="r"><span data-tip="Plus-Value latente — ton gain (ou perte) si tu vendais maintenant. Pas encore réalisé tant que tu gardes les parts.">PV latente</span></th>
-          <th>Tendance 1A</th>
-          <th>Poids</th>
+          <th><span data-tip="Sparkline du cours sur les 12 derniers mois — direction visuelle de l'ETF.">Tendance 1A</span></th>
+          <th><span data-tip="Poids de cette ligne dans ton portefeuille boursier total — valeur position / valeur portefeuille × 100.">Poids</span></th>
         </tr>
       </thead>
       <tbody>
@@ -173,9 +173,19 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
               </div>
             </td>
             <td>
-              <span class="pill"
-                [class.olive]="etf.alloc === 'Core'"
-                [class.soft]="etf.alloc === 'Obligations'">{{ etf.alloc }}</span>
+              <div class="row" style="gap:4px;flex-wrap:wrap">
+                <span class="pill"
+                  [class.olive]="etf.alloc === 'Core'"
+                  [class.soft]="etf.alloc === 'Obligations'">{{ etf.alloc }}</span>
+                <span class="risk-badge"
+                      [class.defensive]="riskLevel(etf) === 'defensive'"
+                      [class.balanced]="riskLevel(etf) === 'balanced'"
+                      [class.aggressive]="riskLevel(etf) === 'aggressive'"
+                      [attr.data-tip]="riskTip(etf)"
+                      [attr.aria-label]="'Profil de risque : ' + riskLabel(etf)">
+                  {{ riskLabel(etf) }}
+                </span>
+              </div>
             </td>
             <td>
               <span class="pill soft" style="font-size:10px">{{ etf.pea ? 'PEA' : 'CTO' }}</span>

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { EnvelopeService, EtfService, Envelope, etfValue } from '@patrimo/data-access';
 import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
@@ -36,7 +37,7 @@ export interface FamilyRow {
 @Component({
   selector: 'app-wealth',
   standalone: true,
-  imports: [DeltaComponent, EnvGlyphComponent],
+  imports: [RouterLink, DeltaComponent, EnvGlyphComponent],
   templateUrl: './wealth.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
