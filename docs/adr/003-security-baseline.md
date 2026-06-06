@@ -66,9 +66,13 @@ After: every fragment is fed through `new URL()`. Invalid entries are dropped wi
 
 These are P1 items from the audit deliberately deferred — each documented separately in `TMP/security-audit.md`:
 
-- **CSRF token.** `SameSite=Lax` handles most cross-site mutation vectors; adding a full token round-trip means a frontend `AuthInterceptor` change and is bigger than this ADR's appetite. Tracked as ADR-future.
 - **Redis-backed sessions.** Operational, not security. The in-memory `Map` loses every session on restart and prevents horizontal scaling. Needed before this app sees more than a single user or a single replica.
 - **Sliding session window.** Cookie `maxAge` is 7 days fixed; no refresh-on-activity. Acceptable for a personal tracker; revisit when multi-user.
-- **Per-route stricter throttle buckets.** Easy follow-up — `@Throttle({ default: { ttl:60_000, limit:5 } })` on `/auth/*` and `/transactions/import`.
 
-If any of those become urgent (multi-user beta, public deployment), they get their own ADR.
+If either becomes urgent (multi-user beta, public deployment), they get their own ADR.
+
+## Updates since acceptance
+
+- **2026-06-06 — CSRF token shipped (`191b4dd`).** Response-header double-submit pattern via `CsrfMiddleware` (backend) and `CsrfService` + `csrfInterceptor` (frontend). Picked the header variant over the cookie-read variant because the SPA and the API live on different ports in dev — `document.cookie` doesn't see cross-origin cookies. The header round-trip works identically in dev and prod, with no proxy required. Bypass list pinned at `/api/auth/google` and `/api/auth/google/callback` (Google redirects can't carry a header).
+- **2026-06-06 — Per-route throttle buckets shipped (`e4c0314`).** Tighter 5–10/min limits on `/auth/google`, `/auth/google/callback`, `/auth/dev-login`, and `/transactions/import`. Global 100/min bucket still applies elsewhere.
+- **2026-06-06 — Fail-loud CORS misconfig (`e4c0314`).** `parseOrigins` now throws at boot in production if no valid origin survives validation, instead of falling back to localhost.
