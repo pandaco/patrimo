@@ -11,6 +11,15 @@ interface EnvTargetRow { glyph:  string; pct: number }
 const DEFAULT_STRATEGIC = { stocks: 90, bonds: 10 };
 const DEFAULT_TACTIC    = { core: 72, satellite: 18, bonds: 10 };
 
+type WizardStepId = 1 | 2 | 3 | 4;
+interface WizardStep { id: WizardStepId; label: string; hint: string }
+const WIZARD_STEPS: WizardStep[] = [
+  { id: 1, label: 'Stratégique', hint: 'Actions vs Obligations'        },
+  { id: 2, label: 'Tactique',    hint: 'Core / Satellite / Obligations' },
+  { id: 3, label: 'Par ETF',     hint: 'Poids cible par ligne'          },
+  { id: 4, label: 'Par enveloppe', hint: 'Répartition par contenant'    },
+];
+
 @Component({
   selector: 'app-allocation-settings',
   standalone: true,
@@ -47,6 +56,27 @@ export class AllocationSettingsComponent {
   protected readonly tacticSum    = computed(() => this.corePct() + this.satellitePct() + this.bondsTacticPct());
   protected readonly etfSum       = computed(() => this.etfTargets().reduce((a, r) => a + (r.pct || 0), 0));
   protected readonly envSum       = computed(() => this.envTargets().reduce((a, r) => a + (r.pct || 0), 0));
+
+  protected readonly steps    = WIZARD_STEPS;
+  protected readonly step     = signal<WizardStepId>(1);
+  protected readonly isLast   = computed(() => this.step() === WIZARD_STEPS[WIZARD_STEPS.length - 1].id);
+
+  protected readonly stepValid = computed(() => {
+    switch (this.step()) {
+      case 1: return Math.abs(this.strategicSum() - 100) < 0.01;
+      case 2: return Math.abs(this.tacticSum() - 100) < 0.01;
+      case 3: return this.etfSum() === 0 || Math.abs(this.etfSum() - 100) < 0.01;
+      case 4: return this.envSum() === 0 || Math.abs(this.envSum() - 100) < 0.01;
+    }
+  });
+
+  protected readonly stepStatus = computed(() => {
+    const current = this.step();
+    return WIZARD_STEPS.map(s => ({
+      ...s,
+      state: s.id < current ? 'done' : s.id === current ? 'current' : 'todo',
+    }));
+  });
 
   constructor() {
     effect(() => {
@@ -146,4 +176,21 @@ export class AllocationSettingsComponent {
   }
 
   protected back(): void { this.router.navigateByUrl('/tools/allocation'); }
+
+  protected next(): void {
+    if (!this.stepValid()) return;
+    const current = this.step();
+    if (current < WIZARD_STEPS.length) this.step.set((current + 1) as WizardStepId);
+  }
+
+  protected prev(): void {
+    const current = this.step();
+    if (current > 1) this.step.set((current - 1) as WizardStepId);
+  }
+
+  protected goTo(id: WizardStepId): void {
+    // Allow jumping to any previously-visited step or the next one if current is valid.
+    if (id <= this.step()) { this.step.set(id); return; }
+    if (this.stepValid() && id === this.step() + 1) this.step.set(id);
+  }
 }

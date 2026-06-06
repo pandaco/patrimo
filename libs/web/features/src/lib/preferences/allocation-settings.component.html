@@ -1,136 +1,175 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">Stratégie</div>
+    <div class="page-eyebrow">Stratégie · étape {{ step() }}/{{ steps.length }}</div>
     <h1 class="page-title">Cibles <em>d'allocation</em></h1>
     <p class="page-sub">
-      Trois niveaux : la décision Actions/Obligations (stratégique), la décomposition
-      Core/Satellite (tactique), puis le poids cible par ETF et par enveloppe.
-      Chaque Σ doit atteindre 100 %.
+      Définis tes cibles niveau par niveau. Chaque section doit sommer à 100 %
+      (sauf ETF / enveloppe que tu peux laisser vides pour les ignorer).
     </p>
   </div>
 
+  <!-- STEPPER -->
+  <ol class="wizard-steps" aria-label="Progression du wizard">
+    @for (s of stepStatus(); track s.id) {
+      <li class="wizard-step" [class.done]="s.state === 'done'" [class.current]="s.state === 'current'">
+        <button type="button" class="wizard-step-btn"
+                [disabled]="s.state === 'todo' && !stepValid()"
+                [attr.aria-current]="s.state === 'current' ? 'step' : null"
+                (click)="goTo(s.id)">
+          <span class="wizard-step-index">{{ s.state === 'done' ? '✓' : s.id }}</span>
+          <span class="wizard-step-label">
+            <span class="wizard-step-name">{{ s.label }}</span>
+            <span class="wizard-step-hint muted tiny">{{ s.hint }}</span>
+          </span>
+        </button>
+      </li>
+    }
+  </ol>
+
   <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
 
-    <!-- STRATEGIC -->
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
-      Stratégique
-      <span class="num small" [class.pos]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
-            style="margin-left:8px">Σ = {{ strategicSum() }} %</span>
-    </h3>
-    <div class="field-row">
-      <div class="field">
-        <label for="as-stocks">Actions (%)</label>
-        <input id="as-stocks" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set(+$event)" />
+    <!-- STEP 1 — STRATEGIC -->
+    @if (step() === 1) {
+      <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
+        Stratégique
+        <span class="num small" [class.pos]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
+              style="margin-left:8px">Σ = {{ strategicSum() }} %</span>
+      </h3>
+      <p class="muted small" style="margin:0 0 14px">
+        La décision la plus structurante : combien d'actions (risque + rendement) vs obligations (stabilité).
+      </p>
+      <div class="field-row">
+        <div class="field">
+          <label for="as-stocks">Actions (%)</label>
+          <input id="as-stocks" type="number" min="0" max="100" step="1" class="num-input"
+                 [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set(+$event)" />
+        </div>
+        <div class="field">
+          <label for="as-bonds-strat">Obligations (%)</label>
+          <input id="as-bonds-strat" type="number" min="0" max="100" step="1" class="num-input"
+                 [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set(+$event)" />
+        </div>
       </div>
-      <div class="field">
-        <label for="as-bonds-strat">Obligations (%)</label>
-        <input id="as-bonds-strat" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set(+$event)" />
-      </div>
-    </div>
-
-    <div class="divider-soft" style="margin:20px 0 16px"></div>
-
-    <!-- TACTIC -->
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
-      Tactique
-      <span class="num small" [class.pos]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
-            style="margin-left:8px">Σ = {{ tacticSum() }} %</span>
-    </h3>
-    <div class="field-row">
-      <div class="field">
-        <label for="as-core">Core (%)</label>
-        <input id="as-core" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="corePct()" (ngModelChange)="corePct.set(+$event)" />
-      </div>
-      <div class="field">
-        <label for="as-sat">Satellite (%)</label>
-        <input id="as-sat" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set(+$event)" />
-      </div>
-      <div class="field">
-        <label for="as-bonds-tac">Obligations (%)</label>
-        <input id="as-bonds-tac" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set(+$event)" />
-      </div>
-    </div>
-
-    <div class="divider-soft" style="margin:20px 0 16px"></div>
-
-    <!-- PER ETF -->
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
-      Par ETF
-      <span class="num small" [class.pos]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
-            style="margin-left:8px">Σ = {{ etfSum() }} %</span>
-      <span class="muted tiny" style="margin-left:8px">(laisse vide pour ignorer)</span>
-    </h3>
-    @if (etfTargets().length === 0) {
-      <p class="muted small">Aucun ETF dans le catalogue.</p>
-    } @else {
-      <table class="tbl" style="font-size:13px">
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th class="r" style="width:120px">Cible %</th>
-            <th class="r" style="width:60px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of etfTargets(); track row.ticker) {
-            <tr>
-              <td><span class="pill solid">{{ row.ticker }}</span></td>
-              <td class="r">
-                <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
-                       [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
-              </td>
-              <td class="r">
-                <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
-                        (click)="removeEtf(row.ticker)" aria-label="Retirer" title="Retirer">×</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
     }
 
-    <div class="divider-soft" style="margin:20px 0 16px"></div>
+    <!-- STEP 2 — TACTIC -->
+    @if (step() === 2) {
+      <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
+        Tactique
+        <span class="num small" [class.pos]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
+              style="margin-left:8px">Σ = {{ tacticSum() }} %</span>
+      </h3>
+      <p class="muted small" style="margin:0 0 14px">
+        Décompose la poche actions entre Core (MSCI World, S&amp;P 500) et Satellite
+        (thématiques ciblés). Inclus aussi les obligations ici.
+      </p>
+      <div class="field-row">
+        <div class="field">
+          <label for="as-core">Core (%)</label>
+          <input id="as-core" type="number" min="0" max="100" step="1" class="num-input"
+                 [ngModel]="corePct()" (ngModelChange)="corePct.set(+$event)" />
+        </div>
+        <div class="field">
+          <label for="as-sat">Satellite (%)</label>
+          <input id="as-sat" type="number" min="0" max="100" step="1" class="num-input"
+                 [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set(+$event)" />
+        </div>
+        <div class="field">
+          <label for="as-bonds-tac">Obligations (%)</label>
+          <input id="as-bonds-tac" type="number" min="0" max="100" step="1" class="num-input"
+                 [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set(+$event)" />
+        </div>
+      </div>
+    }
 
-    <!-- PER ENVELOPE -->
-    <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
-      Par enveloppe
-      <span class="num small" [class.pos]="envSum() === 100" [class.neg]="envSum() > 0 && envSum() !== 100"
-            style="margin-left:8px">Σ = {{ envSum() }} %</span>
-      <span class="muted tiny" style="margin-left:8px">(laisse vide pour ignorer)</span>
-    </h3>
-    @if (envTargets().length === 0) {
-      <p class="muted small">Aucune enveloppe trouvée.</p>
-    } @else {
-      <table class="tbl" style="font-size:13px">
-        <thead>
-          <tr>
-            <th>Enveloppe</th>
-            <th class="r" style="width:120px">Cible %</th>
-            <th class="r" style="width:60px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of envTargets(); track row.glyph) {
+    <!-- STEP 3 — PER ETF -->
+    @if (step() === 3) {
+      <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
+        Par ETF
+        <span class="num small" [class.pos]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
+              style="margin-left:8px">Σ = {{ etfSum() }} %</span>
+        <span class="muted tiny" style="margin-left:8px">(laisse tout à 0 pour ignorer)</span>
+      </h3>
+      <p class="muted small" style="margin:0 0 14px">
+        Poids cible par ETF de ton catalogue. Σ doit faire 100 % si tu en saisis au moins un.
+      </p>
+      @if (etfTargets().length === 0) {
+        <p class="muted small">Aucun ETF dans le catalogue.</p>
+      } @else {
+        <table class="tbl" style="font-size:13px">
+          <thead>
             <tr>
-              <td><span class="pill solid">{{ row.glyph | uppercase }}</span></td>
-              <td class="r">
-                <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
-                       [ngModel]="row.pct" (ngModelChange)="setEnvPct(row.glyph, +$event)" />
-              </td>
-              <td class="r">
-                <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
-                        (click)="removeEnv(row.glyph)" aria-label="Retirer" title="Retirer">×</button>
-              </td>
+              <th>Ticker</th>
+              <th class="r" style="width:120px">Cible %</th>
+              <th class="r" style="width:60px"></th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (row of etfTargets(); track row.ticker) {
+              <tr>
+                <td><span class="pill solid">{{ row.ticker }}</span></td>
+                <td class="r">
+                  <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
+                         [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
+                </td>
+                <td class="r">
+                  <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
+                          (click)="removeEtf(row.ticker)" aria-label="Retirer" title="Retirer">×</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    <!-- STEP 4 — PER ENVELOPE -->
+    @if (step() === 4) {
+      <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
+        Par enveloppe
+        <span class="num small" [class.pos]="envSum() === 100" [class.neg]="envSum() > 0 && envSum() !== 100"
+              style="margin-left:8px">Σ = {{ envSum() }} %</span>
+        <span class="muted tiny" style="margin-left:8px">(laisse tout à 0 pour ignorer)</span>
+      </h3>
+      <p class="muted small" style="margin:0 0 14px">
+        Répartition cible par type d'enveloppe (PEA, CTO, AV, …). Utile si tu veux piloter
+        l'optimisation fiscale en plus du couple actions/obligations.
+      </p>
+      @if (envTargets().length === 0) {
+        <p class="muted small">Aucune enveloppe trouvée.</p>
+      } @else {
+        <table class="tbl" style="font-size:13px">
+          <thead>
+            <tr>
+              <th>Enveloppe</th>
+              <th class="r" style="width:120px">Cible %</th>
+              <th class="r" style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of envTargets(); track row.glyph) {
+              <tr>
+                <td><span class="pill solid">{{ row.glyph | uppercase }}</span></td>
+                <td class="r">
+                  <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
+                         [ngModel]="row.pct" (ngModelChange)="setEnvPct(row.glyph, +$event)" />
+                </td>
+                <td class="r">
+                  <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
+                          (click)="removeEnv(row.glyph)" aria-label="Retirer" title="Retirer">×</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+
+    @if (!stepValid()) {
+      <p class="muted small" style="margin:14px 0 0;color:var(--loss)">
+        Cette section n'est pas valide — corrige avant de passer à l'étape suivante.
+      </p>
     }
   </div>
 
@@ -145,11 +184,21 @@
     </div>
   }
 
-  <div class="row" style="max-width:720px;gap:12px;justify-content:flex-end">
+  <div class="row" style="max-width:720px;gap:12px;justify-content:space-between">
     <button type="button" class="btn ghost" (click)="back()" [disabled]="submitting()">← Allocation</button>
-    <button type="button" class="btn primary" (click)="save()" [disabled]="submitting() || loading()">
-      {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
-    </button>
+    <div class="row" style="gap:12px">
+      @if (step() > 1) {
+        <button type="button" class="btn" (click)="prev()" [disabled]="submitting()">Précédent</button>
+      }
+      @if (!isLast()) {
+        <button type="button" class="btn primary" (click)="next()" [disabled]="!stepValid()">Suivant →</button>
+      } @else {
+        <button type="button" class="btn primary" (click)="save()"
+                [disabled]="submitting() || loading() || !stepValid()">
+          {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      }
+    </div>
   </div>
 
 </div>
