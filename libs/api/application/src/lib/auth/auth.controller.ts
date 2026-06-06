@@ -40,10 +40,11 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     };
     // Dev-login is a known backdoor. Refuse to enable it unless BOTH
-    // `NODE_ENV !== production` AND `ALLOW_DEV_LOGIN=true` are set, so a
-    // single mis-set env can never silently expose the backdoor in prod.
-    this.devLoginEnabled =
-      !isProd && config.get<string>('ALLOW_DEV_LOGIN') === 'true';
+    // `NODE_ENV !== production` AND `ALLOW_DEV_LOGIN` is a truthy flag.
+    // Accept the common truthy spellings ('true', 'TRUE', '1') so an ops
+    // typing the env in caps doesn't silently get a 403 they can't debug.
+    const flag = config.get<string>('ALLOW_DEV_LOGIN')?.toLowerCase();
+    this.devLoginEnabled = !isProd && (flag === 'true' || flag === '1');
   }
 
   @Get('google')

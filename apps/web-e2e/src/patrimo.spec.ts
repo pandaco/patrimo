@@ -85,7 +85,7 @@ test.describe('Patrimo E2E Tests', () => {
       ['/tools/dca',   'C\'est quoi le DCA'],
     ] as const) {
       await page.goto(route);
-      await page.waitForURL(new RegExp(`${route.replace('/', '\\/')}(\\?|#|$)`));
+      await page.waitForURL(new RegExp(`${route.replace(/\//g, '\\/')}(\\?|#|$)`));
       await expect(page.locator('details.explainer summary', { hasText: summary })).toBeVisible();
     }
   });
