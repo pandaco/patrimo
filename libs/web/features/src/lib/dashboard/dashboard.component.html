@@ -2,7 +2,10 @@
 
   <!-- PAGE HEAD -->
   <div class="page-head">
-    <div class="page-eyebrow"><span class="dot"></span>{{ todayLabel }}</div>
+    <div class="page-eyebrow">
+      <span class="dot" [class.open]="marketOpen()" [class.closed]="!marketOpen()"></span>
+      {{ todayLabel() }} · {{ marketLabel() }}
+    </div>
     <h1 class="page-title">Bonjour <em>{{ firstName() || '…' }}.</em></h1>
     <p class="page-sub">
       Ton patrimoine progresse de <span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span> aujourd'hui,

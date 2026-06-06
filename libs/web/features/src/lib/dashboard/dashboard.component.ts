@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AlertService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
@@ -20,6 +20,20 @@ const GLYPH_COLORS: Record<string, string> = {
   immo:'#DC2626', metal:'#B45309',
 };
 
+// Euronext Paris core session: 09:00 – 17:30 Paris time, Mon–Fri.
+// Holidays are ignored — they would require a lookup table and are a
+// minor visual nit; "Marchés fermés" on a Bastille Day morning is wrong
+// but cheap to live with until we wire a real calendar.
+const MARKET_OPEN_MIN  = 9 * 60;
+const MARKET_CLOSE_MIN = 17 * 60 + 30;
+function isParisMarketOpen(now: Date): boolean {
+  const paris = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const day = paris.getDay();
+  if (day === 0 || day === 6) return false;
+  const minutes = paris.getHours() * 60 + paris.getMinutes();
+  return minutes >= MARKET_OPEN_MIN && minutes < MARKET_CLOSE_MIN;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -39,9 +53,22 @@ export class DashboardComponent {
   protected readonly firstName      = computed(() => this.auth.user()?.firstName ?? '');
   protected readonly fxRate         = this.fx.rate;
   protected readonly displayCurrency = this.fx.displayCurrency;
-  protected readonly todayLabel = new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+
+  // Ticks every minute so the date and market state refresh without a reload.
+  private readonly nowTick = signal(Date.now());
+
+  protected readonly todayLabel = computed(() => {
+    return new Date(this.nowTick()).toLocaleDateString('fr-FR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
   });
+  protected readonly marketOpen   = computed(() => isParisMarketOpen(new Date(this.nowTick())));
+  protected readonly marketLabel  = computed(() => this.marketOpen() ? 'Marchés ouverts' : 'Marchés fermés');
+
+  constructor() {
+    const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
 
   protected readonly envAll       = this.envelopes.all;
   protected readonly envLoading   = this.envelopes.loading;
