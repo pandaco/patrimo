@@ -61,7 +61,16 @@
         </div>
       </div>
     } @else if (loading()) {
-      <div class="muted" style="text-align:center;padding:60px 0">Chargement de la série…</div>
+      <div style="padding:24px 0">
+        <div class="skeleton" style="height:14px;width:180px;border-radius:4px;margin-bottom:14px"></div>
+        <div class="skeleton" style="height:280px;width:100%;border-radius:8px"></div>
+        <div class="row" style="gap:14px;margin-top:18px">
+          <div class="skeleton" style="height:14px;width:120px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;width:90px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;width:100px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;width:80px;border-radius:4px"></div>
+        </div>
+      </div>
     } @else {
       <div class="muted" style="text-align:center;padding:60px 0">
         Aucune position sur la période sélectionnée. Crée une transaction pour démarrer la courbe.

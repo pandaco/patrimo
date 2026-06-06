@@ -53,8 +53,8 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
   <!-- STATS BAR -->
   <div class="card" style="padding:0;margin-bottom:24px">
     @if (loading()) {
-      <div style="display:grid;grid-template-columns:repeat(4, 1fr)">
-        @for (i of [1,2,3,4]; track i) {
+      <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
+        @for (i of [1,2,3,4,5]; track i) {
           <div class="stat">
             <div class="skeleton" style="height:12px;width:80px;margin-bottom:10px;border-radius:4px"></div>
             <div class="skeleton" style="height:28px;width:120px;margin-bottom:8px;border-radius:4px"></div>
@@ -63,7 +63,7 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
         }
       </div>
     } @else {
-      <div style="display:grid;grid-template-columns:repeat(4, 1fr)">
+      <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
         <div class="stat">
           <div class="label">Valeur portefeuille</div>
           <div class="value">{{ fmtEur(total(), 2) }}</div>
@@ -78,6 +78,15 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
           <div class="label">PV latente</div>
           <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
           <div class="sub"><span class="pos">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span></div>
+        </div>
+        <div class="stat">
+          <div class="label">
+            <span data-tip="Plus-Value réalisée depuis le 1er janvier. Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF.">PV réalisée YTD</span>
+          </div>
+          <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+            {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 2) }}
+          </div>
+          <div class="sub">depuis le 1er janv.</div>
         </div>
         <div class="stat">
           <div class="label">Dividendes 12M</div>
@@ -120,6 +129,20 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
         </tr>
       </thead>
       <tbody>
+        @if (loading() && filtered().length === 0) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><div class="skeleton" style="height:18px;width:60%;border-radius:4px"></div></td>
+              <td class="r"><div class="skeleton" style="height:14px;width:60px;margin-left:auto;border-radius:4px"></div></td>
+              <td class="r"><div class="skeleton" style="height:14px;width:50px;margin-left:auto;border-radius:4px"></div></td>
+              <td class="r"><div class="skeleton" style="height:14px;width:40px;margin-left:auto;border-radius:4px"></div></td>
+              <td class="r"><div class="skeleton" style="height:14px;width:80px;margin-left:auto;border-radius:4px"></div></td>
+              <td class="r"><div class="skeleton" style="height:14px;width:70px;margin-left:auto;border-radius:4px"></div></td>
+              <td><div class="skeleton" style="height:14px;width:90%;border-radius:4px"></div></td>
+              <td><div class="skeleton" style="height:14px;width:60%;border-radius:4px"></div></td>
+            </tr>
+          }
+        }
         @for (etf of filtered(); track etf.isin) {
           <tr>
             <td>

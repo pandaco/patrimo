@@ -42,6 +42,7 @@ export class TransactionsComponent {
   protected readonly filters   = FILTER_OPTIONS;
   protected readonly activeFilter = signal<FilterType>('ALL');
 
+  protected readonly loading   = this.txSvc.loading;
   protected readonly envelopes = this.envSvc.all;
   protected readonly etfs      = this.etfSvc.all;
   protected readonly labels    = this.txSvc.labels;
@@ -79,6 +80,14 @@ export class TransactionsComponent {
   });
 
   protected readonly displayCount = signal(30);
+
+  protected readonly importing = signal(false);
+  protected readonly toastMsg  = signal<{ text: string; ok: boolean } | null>(null);
+
+  private showToast(text: string, ok = true): void {
+    this.toastMsg.set({ text, ok });
+    setTimeout(() => this.toastMsg.set(null), 3500);
+  }
 
   protected readonly pagedGroups = computed<TxGroup[]>(() => {
     let remaining = this.displayCount();
@@ -188,15 +197,18 @@ export class TransactionsComponent {
   protected async importFile(event: Event): Promise<void> {
     const el   = event.target as HTMLInputElement;
     const file = el.files?.[0];
-    if (!file) return;
+    if (!file || this.importing()) return;
 
+    this.importing.set(true);
     try {
       const { count } = await this.txSvc.importCsv(file);
-      alert(`${count} transactions importées avec succès.`);
-      el.value = '';
+      this.showToast(`${count} transactions importées.`);
     } catch (err) {
       console.error('Import failed', err);
-      alert('Erreur lors de l\'import CSV. Vérifiez le format du fichier.');
+      this.showToast('Erreur lors de l\'import CSV. Vérifie le format.', false);
+    } finally {
+      this.importing.set(false);
+      el.value = '';
     }
   }
 }

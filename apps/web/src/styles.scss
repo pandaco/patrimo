@@ -463,6 +463,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--paper);
   transition: left 0.2s;
 }
+
+.ui-toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  padding: 12px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  &.ok  { background: var(--gain); }
+  &.err { background: var(--loss); }
+}
 .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
 .card-title {
   font-size: 15px; font-weight: 600; line-height: 1; letter-spacing: -0.02em;

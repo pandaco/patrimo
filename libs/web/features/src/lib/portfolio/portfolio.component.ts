@@ -40,6 +40,47 @@ export class PortfolioComponent {
   protected readonly totalPnl  = computed(() => this.total() - this.totalCost());
   protected readonly totalDay  = computed(() => this.allEtfs().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0));
 
+  // FIFO realized P&L since the start of the calendar year.
+  // We replay every BUY/SELL chronologically per ETF, popping units from the oldest
+  // lots first. Only the realized leg of a SELL that lands in the current year is
+  // counted — partial sells (the previous closed-positions card ignored them) and
+  // mixed-cost-basis lots are now handled correctly.
+  protected readonly realizedYtd = computed(() => {
+    const startOfYear = `${new Date().getFullYear()}-01-01`;
+    const lots = new Map<string, { qty: number; pricePerUnit: number }[]>();
+    let realized = 0;
+
+    const sorted = this.txSvc.all()
+      .filter(t => t.etf && (t.type === 'BUY' || t.type === 'SELL'))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    for (const t of sorted) {
+      const isin = t.etf;
+      if (!isin) continue;
+      const queue = lots.get(isin) ?? [];
+      if (queue.length === 0) lots.set(isin, queue);
+
+      if (t.type === 'BUY') {
+        queue.push({ qty: t.qty, pricePerUnit: t.amount / t.qty });
+        continue;
+      }
+
+      let remaining = t.qty;
+      const sellPerUnit = t.amount / t.qty;
+      while (remaining > 0 && queue.length > 0) {
+        const lot = queue[0];
+        const take = Math.min(remaining, lot.qty);
+        if (t.date >= startOfYear) {
+          realized += take * (sellPerUnit - lot.pricePerUnit);
+        }
+        lot.qty -= take;
+        remaining -= take;
+        if (lot.qty < 1e-9) queue.shift();
+      }
+    }
+    return realized;
+  });
+
   protected readonly closedPositions = computed(() => {
     const txs  = this.txSvc.all();
     const etfs = this.etfSvc.all();
