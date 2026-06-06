@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { PersistenceModule } from '@patrimo/infrastructure';
-import { ApplicationModule } from '@patrimo/application';
+import { ApplicationModule, CsrfMiddleware } from '@patrimo/application';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { validateEnv } from './env.validation';
@@ -30,4 +30,11 @@ import { validateEnv } from './env.validation';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    // CSRF double-submit-cookie applies to every route. The middleware itself
+    // shortcuts on safe methods (GET/HEAD/OPTIONS) and on the OAuth callback
+    // paths, so its cost on read traffic is one cookie check.
+    consumer.apply(CsrfMiddleware).forRoutes('*');
+  }
+}

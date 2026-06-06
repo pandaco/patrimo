@@ -62,7 +62,14 @@ async function bootstrap() {
 
   const isProd  = config.get<string>('NODE_ENV') === 'production';
   const origins = parseOrigins(config.get<string>('FRONTEND_URL'), isProd);
-  app.enableCors({ origin: origins, credentials: true });
+  app.enableCors({
+    origin: origins,
+    credentials: true,
+    // SPA must read X-CSRF-Token from responses because cookies are
+    // cross-origin in dev (SPA :4200, API :3333) and CORS hides response
+    // headers by default.
+    exposedHeaders: ['X-CSRF-Token'],
+  });
   app.set('frontend-url', origins[0]);
   app.set('trust proxy', 1);
 
