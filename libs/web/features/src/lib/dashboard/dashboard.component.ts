@@ -118,7 +118,12 @@ export class DashboardComponent {
     if (pts.length < 2) return null;
     const start = pts.find(v => v > 0) ?? 0;
     const end   = pts[pts.length - 1];
-    return start ? (end / start - 1) * 100 : null;
+    // Need at least €1 of starting capital — otherwise tiny denominators
+    // (a stray decimal during the first hour of a fresh account) turn
+    // `end / start` into +Infinity and the headline shows nonsense.
+    if (start < 1) return null;
+    const ratio = (end / start - 1) * 100;
+    return Number.isFinite(ratio) ? ratio : null;
   });
 
   protected readonly donutData = computed(() =>

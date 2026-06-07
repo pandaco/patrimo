@@ -832,19 +832,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 .hero-stats {
   background: var(--surface); border: 1px solid var(--rule);
-  border-radius: var(--r-lg); overflow: hidden; margin-bottom: 24px;
+  border-radius: var(--r-lg); margin-bottom: 24px;
+  // NOTE: no `overflow: hidden` here — it would clip the absolute-positioned
+  // `[data-tip]` tooltips that float above the `.stat` labels. Rounded
+  // corners on the inner grid are honoured via the per-child rules below.
 }
-.hero-main { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+.hero-main {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  border-radius: inherit;
+  & > :first-child {
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+  }
+  & > :last-child {
+    border-top-right-radius: inherit;
+    border-bottom-right-radius: inherit;
+  }
+}
 
 .hero-money {
   padding: 28px 28px; background: var(--ink); color: #fff;
   display: flex; flex-direction: column; justify-content: space-between;
-  gap: 16px; position: relative; overflow: hidden;
+  gap: 16px; position: relative; isolation: isolate;
+  // No `overflow: hidden` — it would clip the `[data-tip]` tooltip on the
+  // "Patrimoine total" label. The radial decoration below is sized and
+  // positioned so it never visually extends beyond the card's rounded
+  // corners, so we don't need a clipping container any more.
   &::after {
-    content: ""; position: absolute; inset: auto -40px -60px auto;
-    width: 220px; height: 220px; border-radius: 50%;
+    content: ""; position: absolute; inset: auto 0 0 auto;
+    width: 180px; height: 180px; border-radius: 50%;
     background: radial-gradient(circle, var(--brand) 0%, transparent 60%);
-    opacity: 0.15; pointer-events: none;
+    opacity: 0.15; pointer-events: none; z-index: -1;
   }
   .label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; letter-spacing: -0.005em; }
   .value {

@@ -190,7 +190,13 @@
                 <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
                   [style.background]="donutData()[$index]?.color"></span>
                 <span style="flex:1">{{ env.label }}</span>
-                <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
+                <span class="num muted">
+                  @if (totalValue() > 0) {
+                    {{ fmtPctRaw(env.value / totalValue() * 100, 1) }}
+                  } @else {
+                    —
+                  }
+                </span>
               </div>
             }
           }
