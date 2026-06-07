@@ -10,6 +10,34 @@
     </p>
   </div>
 
+  <details class="explainer">
+    <summary>Comment utiliser le comparateur</summary>
+    <div class="explainer-body">
+      <p>
+        <b>1. Sélectionne</b> jusqu'à 4 ETF parmi la liste pour les afficher côte
+        à côte avec leurs caractéristiques structurelles. Utilise les filtres
+        pour réduire la liste si elle est trop longue.
+      </p>
+      <p>
+        <b>2. Compare</b> TER (frais annuels), TCO 5 ans (coût total estimé),
+        éligibilité PEA, distribution capitalisante vs distribuante. Le tableau
+        en bas regroupe tous les critères pour un balayage rapide.
+      </p>
+      <p>
+        <b>3. Achète</b> via le bouton <em>+ Acheter cet ETF</em> sur chaque
+        carte : ça ouvre la boîte de saisie d'une transaction BUY pré-remplie
+        avec l'ISIN. Choisis ton enveloppe (PEA, CTO, …), saisis quantité et
+        prix d'achat, valide.
+      </p>
+      <p style="color:var(--ink-3);font-size:12.5px;margin:0">
+        <b>Catalogue.</b> La liste est curée — ce sont les ETF que Patrimo
+        suit côté backend pour leurs cours Yahoo Finance. Si un ETF te manque,
+        c'est une demande à pousser côté projet (ajout dans la table
+        <code>etfs</code>) ; pas encore d'UI pour ça.
+      </p>
+    </div>
+  </details>
+
   <!-- SELECTOR -->
   <div class="card" style="margin-bottom:24px">
     <div class="card-head">
@@ -99,6 +127,10 @@
           <div class="kv"><dt>Catégorie</dt><dd>{{ etf.alloc }}</dd></div>
           <div class="divider-soft"></div>
           <div class="kv"><dt><span data-tip="Total Cost of Ownership — coût total estimé sur 5 ans : frais de gestion TER + frais de courtage, pour un DCA de 500 €/mois. Permet de comparer deux ETFs équivalents sur leur coût réel de détention.">TCO 5A</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
+          <button type="button" class="btn primary sm" style="width:100%;margin-top:14px;justify-content:center"
+                  (click)="buy(etf)">
+            + Acheter cet ETF
+          </button>
         </div>
       }
     </div>

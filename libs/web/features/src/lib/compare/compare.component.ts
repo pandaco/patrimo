@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { Etf, EtfService } from '@patrimo/data-access';
-import { fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 
@@ -14,6 +15,7 @@ const MAX_SELECTION = 4;
 })
 export class CompareComponent {
   private readonly etfSvc = inject(EtfService);
+  private readonly dialog = inject(MatDialog);
 
   /** ISINs the user has put on the comparator. Capped at `MAX_SELECTION`. */
   protected readonly selectedIsins = signal<string[]>([]);
@@ -76,6 +78,13 @@ export class CompareComponent {
 
   protected isSelected(isin: string): boolean {
     return this.selectedIsins().includes(isin);
+  }
+
+  protected buy(etf: Etf): void {
+    this.dialog.open(TransactionDialogComponent, {
+      data: { presetEtfIsin: etf.isin, presetType: 'BUY' },
+      panelClass: 'tx-dialog-panel',
+    });
   }
 
   protected toggle(etf: Etf): void {

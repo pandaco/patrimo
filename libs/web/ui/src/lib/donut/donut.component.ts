@@ -35,7 +35,7 @@ interface ComputedSlice {
           [attr.stroke-dasharray]="s.dasharray"
           [attr.stroke-dashoffset]="s.dashoffset"
           [attr.transform]="'rotate(-90 ' + cx() + ' ' + cx() + ')'"
-          style="cursor: help"
+          style="cursor: help; pointer-events: visibleStroke"
         >
           @if (s.title) { <title>{{ s.title }}</title> }
         </circle>
