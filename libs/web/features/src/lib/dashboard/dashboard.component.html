@@ -142,8 +142,18 @@
           </div>
         </div>
       </div>
-      <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
-      @if (portfolioPct() !== null) {
+      @if (totalValue() > 0) {
+        <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
+      } @else {
+        <div style="padding:40px 0;text-align:center">
+          <p class="muted small" style="margin:0 0 14px">
+            Aucune position pour reconstituer la courbe.
+            Crée une transaction d'achat pour démarrer.
+          </p>
+          <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+        </div>
+      }
+      @if (portfolioPct() !== null && totalValue() > 0) {
         <div class="grid cols-2" style="margin-top:18px">
           <div>
             <div class="eyebrow" style="margin-bottom:6px">{{ dashPeriod() }}</div>
@@ -173,6 +183,17 @@
         <div class="card-title">Répartition</div>
         <span class="card-sub">par enveloppe</span>
       </div>
+      @if (totalValue() <= 0 && !envLoading()) {
+        <div style="display:flex;flex-direction:column;gap:10px;padding:18px 0">
+          <p class="muted small" style="margin:0">
+            Tes enveloppes sont créées mais vides. Ajoute un dépôt ou un achat
+            pour voir la répartition apparaître.
+          </p>
+          <a class="btn sm primary" routerLink="/transactions" style="align-self:flex-start">
+            + Première transaction
+          </a>
+        </div>
+      } @else {
       <div style="display:flex;gap:24px;align-items:center">
         <ui-donut [data]="donutData()" [size]="150" [thickness]="22" />
         <div style="flex:1;font-size:12.5px">
@@ -190,13 +211,7 @@
                 <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
                   [style.background]="donutData()[$index]?.color"></span>
                 <span style="flex:1">{{ env.label }}</span>
-                <span class="num muted">
-                  @if (totalValue() > 0) {
-                    {{ fmtPctRaw(env.value / totalValue() * 100, 1) }}
-                  } @else {
-                    —
-                  }
-                </span>
+                <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
               </div>
             }
           }
@@ -205,6 +220,7 @@
           </a>
         </div>
       </div>
+      }
     </div>
 
   </div>
