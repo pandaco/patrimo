@@ -13,3 +13,4 @@ export * from './lib/glossary/glossary.component';
 export * from './lib/performance/performance.component';
 export * from './lib/login/login.component';
 export * from './lib/allocation/allocation.component';
+export * from './lib/tips/tips.component';

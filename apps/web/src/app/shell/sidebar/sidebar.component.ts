@@ -41,6 +41,7 @@ const NAV: NavGroup[] = [
       { id: 'compare',   label: 'Comparateur ETF', route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },
       { id: 'alerts',    label: 'Alertes',         route: '/tools/alerts',   icon: 'alert',     shortcut: 'A' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
+      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
     ],
   },
 ];

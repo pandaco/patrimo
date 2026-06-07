@@ -19,6 +19,7 @@ const CRUMB_MAP: Record<string, string[]> = {
   '/tools/compare':  ['Outils',   'Comparateur ETF'],
   '/tools/alerts':   ['Outils',   'Alertes'],
   '/tools/glossary': ['Outils',   'Glossaire'],
+  '/tools/tips':     ['Outils',   'Conseils'],
 };
 
 @Component({

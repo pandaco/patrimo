@@ -99,6 +99,13 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'tools/tips',
+        loadComponent: () =>
+          import('@patrimo/features').then(
+            (m) => m.TipsComponent,
+          ),
+      },
+      {
         path: 'settings/preferences',
         loadComponent: () =>
           import('@patrimo/features').then((m) => m.PreferencesComponent),
