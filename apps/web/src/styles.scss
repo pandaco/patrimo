@@ -486,6 +486,37 @@ button { font: inherit; color: inherit; cursor: pointer; }
   position: relative;
   display: inline-block;
 }
+// Dashboard "Indicateurs clés" tile — compact card with label + value + sub.
+.kpi-tile {
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  .label {
+    font-size: 11px; font-weight: 500; color: var(--ink-3);
+    letter-spacing: 0.02em; line-height: 1.2;
+    text-transform: none;
+  }
+  .value {
+    font-size: 22px; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    &.pos  { color: var(--gain); }
+    &.neg  { color: var(--loss); }
+    &.warn { color: #B8761A; }
+    small { color: var(--ink-3); margin-left: 2px; font-variant-numeric: normal; }
+  }
+  .sub {
+    font-size: 11.5px; color: var(--ink-3); line-height: 1.35;
+    a { text-decoration: none; }
+    a:hover { color: var(--ink); }
+  }
+}
+@media (max-width: 1180px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 720px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
 // Drift bar — used on Allocation to show real vs target as a horizontal
 // track with a vertical tick at the target. The bar itself shows a track
 // background; the inner span is the filled portion driven by inline width.

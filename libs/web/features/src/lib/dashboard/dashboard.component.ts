@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
+import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 
 const DASH_PERIODS: { id: PerformancePeriod; label: string }[] = [
   { id: '1M', label: '1M' },
@@ -47,6 +48,7 @@ export class DashboardComponent {
   private readonly txService  = inject(TransactionService);
   private readonly alerts     = inject(AlertService);
   private readonly perfSvc    = inject(PerformanceService);
+  private readonly allocSvc   = inject(AllocationService);
   private readonly auth       = inject(AuthService);
   protected readonly fx       = inject(FxService);
 
@@ -136,6 +138,109 @@ export class DashboardComponent {
   );
 
   protected readonly envPreview = computed(() => this.envelopes.all().slice(0, 6));
+
+  // ─── Key indicators ────────────────────────────────────────────────────────
+  // Ten metrics surfaced as a second hero row on the dashboard.
+
+  /** 1. Average €/month invested over the last 12 months (BUY + DEPOSIT). */
+  protected readonly savingsVelocity = computed(() => {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    const cutoffIso = cutoff.toISOString().slice(0, 10);
+    const invested = this.txService.all()
+      .filter(t => (t.type === 'BUY' || t.type === 'DEPOSIT') && t.date >= cutoffIso)
+      .reduce((a, t) => a + t.amount, 0);
+    return invested / 12;
+  });
+
+  /** 2. Theoretical monthly income at the 4 %/yr safe withdrawal rate. */
+  protected readonly swrIncome = computed(() => this.totalValue() * 0.04 / 12);
+
+  /** 3. Current drawdown vs the all-time peak of the perf series. */
+  protected readonly currentDrawdown = computed(() => {
+    const series = this.perfPortfolio();
+    if (series.length < 2) return null;
+    const peak    = Math.max(...series);
+    const current = series[series.length - 1];
+    if (peak <= 0) return null;
+    return ((current - peak) / peak) * 100;
+  });
+
+  /** 4. Realized YTD P&L via FIFO walk (same helper as Portfolio page). */
+  protected readonly realizedYtd = computed(() =>
+    computeRealized(this.txService.all(), startOfYearISO()).realizedSince,
+  );
+
+  /** 5. Concentration: share of the boursier portfolio held in the top 3 ETFs. */
+  protected readonly concentrationTop3 = computed(() => {
+    const etfs = this.etfs.all();
+    const total = etfs.reduce((a, e) => a + etfValue(e), 0);
+    if (total <= 0) return null;
+    const top = etfs.map(etfValue).sort((a, b) => b - a).slice(0, 3);
+    const top3 = top.reduce((a, v) => a + v, 0);
+    return (top3 / total) * 100;
+  });
+
+  /** 6. Total dividends + interest received over the last 12 months. */
+  protected readonly dividends12M = computed(() => {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    const cutoffIso = cutoff.toISOString().slice(0, 10);
+    const divs = this.txService.all().filter(t =>
+      (t.type === 'DIVIDEND' || t.type === 'INTEREST') && t.date >= cutoffIso,
+    );
+    return { total: divs.reduce((a, t) => a + t.amount, 0), count: divs.length };
+  });
+
+  /** 7. Streak of consecutive months with at least one BUY or DEPOSIT. */
+  protected readonly dcaStreak = computed(() => {
+    const monthSet = new Set<string>();
+    for (const t of this.txService.all()) {
+      if (t.type === 'BUY' || t.type === 'DEPOSIT') monthSet.add(t.date.slice(0, 7));
+    }
+    let streak = 0;
+    const cursor = new Date();
+    cursor.setDate(1);
+    for (let i = 0; i < 240; i++) {
+      const ym = cursor.toISOString().slice(0, 7);
+      if (!monthSet.has(ym)) break;
+      streak++;
+      cursor.setMonth(cursor.getMonth() - 1);
+    }
+    return streak;
+  });
+
+  /** 8. Next round-number milestone the user is closing in on (with progress). */
+  protected readonly milestoneProgress = computed(() => {
+    const v = this.totalValue();
+    const ladder = [10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000];
+    const next = ladder.find(m => m > v) ?? v * 2;
+    const prev = [...ladder].reverse().find(m => m <= v) ?? 0;
+    const denom = next - prev;
+    const pct = denom > 0 ? Math.max(0, Math.min(100, ((v - prev) / denom) * 100)) : 0;
+    return { target: next, previous: prev, pct };
+  });
+
+  /** 9. Rule-of-72 doubling time at the current annualised return. */
+  protected readonly doublingYears = computed(() => {
+    const cagr = this.annualized();
+    if (cagr === null || cagr <= 0 || !Number.isFinite(cagr)) return null;
+    return 72 / cagr;
+  });
+
+  /** 10. Biggest absolute drift between strategic-level target and reality. */
+  protected readonly driftMax = computed(() => {
+    const total = this.totalBourse() + 0;
+    if (total <= 0) return null;
+    const t = this.allocSvc.targets().strategic;
+    if (!t || (t.stocks + t.bonds) === 0) return null;
+    // Real shares: stocks = boursier (PEA/CTO/AV/PER), bonds ≈ obligations sleeve.
+    // Without per-ETF asset-class metadata we approximate "stocks" as all bourse
+    // and "bonds" as 0 — refined when allocation-by-asset-class lands.
+    const realStocksPct = 100;
+    const driftStocks   = realStocksPct - t.stocks;
+    return Math.abs(driftStocks);
+  });
 
   protected readonly fmtEur    = fmtEur;
   protected readonly fmtNum    = fmtNum;
