@@ -137,7 +137,7 @@
     <h2 class="section-title">Indicateurs <em>clés</em></h2>
     <span class="section-sub">10 chiffres pour piloter sans ouvrir 5 onglets</span>
   </div>
-  <div class="grid kpi-grid" style="grid-template-columns:repeat(5, 1fr);gap:14px;margin-bottom:24px">
+  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:24px">
 
     <!-- 1. Vélocité épargne -->
     <div class="card kpi-tile">
@@ -229,6 +229,20 @@
       } @else {
         <div class="value">—</div>
         <div class="sub">CAGR ≤ 0 ou indisponible</div>
+      }
+    </div>
+
+    <!-- 10. TRI / XIRR -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TRI</span></div>
+      @if (tri() !== null) {
+        <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
+          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
+        </div>
+        <div class="sub">depuis ton 1ᵉʳ versement</div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">pas assez de versements</div>
       }
     </div>
 

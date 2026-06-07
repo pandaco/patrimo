@@ -5,6 +5,7 @@ import { AlertType, PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
+import { computeTri } from '../portfolio/tri';
 
 const DASH_PERIODS: { id: PerformancePeriod; label: string }[] = [
   { id: '1M', label: '1M' },
@@ -232,7 +233,12 @@ export class DashboardComponent {
     return 72 / cagr;
   });
 
-  /** 10. Biggest absolute drift between strategic-level target and reality. */
+  /** 10b. Money-weighted return (XIRR) — true annualised rate counting deposit timing. */
+  protected readonly tri = computed(() =>
+    computeTri(this.txService.all(), this.totalValue()),
+  );
+
+  /** 11. Biggest absolute drift between strategic-level target and reality. */
   protected readonly driftMax = computed(() => {
     const total = this.totalBourse() + 0;
     if (total <= 0) return null;

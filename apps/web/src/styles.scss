@@ -513,8 +513,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @media (max-width: 1180px) {
   .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
-@media (max-width: 720px) {
+@media (max-width: 880px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 540px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
 }
 
 // Drift bar — used on Allocation to show real vs target as a horizontal
