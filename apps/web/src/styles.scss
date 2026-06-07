@@ -486,6 +486,35 @@ button { font: inherit; color: inherit; cursor: pointer; }
   position: relative;
   display: inline-block;
 }
+// Drift bar — used on Allocation to show real vs target as a horizontal
+// track with a vertical tick at the target. The bar itself shows a track
+// background; the inner span is the filled portion driven by inline width.
+.bar {
+  position: relative;
+  background: var(--rule-soft);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+  > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--brand);
+    transition: width 0.2s ease;
+  }
+}
+// Vertical target tick rendered as a sibling of `.bar` inside a wrapper.
+.bar-target-tick {
+  position: absolute;
+  top: -3px;
+  height: 12px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 .chart-tooltip {
   position: absolute;
   z-index: 50;
