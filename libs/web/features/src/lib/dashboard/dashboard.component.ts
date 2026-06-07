@@ -127,7 +127,12 @@ export class DashboardComponent {
   });
 
   protected readonly donutData = computed(() =>
-    this.envelopes.all().map(e => ({ value: e.value, color: GLYPH_COLORS[e.glyph] ?? '#999' }))
+    this.envelopes.all().map(e => ({
+      value: e.value,
+      color: GLYPH_COLORS[e.glyph] ?? '#999',
+      label: e.label,
+      unit:  '€',
+    }))
   );
 
   protected readonly envPreview = computed(() => this.envelopes.all().slice(0, 6));

@@ -89,7 +89,7 @@ export class AllocationComponent {
   });
 
   protected readonly currencyDonut = computed(() =>
-    this.byCurrency().map(s => ({ value: s.value, color: s.color })),
+    this.byCurrency().map(s => ({ value: s.value, color: s.color, label: s.label, unit: '€' })),
   );
 
   protected readonly etfsWithTargets = computed(() =>
@@ -97,14 +97,14 @@ export class AllocationComponent {
   );
 
   protected readonly strategicDonut = computed(() => [
-    { value: this.targets().strategic.stocks, color: 'var(--brand)' },
-    { value: this.targets().strategic.bonds,  color: 'var(--ink-3)' },
+    { value: this.targets().strategic.stocks, color: 'var(--brand)',  label: 'Actions',     unit: '%' },
+    { value: this.targets().strategic.bonds,  color: 'var(--ink-3)',  label: 'Obligations', unit: '%' },
   ]);
 
   protected readonly tacticDonut = computed(() => [
-    { value: this.targets().tactic.core,      color: 'var(--brand)' },
-    { value: this.targets().tactic.satellite, color: '#8C6E2A' },
-    { value: this.targets().tactic.bonds,     color: 'var(--ink-3)' },
+    { value: this.targets().tactic.core,      color: 'var(--brand)', label: 'Core',        unit: '%' },
+    { value: this.targets().tactic.satellite, color: '#8C6E2A',      label: 'Satellite',   unit: '%' },
+    { value: this.targets().tactic.bonds,     color: 'var(--ink-3)', label: 'Obligations', unit: '%' },
   ]);
 
   protected readonly fmtEur = fmtEur;
