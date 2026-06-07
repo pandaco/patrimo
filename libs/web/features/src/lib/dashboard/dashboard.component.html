@@ -75,9 +75,14 @@
           <div class="sub" style="flex-wrap:wrap">
             <ui-delta [value]="dayPct()" [digits]="2" />
             <span data-tip="Variation de la valorisation de tes ETF depuis la clôture de la veille — uniquement la part boursière, livrets exclus.">aujourd'hui</span>
-            <span style="opacity:0.35">•</span>
-            <span style="color:#4ADE80" class="num bold">+{{ fmtNum(pnlPct(), 1) }} %</span>
-            <span data-tip="Plus-value latente totale en % — (valeur actuelle / coût total − 1) × 100. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">depuis l'achat</span>
+            @if (portfolioCost() > 0) {
+              <span style="opacity:0.35">•</span>
+              <span class="num bold"
+                    [style.color]="pnlPct() >= 0 ? '#4ADE80' : '#FCA5A5'">
+                {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %
+              </span>
+              <span data-tip="Plus-value latente totale en % — (valeur actuelle / coût total − 1) × 100. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">depuis l'achat</span>
+            }
           </div>
         </div>
         <div class="stat">

@@ -95,14 +95,18 @@ export class DashboardComponent {
   );
   protected readonly pnlPct = computed(() => {
     const cost = this.portfolioCost();
-    return cost ? (this.portfolioValue() / cost - 1) * 100 : 0;
+    if (cost < 1) return 0;
+    const ratio = (this.portfolioValue() / cost - 1) * 100;
+    return Number.isFinite(ratio) ? ratio : 0;
   });
   protected readonly dayValue = computed(() =>
     this.etfs.all().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0)
   );
   protected readonly dayPct = computed(() => {
     const value = this.portfolioValue();
-    return value ? (this.dayValue() / value) * 100 : 0;
+    if (value < 1) return 0;
+    const ratio = (this.dayValue() / value) * 100;
+    return Number.isFinite(ratio) ? ratio : 0;
   });
 
   protected readonly topAlerts    = computed(() => this.alerts.all().slice(0, 3));

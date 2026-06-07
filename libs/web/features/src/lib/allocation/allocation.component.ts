@@ -139,7 +139,7 @@ export class AllocationComponent {
   });
 
   protected drift(ticker: string): number {
-    return (this.realPct()[ticker] ?? 0) - this.targets().etf[ticker];
+    return (this.realPct()[ticker] ?? 0) - (this.targets().etf[ticker] ?? 0);
   }
 
   protected driftSev(drift: number): string {

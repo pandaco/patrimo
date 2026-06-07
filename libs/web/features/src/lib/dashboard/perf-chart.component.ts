@@ -100,10 +100,15 @@ export class PerfChartComponent {
   protected benchPts     = computed(() => this.toPoints(this.benchmark()));
 
   private toPoints(series: number[]): string {
+    if (series.length === 0) return '';
     const { min, max } = this.minMax();
+    const range = max - min;
+    const denom = series.length === 1 ? 1 : series.length - 1;
     return series.map((v, i) => {
-      const x = P + (i / (series.length - 1)) * (W - P * 2);
-      const y = H - P - ((v - min) / (max - min)) * (H - P * 2);
+      const x = P + (i / denom) * (W - P * 2);
+      const y = range > 0
+        ? H - P - ((v - min) / range) * (H - P * 2)
+        : H - P;
       return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
   }
@@ -116,13 +121,17 @@ export class PerfChartComponent {
 
   protected endX = computed(() => {
     const n = this.portfolio().length;
-    return P + ((n - 1) / (n - 1)) * (W - P * 2);
+    if (n < 2) return W - P;
+    return P + (W - P * 2);
   });
 
   protected endY = computed(() => {
     const d = this.portfolio();
+    if (d.length === 0) return H - P;
     const { min, max } = this.minMax();
-    return H - P - ((d[d.length - 1] - min) / (max - min)) * (H - P * 2);
+    const range = max - min;
+    if (range <= 0) return H - P;
+    return H - P - ((d[d.length - 1] - min) / range) * (H - P * 2);
   });
 
   protected perfLabel = computed(() => {

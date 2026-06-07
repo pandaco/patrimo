@@ -97,7 +97,11 @@ export class PerformanceComponent {
     if (series.length < 2) return 0;
     const start = series.find(v => v > 0) ?? 0;
     const end   = series[series.length - 1];
-    return start ? (end / start - 1) * 100 : 0;
+    // Same defensive guard as the dashboard portfolioPct: under €1 of base
+    // capital the ratio is meaningless and prone to overflow into Infinity.
+    if (start < 1) return 0;
+    const ratio = (end / start - 1) * 100;
+    return Number.isFinite(ratio) ? ratio : 0;
   }
 
   protected readonly portfolioPct = computed(() => PerformanceComponent.totalReturn(this.portfolio()));
