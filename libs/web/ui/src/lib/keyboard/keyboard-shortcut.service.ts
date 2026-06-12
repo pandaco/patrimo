@@ -114,6 +114,6 @@ export class KeyboardShortcutService {
 
   async openShortcuts(): Promise<void> {
     const { ShortcutsDialogComponent } = await import('./shortcuts-dialog.component');
-    this.dialog.open(ShortcutsDialogComponent, { maxWidth: '480px', width: '100%' });
+    this.dialog.open(ShortcutsDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '480px', width: '100%' });
   }
 }

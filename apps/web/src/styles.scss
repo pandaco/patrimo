@@ -1126,6 +1126,19 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .search-placeholder { flex: 1; text-align: left; }
 }
 
+// Transaction / envelope dialog overlay — the MatDialog container is just a
+// positioning shell here: the .modal inside owns the surface (background,
+// border, radius, shadow). Strip the default M3 surface chrome, otherwise its
+// white rounded box shows as a stray band on the right edge whenever the
+// container (580px from the open() config) is wider than the .modal.
+.tx-dialog-panel {
+  --mdc-dialog-container-color: transparent;
+
+  .mat-mdc-dialog-container { padding: 0; overflow: visible; }
+  .mat-mdc-dialog-surface   { background: transparent; box-shadow: none; }
+  .modal { max-width: none; } // fill the container exactly — no gap to show
+}
+
 // Search dialog overlay
 .search-dialog-panel .mat-mdc-dialog-container {
   padding: 0;
