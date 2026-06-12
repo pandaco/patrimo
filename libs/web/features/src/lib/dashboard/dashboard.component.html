@@ -9,8 +9,9 @@
     <h1 class="page-title">Bonjour <em>{{ firstName() || '…' }}.</em></h1>
     @if (!isEmpty()) {
       <p class="page-sub">
-        Ton patrimoine progresse de <span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span> aujourd'hui,
-        soit <span class="hl-soft">{{ fmtEur(dayValue(), 0) }}</span>.
+        Aujourd'hui, ton patrimoine {{ dayValue() >= 0 ? 'gagne' : 'perd' }}
+        <span class="hl-soft">{{ fmtEur(abs(dayValue()), 0) }}</span>
+        (<span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span>).
         @if (topAlerts().length > 0) {
           <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
         }
@@ -81,10 +82,11 @@
             @if (portfolioCost() > 0) {
               <span style="opacity:0.35">•</span>
               <span class="num bold"
-                    [style.color]="pnlPct() >= 0 ? '#4ADE80' : '#FCA5A5'">
-                {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %
+                    [style.color]="pnlValue() >= 0 ? '#4ADE80' : '#FCA5A5'">
+                {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
               </span>
-              <span data-tip="Plus-value latente totale en % — (valeur actuelle / coût total − 1) × 100. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">depuis l'achat</span>
+              <span data-tip="Plus-value latente totale — valeur actuelle moins coût d'achat. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">{{ pnlValue() >= 0 ? 'gagnés' : 'perdus' }} depuis l'achat</span>
+              <span class="num muted">({{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %)</span>
             }
           </div>
         </div>
@@ -189,7 +191,7 @@
         <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.pos]="currentDrawdown()! >= -0.5">
           {{ fmtPct(currentDrawdown()!, 1) }}
         </div>
-        <div class="sub">vs sommet historique</div>
+        <div class="sub">vs sommet · repère : −34 % au krach 2020</div>
       } @else {
         <div class="value">—</div>
         <div class="sub">pas assez d'historique</div>
@@ -268,7 +270,7 @@
         <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
           {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
         </div>
-        <div class="sub">depuis ton 1ᵉʳ versement</div>
+        <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
       } @else {
         <div class="value">—</div>
         <div class="sub">pas assez de versements</div>
@@ -342,6 +344,7 @@
                   {{ annualized()! >= 0 ? '+' : '' }}{{ fmtPct(annualized()!, 2) }}/an
                 </span>
               </div>
+              <div class="muted tiny" style="margin-top:4px">repère : actions monde ≈ 7–9 %/an sur 30 ans</div>
             </div>
           }
         </div>

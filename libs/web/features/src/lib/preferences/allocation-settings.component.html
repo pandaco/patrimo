@@ -137,7 +137,10 @@
         l'optimisation fiscale en plus du couple actions/obligations.
       </p>
       @if (envTargets().length === 0) {
-        <p class="muted small">Aucune enveloppe trouvée.</p>
+        <div style="padding:4px 0">
+          <p class="muted small" style="margin:0 0 10px">Aucune enveloppe trouvée — commence par déclarer où ton argent est placé.</p>
+          <a class="btn sm" routerLink="/wealth">+ Créer une enveloppe</a>
+        </div>
       } @else {
         <table class="tbl" style="font-size:13px">
           <thead>

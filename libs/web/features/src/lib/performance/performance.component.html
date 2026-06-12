@@ -317,7 +317,10 @@
       @if (loadingStats()) {
         <p class="muted small">Chargement…</p>
       } @else if (etfStats().length === 0) {
-        <p class="muted small">Aucune position trouvée.</p>
+        <div style="padding:8px 0">
+          <p class="muted small" style="margin:0 0 10px">Aucune position trouvée — le tracking se calcule dès ton premier achat d'ETF.</p>
+          <a class="btn sm" routerLink="/transactions">+ Nouvelle transaction</a>
+        </div>
       } @else {
         <table class="tbl" style="font-size:12px">
           <thead>

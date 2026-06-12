@@ -118,6 +118,7 @@ export class DashboardComponent {
   protected readonly portfolioCost = computed(() =>
     this.etfs.all().reduce((a, e) => a + etfCost(e), 0)
   );
+  protected readonly pnlValue = computed(() => this.portfolioValue() - this.portfolioCost());
   protected readonly pnlPct = computed(() => {
     const cost = this.portfolioCost();
     if (cost < 1) return 0;
@@ -276,6 +277,7 @@ export class DashboardComponent {
     return Math.abs(driftStocks);
   });
 
+  protected readonly abs       = Math.abs;
   protected readonly fmtEur    = fmtEur;
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPct    = fmtPct;

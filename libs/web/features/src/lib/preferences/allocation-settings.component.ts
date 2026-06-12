@@ -1,7 +1,7 @@
 import { UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AllocationTargetsDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { EnvelopeService, EtfService, PreferencesService } from '@patrimo/data-access';
 
@@ -23,7 +23,7 @@ const WIZARD_STEPS: WizardStep[] = [
 @Component({
   selector: 'app-allocation-settings',
   standalone: true,
-  imports: [FormsModule, UpperCasePipe],
+  imports: [FormsModule, UpperCasePipe, RouterLink],
   templateUrl: './allocation-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
