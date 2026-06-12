@@ -30,10 +30,11 @@
         prix d'achat, valide.
       </p>
       <p style="color:var(--ink-3);font-size:12.5px;margin:0">
-        <b>Catalogue.</b> La liste est curée — ce sont les ETF que Patrimo
-        suit côté backend pour leurs cours Yahoo Finance. Si un ETF te manque,
-        c'est une demande à pousser côté projet (ajout dans la table
-        <code>etfs</code>) ; pas encore d'UI pour ça.
+        <b>Catalogue.</b> Il te manque un ETF ? Clique
+        <em>+ Ajouter un ETF</em> : saisis son ISIN et son ticker, Patrimo
+        vérifie que Yahoo Finance connaît le cours avant de l'accepter. Le
+        nouvel ETF arrive en suivi (watchlist) — compare-le, puis achète-le
+        quand tu es prêt.
       </p>
     </div>
   </details>
@@ -49,6 +50,9 @@
         }
         <button class="btn sm" [class.primary]="activeFilterCount() > 0" (click)="filterOpen.update(v => !v)">
           + Filtre @if (activeFilterCount() > 0) { <span class="pill" style="margin-left:4px">{{ activeFilterCount() }}</span> }
+        </button>
+        <button class="btn sm primary" data-testid="open-etf-dialog" (click)="addEtf()">
+          + Ajouter un ETF
         </button>
       </div>
     </div>

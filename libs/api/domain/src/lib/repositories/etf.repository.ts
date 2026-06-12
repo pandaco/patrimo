@@ -8,4 +8,5 @@ export interface EtfRepository {
   upsert(seed: EtfSeed): Promise<Etf>;
   updateExposure(isin: string, exposure: Etf['exposure']): Promise<void>;
   setWatchOnly(isin: string, watchOnly: boolean): Promise<void>;
+  deleteByIsin(isin: string): Promise<void>;
 }

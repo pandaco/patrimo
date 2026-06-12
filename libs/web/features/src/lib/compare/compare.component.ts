@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { EtfDto } from '@patrimo/contracts';
 import { Etf, EtfService } from '@patrimo/data-access';
 import { TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { EtfDialogComponent } from './etf-dialog.component';
 
 const MAX_SELECTION = 4;
 
@@ -97,6 +99,18 @@ export class CompareComponent {
     this.dialog.open(TransactionDialogComponent, {
       data: { presetEtfIsin: etf.isin, presetType: 'BUY' },
       panelClass: 'tx-dialog-panel',
+    });
+  }
+
+  /** Open the add-ETF dialog; a created ETF joins the comparator selection right away. */
+  protected addEtf(): void {
+    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'tx-dialog-panel' });
+    ref.afterClosed().subscribe((created?: EtfDto) => {
+      if (!created) return;
+      const current = this.selectedIsins();
+      if (!current.includes(created.isin) && current.length < MAX_SELECTION) {
+        this.selectedIsins.set([...current, created.isin]);
+      }
     });
   }
 

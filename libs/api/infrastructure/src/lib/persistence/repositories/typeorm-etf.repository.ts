@@ -55,4 +55,8 @@ export class TypeOrmEtfRepository implements EtfRepository {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await this.repo.update({ isin }, { exposure: exposure as any });
   }
+
+  async deleteByIsin(isin: string): Promise<void> {
+    await this.repo.delete({ isin });
+  }
 }

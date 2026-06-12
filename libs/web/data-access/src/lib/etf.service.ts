@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
-import { EtfDto, PositionDto } from '@patrimo/contracts';
+import { CreateEtfDto, EtfDto, PositionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
@@ -97,6 +97,23 @@ export class EtfService {
       this.http.patch<EtfDto>(`${this.baseUrl}/etfs/${isin}/watch`, { watchOnly }),
     );
     this.catalogResource.update(list => list.map(e => e.isin === updated.isin ? updated : e));
+  }
+
+  /** Add a user-supplied ETF to the catalog (backend validates the Yahoo symbol first). */
+  async create(input: CreateEtfDto): Promise<EtfDto> {
+    const created = await firstValueFrom(
+      this.http.post<EtfDto>(`${this.baseUrl}/etfs`, input),
+    );
+    this.catalogResource.reload();
+    return created;
+  }
+
+  /** Remove a catalog entry — the backend refuses while transactions reference it. */
+  async remove(isin: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(`${this.baseUrl}/etfs/${encodeURIComponent(isin)}`),
+    );
+    this.catalogResource.reload();
   }
 
   /**

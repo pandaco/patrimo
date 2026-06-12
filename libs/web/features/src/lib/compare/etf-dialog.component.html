@@ -1,0 +1,118 @@
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="etf-modal-title">
+
+  <div class="modal-head">
+    <div>
+      <div style="font-size:11.5px;font-weight:500;color:var(--ink-3);margin-bottom:4px">
+        Nouvel ETF
+      </div>
+      <div class="modal-title" id="etf-modal-title">
+        Ajoute un ETF au <em>catalogue</em>
+      </div>
+    </div>
+    <button class="btn ghost sm" (click)="close()" style="margin-left:auto" aria-label="Fermer le dialogue">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-isin">ISIN</label>
+        <input id="etf-isin" type="text" placeholder="IE00B4L5Y983" maxlength="12"
+               [ngModel]="isin()" (ngModelChange)="isin.set($event)"
+               style="text-transform:uppercase" />
+        @if (isin().length > 0 && !isinValid()) {
+          <span class="muted tiny" style="color:#FCA5A5">Format attendu : 2 lettres + 10 caractères (ex. FR0010315770)</span>
+        }
+      </div>
+      <div class="field">
+        <label for="etf-ticker">Ticker</label>
+        <input id="etf-ticker" type="text" placeholder="IWDA" maxlength="12"
+               [ngModel]="ticker()" (ngModelChange)="ticker.set($event)"
+               style="text-transform:uppercase" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="etf-name">Nom</label>
+      <input id="etf-name" type="text" placeholder="iShares Core MSCI World UCITS"
+             [ngModel]="name()" (ngModelChange)="name.set($event)" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-ter">Frais de gestion (TER, % par an)</label>
+        <input id="etf-ter" type="number" step="0.01" min="0" max="5" placeholder="0.20"
+               [ngModel]="ter()" (ngModelChange)="ter.set($event)" />
+      </div>
+      <div class="field">
+        <label for="etf-currency">Devise</label>
+        <select id="etf-currency" [ngModel]="currency()" (ngModelChange)="currency.set($event)">
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="CHF">CHF</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-distrib">Distribution</label>
+        <select id="etf-distrib" [ngModel]="distrib()" (ngModelChange)="distrib.set($event)">
+          <option value="Capitalisant">Capitalisant — dividendes réinvestis</option>
+          <option value="Distribuant">Distribuant — dividendes versés</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="etf-alloc">Rôle dans ta stratégie</label>
+        <select id="etf-alloc" [ngModel]="alloc()" (ngModelChange)="alloc.set($event)">
+          <option value="Core">Core — base diversifiée</option>
+          <option value="Satellite">Satellite — poche tactique</option>
+          <option value="Obligations">Obligations — stabilité</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-issuer">Émetteur <span class="muted">(optionnel)</span></label>
+        <input id="etf-issuer" type="text" placeholder="iShares, Amundi…"
+               [ngModel]="issuer()" (ngModelChange)="issuer.set($event)" />
+      </div>
+      <div class="field">
+        <label for="etf-index">Indice suivi <span class="muted">(optionnel)</span></label>
+        <input id="etf-index" type="text" placeholder="MSCI World"
+               [ngModel]="index()" (ngModelChange)="index.set($event)" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-repli">Réplication <span class="muted">(optionnel)</span></label>
+        <select id="etf-repli" [ngModel]="repli()" (ngModelChange)="repli.set($event)">
+          <option value="">—</option>
+          <option value="Physique">Physique</option>
+          <option value="Synthétique">Synthétique</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0 0 10px">
+          <input type="checkbox" [ngModel]="pea()" (ngModelChange)="pea.set($event)" />
+          Éligible PEA
+        </label>
+      </div>
+    </div>
+
+    <p class="muted tiny" style="margin:4px 0 0">
+      Le ticker est vérifié contre Yahoo Finance à l'enregistrement — si aucun cours
+      n'est trouvé, l'ajout est refusé pour éviter un suivi silencieusement cassé.
+    </p>
+  </div>
+
+  <div class="modal-foot">
+    <button class="btn ghost" (click)="close()" [disabled]="submitting()">Annuler</button>
+    <button class="btn primary" data-testid="etf-save" (click)="save()" [disabled]="!canSave()">
+      {{ submitting() ? 'Vérification du cours…' : 'Ajouter au catalogue →' }}
+    </button>
+  </div>
+</div>
