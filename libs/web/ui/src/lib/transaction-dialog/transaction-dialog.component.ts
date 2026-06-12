@@ -28,8 +28,8 @@ const TRANSACTION_TYPES: TransactionTypeEntry[] = [
   { id: 'SELL',       label: 'Vente',     sym: '−' },
   { id: 'DEPOSIT',    label: 'Dépôt',     sym: '↘' },
   { id: 'WITHDRAWAL', label: 'Retrait',   sym: '↗' },
-  { id: 'DIVIDEND',   label: 'Dividende', sym: '◆' },
-  { id: 'INTEREST',   label: 'Intérêts',  sym: '◆' },
+  { id: 'DIVIDEND',   label: 'Dividende', sym: '€' },
+  { id: 'INTEREST',   label: 'Intérêts',  sym: '%' },
   { id: 'TRANSFER',   label: 'Transfert', sym: '⇄' },
 ];
 

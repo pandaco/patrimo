@@ -59,8 +59,8 @@ export const TRANSACTION_LABELS: Record<TransactionType, TransactionLabel> = {
   SELL:       { label:'Vente',    sym:'−', dir:'−' },
   DEPOSIT:    { label:'Dépôt',    sym:'↘', dir:'+' },
   WITHDRAWAL: { label:'Retrait',  sym:'↗', dir:'−' },
-  DIVIDEND:   { label:'Dividende',sym:'◆', dir:'+' },
-  INTEREST:   { label:'Intérêts', sym:'◆', dir:'+' },
+  DIVIDEND:   { label:'Dividende',sym:'€', dir:'+' },
+  INTEREST:   { label:'Intérêts', sym:'%', dir:'+' },
 };
 
 export const MOCK_TARGETS: Targets = {
