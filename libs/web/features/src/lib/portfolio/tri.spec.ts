@@ -23,7 +23,7 @@ describe('xirr — single deposit then liquidation', () => {
       { date: '2025-01-01', amount: 1000 },
     ]);
     expect(r).not.toBeNull();
-    expect(r!).toBeCloseTo(0, 3);
+    expect(r ?? Number.NaN).toBeCloseTo(0, 3);
   });
 
   it('returns ~10 %/yr for a deposit that doubled in ~7.27 years (rule of 72)', () => {
@@ -33,7 +33,7 @@ describe('xirr — single deposit then liquidation', () => {
       { date: '2025-04-04', amount: 2000 },
     ]);
     expect(r).not.toBeNull();
-    expect(r!).toBeCloseTo(10, 0);
+    expect(r ?? Number.NaN).toBeCloseTo(10, 0);
   });
 
   it('returns negative when value finished below the deposit', () => {
@@ -42,7 +42,7 @@ describe('xirr — single deposit then liquidation', () => {
       { date: '2025-01-01', amount: 800 },
     ]);
     expect(r).not.toBeNull();
-    expect(r!).toBeCloseTo(-20, 1);
+    expect(r ?? Number.NaN).toBeCloseTo(-20, 1);
   });
 });
 
@@ -58,8 +58,8 @@ describe('xirr — multiple deposits', () => {
     flows.push({ date: '2024-12-31', amount: 1300 });
     const r = xirr(flows);
     expect(r).not.toBeNull();
-    expect(r!).toBeGreaterThan(0);
-    expect(r!).toBeLessThan(50);
+    expect(r ?? Number.NaN).toBeGreaterThan(0);
+    expect(r ?? Number.NaN).toBeLessThan(50);
   });
 });
 
@@ -91,7 +91,7 @@ describe('computeTri — from transaction history', () => {
     // current portfolio still worth €1000 a year later → r = 0
     const r = computeTri(txs, 1000, new Date('2026-06-07'));
     expect(r).not.toBeNull();
-    expect(r!).toBeCloseTo(0, 1);
+    expect(r ?? Number.NaN).toBeCloseTo(0, 1);
   });
 
   it('ignores BUY / SELL transactions (internal transfers)', () => {
@@ -104,7 +104,7 @@ describe('computeTri — from transaction history', () => {
     // €1000 deposit and the current value.
     const r = computeTri(txs, 1100, new Date('2026-06-07'));
     expect(r).not.toBeNull();
-    expect(r!).toBeCloseTo(10, 1);
+    expect(r ?? Number.NaN).toBeCloseTo(10, 1);
   });
 
   it('returns null when there is no current value', () => {
