@@ -92,6 +92,61 @@
     </div>
   }
 
+  <!-- PAYMENTS REPORT -->
+  <div class="section-head" style="margin-top:28px">
+    <h2 class="section-title">Revenus <em>encaissés</em></h2>
+    <span class="section-sub">dividendes + intérêts, par année</span>
+  </div>
+  <div class="grid" style="grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:8px">
+    <div class="card" style="padding:4px 12px">
+      @if (paymentYears().length === 0) {
+        <p class="muted small" style="padding:16px 8px">
+          Aucun dividende ni intérêt enregistré. Saisis-les comme mouvements
+          DIVIDEND / INTEREST pour suivre tes revenus passifs ici.
+        </p>
+      } @else {
+        <table class="tbl tbl-compact">
+          <thead>
+            <tr>
+              <th>Année</th>
+              <th class="r">Dividendes</th>
+              <th class="r">Intérêts</th>
+              <th class="r">Total</th>
+              <th class="r">Paiements</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of paymentYears(); track row.year) {
+              <tr>
+                <td class="serif-italic">{{ row.year }}</td>
+                <td class="r num">{{ fmtEur(row.dividends, 2) }}</td>
+                <td class="r num">{{ fmtEur(row.interest, 2) }}</td>
+                <td class="r num bold">{{ fmtEur(row.total, 2) }}</td>
+                <td class="r num muted">{{ row.count }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">{{ currentYear }} <em>par source</em></div>
+        <span class="card-sub" data-tip="Somme des dividendes et intérêts encaissés sur les 12 derniers mois glissants — une estimation simple de ton revenu passif annuel au rythme actuel.">run-rate 12M : {{ fmtEur(incomeRunRate(), 0) }}/an</span>
+      </div>
+      @if (paymentsBySource().length === 0) {
+        <p class="muted small" style="margin:0">Aucun revenu encaissé cette année pour l'instant.</p>
+      } @else {
+        @for (row of paymentsBySource(); track row.source) {
+          <div class="row" style="justify-content:space-between;padding:5px 0;font-size:13px">
+            <span class="serif-italic">{{ row.source }}</span>
+            <span class="num">{{ fmtEur(row.total, 2) }}</span>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
   <!-- LEGEND -->
   <div class="row" style="margin-top:16px;gap:14px;font-size:12px">
     <span class="row gap-12">

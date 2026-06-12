@@ -212,6 +212,53 @@ export class CalendarComponent {
 
   protected closePopover(): void { this.selectedEvent.set(null); }
 
+  // --- Payments report (Portfolio Performance-style) -----------------------
+
+  /** DIVIDEND + INTEREST grouped by calendar year, newest first. */
+  protected readonly paymentYears = computed(() => {
+    const byYear = new Map<number, { dividends: number; interest: number; count: number }>();
+    for (const t of this.txSvc.all()) {
+      if (t.type !== 'DIVIDEND' && t.type !== 'INTEREST') continue;
+      const year = Number(t.date.slice(0, 4));
+      const acc  = byYear.get(year) ?? { dividends: 0, interest: 0, count: 0 };
+      if (t.type === 'DIVIDEND') acc.dividends += t.amount;
+      else                       acc.interest  += t.amount;
+      acc.count++;
+      byYear.set(year, acc);
+    }
+    return Array.from(byYear.entries())
+      .map(([year, v]) => ({ year, ...v, total: v.dividends + v.interest }))
+      .sort((a, b) => b.year - a.year);
+  });
+
+  /** Current-year payments broken down by source (ETF ticker or envelope). */
+  protected readonly paymentsBySource = computed(() => {
+    const year = String(new Date().getFullYear());
+    const bySource = new Map<string, number>();
+    for (const t of this.txSvc.all()) {
+      if (t.type !== 'DIVIDEND' && t.type !== 'INTEREST') continue;
+      if (!t.date.startsWith(year)) continue;
+      const source = t.etf
+        ? (this.etfByIsin().get(t.etf) ?? t.etf)
+        : (this.envById().get(t.envelope)?.code ?? 'Livrets');
+      bySource.set(source, (bySource.get(source) ?? 0) + t.amount);
+    }
+    return Array.from(bySource.entries())
+      .map(([source, total]) => ({ source, total }))
+      .sort((a, b) => b.total - a.total);
+  });
+
+  /** Trailing-12-months income — a simple annual run-rate. */
+  protected readonly incomeRunRate = computed(() => {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+    return this.txSvc.all()
+      .filter(t => (t.type === 'DIVIDEND' || t.type === 'INTEREST') && new Date(t.date) >= cutoff)
+      .reduce((a, t) => a + t.amount, 0);
+  });
+
+  protected readonly currentYear = new Date().getFullYear();
+
   private readonly fxSvc = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
   protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
