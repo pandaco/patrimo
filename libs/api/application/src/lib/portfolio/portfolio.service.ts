@@ -20,8 +20,10 @@ function applyTransaction(pos: PositionAccumulator, tx: Transaction): void {
   if (tx.type !== 'BUY' && tx.type !== 'SELL') return;
   const sign      = tx.type === 'BUY' ? 1 : -1;
   const price     = tx.price ?? 0;
-  const fees      = tx.fees ?? 0;
-  const grossCost = tx.quantity * price + (tx.type === 'BUY' ? fees : -fees);
+  // Taxes follow the same direction as fees: they raise the cost of a BUY
+  // and shrink the proceeds of a SELL.
+  const costs     = (tx.fees ?? 0) + (tx.taxes ?? 0);
+  const grossCost = tx.quantity * price + (tx.type === 'BUY' ? costs : -costs);
   pos.qty      += sign * tx.quantity;
   pos.invested += sign * grossCost;
   if (sign > 0) {

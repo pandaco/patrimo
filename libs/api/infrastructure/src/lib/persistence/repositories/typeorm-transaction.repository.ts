@@ -21,6 +21,7 @@ function toDomain(row: TransactionOrmEntity): Transaction {
     quantity: row.quantity,
     price: row.price,
     fees: row.fees,
+    taxes: row.taxes,
     amount: row.amount,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

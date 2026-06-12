@@ -42,6 +42,12 @@ export class CreateTransactionDtoBody {
   @Min(0)
   fees!: number;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  taxes?: number;
+
   @Type(() => Number)
   @IsNumber()
   amount!: number;

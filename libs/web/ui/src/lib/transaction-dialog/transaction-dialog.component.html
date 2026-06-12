@@ -90,12 +90,17 @@
       </div>
     }
 
-    <!-- FEES -->
+    <!-- FEES + TAXES -->
     @if (showQtyPrice()) {
       <div class="field">
         <label for="tx-fees">Frais courtage (€)</label>
         <input id="tx-fees" type="number" step="0.01" class="num-input" [ngModel]="fees()" (ngModelChange)="fees.set(+$event)" />
         <div class="field-help">Auto-calculé · Fortuneo : 0,99 € ≤ 500 €, 0,35 % au-delà</div>
+      </div>
+      <div class="field">
+        <label for="tx-taxes">Taxes (€)</label>
+        <input id="tx-taxes" type="number" step="0.01" class="num-input" [ngModel]="taxes()" (ngModelChange)="taxes.set(+$event)" />
+        <div class="field-help">TTF, prélèvements retenus à la source — séparés des frais pour le suivi fiscal</div>
       </div>
     }
 
@@ -111,7 +116,7 @@
           <b>{{ fmtEur(price(), 2) }}</b> =
           <b>{{ fmtEur(txAmount(), 2) }}</b>
           @if (type() === 'BUY') {
-            + frais {{ fmtEur(fees(), 2) }} = <b>{{ fmtEur(total(), 2) }}</b>
+            + frais {{ fmtEur(fees(), 2) }}@if (taxes() > 0) { + taxes {{ fmtEur(taxes(), 2) }} } = <b>{{ fmtEur(total(), 2) }}</b>
           }
         </div>
         <div class="recap-line">

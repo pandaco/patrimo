@@ -68,6 +68,7 @@ function tx(overrides: Partial<Transaction>): Transaction {
     quantity: overrides.quantity ?? 10,
     price: overrides.price ?? 40,
     fees: overrides.fees ?? 0,
+    taxes: overrides.taxes ?? 0,
     amount: overrides.amount ?? 400,
     createdAt: new Date(),
     updatedAt: new Date(),

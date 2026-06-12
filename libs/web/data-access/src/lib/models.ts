@@ -52,6 +52,8 @@ export interface Transaction {
   qty: number;
   price: number | null;
   fees: number;
+  /** Taxes withheld (PFU, social levies) — separate from broker fees. */
+  taxes: number;
   amount: number;
 }
 

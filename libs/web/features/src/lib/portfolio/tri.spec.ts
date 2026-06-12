@@ -12,6 +12,7 @@ function tx(partial: Partial<Transaction> & { id: string; type: TxType; date: st
     qty:      partial.qty ?? 0,
     price:    partial.price ?? null,
     fees:     partial.fees ?? 0,
+    taxes:    partial.taxes ?? 0,
     amount:   partial.amount,
   };
 }

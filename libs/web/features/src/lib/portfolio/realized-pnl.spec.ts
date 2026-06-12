@@ -12,6 +12,7 @@ function tx(partial: Partial<Transaction> & { id: string; type: TxType; date: st
     qty:      partial.qty ?? 1,
     price:    partial.price ?? 100,
     fees:     partial.fees ?? 0,
+    taxes:    partial.taxes ?? 0,
     amount:   partial.amount ?? 100,
   };
 }
@@ -158,5 +159,16 @@ describe('computeRealized — closed positions', () => {
 describe('startOfYearISO', () => {
   it('returns YYYY-01-01 for an arbitrary date', () => {
     expect(startOfYearISO(new Date('2026-06-15T12:00:00Z'))).toBe('2026-01-01');
+  });
+});
+
+describe('computeRealized — taxes are part of the cost basis', () => {
+  it('raises the basis by buy taxes and lowers proceeds by sell taxes', () => {
+    const txs = [
+      tx({ id: 'a', type: 'BUY',  date: '2024-06-01', qty: 10, amount: 1000, fees: 5, taxes: 3 }), // basis = 1008
+      tx({ id: 'b', type: 'SELL', date: '2026-02-01', qty: 10, amount: 1200, fees: 5, taxes: 2 }), // proceeds = 1193
+    ];
+    const report = computeRealized(txs, '2026-01-01');
+    expect(report.realizedSince).toBeCloseTo(1193 - 1008, 6);
   });
 });

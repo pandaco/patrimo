@@ -59,6 +59,7 @@ export class TransactionDialogComponent {
   protected price      = signal(this.data?.transaction?.price ?? 0);
   protected date       = signal(this.data?.transaction?.date ?? new Date().toISOString().slice(0, 10));
   protected fees       = signal(this.data?.transaction?.fees ?? 0);
+  protected taxes      = signal(this.data?.transaction?.taxes ?? 0);
   protected amount     = signal(this.data?.transaction?.amount ?? 0);
 
   protected readonly submitting = signal(false);
@@ -97,7 +98,8 @@ export class TransactionDialogComponent {
   );
   protected readonly total = computed(() => {
     const t = this.type();
-    return t === 'BUY' ? this.txAmount() + this.fees() : this.txAmount() - this.fees();
+    const costs = this.fees() + this.taxes();
+    return t === 'BUY' ? this.txAmount() + costs : this.txAmount() - costs;
   });
 
   private readonly totalPortfolioValue = computed(() =>
@@ -141,6 +143,7 @@ export class TransactionDialogComponent {
     this.price.set(0);
     this.amount.set(0);
     this.fees.set(0);
+    this.taxes.set(0);
   }
 
   private async submit(): Promise<boolean> {
@@ -164,6 +167,7 @@ export class TransactionDialogComponent {
       quantity: showQtyPrice ? this.qty() : 1,
       price: showQtyPrice ? this.price() : null,
       fees: this.fees(),
+      taxes: this.taxes(),
       amount: this.txAmount(),
     };
 

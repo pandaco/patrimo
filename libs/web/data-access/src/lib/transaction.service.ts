@@ -18,6 +18,7 @@ function fromDto(d: TransactionDto): Transaction {
     qty: d.quantity,
     price: d.price,
     fees: d.fees,
+    taxes: d.taxes,
     amount: d.amount,
   };
 }

@@ -64,6 +64,12 @@ export class TransactionOrmEntity {
   @Column({ type: 'numeric', precision: 18, scale: 6, transformer: decimalTransformer })
   fees!: number;
 
+  // Taxes withheld on the transaction (French PFU, social levies, stamp
+  // duties). Kept separate from broker fees so tax reporting and fee
+  // analytics do not pollute each other.
+  @Column({ type: 'numeric', precision: 18, scale: 6, default: 0, transformer: decimalTransformer })
+  taxes!: number;
+
   @Column({ type: 'numeric', precision: 18, scale: 6, transformer: decimalTransformer })
   amount!: number;
 

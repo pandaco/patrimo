@@ -38,8 +38,8 @@ interface PerEtf {
  * prior BUY to match against).
  *
  * Cost basis is fee-aware:
- *   - BUY  net-per-unit = (amount + fees) / qty   — fees raise the cost basis
- *   - SELL net-per-unit = (amount - fees) / qty   — fees lower the proceeds
+ *   - BUY  net-per-unit = (amount + fees + taxes) / qty — costs raise the basis
+ *   - SELL net-per-unit = (amount - fees - taxes) / qty — costs lower the proceeds
  *
  * Same-date BUYs are processed before same-date SELLs so an intraday round
  * trip is matched correctly regardless of which row was inserted first.
@@ -79,16 +79,16 @@ export function computeRealized(txs: Transaction[], sinceDate: string): Realized
     const s = statsFor(isin);
 
     if (t.type === 'BUY') {
-      const netCostPerUnit = (t.amount + t.fees) / t.qty;
+      const netCostPerUnit = (t.amount + t.fees + (t.taxes ?? 0)) / t.qty;
       if (!Number.isFinite(netCostPerUnit)) continue;
       const queue = lots.get(isin) ?? [];
       if (queue.length === 0) lots.set(isin, queue);
       queue.push({ qty: t.qty, netCostPerUnit });
-      s.buyCost += t.amount + t.fees;
+      s.buyCost += t.amount + t.fees + (t.taxes ?? 0);
       continue;
     }
 
-    const netSellPerUnit = (t.amount - t.fees) / t.qty;
+    const netSellPerUnit = (t.amount - t.fees - (t.taxes ?? 0)) / t.qty;
     if (!Number.isFinite(netSellPerUnit)) continue;
     const queue = lots.get(isin) ?? [];
     if (queue.length === 0) lots.set(isin, queue);
@@ -107,7 +107,7 @@ export function computeRealized(txs: Transaction[], sinceDate: string): Realized
       if (lot.qty < 1e-9) queue.shift();
     }
 
-    s.sellProceeds += t.amount - t.fees;
+    s.sellProceeds += t.amount - t.fees - (t.taxes ?? 0);
     s.hasSold = true;
     if (t.date > s.lastSell) s.lastSell = t.date;
 

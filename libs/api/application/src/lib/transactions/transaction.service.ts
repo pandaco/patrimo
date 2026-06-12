@@ -13,6 +13,7 @@ function toDto(tx: Transaction): TransactionDto {
     quantity: tx.quantity,
     price: tx.price,
     fees: tx.fees,
+    taxes: tx.taxes,
     amount: tx.amount,
   };
 }
@@ -26,6 +27,7 @@ function toPatch(input: UpdateTransactionDto): Partial<TransactionSeed> {
   if (input.quantity   !== undefined) patch.quantity   = input.quantity;
   if (input.price      !== undefined) patch.price      = input.price;
   if (input.fees       !== undefined) patch.fees       = input.fees;
+  if (input.taxes      !== undefined) patch.taxes      = input.taxes;
   if (input.amount     !== undefined) patch.amount     = input.amount;
   return patch;
 }
@@ -72,6 +74,7 @@ export class TransactionService {
       quantity: input.quantity,
       price: input.price ?? null,
       fees: input.fees,
+      taxes: input.taxes ?? 0,
       amount: input.amount,
     });
     return toDto(created);
@@ -88,7 +91,7 @@ export class TransactionService {
 
   async exportCsv(userId: string): Promise<string> {
     const rows = await this.transactions.findByUserId(userId);
-    const header = 'Date,Type,Enveloppe ID,ISIN,Quantité,Prix (€),Frais (€),Montant (€)\n';
+    const header = 'Date,Type,Enveloppe ID,ISIN,Quantité,Prix (€),Frais (€),Taxes (€),Montant (€)\n';
     const lines = rows.map(tx => [
       tx.date.toISOString().slice(0, 10),
       tx.type,
@@ -97,6 +100,7 @@ export class TransactionService {
       tx.quantity,
       tx.price ?? '',
       tx.fees,
+      tx.taxes,
       tx.amount,
     ].join(','));
     return header + lines.join('\n');
@@ -119,16 +123,22 @@ export class TransactionService {
       const parsed = parseCsvLine(line);
       if (parsed.length === 0 || parsed[0].toLowerCase() === 'date') continue;
 
-      const [date, type, envCode, ticker, qty, price, fees, amount] = parsed;
+      // 9 columns since the taxes column shipped; 8-column exports from
+      // older versions are still accepted (taxes default to 0).
+      const [date, type, envCode, ticker, qty, price, fees, col8, col9] = parsed;
+      const hasTaxes = parsed.length >= 9;
+      const taxesRaw = hasTaxes ? col8 : '0';
+      const amountRaw = hasTaxes ? col9 : col8;
 
       const envelopeId = envMap.get(envCode);
       if (!envelopeId) { skipped++; continue; }
 
       const etfIsin   = ticker ? etfMap.get(ticker) : null;
       const txType    = type as TxType;
-      const quantity  = parseFloat(qty)    || 0;
-      const fee       = parseFloat(fees)   || 0;
-      const amt       = parseFloat(amount) || 0;
+      const quantity  = parseFloat(qty)      || 0;
+      const fee       = parseFloat(fees)     || 0;
+      const tax       = parseFloat(taxesRaw) || 0;
+      const amt       = parseFloat(amountRaw) || 0;
       const parsedDate = new Date(date);
 
       // For BUY/SELL the qty and amount must both be strictly positive — a
@@ -152,6 +162,7 @@ export class TransactionService {
         quantity,
         price: price ? parseFloat(price) : null,
         fees: fee,
+        taxes: tax,
         amount: amt,
       });
       count++;

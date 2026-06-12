@@ -10,6 +10,8 @@ export interface TransactionDto {
   quantity: number;
   price: number | null;
   fees: number;
+  /** Taxes withheld (PFU, social levies) — separate from broker fees. */
+  taxes: number;
   amount: number;
 }
 
@@ -22,6 +24,8 @@ export interface CreateTransactionDto {
   quantity: number;
   price?: number | null;
   fees: number;
+  /** Taxes withheld — defaults to 0 when omitted. */
+  taxes?: number;
   amount: number;
 }
 
