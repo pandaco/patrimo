@@ -74,6 +74,7 @@ Tests une seule fois par défaut (mode CI).
 | `npm test` | tous les tests (web + api + libs) |
 | `npm run test:web` | tests du frontend |
 | `npm run test:api` | tests du backend |
+| `npm run test:integration` | repos TypeORM contre un vrai Postgres (nécessite `docker:up` ; base dédiée `patrimo_integration`, la base dev n'est jamais touchée) |
 
 ### Test watch (relance au changement)
 

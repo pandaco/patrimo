@@ -3,5 +3,15 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/api/infrastructure/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:api", "layer:infrastructure"]
+  "tags": ["type:lib", "scope:api", "layer:infrastructure"],
+  "targets": {
+    "integration": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/api/infrastructure"],
+      "cache": false,
+      "options": {
+        "jestConfig": "libs/api/infrastructure/jest.integration.config.cts"
+      }
+    }
+  }
 }
