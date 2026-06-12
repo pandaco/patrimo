@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AlertRead1780704000000 implements MigrationInterface {
-  name = 'AlertRead1780704000000';
+export class AlertRead1780640000000 implements MigrationInterface {
+  name = 'AlertRead1780640000000';
 
   async up(q: QueryRunner): Promise<void> {
     await q.query(`
