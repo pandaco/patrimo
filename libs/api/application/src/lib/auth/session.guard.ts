@@ -16,7 +16,7 @@ export class SessionGuard implements CanActivate {
     const sid = req.signedCookies?.[SESSION_COOKIE_NAME];
     if (typeof sid !== 'string') throw new UnauthorizedException();
 
-    const session = this.sessions.get(sid);
+    const session = await this.sessions.get(sid);
     if (!session) throw new UnauthorizedException();
 
     const user = await this.users.findById(session.userId);

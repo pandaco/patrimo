@@ -60,11 +60,11 @@ export class AuthController {
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @UseGuards(AuthGuard('google'))
   @UseFilters(GoogleAuthFilter)
-  googleCallback(
+  async googleCallback(
     @Req() req: Request & { user: AuthUser },
     @Res() res: Response,
-  ): void {
-    const sid = this.sessions.create(req.user.id);
+  ): Promise<void> {
+    const sid = await this.sessions.create(req.user.id);
     res.cookie(SESSION_COOKIE_NAME, sid, this.cookieOptions);
     const frontend = (req.app.get('frontend-url') as string) || 'http://localhost:4200';
     res.redirect(`${frontend}/auth/callback`);
@@ -90,7 +90,7 @@ export class AuthController {
         initials:  'AH',
       });
     }
-    const sid = this.sessions.create(user.id);
+    const sid = await this.sessions.create(user.id);
     res.cookie(SESSION_COOKIE_NAME, sid, this.cookieOptions);
     const frontend = (req.app.get('frontend-url') as string) || 'http://localhost:4200';
     res.redirect(`${frontend}/auth/callback`);
@@ -104,9 +104,9 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  logout(@Req() req: Request, @Res() res: Response): void {
+  async logout(@Req() req: Request, @Res() res: Response): Promise<void> {
     const sid = req.signedCookies?.[SESSION_COOKIE_NAME];
-    if (typeof sid === 'string') this.sessions.destroy(sid);
+    if (typeof sid === 'string') await this.sessions.destroy(sid);
     res.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
     res.send();
   }
