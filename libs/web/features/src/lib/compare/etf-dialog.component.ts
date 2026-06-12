@@ -59,6 +59,7 @@ export class EtfDialogComponent {
     this.ticker.set(result.symbol);
     this.name.set(result.name);
     if (result.currency) this.currency.set(result.currency);
+    if (result.ter !== null) this.ter.set(result.ter);
     const query = this.searchQuery().trim().toUpperCase();
     if (ISIN_PATTERN.test(query)) this.isin.set(query);
     this.searchResults.set([]);

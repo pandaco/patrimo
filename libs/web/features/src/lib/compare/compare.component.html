@@ -19,7 +19,7 @@
         pour réduire la liste si elle est trop longue.
       </p>
       <p>
-        <b>2. Compare</b> TER (frais annuels), TCO 5 ans (coût total estimé),
+        <b>2. Compare</b> TER (frais annuels), frais cumulés sur 5 ans,
         éligibilité PEA, distribution capitalisante vs distribuante. Le tableau
         en bas regroupe tous les critères pour un balayage rapide.
       </p>
@@ -148,7 +148,7 @@
           <div class="kv"><dt>Devise</dt><dd>{{ etf.currency }}</dd></div>
           <div class="kv"><dt>Catégorie</dt><dd>{{ etf.alloc }}</dd></div>
           <div class="divider-soft"></div>
-          <div class="kv"><dt><span data-tip="Total Cost of Ownership — coût total estimé sur 5 ans : frais de gestion TER + frais de courtage, pour un DCA de 500 €/mois. Permet de comparer deux ETFs équivalents sur leur coût réel de détention.">TCO 5A</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
+          <div class="kv"><dt><span data-tip="Ce que les frais de gestion (TER) te coûteraient en € cumulés sur 5 ans, avec l'hypothèse 500 €/mois investis et 7 %/an de rendement. Calcul Patrimo, identique quel que soit ton courtier — les frais d'ordre du courtier ne sont pas inclus. Sert uniquement à comparer deux ETFs entre eux.">Frais sur 5 ans</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
           <button type="button" class="btn primary sm" style="width:100%;margin-top:14px;justify-content:center"
                   (click)="buy(etf)">
             + Acheter cet ETF
@@ -198,7 +198,7 @@
           <tr><td class="muted small">Catégorie d'allocation</td>
             @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.alloc }}</td> }
           </tr>
-          <tr><td class="muted small">TCO 5A (500 €/m, 7 %/an)</td>
+          <tr><td class="muted small">Frais sur 5 ans (500 €/m, 7 %/an)</td>
             @for (etf of candidates(); track etf.isin) {
               <td class="num small">≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</td>
             }
@@ -208,8 +208,11 @@
     </div>
 
     <p class="muted small" style="margin-top:12px">
-      TCO estimé sur un DCA de 500 €/mois avec 7 %/an de rendement marché.
-      Frais courtage et spreads exclus (dépendent du broker).
+      « Frais sur 5 ans » = impact cumulé du TER si tu investis 500 €/mois avec
+      7 %/an de rendement marché. C'est un calcul Patrimo, identique quel que
+      soit ton courtier — ses frais d'ordre et le spread n'y sont pas. Le
+      chiffre absolu compte peu : c'est l'écart entre deux ETFs qui t'aide à
+      choisir.
     </p>
   } @else {
     <div class="card" style="text-align:center;padding:40px">

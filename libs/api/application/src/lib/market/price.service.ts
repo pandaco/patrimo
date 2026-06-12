@@ -6,6 +6,8 @@ import { toYahooSymbol } from './yahoo-symbol';
 export interface SymbolSearchResult extends SymbolCandidate {
   currency: string | null;
   price:    number | null;
+  /** Expense ratio in percent when Yahoo discloses it (mostly US-listed funds). */
+  ter:      number | null;
 }
 
 @Injectable()

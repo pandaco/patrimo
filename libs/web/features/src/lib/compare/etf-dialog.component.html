@@ -78,7 +78,7 @@
         <label for="etf-ter">Frais de gestion (TER, % par an) *</label>
         <input id="etf-ter" type="number" step="0.01" min="0" max="5" placeholder="0.20"
                [ngModel]="ter()" (ngModelChange)="ter.set($event)" />
-        <span class="muted tiny">Sur la fiche du fonds (DIC/KID) — ex. 0,07 pour le S&amp;P 500 iShares</span>
+        <span class="muted tiny">Pré-rempli depuis Yahoo quand disponible — sinon, sur la fiche du fonds (DIC/KID). Ex. 0,07 pour le S&amp;P 500 iShares</span>
       </div>
       <div class="field">
         <label for="etf-currency">Devise</label>

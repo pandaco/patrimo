@@ -55,18 +55,37 @@ export class YahooPriceProvider {
     }
   }
 
-  /** Currency + last price for a search candidate — no cache, lookup-time only. */
-  async fetchSearchDetail(symbol: string): Promise<{ currency: string | null; price: number | null }> {
+  /**
+   * Currency, last price and — when Yahoo discloses it — the fund's expense
+   * ratio (TER) for a search candidate. US-listed funds usually expose the
+   * ratio, European UCITS only sometimes; `ter` is in percent (0.07 = 0.07 %).
+   * No cache: lookup-time only.
+   */
+  async fetchSearchDetail(symbol: string): Promise<{ currency: string | null; price: number | null; ter: number | null }> {
     try {
-      const response = await yahooFinance.quote(symbol);
-      const quote = Array.isArray(response) ? response[0] : response;
-      const record = quote as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const summary: any = await yahooFinance.quoteSummary(symbol, { modules: ['price', 'fundProfile'] });
+      const ratio = pickNumber(summary?.fundProfile?.feesExpensesInvestment, 'annualReportExpenseRatio');
       return {
-        currency: typeof record['currency'] === 'string' ? record['currency'] : null,
-        price:    pickNumber(quote, 'regularMarketPrice'),
+        currency: typeof summary?.price?.currency === 'string' ? summary.price.currency : null,
+        price:    pickNumber(summary?.price, 'regularMarketPrice'),
+        ter:      ratio !== null ? Number((ratio * 100).toFixed(2)) : null,
       };
     } catch {
-      return { currency: null, price: null };
+      // quoteSummary is rejected for some symbols where a plain quote works —
+      // degrade to price + currency without the expense ratio.
+      try {
+        const response = await yahooFinance.quote(symbol);
+        const quote = Array.isArray(response) ? response[0] : response;
+        const record = quote as Record<string, unknown>;
+        return {
+          currency: typeof record['currency'] === 'string' ? record['currency'] : null,
+          price:    pickNumber(quote, 'regularMarketPrice'),
+          ter:      null,
+        };
+      } catch {
+        return { currency: null, price: null, ter: null };
+      }
     }
   }
 

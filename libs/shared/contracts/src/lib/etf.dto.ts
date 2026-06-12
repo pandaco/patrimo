@@ -26,6 +26,8 @@ export interface EtfLookupResultDto {
   type:     string;
   currency: string | null;
   price:    number | null;
+  /** Annual fee in percent when Yahoo discloses it — pre-fills the form, always worth checking against the KID. */
+  ter:      number | null;
 }
 
 /**
