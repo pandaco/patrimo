@@ -8,6 +8,8 @@ interface GlyphOption { value: string; label: string }
 
 export interface EnvelopeDialogData {
   envelope?: Envelope;
+  /** Pre-select the envelope type (e.g. when created from a family header). */
+  presetGlyph?: string;
 }
 
 const GLYPHS: GlyphOption[] = [
@@ -41,7 +43,7 @@ export class EnvelopeDialogComponent {
   protected readonly glyphs = GLYPHS;
 
   protected code     = signal(this.data?.envelope?.code ?? '');
-  protected glyph    = signal(this.data?.envelope?.glyph ?? 'pea');
+  protected glyph    = signal(this.data?.envelope?.glyph ?? this.data?.presetGlyph ?? 'pea');
   protected label    = signal(this.data?.envelope?.label ?? '');
   protected broker   = signal(this.data?.envelope?.broker ?? '');
   protected openedAt = signal(this.data?.envelope?.openedAt ?? new Date().toISOString().slice(0, 10));

@@ -121,12 +121,27 @@ export class WealthComponent {
     });
   }
 
-  protected async openNewEnvelope(): Promise<void> {
+  protected async openNewEnvelope(presetGlyph?: string): Promise<void> {
     this.dialog.open(EnvelopeDialogComponent, {
+      data: presetGlyph ? { presetGlyph } : undefined,
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
+  }
+
+  /**
+   * Family-level "+ Ajouter": with at least one envelope it pre-fills a
+   * transaction on the first one; on an empty family it opens the envelope
+   * creation dialog pre-set on the family's first type — a disabled button
+   * that silently does nothing is a dead end for a brand-new account.
+   */
+  protected async addForFamily(row: FamilyRow): Promise<void> {
+    if (row.envelopes.length > 0) {
+      await this.openAddTx(row.envelopes[0]);
+    } else {
+      await this.openNewEnvelope(row.family.glyphs[0]);
+    }
   }
 
   protected async openEditEnvelope(env: Envelope): Promise<void> {

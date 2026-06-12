@@ -124,9 +124,9 @@
           </div>
         </div>
         <div>
-          <button class="btn sm" (click)="openAddTx(row.envelopes[0])"
-                  [disabled]="row.envelopes.length === 0"
-                  title="Ajouter une transaction sur cette famille">+ Ajouter</button>
+          <button class="btn sm" (click)="addForFamily(row)"
+                  [title]="row.envelopes.length > 0 ? 'Ajouter une transaction sur cette famille' : 'Créer une enveloppe de cette famille'">
+            + Ajouter</button>
         </div>
       </div>
     </div>
