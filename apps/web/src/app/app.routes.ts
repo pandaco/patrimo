@@ -18,6 +18,14 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    // Full-screen onboarding, outside the shell on purpose: no sidebar to
+    // overwhelm a first-time user.
+    path: 'welcome',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('@patrimo/features').then((m) => m.WelcomeComponent),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>

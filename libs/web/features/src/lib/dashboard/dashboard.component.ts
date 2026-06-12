@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
@@ -51,6 +51,8 @@ export class DashboardComponent {
   private readonly perfSvc    = inject(PerformanceService);
   private readonly allocSvc   = inject(AllocationService);
   private readonly auth       = inject(AuthService);
+  private readonly prefs      = inject(PreferencesService);
+  private readonly router     = inject(Router);
   protected readonly fx       = inject(FxService);
 
   protected readonly firstName      = computed(() => this.auth.user()?.firstName ?? '');
@@ -71,6 +73,15 @@ export class DashboardComponent {
   constructor() {
     const timer = setInterval(() => this.nowTick.set(Date.now()), 60_000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
+
+    // First-time users land on the welcome flow instead of an empty
+    // dashboard. Only fires once the real preferences are loaded so the
+    // pessimistic default (onboardingDone: true) never causes a flash.
+    effect(() => {
+      if (!this.prefs.loading() && !this.prefs.current().onboardingDone && this.isEmpty()) {
+        this.router.navigateByUrl('/welcome');
+      }
+    });
   }
 
   protected readonly envAll       = this.envelopes.all;
@@ -86,6 +97,19 @@ export class DashboardComponent {
   // card pointing at the three first steps.
   protected readonly isEmpty = computed(() =>
     this.totalValue() <= 0 && this.envelopes.all().length === 0
+  );
+
+  // "Configuration X/5" checklist — derived live, disappears at 5/5.
+  protected readonly configSteps = computed(() => [
+    { label: 'Définir ton profil investisseur', done: this.prefs.current().onboardingDone,           route: '/welcome' },
+    { label: 'Créer ta première enveloppe',     done: this.envelopes.all().length > 0,               route: '/wealth' },
+    { label: 'Saisir ta première opération',    done: this.txService.all().length > 0,               route: '/transactions' },
+    { label: 'Choisir ton allocation cible',    done: this.prefs.current().allocationTargets !== null, route: '/settings/allocation' },
+    { label: 'Fixer ton épargne mensuelle',     done: this.prefs.current().monthlyTarget > 0,        route: '/settings/preferences' },
+  ]);
+  protected readonly configDone = computed(() => this.configSteps().filter((s) => s.done).length);
+  protected readonly showChecklist = computed(() =>
+    !this.isEmpty() && !this.prefs.loading() && this.configDone() < this.configSteps().length
   );
 
   protected readonly portfolioValue = computed(() =>

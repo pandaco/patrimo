@@ -1,0 +1,107 @@
+<div class="welcome">
+  <div class="welcome-card">
+
+    <div class="welcome-head">
+      <div class="brand-mark" aria-hidden="true">P</div>
+      <div class="welcome-step-label">Étape {{ step() }} / 2</div>
+    </div>
+
+    @if (step() === 1) {
+      <h1>Bienvenue ! <em>3 questions</em> pour personnaliser Patrimo.</h1>
+      <p class="muted">
+        Tes réponses règlent ton profil, tes alertes et tes suggestions.
+        Tu pourras tout changer plus tard dans les préférences.
+      </p>
+
+      <h2>1. Quel investisseur es-tu ?</h2>
+      <div class="risk-grid" role="radiogroup" aria-label="Profil de risque">
+        @for (choice of riskChoices; track choice.value) {
+          <button type="button"
+                  class="risk-card"
+                  role="radio"
+                  [attr.aria-checked]="riskProfile() === choice.value"
+                  [class.selected]="riskProfile() === choice.value"
+                  (click)="riskProfile.set(choice.value)">
+            <span class="risk-label">{{ choice.label }}</span>
+            <span class="risk-desc">{{ choice.desc }}</span>
+            <span class="risk-mix">{{ choice.mix }}</span>
+          </button>
+        }
+      </div>
+
+      <h2>2. Tu investis pour dans combien de temps ?</h2>
+      <div class="field-row">
+        <input type="range" min="1" max="40" step="1"
+               [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set($event)"
+               aria-label="Horizon d'investissement en années" />
+        <span class="field-value">{{ horizonYears() }} ans</span>
+      </div>
+      <p class="muted tiny">
+        Plus l'horizon est long, plus tu peux accepter les variations du marché :
+        sur 15 ans et plus, les actions monde n'ont historiquement jamais perdu d'argent.
+      </p>
+
+      <h2>3. Combien peux-tu mettre de côté chaque mois ?</h2>
+      <div class="field-row">
+        <input type="number" min="0" step="50"
+               [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set($event)"
+               aria-label="Épargne mensuelle en euros" />
+        <span class="field-value">€ / mois</span>
+      </div>
+      <p class="muted tiny">
+        Même 50 € par mois comptent — la régularité pèse plus que le montant.
+        Ce chiffre alimente ton suivi DCA et tes alertes.
+      </p>
+
+      <div class="welcome-actions">
+        <button type="button" class="btn ghost" (click)="skip()" [disabled]="submitting()">
+          Passer pour l'instant
+        </button>
+        <button type="button" class="btn primary" (click)="next()">
+          Continuer →
+        </button>
+      </div>
+    } @else {
+      <h1>Parfait. <em>Voilà ton point de départ.</em></h1>
+      <p class="muted">
+        Profil <b>{{ selectedRisk().label }}</b> · horizon <b>{{ horizonYears() }} ans</b> ·
+        <b>{{ monthlyTarget() }} €</b> / mois. {{ selectedRisk().mix }}.
+      </p>
+
+      <h2>Par quoi veux-tu commencer ?</h2>
+      <div class="next-grid">
+        <button type="button" class="next-card" (click)="finish('/wealth')" [disabled]="submitting()">
+          <span class="next-num">1</span>
+          <span class="next-title">Déclarer mes comptes</span>
+          <span class="next-desc">PEA, assurance-vie, Livret A, compte-titres —
+            dis où ton argent est placé aujourd'hui. 2 minutes.</span>
+          <span class="next-cta">Recommandé pour démarrer →</span>
+        </button>
+        <button type="button" class="next-card" (click)="finish('/transactions')" [disabled]="submitting()">
+          <span class="next-num">2</span>
+          <span class="next-title">Importer mes opérations</span>
+          <span class="next-desc">Un CSV de ton courtier ou une saisie manuelle —
+            tes positions et plus-values se calculent toutes seules.</span>
+          <span class="next-cta">J'ai déjà un historique →</span>
+        </button>
+        <button type="button" class="next-card" (click)="finish('/dashboard')" [disabled]="submitting()">
+          <span class="next-num">3</span>
+          <span class="next-title">Explorer d'abord</span>
+          <span class="next-desc">Visite le tableau de bord, le glossaire et les
+            conseils avant de saisir quoi que ce soit.</span>
+          <span class="next-cta">Je regarde autour →</span>
+        </button>
+      </div>
+
+      <div class="welcome-actions">
+        <button type="button" class="btn ghost" (click)="backToStep1()" [disabled]="submitting()">
+          ← Revenir
+        </button>
+      </div>
+    }
+
+    <p class="muted tiny disclaimer">
+      Patrimo est un outil de suivi personnel — pas un conseil en investissement.
+    </p>
+  </div>
+</div>

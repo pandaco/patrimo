@@ -133,6 +133,32 @@
     </div>
   }
 
+  @if (showChecklist()) {
+    <!-- CONFIGURATION CHECKLIST -->
+    <div class="card" style="padding:18px 22px;margin-bottom:24px;background:var(--paper-2)">
+      <div class="row" style="gap:12px;align-items:baseline;margin-bottom:12px">
+        <h2 style="font-size:15px;margin:0">Configuration</h2>
+        <span class="num small muted">{{ configDone() }}/{{ configSteps().length }}</span>
+        <div class="bar" style="flex:1;height:5px;max-width:160px">
+          <span [style.width.%]="configDone() / configSteps().length * 100"></span>
+        </div>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px">
+        @for (step of configSteps(); track step.label) {
+          <li style="font-size:12.5px;display:flex;align-items:center;gap:6px">
+            @if (step.done) {
+              <span aria-hidden="true" style="color:#4ADE80">✓</span>
+              <span class="muted" style="text-decoration:line-through">{{ step.label }}</span>
+            } @else {
+              <span aria-hidden="true" class="muted">○</span>
+              <a [routerLink]="step.route" style="color:var(--ink)">{{ step.label }} →</a>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
   @if (!isEmpty()) {
 
   <!-- KEY INDICATORS -->
