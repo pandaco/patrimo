@@ -15,5 +15,9 @@ const YAHOO_OVERRIDES: Record<string, string> = {
 };
 
 export function toYahooSymbol(isin: string, ticker: string): string {
-  return YAHOO_OVERRIDES[isin] ?? `${ticker}.PA`;
+  const override = YAHOO_OVERRIDES[isin];
+  if (override) return override;
+  // A ticker that already carries an exchange suffix (`SXR8.DE`, `IWDA.AS`)
+  // is a complete Yahoo symbol — only suffix-less tickers default to Paris.
+  return ticker.includes('.') ? ticker : `${ticker}.PA`;
 }
