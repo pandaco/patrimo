@@ -90,6 +90,10 @@
   z-index: 100;
   display: flex;
   flex-direction: column;
+
+  // The global .divider carries an 18px stack margin meant for page
+  // sections — way too airy inside a compact menu.
+  .divider { margin: 4px 0; }
 }
 
 .dropdown-item {
