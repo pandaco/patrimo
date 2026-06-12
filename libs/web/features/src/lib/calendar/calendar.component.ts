@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { EnvelopeService, EtfService, TransactionService, DividendService, DcaPlanService } from '@patrimo/data-access';
-import { fmtEur } from '@patrimo/ui';
+import { DcaPlanService, DividendService, EnvelopeService, EtfService, FxService, TransactionService } from '@patrimo/data-access';
 import { DcaPlanDto, DividendDto } from '@patrimo/contracts';
 
 type EventType = 'DIV' | 'MARK' | 'DCA';
@@ -95,7 +94,7 @@ export class CalendarComponent {
         return {
           date: tx.date,
           type: 'DIV' as const,
-          label: `Dividende ${ticker} · ${fmtEur(tx.amount, 2)}`,
+          label: `Dividende ${ticker} · ${this.fmtEur(tx.amount, 2)}`,
           envCode: env?.code ?? '',
           amount: tx.amount,
           past: true,
@@ -105,7 +104,7 @@ export class CalendarComponent {
     const upcoming = this.divSvc.upcoming().map((d: DividendDto) => ({
       date: d.date,
       type: 'DIV' as const,
-      label: `Dividende ${d.ticker} · ${fmtEur(d.amount, 2)} (est.)`,
+      label: `Dividende ${d.ticker} · ${this.fmtEur(d.amount, 2)} (est.)`,
       envCode: '?',
       amount: d.amount,
       past: false,
@@ -213,6 +212,8 @@ export class CalendarComponent {
 
   protected closePopover(): void { this.selectedEvent.set(null); }
 
-  protected readonly fmtEur = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly eventColor = eventColor;
 }

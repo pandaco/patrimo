@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EtfService, PerformanceService, etfValue } from '@patrimo/data-access';
+import { EtfService, etfValue, FxService, PerformanceService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 
 interface StressScenario {
@@ -207,7 +207,9 @@ export class PerformanceComponent {
       : `rgba(239,68,68,${opacity})`;
   }
 
-  protected readonly fmtEur    = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;
   protected readonly fmtNum    = fmtNum;

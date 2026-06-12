@@ -31,4 +31,21 @@ export class FxService {
     const symbols: Record<string, string> = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF' };
     return symbols[this.displayCurrency()] ?? this.displayCurrency();
   }
+
+  /**
+   * Convert an EUR-base amount to the display currency and format it with
+   * the right symbol — drop-in replacement for the `fmtEur` helper in
+   * components. Non-breaking spaces are normalised like in `fmtEur`.
+   */
+  fmt(eur: number, d = 2): string {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: this.displayCurrency(),
+      minimumFractionDigits: d,
+      maximumFractionDigits: d,
+    })
+      .format(this.convert(eur))
+      .replace(/\u00A0/g, ' ')
+      .replace(/\u202F/g, ' ');
+  }
 }

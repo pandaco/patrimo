@@ -3,8 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { AllocationService, EnvelopeService, EtfService, etfValue, DcaPlanService, ToastService } from '@patrimo/data-access';
-import { BarComponent, fmtEur, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
+import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, FxService, ToastService } from '@patrimo/data-access';
+import { BarComponent, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -120,7 +120,9 @@ export class DcaComponent {
     }, 0) / rows.length;
   });
 
-  protected readonly fmtEur    = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 

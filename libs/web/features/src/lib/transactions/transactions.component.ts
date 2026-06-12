@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, EtfService, TransactionService, Transaction, ToastService, TxType, API_BASE_URL } from '@patrimo/data-access';
-import { EnvGlyphComponent, fmtDate, fmtEur, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
+import { API_BASE_URL, EnvelopeService, EtfService, FxService, ToastService, Transaction, TransactionService, TxType } from '@patrimo/data-access';
+import { EnvGlyphComponent, fmtDate, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
 type FilterType = TxType | 'ALL';
@@ -131,7 +131,9 @@ export class TransactionsComponent {
     })).sort((a, b) => Math.abs(b.cashBalance) - Math.abs(a.cashBalance));
   });
 
-  protected readonly fmtEur  = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtNum  = fmtNum;
   protected readonly fmtDate = fmtDate;
   protected readonly abs     = Math.abs;

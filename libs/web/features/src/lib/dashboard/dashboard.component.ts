@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
@@ -278,7 +278,8 @@ export class DashboardComponent {
   });
 
   protected readonly abs       = Math.abs;
-  protected readonly fmtEur    = fmtEur;
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fx.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;

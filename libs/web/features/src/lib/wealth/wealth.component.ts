@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { EnvelopeService, EtfService, Envelope, etfValue } from '@patrimo/data-access';
-import { DeltaComponent, EnvGlyphComponent, fmtEur, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
+import { Envelope, EnvelopeService, EtfService, etfValue, FxService } from '@patrimo/data-access';
+import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 
@@ -103,7 +103,9 @@ export class WealthComponent {
     });
   });
 
-  protected readonly fmtEur    = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
   protected pnl(env: Envelope)    { return env.value - env.invested; }

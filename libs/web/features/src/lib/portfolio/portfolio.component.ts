@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { EtfService, ExposureService, TransactionService, Etf, etfValue, etfCost, etfPnl, etfPnlPct, etfDayPct, API_BASE_URL } from '@patrimo/data-access';
-import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, fmtEur, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, FxService, TransactionService } from '@patrimo/data-access';
+import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-pnl';
 
@@ -77,7 +77,9 @@ export class PortfolioComponent {
     return { total: divs.reduce((a, t) => a + t.amount, 0), count: divs.length };
   });
 
-  protected readonly fmtEur    = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 

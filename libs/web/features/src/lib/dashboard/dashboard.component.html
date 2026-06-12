@@ -475,7 +475,7 @@
             <td class="r num">{{ tx.etf ? fmtNum(tx.qty, 0) : '—' }}</td>
             <td class="r num">{{ tx.price ? fmtEur(tx.price, 2) : '—' }}</td>
             <td class="r num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">
-              {{ lbl.dir }}{{ fmtEur(tx.amount, 2).replace('€', '').trim() }} €
+              {{ lbl.dir }}{{ fmtEur(tx.amount, 2) }}
             </td>
           </tr>
         }

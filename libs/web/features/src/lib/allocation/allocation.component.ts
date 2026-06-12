@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AllocationService, API_BASE_URL, EtfService, etfValue } from '@patrimo/data-access';
+import { AllocationService, API_BASE_URL, EtfService, etfValue, FxService } from '@patrimo/data-access';
 import { RebalancePlanDto } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, TermComponent, fmtEur, fmtNum, fmtPct } from '@patrimo/ui';
+import { DeltaComponent, DonutComponent, TermComponent, fmtNum, fmtPct } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
 
@@ -107,7 +107,9 @@ export class AllocationComponent {
     { value: this.targets().tactic.bonds,     color: 'var(--ink-3)', label: 'Obligations', unit: '%' },
   ]);
 
-  protected readonly fmtEur = fmtEur;
+  private readonly fxSvc = inject(FxService);
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
   protected readonly fmtNum = fmtNum;
   protected readonly fmtPct = fmtPct;
   protected readonly abs    = Math.abs;
