@@ -19,4 +19,6 @@ export interface TransactionRepository {
   /** Delete the transaction iff it belongs to `userId`. Returns `true` when a row was removed. */
   deleteForUser(id: string, userId: string): Promise<boolean>;
   deleteByTransferId(transferId: string, userId: string): Promise<number>;
+  /** Persists all seeds in a single database transaction — all or nothing. */
+  createMany(seeds: TransactionSeed[]): Promise<Transaction[]>;
 }

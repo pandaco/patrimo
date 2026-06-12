@@ -73,4 +73,12 @@ export class TypeOrmTransactionRepository implements TransactionRepository {
     const result = await this.repo.delete({ transferId, userId });
     return result.affected ?? 0;
   }
+
+  async createMany(seeds: TransactionSeed[]): Promise<Transaction[]> {
+    const saved = await this.repo.manager.transaction(async (em) => {
+      const rows = seeds.map(seed => em.create(TransactionOrmEntity, seed as Partial<TransactionOrmEntity>));
+      return em.save(rows);
+    });
+    return saved.map(toDomain);
+  }
 }

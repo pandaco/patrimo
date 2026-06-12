@@ -99,10 +99,10 @@ export class TransactionService {
   }
 
   /**
-   * Atomic-in-intent inter-envelope transfer: one WITHDRAWAL leg on the
-   * source, one DEPOSIT leg on the target, both stamped with the same
-   * transferId. Reusing the existing types keeps every downstream cash and
-   * position computation untouched.
+   * Inter-envelope transfer: one WITHDRAWAL leg on the source, one DEPOSIT
+   * leg on the target, both stamped with the same transferId and persisted
+   * in a single database transaction. Reusing the existing types keeps every
+   * downstream cash and position computation untouched.
    */
   async createTransfer(userId: string, input: CreateTransferDto): Promise<TransactionDto[]> {
     if (input.fromEnvelopeId === input.toEnvelopeId) {
@@ -127,17 +127,13 @@ export class TransactionService {
       transferId,
       date,
     };
-    const out = await this.transactions.create({ ...base, envelopeId: input.fromEnvelopeId, type: 'WITHDRAWAL' });
-    try {
-      const inn = await this.transactions.create({ ...base, envelopeId: input.toEnvelopeId, type: 'DEPOSIT' });
-      return [toDto(out), toDto(inn)];
-    } catch (err) {
-      // Second leg failed — roll the first one back so no half-transfer
-      // survives. Best effort: if this delete also fails we surface the
-      // original error anyway.
-      await this.transactions.deleteForUser(out.id, userId).catch(() => undefined);
-      throw err;
-    }
+    // Single database transaction: either both legs exist or neither does,
+    // even if the process dies between the two inserts.
+    const legs = await this.transactions.createMany([
+      { ...base, envelopeId: input.fromEnvelopeId, type: 'WITHDRAWAL' },
+      { ...base, envelopeId: input.toEnvelopeId,   type: 'DEPOSIT' },
+    ]);
+    return legs.map(toDto);
   }
 
   async exportCsv(userId: string): Promise<string> {
