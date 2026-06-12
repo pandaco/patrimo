@@ -35,6 +35,8 @@ export class AppModule implements NestModule {
     // CSRF double-submit-cookie applies to every route. The middleware itself
     // shortcuts on safe methods (GET/HEAD/OPTIONS) and on the OAuth callback
     // paths, so its cost on read traffic is one cookie check.
-    consumer.apply(CsrfMiddleware).forRoutes('*');
+    // '{*path}' is the path-to-regexp v8 (Nest 11) spelling of the old '*'
+    // catch-all — same coverage, without the LegacyRouteConverter warning.
+    consumer.apply(CsrfMiddleware).forRoutes('{*path}');
   }
 }
