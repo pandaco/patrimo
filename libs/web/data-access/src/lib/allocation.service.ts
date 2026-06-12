@@ -14,7 +14,9 @@ export class AllocationService {
       strategic: stored.strategic,
       tactic:    stored.tactic,
       etf:       stored.etf,
-      envelope:  stored.envelope ?? MOCK_TARGETS.envelope,
+      // No mock fallback here: an unset envelope sub-target means "not
+      // defined yet", not the demo allocation — the UI shows an empty state.
+      envelope:  stored.envelope ?? {},
     };
   });
 }

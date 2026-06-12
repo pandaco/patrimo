@@ -280,6 +280,67 @@
     </table>
   </div>
 
+  <!-- ENVELOPE TARGETS -->
+  <h2 class="section-title" style="margin-top:32px">Par enveloppe <em>réel vs cible</em></h2>
+  @if (envelopeTargetRows().length > 0) {
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Enveloppe</th>
+            <th class="r">Cible</th>
+            <th class="r">Réel</th>
+            <th class="r"><span data-tip="Écart entre le poids réel de la famille d'enveloppes dans ton patrimoine total et sa cible. Vert ≤ 2 pts, orange ≤ 5 pts, rouge au-delà.">Drift</span></th>
+            <th style="width:40%">Visualisation</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of envelopeTargetRows(); track row.glyph) {
+            <tr>
+              <td>
+                <div class="row gap-12">
+                  <span class="pill solid">{{ row.glyph.toUpperCase() }}</span>
+                  <span class="muted small">{{ row.label }}</span>
+                </div>
+              </td>
+              <td class="r num">{{ fmtNum(row.target, 0) }} %</td>
+              <td class="r num">{{ fmtNum(row.real, 1) }} %</td>
+              <td class="r">
+                <span class="num" [class.pos]="row.drift > 0" [class.neg]="row.drift < 0">
+                  {{ row.drift >= 0 ? '+' : '' }}{{ fmtNum(row.drift, 1) }} pts
+                </span>
+              </td>
+              <td>
+                <div style="position:relative;height:12px;margin:4px 0">
+                  <div class="bar">
+                    <span [style.width]="driftBarW(row.real, row.target, row.real)"></span>
+                  </div>
+                  <span class="bar-target-tick"
+                        [style.left]="driftBarW(row.target, row.target, row.real)"
+                        [attr.title]="'Cible : ' + row.target + ' %'"></span>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="muted small" style="margin-top:10px">
+      Poids mesurés sur le patrimoine total (livrets et cash inclus), par famille
+      d'enveloppes. Modifiable à l'étape « Par enveloppe » de
+      <a routerLink="/settings/allocation" style="color:var(--ink)">l'éditeur de cible</a>.
+    </p>
+  } @else {
+    <div class="card" style="text-align:center;padding:28px">
+      <p class="muted small" style="margin:0 0 12px">
+        Aucune cible par enveloppe définie. Fixe par exemple « PEA 60 % / CTO 12 % /
+        Livrets 20 % » pour surveiller la dérive de tes contenants, pas seulement de
+        tes lignes.
+      </p>
+      <a class="btn sm" routerLink="/settings/allocation">Définir ma cible par enveloppe →</a>
+    </div>
+  }
+
   <!-- BOTTOM GRID -->
   <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:24px">
 

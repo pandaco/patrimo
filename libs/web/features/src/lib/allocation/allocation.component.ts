@@ -1,11 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AllocationService, API_BASE_URL, EtfService, etfValue, FxService } from '@patrimo/data-access';
+import { AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, FxService } from '@patrimo/data-access';
 import { RebalancePlanDto } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, TermComponent, fmtNum, fmtPct } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
+
+interface EnvelopeTargetRow {
+  glyph:  string;
+  label:  string;
+  target: number;
+  real:   number;
+  drift:  number;
+}
 
 type AllocBucket = 'Core' | 'Satellite' | 'Obligations';
 
@@ -32,6 +40,7 @@ const CURRENCY_COLORS: Record<string, string> = {
 export class AllocationComponent {
   private readonly allocationService = inject(AllocationService);
   private readonly etfService   = inject(EtfService);
+  private readonly envelopeService = inject(EnvelopeService);
   private readonly http     = inject(HttpClient);
   private readonly baseUrl  = inject(API_BASE_URL);
 
@@ -96,6 +105,40 @@ export class AllocationComponent {
     this.etfService.all().filter(e => this.targets().etf[e.ticker] != null),
   );
 
+  /**
+   * Real vs target weight per envelope family (glyph), against total wealth —
+   * the envelope target covers the whole patrimoine, not just the ETF lines.
+   * Empty when the user has not set the envelope sub-targets yet.
+   */
+  protected readonly envelopeTargetRows = computed<EnvelopeTargetRow[]>(() => {
+    const targetByGlyph = this.targets().envelope ?? {};
+    if (Object.keys(targetByGlyph).length === 0) return [];
+
+    const envelopes = this.envelopeService.all();
+    const wealthTotal = envelopes.reduce((a, e) => a + e.value, 0);
+    const valueByGlyph = new Map<string, number>();
+    const labelByGlyph = new Map<string, string>();
+    for (const envelope of envelopes) {
+      valueByGlyph.set(envelope.glyph, (valueByGlyph.get(envelope.glyph) ?? 0) + envelope.value);
+      if (!labelByGlyph.has(envelope.glyph)) labelByGlyph.set(envelope.glyph, envelope.label);
+    }
+
+    const glyphs = new Set([...Object.keys(targetByGlyph), ...valueByGlyph.keys()]);
+    return [...glyphs]
+      .map(glyph => {
+        const target = targetByGlyph[glyph] ?? 0;
+        const real = wealthTotal > 0 ? ((valueByGlyph.get(glyph) ?? 0) / wealthTotal) * 100 : 0;
+        return {
+          glyph,
+          label: labelByGlyph.get(glyph) ?? glyph.toUpperCase(),
+          target,
+          real,
+          drift: real - target,
+        };
+      })
+      .sort((a, b) => b.target - a.target);
+  });
+
   protected readonly strategicDonut = computed(() => [
     { value: this.targets().strategic.stocks, color: 'var(--brand)',  label: 'Actions',     unit: '%' },
     { value: this.targets().strategic.bonds,  color: 'var(--ink-3)',  label: 'Obligations', unit: '%' },
@@ -132,10 +175,13 @@ export class AllocationComponent {
     const etfValues = Object.values(t.etf);
     const sumEtf    = etfValues.reduce((a, b) => a + b, 0);
     const drift5    = Object.entries(this.realPct()).some(([tk, real]) => Math.abs(real - (t.etf[tk] ?? 0)) > 5);
+    const envValues = Object.values(t.envelope ?? {});
+    const sumEnv    = envValues.reduce((a, b) => a + b, 0);
     return [
       { ok: Math.abs(sumStrat  - 100) < 0.01, warn: false, label: 'Somme stratégique = 100 %', detail: `${t.strategic.stocks} + ${t.strategic.bonds}` },
       { ok: Math.abs(sumTactic - 100) < 0.01, warn: false, label: 'Somme tactique = 100 %',    detail: `${t.tactic.core} + ${t.tactic.satellite} + ${t.tactic.bonds}` },
       { ok: etfValues.length === 0 || Math.abs(sumEtf - 100) < 0.01, warn: false, label: 'Somme ETF = 100 %', detail: etfValues.length ? etfValues.join(' + ') : '—' },
+      { ok: envValues.length === 0 || Math.abs(sumEnv - 100) < 0.01, warn: false, label: 'Somme enveloppes = 100 %', detail: envValues.length ? envValues.join(' + ') : 'non définie' },
       { ok: !drift5, warn: drift5, label: 'Drift ETF < 5 pts', detail: drift5 ? 'Drift > 5 pts détecté' : 'Tous dans la tolérance' },
     ];
   });
