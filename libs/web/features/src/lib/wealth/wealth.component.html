@@ -98,8 +98,7 @@
   <!-- FAMILIES -->
   @for (row of families(); track row.family.label) {
     <div class="family-head">
-      <span style="width:10px;height:38px;border-radius:5px;flex-shrink:0"
-        [style.background]="row.family.color"></span>
+      <span class="family-accent" [style.background]="row.family.color"></span>
       <div>
         <h3>{{ row.family.label }}</h3>
         <div class="muted small" style="margin-top:6px">

@@ -1083,10 +1083,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 // Family header for Wealth
 .family-head {
-  display: flex; align-items: baseline; gap: 16px; margin: 36px 0 18px;
+  // `center` + a stretched accent bar: with `baseline`, the text-less accent
+  // span aligned its *bottom* edge on the title baseline and floated way
+  // above the title's cap height.
+  display: flex; align-items: center; gap: 16px; margin: 36px 0 18px;
   padding: 20px 22px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-lg);
+  .family-accent { align-self: stretch; width: 10px; border-radius: 5px; flex-shrink: 0; }
   h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.028em; line-height: 1; margin: 0; }
-  .stats { display: flex; gap: 28px; margin-left: auto; align-items: baseline; }
+  .stats { display: flex; gap: 28px; margin-left: auto; align-items: center; }
   .stats .stat-block { text-align: right; }
   .stats .stat-block .k { font-size: 11.5px; font-weight: 500; color: var(--ink-3); margin-bottom: 4px; }
   .stats .stat-block .v { font-size: 20px; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; &.pos { color: var(--gain); } }
