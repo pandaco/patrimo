@@ -33,6 +33,7 @@ export class PreferencesComponent {
   protected horizonYears    = signal(25);
   protected monthlyTarget   = signal(0);
   protected displayCurrency = signal('EUR');
+  protected uiMode          = signal<'simple' | 'expert' | ''>('');
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -45,6 +46,7 @@ export class PreferencesComponent {
       if (this.horizonYears() === 25 && c.horizonYears !== 25) this.horizonYears.set(c.horizonYears);
       if (!this.monthlyTarget() && c.monthlyTarget !== 0)      this.monthlyTarget.set(c.monthlyTarget);
       if (this.displayCurrency() === 'EUR' && c.displayCurrency !== 'EUR') this.displayCurrency.set(c.displayCurrency);
+      if (!this.uiMode()) this.uiMode.set(c.uiMode);
     });
   }
 
@@ -58,6 +60,7 @@ export class PreferencesComponent {
       horizonYears:      Math.max(0, Math.min(100, Math.round(this.horizonYears()))),
       monthlyTarget:     Math.max(0, this.monthlyTarget()),
       displayCurrency:   this.displayCurrency(),
+      uiMode:            this.uiMode() || 'simple',
       allocationTargets: this.prefs.current().allocationTargets,
     };
 

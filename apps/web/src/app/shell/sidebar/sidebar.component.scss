@@ -29,8 +29,25 @@
 
   .ico { width: 15px; height: 15px; display: inline-flex; flex-shrink: 0; opacity: 0.85; }
 
-  .badge {
+  .nav-kbd {
     margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    color: var(--ink-3);
+    opacity: 0.4;
+    letter-spacing: 0.02em;
+    transition: opacity 0.12s;
+  }
+
+  &:hover .nav-kbd,
+  &:focus-visible .nav-kbd { opacity: 0.9; }
+  &.active .nav-kbd { color: #fff; opacity: 0.55; }
+
+  // When a badge is present it owns the right edge; the kbd hint sits after it.
+  .badge { margin-left: auto; }
+  .badge + .nav-kbd { margin-left: 8px; }
+
+  .badge {
     font-family: var(--font-mono);
     font-size: 10.5px;
     font-weight: 500;

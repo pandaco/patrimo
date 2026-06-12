@@ -36,6 +36,17 @@
 
     <div class="field-row">
       <div class="field">
+        <label for="pref-uimode">Mode d'affichage</label>
+        <select id="pref-uimode" [ngModel]="uiMode()" (ngModelChange)="uiMode.set($event)">
+          <option value="simple">Simple — l'essentiel (5 pages)</option>
+          <option value="expert">Expert — tout afficher (12 pages)</option>
+        </select>
+        <div class="field-help">Le mode simple masque les outils avancés (performance, comparateur, calendrier…).</div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
         <label for="pref-horizon">Horizon (années)</label>
         <input id="pref-horizon" type="number" min="0" max="100" step="1" class="num-input"
                [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set(+$event)" />

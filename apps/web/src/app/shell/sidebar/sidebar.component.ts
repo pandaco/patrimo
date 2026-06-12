@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, output, signal, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { AlertService, AuthService, TransactionService, UserService } from '@patrimo/data-access';
+import { AlertService, AuthService, PreferencesService, TransactionService, UserService } from '@patrimo/data-access';
 import { AppIconComponent, AppIconName } from '@patrimo/ui';
 
 interface NavItem {
@@ -15,6 +15,20 @@ interface NavGroup {
   label: string;
   items: NavItem[];
 }
+
+// Beginner-friendly nav: 5 entries instead of 12, plain-French labels.
+const NAV_SIMPLE: NavGroup[] = [
+  {
+    label: 'Essentiel',
+    items: [
+      { id: 'dashboard', label: 'Mon patrimoine',  route: '/dashboard',      icon: 'dashboard', shortcut: 'D' },
+      { id: 'tx',        label: 'Mes opérations',  route: '/transactions',   icon: 'tx',        shortcut: 'T' },
+      { id: 'alloc',     label: 'Mon plan',        route: '/allocation',     icon: 'alloc',     shortcut: 'L' },
+      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
+      { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
+    ],
+  },
+];
 
 const NAV: NavGroup[] = [
   {
@@ -61,8 +75,10 @@ export class SidebarComponent {
   private readonly router = inject(Router);
   private readonly txSvc  = inject(TransactionService);
   private readonly alertSvc = inject(AlertService);
+  private readonly prefs  = inject(PreferencesService);
 
-  protected readonly nav  = NAV;
+  protected readonly uiMode = computed(() => this.prefs.current().uiMode);
+  protected readonly nav    = computed(() => this.uiMode() === 'simple' ? NAV_SIMPLE : NAV);
   protected readonly user = inject(UserService).currentUser;
   protected readonly menuOpen = signal(false);
 
@@ -85,6 +101,16 @@ export class SidebarComponent {
   @HostListener('document:keydown.escape')
   closeMenu(): void {
     this.menuOpen.set(false);
+  }
+
+  protected async toggleUiMode(): Promise<void> {
+    const next = this.uiMode() === 'simple' ? 'expert' : 'simple';
+    this.menuOpen.set(false);
+    try {
+      await this.prefs.update({ uiMode: next });
+    } catch {
+      // Preference save failed — nav simply stays as it was.
+    }
   }
 
   protected async logout(): Promise<void> {

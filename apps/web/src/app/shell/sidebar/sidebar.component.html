@@ -9,7 +9,7 @@
     </div>
   </div>
 
-  @for (group of nav; track group.label) {
+  @for (group of nav(); track group.label) {
     <nav class="nav-group" [attr.aria-label]="group.label">
       <div class="nav-label">{{ group.label }}</div>
       @for (item of group.items; track item.id) {
@@ -27,6 +27,9 @@
           @let b = badge(item.id);
           @if (b) {
             <span class="badge" [attr.aria-label]="b + ' en attente'">{{ b }}</span>
+          }
+          @if (item.shortcut) {
+            <span class="nav-kbd" aria-hidden="true">G·{{ item.shortcut }}</span>
           }
         </a>
       }
@@ -55,6 +58,11 @@
         <button class="dropdown-item" (click)="openShortcuts.emit(); menuOpen.set(false)">
           <span class="ico" aria-hidden="true"><app-ico name="calendar" /></span>
           Raccourcis clavier
+        </button>
+        <button class="dropdown-item" (click)="toggleUiMode()">
+          <span class="ico" aria-hidden="true"><app-ico name="settings" /></span>
+          @if (uiMode() === 'simple') { Mode expert (tout afficher) }
+          @else { Mode simple (l'essentiel) }
         </button>
         <div class="divider"></div>
         <button class="dropdown-item" (click)="logout()">
