@@ -5,6 +5,7 @@ import { ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } f
 import { PriceService } from '../market/price.service';
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
+  '1W':  7,
   '1M':  30,
   '3M':  90,
   '6M':  180,

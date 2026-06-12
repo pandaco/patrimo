@@ -77,8 +77,19 @@
             </div>
           </div>
           <div class="sub" style="flex-wrap:wrap">
-            <ui-delta [value]="dayPct()" [digits]="2" />
-            <span data-tip="Variation de la valorisation de tes ETF depuis la clôture de la veille — uniquement la part boursière, livrets exclus.">aujourd'hui</span>
+            @if (heroPnlText() !== null) {
+              <button class="num bold"
+                      (click)="togglePnlDisplay()"
+                      style="background:none;border:none;cursor:pointer;padding:0;font:inherit;font-weight:inherit"
+                      [style.color]="heroPnlPositive() ? '#4ADE80' : '#FCA5A5'"
+                      data-tip="Plus ou moins-value de la période, corrigée de tes versements — un dépôt n'est pas un gain. Clique pour basculer entre € et %."
+                      aria-label="Basculer l'affichage entre euros et pourcentage">
+                {{ heroPnlText() }}
+              </button>
+            } @else {
+              <span class="num muted">—</span>
+            }
+            <span data-tip="Variation de la part boursière uniquement — livrets et cash exclus.">{{ heroPnlCaption() }}</span>
             @if (portfolioCost() > 0) {
               <span style="opacity:0.35">•</span>
               <span class="num bold"
@@ -87,6 +98,14 @@
               </span>
               <span data-tip="Plus-value latente totale — valeur actuelle moins coût d'achat. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">{{ pnlValue() >= 0 ? 'gagnés' : 'perdus' }} depuis l'achat</span>
               <span class="num muted">({{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %)</span>
+            }
+          </div>
+          <div class="tabs" style="margin-top:14px" role="tablist" aria-label="Période de plus-value">
+            @for (p of heroPeriods; track p.id) {
+              <button [class.active]="p.id === activeHeroPeriod()"
+                      (click)="setHeroPeriod(p.id)"
+                      role="tab"
+                      [attr.aria-selected]="p.id === activeHeroPeriod()">{{ p.label }}</button>
             }
           </div>
         </div>

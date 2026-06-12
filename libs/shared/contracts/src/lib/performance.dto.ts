@@ -1,4 +1,4 @@
-export type PerformancePeriod = '1M' | '3M' | '6M' | '1Y' | 'YTD' | '3Y' | '5Y' | 'MAX';
+export type PerformancePeriod = '1W' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | '3Y' | '5Y' | 'MAX';
 
 export interface DrawdownDto {
   /** ISO date of the most recent local peak before the dip. */

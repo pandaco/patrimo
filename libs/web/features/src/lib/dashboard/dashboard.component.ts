@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
+import { computePeriodPnl } from './period-pnl';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
 
@@ -14,6 +15,22 @@ const DASH_PERIODS: { id: PerformancePeriod; label: string }[] = [
   { id: '1Y', label: '1A' },
   { id: 'YTD', label: 'YTD' },
   { id: 'MAX', label: 'MAX' },
+];
+
+/**
+ * Hero P&L selector. `1D` is frontend-only: the daily figure comes from
+ * `price − prev` on the positions (no intraday history available), while the
+ * chart below falls back to the 1-week series for context.
+ */
+type HeroPeriod = '1D' | PerformancePeriod;
+const HERO_PERIODS: { id: HeroPeriod; label: string; caption: string }[] = [
+  { id: '1D',  label: '1J',  caption: "aujourd'hui" },
+  { id: '1W',  label: '1S',  caption: 'sur 1 semaine' },
+  { id: '1M',  label: '1M',  caption: 'sur 1 mois' },
+  { id: '3M',  label: '3M',  caption: 'sur 3 mois' },
+  { id: 'YTD', label: 'YTD', caption: 'depuis le 1er janv.' },
+  { id: '3Y',  label: '3A',  caption: 'sur 3 ans' },
+  { id: '5Y',  label: '5A',  caption: 'sur 5 ans' },
 ];
 
 const GLYPH_COLORS: Record<string, string> = {
@@ -39,7 +56,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, DonutComponent, EnvGlyphComponent, PerfChartComponent, TermComponent],
+  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, TermComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -144,6 +161,53 @@ export class DashboardComponent {
   protected readonly dashPeriods    = DASH_PERIODS;
   protected readonly dashPeriod     = this.performanceService.period;
   protected readonly annualized     = computed(() => this.performanceService.raw().annualized);
+
+  // ─── Hero period P&L (Trade-Republic-style selector) ──────────────────────
+
+  protected readonly heroPeriods = HERO_PERIODS;
+  /** Non-null only in `1D` mode — every other period maps 1:1 to the service period. */
+  private readonly heroDayMode = signal(false);
+  protected readonly activeHeroPeriod = computed<HeroPeriod>(() =>
+    this.heroDayMode() ? '1D' : this.performanceService.period(),
+  );
+  protected readonly pnlDisplayMode = signal<'eur' | 'pct'>('eur');
+
+  protected readonly heroPnl = computed(() => {
+    if (this.activeHeroPeriod() === '1D') {
+      return { eur: this.dayValue(), pct: this.dayPct() };
+    }
+    const raw = this.performanceService.raw();
+    return computePeriodPnl(raw.labels, raw.portfolio, this.txService.all());
+  });
+
+  protected readonly heroPnlCaption = computed(() => {
+    const active = this.activeHeroPeriod();
+    return HERO_PERIODS.find(p => p.id === active)?.caption ?? `sur ${active}`;
+  });
+
+  protected readonly heroPnlText = computed(() => {
+    const pnl = this.heroPnl();
+    if (!pnl) return null;
+    if (this.pnlDisplayMode() === 'pct') {
+      return pnl.pct === null ? null : fmtPct(pnl.pct, 2);
+    }
+    return `${pnl.eur >= 0 ? '+' : '−'}${this.fmtEur(Math.abs(pnl.eur), 2)}`;
+  });
+  protected readonly heroPnlPositive = computed(() => (this.heroPnl()?.eur ?? 0) >= 0);
+
+  protected setHeroPeriod(id: HeroPeriod): void {
+    if (id === '1D') {
+      this.heroDayMode.set(true);
+      this.performanceService.setPeriod('1W');
+    } else {
+      this.heroDayMode.set(false);
+      this.performanceService.setPeriod(id);
+    }
+  }
+
+  protected togglePnlDisplay(): void {
+    this.pnlDisplayMode.update(mode => (mode === 'eur' ? 'pct' : 'eur'));
+  }
 
   protected readonly portfolioPct = computed(() => {
     const pts = this.perfPortfolio();
@@ -302,6 +366,9 @@ export class DashboardComponent {
   }
 
   protected setPeriod(id: PerformancePeriod): void {
+    // The chart card tabs and the hero selector share the service period;
+    // leaving day mode keeps the hero P&L consistent with the chart data.
+    this.heroDayMode.set(false);
     this.performanceService.setPeriod(id);
   }
 

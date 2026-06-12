@@ -225,9 +225,9 @@ describe('PerformanceService', () => {
       const series = await service.getSeries('user-1', '1M');
       expect(series.benchmark).not.toBeNull();
       // Anchor: benchmark equals the portfolio on the first non-zero sample.
-      expect(series.benchmark![0]).toBe(series.portfolio[0]);
+      expect(series.benchmark?.[0]).toBe(series.portfolio[0]);
       // Then follows the benchmark's own relative move (+10 %).
-      expect(series.benchmark![1]).toBeCloseTo(series.portfolio[0] * 1.1, 2);
+      expect(series.benchmark?.[1]).toBeCloseTo(series.portfolio[0] * 1.1, 2);
     });
 
     it('uses the preferred benchmark ISIN when it exists in the catalog', async () => {

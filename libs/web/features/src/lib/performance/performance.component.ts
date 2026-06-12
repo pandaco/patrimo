@@ -26,6 +26,7 @@ const STRESS_SCENARIOS: StressScenario[] = [
 ];
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
+  { id: '1W',  label: '1S'  },
   { id: '1M',  label: '1M'  },
   { id: '3M',  label: '3M'  },
   { id: '6M',  label: '6M'  },
