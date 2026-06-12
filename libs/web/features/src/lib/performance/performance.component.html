@@ -355,15 +355,15 @@
     <!-- Frais cumulés YTD -->
     <div class="card">
       <div class="card-head">
-        <div class="card-title">Frais cumulés <em>YTD</em></div>
-        <span class="card-sub">TER drag + courtage depuis le 1er janv.</span>
+        <div class="card-title">Frais cumulés <em>cette année</em></div>
+        <span class="card-sub">frais de gestion + courtage depuis le 1ᵉʳ janv.</span>
       </div>
       @if (loadingFees()) {
         <p class="muted small">Chargement…</p>
       } @else {
         <div class="row" style="gap:24px;margin-bottom:14px">
           <div class="stat-block">
-            <div class="k"><span data-tip="Frottement des frais de gestion sur la valeur actuelle des positions. C'est le coût réel du TER depuis le 1er janvier — de l'argent qui quitte silencieusement le fonds chaque jour.">TER drag</span></div>
+            <div class="k"><span data-tip="Frottement des frais de gestion (TER) sur la valeur actuelle des positions — en anglais « drag ». C'est le coût réel des frais depuis le 1ᵉʳ janvier : de l'argent qui quitte silencieusement le fonds chaque jour.">Frais de gestion</span></div>
             <div class="v neg">{{ fmtEur(fees().terDragYtd, 2) }}</div>
           </div>
           <div class="stat-block">
@@ -378,7 +378,7 @@
         @if (fees().byEtf.length > 0) {
           <table class="tbl" style="font-size:12px">
             <thead>
-              <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1er janvier de l'année.">Drag YTD</span></th></tr>
+              <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1ᵉʳ janvier de l'année (en anglais : « drag »).">Coût cette année</span></th></tr>
             </thead>
             <tbody>
               @for (r of fees().byEtf; track r.ticker) {

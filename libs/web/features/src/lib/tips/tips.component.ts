@@ -66,7 +66,7 @@ const TIPS: Tip[] = [
     id: 'rebalance-1y',
     category: 'allocation',
     title: 'Rééquilibre une fois par an, pas plus souvent',
-    takeaway: 'Le rebalancing fréquent génère des frais et des moins-values fiscales sans gain de rendement. Une fois par an suffit largement.',
+    takeaway: 'Le rééquilibrage fréquent génère des frais et des moins-values fiscales sans gain de rendement. Une fois par an suffit largement.',
     body: 'Tant que ton drift reste sous 5 points, ne touche à rien. Au-delà, soit tu rééquilibres par versement (oriente le prochain DCA vers les lignes sous-pondérées — coût zéro), soit tu vends/achètes (PEA : zéro impact fiscal jusqu\'à la sortie ; CTO : tu réalises de la plus-value imposable). Si tu rééquilibres par DCA, c\'est tellement progressif que tu n\'as quasi jamais besoin d\'arbitrer.',
   },
   {

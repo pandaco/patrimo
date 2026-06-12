@@ -68,7 +68,7 @@ import { AuthService } from '@patrimo/data-access';
             <div>
               <div style="font-size:13.5px;font-weight:500;color:var(--ink)">Pilote en un coup d'œil</div>
               <div class="muted tiny" style="margin-top:2px">
-                Performance vs benchmark, drift d'allocation, alertes de rebalancing,
+                Performance vs benchmark, drift d'allocation, alertes de rééquilibrage,
                 PV réalisée YTD pour la fiscalité… tout y passe.
               </div>
             </div>

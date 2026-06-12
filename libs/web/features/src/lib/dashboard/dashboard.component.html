@@ -205,12 +205,12 @@
 
     <!-- 3. Drawdown actuel -->
     <div class="card kpi-tile">
-      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille. À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Drawdown</span></div>
+      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
       @if (currentDrawdown() !== null) {
         <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.pos]="currentDrawdown()! >= -0.5">
           {{ fmtPct(currentDrawdown()!, 1) }}
         </div>
-        <div class="sub">vs sommet · repère : −34 % au krach 2020</div>
+        <div class="sub">repère : −34 % au krach 2020</div>
       } @else {
         <div class="value">—</div>
         <div class="sub">pas assez d'historique</div>
@@ -219,7 +219,7 @@
 
     <!-- 4. PV réalisée YTD -->
     <div class="card kpi-tile">
-      <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus). Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée YTD</span></div>
+      <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
       <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
         {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
       </div>

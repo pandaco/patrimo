@@ -10,7 +10,7 @@
     </p>
     <div class="row" style="gap:8px;margin-top:18px;flex-wrap:wrap">
       <button class="btn primary" (click)="computeRebalance()" [disabled]="loadingRebalance()">
-        {{ loadingRebalance() ? '…' : 'Plan de rebalancing' }}
+        {{ loadingRebalance() ? '…' : 'Plan de rééquilibrage' }}
       </button>
       <a routerLink="/settings/allocation" class="btn">Modifier les cibles</a>
     </div>
@@ -36,7 +36,7 @@
       <p>
         Le <ui-term term="Drift"><b>drift</b></ui-term> est l'écart en points entre réel et cible. Au-delà de
         5 pts on parle de <em>drift important</em> → le bouton
-        <b>Plan de rebalancing</b> calcule les achats/ventes pour revenir à la cible.
+        <b>Plan de rééquilibrage</b> calcule les achats/ventes pour revenir à la cible.
       </p>
       <p style="color:var(--ink-3);font-size:12.5px;margin:0">
         Pas encore de cible ? Lance le wizard
@@ -49,7 +49,7 @@
   @if (rebalancePlan(); as plan) {
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">
-        <div class="card-title">Plan de rebalancing</div>
+        <div class="card-title">Plan de rééquilibrage</div>
         <span class="card-sub">{{ fmtEur(plan.totalValue, 0) }} de patrimoine boursier</span>
         <div class="card-right">
           <button class="btn sm ghost" (click)="closeRebalance()">✕ Fermer</button>

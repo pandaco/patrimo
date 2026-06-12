@@ -96,7 +96,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
         </div>
         <div class="stat">
           <div class="label">
-            <span data-tip="Plus-Value réalisée depuis le 1er janvier. Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF. Frais d'achat et de vente inclus dans le coût.">PV réalisée YTD</span>
+            <span data-tip="Plus-Value réalisée depuis le 1er janvier (« YTD » en anglais). Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF. Frais d'achat et de vente inclus dans le coût.">PV réalisée cette année</span>
           </div>
           <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
             {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 2) }}
