@@ -17,6 +17,7 @@ function toDomain(row: EtfOrmEntity): Etf {
     distrib: row.distrib,
     pea: row.pea,
     alloc: row.alloc,
+    watchOnly: row.watchOnly,
     exposure: row.exposure,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -44,6 +45,10 @@ export class TypeOrmEtfRepository implements EtfRepository {
     await this.repo.upsert(seed, ['isin']);
     const saved = await this.repo.findOneOrFail({ where: { isin: seed.isin } });
     return toDomain(saved);
+  }
+
+  async setWatchOnly(isin: string, watchOnly: boolean): Promise<void> {
+    await this.repo.update({ isin }, { watchOnly });
   }
 
   async updateExposure(isin: string, exposure: Etf['exposure']): Promise<void> {

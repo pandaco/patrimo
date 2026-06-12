@@ -28,6 +28,7 @@ function fromCatalog(d: EtfDto): Etf {
     distrib: d.distrib,
     pea: d.pea,
     alloc: d.alloc,
+    watchOnly: d.watchOnly,
     qty: 0,
     pru: 0,
     price: 0,
@@ -88,6 +89,14 @@ export class EtfService {
   reload(): void {
     this.catalogResource.reload();
     this.portfolioResource.reload();
+  }
+
+  /** Toggle the watchlist flag and patch the local catalog in place. */
+  async setWatchOnly(isin: string, watchOnly: boolean): Promise<void> {
+    const updated = await firstValueFrom(
+      this.http.patch<EtfDto>(`${this.baseUrl}/etfs/${isin}/watch`, { watchOnly }),
+    );
+    this.catalogResource.update(list => list.map(e => e.isin === updated.isin ? updated : e));
   }
 
   /**

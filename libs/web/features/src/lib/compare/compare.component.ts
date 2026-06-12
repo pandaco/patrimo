@@ -15,6 +15,19 @@ const MAX_SELECTION = 4;
 })
 export class CompareComponent {
   private readonly etfSvc = inject(EtfService);
+
+  /** ETFs followed without a position. */
+  protected readonly watchlist = computed(() =>
+    this.etfSvc.all().filter(e => e.watchOnly),
+  );
+
+  protected async toggleWatch(isin: string, current: boolean): Promise<void> {
+    try {
+      await this.etfSvc.setWatchOnly(isin, !current);
+    } catch {
+      // Toggle failed — the catalog simply stays as it was.
+    }
+  }
   private readonly dialog = inject(MatDialog);
 
   /** ISINs the user has put on the comparator. Capped at `MAX_SELECTION`. */

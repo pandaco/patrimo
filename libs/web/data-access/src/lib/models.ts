@@ -33,6 +33,8 @@ export interface Etf {
   distrib: string;
   pea: boolean;
   alloc: 'Core' | 'Satellite' | 'Obligations';
+  /** Followed without a position — excluded from portfolio analytics. */
+  watchOnly: boolean;
   qty: number;
   pru: number;
   price: number;

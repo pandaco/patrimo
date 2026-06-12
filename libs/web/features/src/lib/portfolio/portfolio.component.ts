@@ -24,7 +24,11 @@ export class PortfolioComponent {
   protected readonly allocFilter = signal<AllocFilter>('Toutes');
   protected readonly allocTabs: AllocFilter[] = ['Toutes', 'Core', 'Satellite', 'Obligations'];
 
-  protected readonly allEtfs  = this.etfSvc.all;
+  // Watch-only ETFs without a position are tracked, not owned — they have
+  // no place in the portfolio table or its totals.
+  protected readonly allEtfs  = computed(() =>
+    this.etfSvc.all().filter(e => !e.watchOnly || e.qty > 0),
+  );
   protected readonly sparks   = this.etfSvc.sparks;
   protected readonly loading  = this.etfSvc.loading;
   protected readonly geo     = this.expSvc.geo;

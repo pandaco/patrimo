@@ -12,4 +12,6 @@ export interface EtfDto {
   distrib: string;
   pea: boolean;
   alloc: EtfAllocationDto;
+  /** Followed without a position — excluded from portfolio analytics. */
+  watchOnly: boolean;
 }

@@ -103,6 +103,24 @@
     @if (catalog().length === 0) {
       <div class="muted small" style="margin-top:8px">Aucun ETF dans le catalogue.</div>
     }
+
+    <!-- WATCHLIST -->
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
+      <span class="muted tiny" data-tip="Marque un ETF « suivi » pour garder un œil dessus sans le compter dans ton portefeuille. Il reste comparable ici, mais disparaît de la page Portefeuille tant que tu n'en détiens pas.">
+        Watchlist ({{ watchlist().length }}) :
+      </span>
+      @for (etf of catalog(); track etf.isin) {
+        <button type="button"
+                class="pill"
+                [class.solid]="etf.watchOnly"
+                [class.soft]="!etf.watchOnly"
+                [attr.aria-pressed]="etf.watchOnly"
+                [attr.aria-label]="(etf.watchOnly ? 'Ne plus suivre ' : 'Suivre ') + etf.ticker"
+                (click)="toggleWatch(etf.isin, etf.watchOnly)">
+          {{ etf.watchOnly ? '★' : '☆' }} {{ etf.ticker }}
+        </button>
+      }
+    </div>
   </div>
 
   <!-- CARDS GRID -->

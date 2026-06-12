@@ -16,6 +16,7 @@ function toDto(etf: Etf): EtfDto {
     distrib: etf.distrib,
     pea: etf.pea,
     alloc: etf.alloc,
+    watchOnly: etf.watchOnly,
   };
 }
 
@@ -26,5 +27,12 @@ export class EtfService {
   async list(): Promise<EtfDto[]> {
     const rows = await this.etfs.findAll();
     return rows.map(toDto);
+  }
+
+  async setWatchOnly(isin: string, watchOnly: boolean): Promise<EtfDto | null> {
+    const etf = await this.etfs.findByIsin(isin);
+    if (!etf) return null;
+    await this.etfs.setWatchOnly(isin, watchOnly);
+    return toDto({ ...etf, watchOnly });
   }
 }
