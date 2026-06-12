@@ -63,3 +63,4 @@ Nx monorepo. Apps are thin entry points; all real code lives in `libs/`.
 - DTO validation: global `ValidationPipe` with `whitelist + forbidNonWhitelisted` — unknown fields are rejected, so new API fields require DTO updates in `libs/shared/contracts`.
 - Architectural decisions go in `docs/adr/` (existing: FIFO realized P&L, ToastService, security baseline).
 - User feedback: shared `ToastService` + `<ui-toast>` — never native `alert()`.
+- Naming: no abbreviations or invented acronyms in identifiers — write words in full (`transactionService`, not `txSvc`; `keyboardShortcuts`, not `kb`) unless the short form is universally obvious (`id`, `url`, `dto`) or canonical domain vocabulary (PRU, TER, DCA, FIFO, ISIN, P&L — see glossary table).
