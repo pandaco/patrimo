@@ -20,7 +20,7 @@
     "db:migrate": "typeorm-ts-node-commonjs migration:run -d libs/api/infrastructure/src/lib/persistence/typeorm.config.ts",
     "db:revert": "typeorm-ts-node-commonjs migration:revert -d libs/api/infrastructure/src/lib/persistence/typeorm.config.ts",
     "db:show": "typeorm-ts-node-commonjs migration:show -d libs/api/infrastructure/src/lib/persistence/typeorm.config.ts",
-    "db:seed": "ts-node --transpile-only -P apps/api/tsconfig.app.json libs/api/infrastructure/src/lib/persistence/seeds/run-seed.ts",
+    "db:seed": "ts-node --transpile-only -r tsconfig-paths/register -P apps/api/tsconfig.app.json libs/api/infrastructure/src/lib/persistence/seeds/run-seed.ts",
     "db:reset": "npm run docker:reset && npm run docker:up && sleep 3 && npm run db:migrate && npm run db:seed",
     "graph": "nx graph",
     "ports:free": "npx --yes kill-port 3333 4200",
