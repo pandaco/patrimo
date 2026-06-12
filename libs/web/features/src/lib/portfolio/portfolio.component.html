@@ -207,14 +207,14 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
             <td class="r num">{{ fmtNum(etf.qty, 0) }}</td>
             <td class="r num">{{ fmtNum(etf.pru, 2) }} €</td>
             <td class="r num">{{ fmtNum(etf.price, 2) }} €</td>
-            <td class="r"><ui-delta [value]="eD(etf)" /></td>
-            <td class="r num">{{ fmtNum(eV(etf), 0) }} €</td>
+            <td class="r"><ui-delta [value]="rowDayPct(etf)" /></td>
+            <td class="r num">{{ fmtNum(rowValue(etf), 0) }} €</td>
             <td class="r">
-              <div class="num" [class.pos]="eP(etf) >= 0" [class.neg]="eP(etf) < 0">
-                {{ eP(etf) >= 0 ? '+' : '' }}{{ fmtNum(eP(etf), 0) }} €
+              <div class="num" [class.pos]="rowPnl(etf) >= 0" [class.neg]="rowPnl(etf) < 0">
+                {{ rowPnl(etf) >= 0 ? '+' : '' }}{{ fmtNum(rowPnl(etf), 0) }} €
               </div>
-              <div class="num tiny" [style.color]="ePP(etf) >= 0 ? 'var(--gain)' : 'var(--loss)'">
-                {{ fmtPctRaw(ePP(etf), 2) }}
+              <div class="num tiny" [style.color]="rowPnlPct(etf) >= 0 ? 'var(--gain)' : 'var(--loss)'">
+                {{ fmtPctRaw(rowPnlPct(etf), 2) }}
               </div>
             </td>
             <td><ui-sparkline [data]="sparks()[etf.ticker] || []" [fill]="true" /></td>

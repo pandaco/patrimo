@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { Transaction, TxType } from '@patrimo/data-access';
+import type { Transaction, TransactionType } from '@patrimo/data-access';
 import { computeTri, xirr } from './tri';
 
-function tx(partial: Partial<Transaction> & { id: string; type: TxType; date: string; amount: number }): Transaction {
+function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
   return {
     id:       partial.id,
     date:     partial.date,

@@ -15,13 +15,13 @@ export class PriceWarmerCron {
   private readonly logger = new Logger(PriceWarmerCron.name);
 
   constructor(
-    @Inject(ETF_REPOSITORY) private readonly etfRepo: EtfRepository,
+    @Inject(ETF_REPOSITORY) private readonly etfRepository: EtfRepository,
     private readonly priceService: PriceService,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_9AM, { name: 'priceWarmer', timeZone: 'Europe/Paris' })
   async refreshAll(): Promise<void> {
-    const etfs = await this.etfRepo.findAll();
+    const etfs = await this.etfRepository.findAll();
     if (etfs.length === 0) return;
 
     this.logger.log(`Pre-warming Yahoo Finance prices for ${etfs.length} ETFs…`);

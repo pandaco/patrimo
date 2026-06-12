@@ -31,7 +31,7 @@ const CRUMB_MAP: Record<string, string[]> = {
 })
 export class ShellComponent {
   private readonly router = inject(Router);
-  protected readonly kb = inject(KeyboardShortcutService);
+  protected readonly keyboardShortcuts = inject(KeyboardShortcutService);
 
   private readonly currentUrl = toSignal(
     this.router.events.pipe(
@@ -46,6 +46,6 @@ export class ShellComponent {
     return CRUMB_MAP[path] ?? ['Patrimo'];
   });
 
-  protected onNewTransaction(): void { this.kb.openTx(); }
-  protected onOpenShortcuts(): void  { this.kb.openShortcuts(); }
+  protected onNewTransaction(): void { this.keyboardShortcuts.openTx(); }
+  protected onOpenShortcuts(): void  { this.keyboardShortcuts.openShortcuts(); }
 }

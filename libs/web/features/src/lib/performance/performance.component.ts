@@ -64,20 +64,20 @@ function shortFr(iso: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PerformanceComponent {
-  private readonly perfSvc = inject(PerformanceService);
-  private readonly etfSvc  = inject(EtfService);
-  private readonly prefsSvc = inject(PreferencesService);
+  private readonly performanceService = inject(PerformanceService);
+  private readonly etfService  = inject(EtfService);
+  private readonly preferencesService = inject(PreferencesService);
 
   // Human label of the user-selected benchmark, e.g. "CW8 — Amundi MSCI World".
   protected readonly benchmarkLabel = computed(() => {
-    const isin = this.prefsSvc.current().benchmarkIsin;
-    const etf  = this.etfSvc.all().find(e => e.isin === isin);
+    const isin = this.preferencesService.current().benchmarkIsin;
+    const etf  = this.etfService.all().find(e => e.isin === isin);
     return etf ? `${etf.ticker} — ${etf.name}` : 'CW8 — MSCI World';
   });
 
   protected readonly periodOptions = PERIOD_OPTIONS;
-  protected readonly activePeriod  = this.perfSvc.period;
-  protected readonly loading       = this.perfSvc.loading;
+  protected readonly activePeriod  = this.performanceService.period;
+  protected readonly loading       = this.performanceService.loading;
 
   // Stress test — apply a historical-drawdown shock to the current
   // boursier book. Livrets and cash dormant are not exposed to market risk
@@ -86,7 +86,7 @@ export class PerformanceComponent {
   protected readonly activeStress    = signal<StressScenario>(STRESS_SCENARIOS[2]);
 
   protected readonly stressBaseValue = computed(() =>
-    this.etfSvc.all().reduce((a, e) => a + etfValue(e), 0),
+    this.etfService.all().reduce((a, e) => a + etfValue(e), 0),
   );
   protected readonly stressLoss = computed(() =>
     this.stressBaseValue() * (this.activeStress().drawdownPct / 100),
@@ -97,8 +97,8 @@ export class PerformanceComponent {
 
   protected selectStress(s: StressScenario): void { this.activeStress.set(s); }
 
-  protected readonly portfolio    = computed(() => this.perfSvc.series().portfolio);
-  protected readonly benchmark    = computed(() => this.perfSvc.series().benchmark);
+  protected readonly portfolio    = computed(() => this.performanceService.series().portfolio);
+  protected readonly benchmark    = computed(() => this.performanceService.series().benchmark);
   protected readonly hasBenchmark = computed(() => this.benchmark().length > 0);
 
   private static totalReturn(series: number[]): number {
@@ -115,11 +115,11 @@ export class PerformanceComponent {
   protected readonly portfolioPct = computed(() => PerformanceComponent.totalReturn(this.portfolio()));
   protected readonly benchmarkPct = computed(() => PerformanceComponent.totalReturn(this.benchmark()));
   protected readonly alphaPct     = computed(() => this.portfolioPct() - this.benchmarkPct());
-  protected readonly annualized    = computed(() => this.perfSvc.raw().annualized);
-  protected readonly etfStats      = this.perfSvc.etfStats;
-  protected readonly fees          = this.perfSvc.fees;
-  protected readonly loadingStats  = this.perfSvc.loadingStats;
-  protected readonly loadingFees   = this.perfSvc.loadingFees;
+  protected readonly annualized    = computed(() => this.performanceService.raw().annualized);
+  protected readonly etfStats      = this.performanceService.etfStats;
+  protected readonly fees          = this.performanceService.fees;
+  protected readonly loadingStats  = this.performanceService.loadingStats;
+  protected readonly loadingFees   = this.performanceService.loadingFees;
 
   protected readonly periodRows = computed<PeriodRow[]>(() =>
     PERIOD_OPTIONS.map(opt => ({
@@ -131,7 +131,7 @@ export class PerformanceComponent {
   );
 
   protected readonly drawdowns = computed(() =>
-    this.perfSvc.raw().drawdowns.map(d => ({
+    this.performanceService.raw().drawdowns.map(d => ({
       ...d,
       peakLabel:     shortFr(d.peakDate),
       troughLabel:   shortFr(d.troughDate),
@@ -143,7 +143,7 @@ export class PerformanceComponent {
 
   protected readonly periodStats = computed((): PeriodStats | null => {
     const pts = this.portfolio();
-    const lbs = this.perfSvc.raw().labels;
+    const lbs = this.performanceService.raw().labels;
     if (pts.length < 5 || lbs.length < 5) return null;
 
     const isWeekly  = (['3Y', '5Y', 'MAX'] as PerformancePeriod[]).includes(this.activePeriod());
@@ -163,7 +163,7 @@ export class PerformanceComponent {
     const annRet = annVal ?? this.portfolioPct();
     const sharpe = volatility > 0 ? (annRet - 2.5) / volatility : null;
 
-    const maxDD  = this.perfSvc.raw().drawdowns[0]?.pct ?? null;
+    const maxDD  = this.performanceService.raw().drawdowns[0]?.pct ?? null;
     const calmar = annVal !== null && maxDD !== null && maxDD < 0
       ? annVal / Math.abs(maxDD)
       : null;
@@ -215,14 +215,14 @@ export class PerformanceComponent {
       : `rgba(239,68,68,${opacity})`;
   }
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;
   protected readonly fmtNum    = fmtNum;
 
   protected setPeriod(period: PerformancePeriod): void {
-    this.perfSvc.setPeriod(period);
+    this.performanceService.setPeriod(period);
   }
 }

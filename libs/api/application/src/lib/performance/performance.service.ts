@@ -60,9 +60,9 @@ function computeAnnualized(series: number[], days: number): number | null {
 @Injectable()
 export class PerformanceService {
   constructor(
-    @Inject(TRANSACTION_REPOSITORY)      private readonly txRepo:   TransactionRepository,
-    @Inject(ETF_REPOSITORY)              private readonly etfRepo:  EtfRepository,
-    @Inject(USER_PREFERENCES_REPOSITORY) private readonly prefRepo: UserPreferencesRepository,
+    @Inject(TRANSACTION_REPOSITORY)      private readonly transactionRepository:   TransactionRepository,
+    @Inject(ETF_REPOSITORY)              private readonly etfRepository:  EtfRepository,
+    @Inject(USER_PREFERENCES_REPOSITORY) private readonly preferencesRepository: UserPreferencesRepository,
     private readonly priceService: PriceService,
   ) {}
 
@@ -72,10 +72,10 @@ export class PerformanceService {
    * ISIN that left the catalog.
    */
   private async resolveBenchmark(userId: string): Promise<{ isin: string; ticker: string }> {
-    const prefs = await this.prefRepo.findByUserId(userId);
-    const isin  = prefs?.benchmarkIsin ?? DEFAULT_BENCHMARK_ISIN;
+    const userPreferences = await this.preferencesRepository.findByUserId(userId);
+    const isin  = userPreferences?.benchmarkIsin ?? DEFAULT_BENCHMARK_ISIN;
     if (isin !== DEFAULT_BENCHMARK_ISIN) {
-      const etf = await this.etfRepo.findByIsin(isin);
+      const etf = await this.etfRepository.findByIsin(isin);
       if (etf) return { isin: etf.isin, ticker: etf.ticker };
     }
     return { isin: DEFAULT_BENCHMARK_ISIN, ticker: DEFAULT_BENCHMARK_TICKER };
@@ -87,8 +87,8 @@ export class PerformanceService {
     const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
 
     const [txs, etfs] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
     ]);
 
     const buyTxs = txs.filter(t => t.type === 'BUY' && t.etfIsin);
@@ -255,8 +255,8 @@ export class PerformanceService {
   async getEtfStats(userId: string): Promise<EtfStatsDto[]> {
     const bench = await this.resolveBenchmark(userId);
     const [txs, etfs, benchHistory] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
       this.priceService.getHistorical(bench.isin, bench.ticker, 365),
     ]);
 
@@ -313,8 +313,8 @@ export class PerformanceService {
     const elapsed = (now.getTime() - jan1.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
 
     const [txs, etfs] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
     ]);
 
     const brokerageYtd = txs

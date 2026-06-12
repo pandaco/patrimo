@@ -36,9 +36,9 @@ export class SearchDialogComponent implements OnInit {
 
   private readonly dialogRef  = inject(MatDialogRef<SearchDialogComponent>);
   private readonly router     = inject(Router);
-  private readonly etfSvc     = inject(EtfService);
-  private readonly envSvc     = inject(EnvelopeService);
-  private readonly txSvc      = inject(TransactionService);
+  private readonly etfService     = inject(EtfService);
+  private readonly envelopeService     = inject(EnvelopeService);
+  private readonly transactionService      = inject(TransactionService);
 
   protected readonly query      = signal('');
   protected readonly activeIdx  = signal(0);
@@ -47,7 +47,7 @@ export class SearchDialogComponent implements OnInit {
     const q = this.query().trim().toLowerCase();
     if (q.length < 2) return [];
 
-    const etfResults: SearchResult[] = this.etfSvc.all()
+    const etfResults: SearchResult[] = this.etfService.all()
       .filter(e =>
         e.ticker.toLowerCase().includes(q) ||
         e.name.toLowerCase().includes(q) ||
@@ -63,7 +63,7 @@ export class SearchDialogComponent implements OnInit {
         route: '/portfolio',
       }));
 
-    const envResults: SearchResult[] = this.envSvc.all()
+    const envResults: SearchResult[] = this.envelopeService.all()
       .filter(e =>
         e.label.toLowerCase().includes(q) ||
         e.glyph.toLowerCase().includes(q) ||
@@ -79,7 +79,7 @@ export class SearchDialogComponent implements OnInit {
         route: '/wealth',
       }));
 
-    const txResults: SearchResult[] = this.txSvc.all()
+    const txResults: SearchResult[] = this.transactionService.all()
       .filter(t =>
         (t.etf && t.etf.toLowerCase().includes(q)) ||
         t.type.toLowerCase().includes(q) ||

@@ -42,13 +42,13 @@ export interface FamilyRow {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WealthComponent {
-  private readonly envSvc = inject(EnvelopeService);
-  private readonly etfSvc = inject(EtfService);
+  private readonly envelopeService = inject(EnvelopeService);
+  private readonly etfService = inject(EtfService);
   private readonly dialog = inject(MatDialog);
 
   protected readonly activeView = signal<WealthView>('famille');
-  protected readonly total      = this.envSvc.total;
-  protected readonly allEnv     = this.envSvc.all;
+  protected readonly total      = this.envelopeService.total;
+  protected readonly allEnv     = this.envelopeService.all;
 
   protected readonly families = computed<FamilyRow[]>(() => {
     const all   = this.allEnv();
@@ -73,7 +73,7 @@ export class WealthComponent {
   protected readonly currencyRows = computed(() => {
     const total = this.total();
     const byKey = new Map<string, number>();
-    for (const e of this.etfSvc.all()) {
+    for (const e of this.etfService.all()) {
       if (e.qty <= 0) continue;
       const v = etfValue(e);
       byKey.set(e.currency, (byKey.get(e.currency) ?? 0) + v);
@@ -103,9 +103,9 @@ export class WealthComponent {
     });
   });
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
   protected pnl(env: Envelope)    { return env.value - env.invested; }
@@ -162,7 +162,7 @@ export class WealthComponent {
     try {
       // EnvelopeService.remove() fans the cascade reload (transactions + positions)
       // out internally — the component does not need to chain them itself.
-      await this.envSvc.remove(env.id);
+      await this.envelopeService.remove(env.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Suppression impossible');
     }

@@ -35,7 +35,7 @@ const GLYPHS: GlyphOption[] = [
 export class EnvelopeDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<EnvelopeDialogComponent>);
   private readonly data      = inject<EnvelopeDialogData>(MAT_DIALOG_DATA, { optional: true });
-  private readonly envSvc    = inject(EnvelopeService);
+  private readonly envelopeService    = inject(EnvelopeService);
 
   protected readonly editing   = !!this.data?.envelope;
   private readonly editingId   = this.data?.envelope?.id ?? null;
@@ -80,9 +80,9 @@ export class EnvelopeDialogComponent {
     this.submitting.set(true);
     try {
       if (this.editing && this.editingId) {
-        await this.envSvc.update(this.editingId, payload);
+        await this.envelopeService.update(this.editingId, payload);
       } else {
-        await this.envSvc.create(payload);
+        await this.envelopeService.create(payload);
       }
       this.dialogRef.close('saved');
     } catch (err) {

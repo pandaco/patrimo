@@ -35,16 +35,16 @@ function applyTransaction(pos: PositionAccumulator, tx: Transaction): void {
 @Injectable()
 export class PortfolioService {
   constructor(
-    @Inject(TRANSACTION_REPOSITORY) private readonly txRepo: TransactionRepository,
-    @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
+    @Inject(TRANSACTION_REPOSITORY) private readonly transactionRepository: TransactionRepository,
+    @Inject(ETF_REPOSITORY)         private readonly etfRepository: EtfRepository,
     private readonly priceService: PriceService,
     private readonly preferences: PreferencesService,
   ) {}
 
   async listForUser(userId: string): Promise<PositionDto[]> {
     const [txs, etfs] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
 
@@ -89,8 +89,8 @@ export class PortfolioService {
    */
   async refreshForUser(userId: string): Promise<PositionDto[]> {
     const [txs, etfs] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
     const heldIsins = new Set(
@@ -108,7 +108,7 @@ export class PortfolioService {
 
   async calculateExposure(userId: string): Promise<PortfolioExposureDto> {
     const positions = await this.listForUser(userId);
-    const etfs = await this.etfRepo.findAll();
+    const etfs = await this.etfRepository.findAll();
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
 
     const totalValue = positions.reduce((sum, p) => sum + p.qty * (p.currentPrice ?? 0), 0);
@@ -132,7 +132,7 @@ export class PortfolioService {
         const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
         if (meta) {
           exposure = this.parseYahooExposure(meta);
-          this.etfRepo.updateExposure(etf.isin, exposure).catch(console.error);
+          this.etfRepository.updateExposure(etf.isin, exposure).catch(console.error);
         }
       }
 
@@ -189,12 +189,12 @@ export class PortfolioService {
   }
 
   async getRebalancePlan(userId: string): Promise<RebalancePlanDto> {
-    const [positions, prefs] = await Promise.all([
+    const [positions, userPreferences] = await Promise.all([
       this.listForUser(userId),
       this.preferences.get(userId),
     ]);
 
-    const targets = prefs.allocationTargets?.etf;
+    const targets = userPreferences.allocationTargets?.etf;
     if (!targets || Object.keys(targets).length === 0) {
       return { totalValue: 0, transactions: [] };
     }
@@ -238,8 +238,8 @@ export class PortfolioService {
 
   async getSparks(userId: string): Promise<Record<string, number[]>> {
     const [txs, etfs] = await Promise.all([
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
     const heldIsins = new Set(
@@ -279,7 +279,7 @@ export class PortfolioService {
 
   async getUpcomingDividends(userId: string): Promise<DividendDto[]> {
     const positions = await this.listForUser(userId);
-    const etfs = await this.etfRepo.findAll();
+    const etfs = await this.etfRepository.findAll();
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
 
     const dividends: DividendDto[] = [];

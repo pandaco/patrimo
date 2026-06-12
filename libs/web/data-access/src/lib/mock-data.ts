@@ -1,6 +1,6 @@
 import {
   Alert, Broker, Dividend, Envelope, Etf, Exposure,
-  GlossaryEntry, Targets, Transaction, TxLabel, TxType, User,
+  GlossaryEntry, Targets, Transaction, TransactionLabel, TransactionType, User,
 } from './models';
 
 export const MOCK_USER: User = {
@@ -54,7 +54,7 @@ export const MOCK_TRANSACTIONS: Transaction[] = [
   { id:'tx-092', date:'2026-03-02', type:'INTEREST', envelope:'livreta', etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount:  54.21, transferId:null },
 ];
 
-export const TX_LABELS: Record<TxType, TxLabel> = {
+export const TRANSACTION_LABELS: Record<TransactionType, TransactionLabel> = {
   BUY:        { label:'Achat',    sym:'+', dir:'+' },
   SELL:       { label:'Vente',    sym:'−', dir:'−' },
   DEPOSIT:    { label:'Dépôt',    sym:'↘', dir:'+' },

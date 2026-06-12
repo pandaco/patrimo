@@ -57,7 +57,7 @@
             <ul class="notif-list">
               @for (alert of alerts().slice(0, 5); track alert.id) {
                 @if (!alert.dismissed) {
-                  <li class="notif-item" [class]="sevClass(alert.severity)" [class.notif-read]="alert.read">
+                  <li class="notif-item" [class]="severityClass(alert.severity)" [class.notif-read]="alert.read">
                     <div class="notif-item-body">
                       <div class="notif-item-title">{{ alert.title }}</div>
                       <div class="notif-item-date">{{ alert.date }}</div>

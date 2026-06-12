@@ -1,11 +1,11 @@
-import { TxType } from '../value-objects/tx-type';
+import { TransactionType } from '../value-objects/tx-type';
 
 export interface Transaction {
   id: string;
   userId: string;
   envelopeId: string;
   etfIsin: string | null;
-  type: TxType;
+  type: TransactionType;
   date: Date;
   quantity: number;
   price: number | null;

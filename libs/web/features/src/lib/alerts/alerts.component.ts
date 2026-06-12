@@ -37,7 +37,7 @@ const METAS: RuleMeta[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlertsComponent {
-  private readonly alertSvc = inject(AlertService);
+  private readonly alertService = inject(AlertService);
   @ViewChild('rulesTable', { read: ElementRef }) private rulesTableRef?: ElementRef;
 
   protected readonly activeTab      = signal<Tab>('unread');
@@ -46,7 +46,7 @@ export class AlertsComponent {
 
   protected readonly filteredAlerts = computed(() => {
     const tab = this.activeTab();
-    return this.alertSvc.all().filter(a => {
+    return this.alertService.all().filter(a => {
       if (tab === 'archived') return a.dismissed;
       if (tab === 'unread')   return !a.read && !a.dismissed;
       return !a.dismissed;
@@ -54,13 +54,13 @@ export class AlertsComponent {
   });
 
   protected readonly tabCounts = computed(() => ({
-    all:      this.alertSvc.all().filter(a => !a.dismissed).length,
-    unread:   this.alertSvc.all().filter(a => !a.read && !a.dismissed).length,
-    archived: this.alertSvc.all().filter(a => a.dismissed).length,
+    all:      this.alertService.all().filter(a => !a.dismissed).length,
+    unread:   this.alertService.all().filter(a => !a.read && !a.dismissed).length,
+    archived: this.alertService.all().filter(a => a.dismissed).length,
   }));
 
   protected readonly rulesWithMeta = computed(() => {
-    const userRules = this.alertSvc.rules();
+    const userRules = this.alertService.rules();
     return METAS.map(meta => {
       const rule = userRules.find(r => r.type === meta.type);
       return {
@@ -78,14 +78,14 @@ export class AlertsComponent {
   }
 
   protected async dismiss(id: string): Promise<void> {
-    await this.alertSvc.dismiss(id);
+    await this.alertService.dismiss(id);
   }
 
   protected async toggleRule(m: RuleWithMeta): Promise<void> {
     if (m.id) {
-      await this.alertSvc.updateRule(m.id, { enabled: !m.enabled });
+      await this.alertService.updateRule(m.id, { enabled: !m.enabled });
     } else {
-      await this.alertSvc.createRule({
+      await this.alertService.createRule({
         type: m.meta.type,
         threshold: m.meta.defaultThreshold,
         channels: ['WEB'],
@@ -108,9 +108,9 @@ export class AlertsComponent {
     if (isNaN(num) || num < 0) return;
     this.editingType.set(null);
     if (m.id) {
-      await this.alertSvc.updateRule(m.id, { threshold: num });
+      await this.alertService.updateRule(m.id, { threshold: num });
     } else {
-      await this.alertSvc.createRule({ type: m.meta.type, threshold: num, channels: ['WEB'], enabled: true });
+      await this.alertService.createRule({ type: m.meta.type, threshold: num, channels: ['WEB'], enabled: true });
     }
   }
 
@@ -124,11 +124,11 @@ export class AlertsComponent {
     if (firstDisabled) this.startEditThreshold(firstDisabled);
   }
 
-  protected sevIcon(sev: string): string {
+  protected severityIcon(sev: string): string {
     return sev === 'warn' ? '!' : sev === 'gain' ? '✓' : sev === 'loss' ? '✗' : 'i';
   }
 
-  protected sevClass(sev: string): string {
+  protected severityClass(sev: string): string {
     return sev === 'warn' ? 'warn' : sev === 'gain' ? 'gain' : sev === 'loss' ? 'loss' : 'info';
   }
 }

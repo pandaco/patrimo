@@ -8,7 +8,7 @@ import { PreferencesService } from './preferences.service';
 export class FxService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly auth    = inject(AuthService);
-  private readonly prefs   = inject(PreferencesService);
+  private readonly preferences   = inject(PreferencesService);
 
   private readonly ratesResource = httpResource<Record<string, number>>(
     () => this.auth.isAuthenticated() ? `${this.baseUrl}/market/fx-rates` : undefined,
@@ -17,7 +17,7 @@ export class FxService {
 
   readonly rates = this.ratesResource.value;
 
-  readonly displayCurrency = computed(() => this.prefs.current().displayCurrency);
+  readonly displayCurrency = computed(() => this.preferences.current().displayCurrency);
 
   readonly rate = computed(() => {
     const cur = this.displayCurrency();

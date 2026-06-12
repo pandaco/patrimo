@@ -14,16 +14,16 @@ const MAX_SELECTION = 4;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompareComponent {
-  private readonly etfSvc = inject(EtfService);
+  private readonly etfService = inject(EtfService);
 
   /** ETFs followed without a position. */
   protected readonly watchlist = computed(() =>
-    this.etfSvc.all().filter(e => e.watchOnly),
+    this.etfService.all().filter(e => e.watchOnly),
   );
 
   protected async toggleWatch(isin: string, current: boolean): Promise<void> {
     try {
-      await this.etfSvc.setWatchOnly(isin, !current);
+      await this.etfService.setWatchOnly(isin, !current);
     } catch {
       // Toggle failed — the catalog simply stays as it was.
     }
@@ -56,7 +56,7 @@ export class CompareComponent {
   }
 
   protected readonly catalog = computed(() => {
-    const all = this.etfSvc.all();
+    const all = this.etfService.all();
     const pea  = this.filterPea();
     const dist = this.filterDistrib();
     const ter  = this.filterTerMax();
@@ -73,7 +73,7 @@ export class CompareComponent {
 
   protected readonly candidates = computed(() => {
     const selected = new Set(this.selectedIsins());
-    return this.etfSvc.all().filter(e => selected.has(e.isin));
+    return this.etfService.all().filter(e => selected.has(e.isin));
   });
 
   protected readonly canAddMore = computed(() => this.selectedIsins().length < MAX_SELECTION);

@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TxType } from '@patrimo/api-domain';
-import { CreateTransactionDto, CreateTransferDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
+import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TransactionType } from '@patrimo/api-domain';
+import { CreateTransactionDto, CreateTransferDto, TransactionDto, TransactionTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 
 function toDto(tx: Transaction): TransactionDto {
@@ -9,7 +9,7 @@ function toDto(tx: Transaction): TransactionDto {
     id: tx.id,
     envelopeId: tx.envelopeId,
     etfIsin: tx.etfIsin,
-    type: tx.type as TxTypeDto,
+    type: tx.type as TransactionTypeDto,
     date: tx.date.toISOString().slice(0, 10),
     quantity: tx.quantity,
     price: tx.price,
@@ -24,7 +24,7 @@ function toPatch(input: UpdateTransactionDto): Partial<TransactionSeed> {
   const patch: Partial<TransactionSeed> = {};
   if (input.envelopeId !== undefined) patch.envelopeId = input.envelopeId;
   if (input.etfIsin    !== undefined) patch.etfIsin    = input.etfIsin;
-  if (input.type       !== undefined) patch.type       = input.type as TxType;
+  if (input.type       !== undefined) patch.type       = input.type as TransactionType;
   if (input.date       !== undefined) patch.date       = new Date(input.date);
   if (input.quantity   !== undefined) patch.quantity   = input.quantity;
   if (input.price      !== undefined) patch.price      = input.price;
@@ -71,7 +71,7 @@ export class TransactionService {
       userId,
       envelopeId: input.envelopeId,
       etfIsin: input.etfIsin ?? null,
-      type: input.type as TxType,
+      type: input.type as TransactionType,
       date: new Date(input.date),
       quantity: input.quantity,
       price: input.price ?? null,
@@ -163,7 +163,7 @@ export class TransactionService {
     const envMap = new Map(userEnvelopes.map(e => [e.code, e.id]));
     const etfMap = new Map(allEtfs.map(e => [e.ticker, e.isin]));
 
-    const positionTypes = new Set<TxType>(['BUY', 'SELL']);
+    const positionTypes = new Set<TransactionType>(['BUY', 'SELL']);
     let count = 0;
     let skipped = 0;
     for (const line of lines) {
@@ -181,7 +181,7 @@ export class TransactionService {
       if (!envelopeId) { skipped++; continue; }
 
       const etfIsin   = ticker ? etfMap.get(ticker) : null;
-      const txType    = type as TxType;
+      const txType    = type as TransactionType;
       const quantity  = parseFloat(qty)      || 0;
       const fee       = parseFloat(fees)     || 0;
       const tax       = parseFloat(taxesRaw) || 0;

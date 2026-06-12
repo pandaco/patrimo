@@ -15,22 +15,22 @@ export class TopbarComponent {
   crumbs = input.required<string[]>();
   newTransaction = output<void>();
 
-  private readonly etfSvc   = inject(EtfService);
-  private readonly alertSvc = inject(AlertService);
-  private readonly kb       = inject(KeyboardShortcutService);
+  private readonly etfService   = inject(EtfService);
+  private readonly alertService = inject(AlertService);
+  private readonly keyboardShortcuts       = inject(KeyboardShortcutService);
 
   protected readonly refreshing  = signal(false);
   protected readonly notifOpen   = signal(false);
-  protected readonly unreadCount = this.alertSvc.unreadCount;
-  protected readonly alerts      = this.alertSvc.all;
+  protected readonly unreadCount = this.alertService.unreadCount;
+  protected readonly alerts      = this.alertService.all;
 
-  protected openSearch(): void { this.kb.openSearch(); }
+  protected openSearch(): void { this.keyboardShortcuts.openSearch(); }
 
   protected async refresh(): Promise<void> {
     if (this.refreshing()) return;
     this.refreshing.set(true);
     try {
-      await this.etfSvc.forceRefresh();
+      await this.etfService.forceRefresh();
     } finally {
       this.refreshing.set(false);
     }
@@ -40,16 +40,16 @@ export class TopbarComponent {
     const opening = !this.notifOpen();
     this.notifOpen.set(opening);
     if (opening && this.unreadCount() > 0) {
-      await this.alertSvc.readAll();
+      await this.alertService.readAll();
     }
   }
 
   protected async dismiss(id: string, event: Event): Promise<void> {
     event.stopPropagation();
-    await this.alertSvc.dismiss(id);
+    await this.alertService.dismiss(id);
   }
 
-  protected sevClass(sev: string): string {
+  protected severityClass(sev: string): string {
     return sev === 'warn' ? 'warn' : sev === 'gain' ? 'gain' : sev === 'loss' ? 'loss' : 'info';
   }
 

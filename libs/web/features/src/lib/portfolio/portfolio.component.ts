@@ -15,9 +15,9 @@ type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioComponent {
-  private readonly etfSvc  = inject(EtfService);
-  private readonly expSvc  = inject(ExposureService);
-  private readonly txSvc   = inject(TransactionService);
+  private readonly etfService  = inject(EtfService);
+  private readonly exposureService  = inject(ExposureService);
+  private readonly transactionService   = inject(TransactionService);
   private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
@@ -27,13 +27,13 @@ export class PortfolioComponent {
   // Watch-only ETFs without a position are tracked, not owned — they have
   // no place in the portfolio table or its totals.
   protected readonly allEtfs  = computed(() =>
-    this.etfSvc.all().filter(e => !e.watchOnly || e.qty > 0),
+    this.etfService.all().filter(e => !e.watchOnly || e.qty > 0),
   );
-  protected readonly sparks   = this.etfSvc.sparks;
-  protected readonly loading  = this.etfSvc.loading;
-  protected readonly geo     = this.expSvc.geo;
-  protected readonly sector  = this.expSvc.sector;
-  protected readonly curr    = this.expSvc.curr;
+  protected readonly sparks   = this.etfService.sparks;
+  protected readonly loading  = this.etfService.loading;
+  protected readonly geo     = this.exposureService.geo;
+  protected readonly sector  = this.exposureService.sector;
+  protected readonly curr    = this.exposureService.curr;
 
   protected readonly filtered = computed(() => {
     const f = this.allocFilter();
@@ -48,7 +48,7 @@ export class PortfolioComponent {
   // Cost-basis-aware FIFO replay of every BUY/SELL, scoped to the current
   // calendar year. The pure function and its spec live in `realized-pnl.ts`.
   private readonly realizedReport = computed(() =>
-    computeRealized(this.txSvc.all(), startOfYearISO()),
+    computeRealized(this.transactionService.all(), startOfYearISO()),
   );
   protected readonly realizedYtd      = computed(() => this.realizedReport().realizedSince);
   protected readonly orphanSellCount  = computed(() => this.realizedReport().orphanSellCount);
@@ -57,7 +57,7 @@ export class PortfolioComponent {
   // Sourced from the same FIFO walk as `realizedYtd` so both cards on the page
   // share one cost-basis model (drift-free) and a single tx-list traversal.
   protected readonly closedPositions = computed(() => {
-    const etfByIsin = new Map(this.etfSvc.all().map(e => [e.isin, e]));
+    const etfByIsin = new Map(this.etfService.all().map(e => [e.isin, e]));
     return this.realizedReport().closedPositions.map(p => {
       const etf = etfByIsin.get(p.isin);
       return {
@@ -75,23 +75,23 @@ export class PortfolioComponent {
   protected readonly dividends12M = computed(() => {
     const cutoff = new Date();
     cutoff.setFullYear(cutoff.getFullYear() - 1);
-    const divs = this.txSvc.all().filter(t =>
+    const divs = this.transactionService.all().filter(t =>
       (t.type === 'DIVIDEND' || t.type === 'INTEREST') && new Date(t.date) >= cutoff,
     );
     return { total: divs.reduce((a, t) => a + t.amount, 0), count: divs.length };
   });
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 
-  protected eV(e: Etf)  { return etfValue(e); }
-  protected eC(e: Etf)  { return etfCost(e); }
-  protected eP(e: Etf)  { return etfPnl(e); }
-  protected ePP(e: Etf) { return etfPnlPct(e) * 100; }
-  protected eD(e: Etf)  { return etfDayPct(e) * 100; }
+  protected rowValue(e: Etf)  { return etfValue(e); }
+  protected rowCost(e: Etf)  { return etfCost(e); }
+  protected rowPnl(e: Etf)  { return etfPnl(e); }
+  protected rowPnlPct(e: Etf) { return etfPnlPct(e) * 100; }
+  protected rowDayPct(e: Etf)  { return etfDayPct(e) * 100; }
   protected wt(e: Etf)  { return etfValue(e) / this.total() * 100; }
 
   protected maxExp(data: { pct: number }[]) { return Math.max(...data.map(d => d.pct)); }

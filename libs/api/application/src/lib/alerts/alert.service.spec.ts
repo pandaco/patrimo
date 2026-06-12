@@ -6,7 +6,7 @@ import type {
   Transaction,
   AlertRule,
   UserPreferences,
-  TxType,
+  TransactionType,
 } from '@patrimo/api-domain';
 import { ALERT_RULE_REPOSITORY } from '@patrimo/api-domain';
 import {
@@ -64,7 +64,7 @@ function tx(overrides: Partial<Transaction>): Transaction {
     userId: 'user-1',
     envelopeId: overrides.envelopeId ?? 'env-1',
     etfIsin: overrides.etfIsin ?? 'ISIN-ESE',
-    type: overrides.type ?? ('BUY' as TxType),
+    type: overrides.type ?? ('BUY' as TransactionType),
     date: overrides.date ?? new Date('2026-01-01'),
     quantity: overrides.quantity ?? 10,
     price: overrides.price ?? 40,
@@ -93,22 +93,22 @@ function rule(overrides: Partial<AlertRule>): AlertRule {
 
 describe('AlertService', () => {
   let service: AlertService;
-  let envRepo: { findByUserId: jest.Mock };
-  let txRepo: { findByUserId: jest.Mock };
-  let etfRepo: { findAll: jest.Mock };
-  let ruleRepo: { findByUserId: jest.Mock };
-  let prefsRepo: { findByUserId: jest.Mock };
+  let envelopeRepository: { findByUserId: jest.Mock };
+  let transactionRepository: { findByUserId: jest.Mock };
+  let etfRepository: { findAll: jest.Mock };
+  let alertRuleRepository: { findByUserId: jest.Mock };
+  let preferencesRepository: { findByUserId: jest.Mock };
   let portfolio: { listForUser: jest.Mock };
-  let alertReadRepo: { findBy: jest.Mock; upsert: jest.Mock };
+  let alertReadRepository: { findBy: jest.Mock; upsert: jest.Mock };
 
   beforeEach(async () => {
-    envRepo = { findByUserId: jest.fn().mockResolvedValue([]) };
-    txRepo = { findByUserId: jest.fn().mockResolvedValue([]) };
-    etfRepo = { findAll: jest.fn().mockResolvedValue([]) };
-    ruleRepo = { findByUserId: jest.fn().mockResolvedValue([]) };
-    prefsRepo = { findByUserId: jest.fn().mockResolvedValue(null) };
+    envelopeRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
+    transactionRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
+    etfRepository = { findAll: jest.fn().mockResolvedValue([]) };
+    alertRuleRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
+    preferencesRepository = { findByUserId: jest.fn().mockResolvedValue(null) };
     portfolio = { listForUser: jest.fn().mockResolvedValue([]) };
-    alertReadRepo = {
+    alertReadRepository = {
       findBy: jest.fn().mockResolvedValue([]),
       upsert: jest.fn().mockResolvedValue({}),
     };
@@ -116,15 +116,15 @@ describe('AlertService', () => {
     const mod = await Test.createTestingModule({
       providers: [
         AlertService,
-        { provide: ENVELOPE_REPOSITORY, useValue: envRepo },
-        { provide: TRANSACTION_REPOSITORY, useValue: txRepo },
-        { provide: ETF_REPOSITORY, useValue: etfRepo },
-        { provide: ALERT_RULE_REPOSITORY, useValue: ruleRepo },
-        { provide: USER_PREFERENCES_REPOSITORY, useValue: prefsRepo },
+        { provide: ENVELOPE_REPOSITORY, useValue: envelopeRepository },
+        { provide: TRANSACTION_REPOSITORY, useValue: transactionRepository },
+        { provide: ETF_REPOSITORY, useValue: etfRepository },
+        { provide: ALERT_RULE_REPOSITORY, useValue: alertRuleRepository },
+        { provide: USER_PREFERENCES_REPOSITORY, useValue: preferencesRepository },
         { provide: PortfolioService, useValue: portfolio },
         {
           provide: getRepositoryToken(AlertReadOrmEntity),
-          useValue: alertReadRepo,
+          useValue: alertReadRepository,
         },
       ],
     }).compile();
@@ -139,17 +139,17 @@ describe('AlertService', () => {
 
   describe('CASH_IDLE rule', () => {
     it('generates CASH_IDLE warning when envelope cash is above threshold and idle > 30 days', async () => {
-      envRepo.findByUserId.mockResolvedValue([
+      envelopeRepository.findByUserId.mockResolvedValue([
         envelope({ id: 'env-1', code: 'PEA', cash: 150 }),
       ]);
-      txRepo.findByUserId.mockResolvedValue([
+      transactionRepository.findByUserId.mockResolvedValue([
         tx({
           envelopeId: 'env-1',
           type: 'DEPOSIT',
           date: new Date(Date.now() - 40 * 24 * 3600 * 1000),
         }),
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'CASH_IDLE', threshold: 100 }),
       ]);
 
@@ -161,17 +161,17 @@ describe('AlertService', () => {
     });
 
     it('does not generate CASH_IDLE when cash is below threshold', async () => {
-      envRepo.findByUserId.mockResolvedValue([
+      envelopeRepository.findByUserId.mockResolvedValue([
         envelope({ id: 'env-1', cash: 50 }),
       ]);
-      txRepo.findByUserId.mockResolvedValue([
+      transactionRepository.findByUserId.mockResolvedValue([
         tx({
           envelopeId: 'env-1',
           type: 'DEPOSIT',
           date: new Date(Date.now() - 40 * 24 * 3600 * 1000),
         }),
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'CASH_IDLE', threshold: 100 }),
       ]);
 
@@ -182,10 +182,10 @@ describe('AlertService', () => {
 
   describe('PLAFOND_NEAR rule', () => {
     it('generates PLAFOND_NEAR alert when envelope value is near the plafond', async () => {
-      envRepo.findByUserId.mockResolvedValue([
+      envelopeRepository.findByUserId.mockResolvedValue([
         envelope({ id: 'env-1', code: 'PEA', value: 140000, plafond: 150000 }),
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'PLAFOND_NEAR', threshold: 0.8 }),
       ]);
 
@@ -196,10 +196,10 @@ describe('AlertService', () => {
     });
 
     it('generates warn severity when ratio >= 95%', async () => {
-      envRepo.findByUserId.mockResolvedValue([
+      envelopeRepository.findByUserId.mockResolvedValue([
         envelope({ id: 'env-1', code: 'PEA', value: 145000, plafond: 150000 }),
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'PLAFOND_NEAR', threshold: 0.8 }),
       ]);
 
@@ -211,7 +211,7 @@ describe('AlertService', () => {
 
   describe('DIVIDEND_RECENT rule', () => {
     it('generates DIVIDEND_RECENT alert for dividends received recently', async () => {
-      txRepo.findByUserId.mockResolvedValue([
+      transactionRepository.findByUserId.mockResolvedValue([
         tx({
           type: 'DIVIDEND',
           etfIsin: 'ISIN-ESE',
@@ -219,8 +219,8 @@ describe('AlertService', () => {
           date: new Date(Date.now() - 2 * 24 * 3600 * 1000),
         }),
       ]);
-      etfRepo.findAll.mockResolvedValue([etf({ isin: 'ISIN-ESE', ticker: 'ESE' })]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      etfRepository.findAll.mockResolvedValue([etf({ isin: 'ISIN-ESE', ticker: 'ESE' })]);
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'DIVIDEND_RECENT', threshold: 7 }),
       ]);
 
@@ -239,10 +239,10 @@ describe('AlertService', () => {
       openedAt.setFullYear(openedAt.getFullYear() - 5);
       openedAt.setDate(openedAt.getDate() + 10);
 
-      envRepo.findByUserId.mockResolvedValue([
+      envelopeRepository.findByUserId.mockResolvedValue([
         envelope({ code: 'PEA', openedAt }),
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'PEA_AGE_NEAR', threshold: 1 }),
       ]);
 
@@ -255,7 +255,7 @@ describe('AlertService', () => {
 
   describe('USD_CONCENTRATION rule', () => {
     it('generates USD_CONCENTRATION warning when USD holdings ratio is high', async () => {
-      etfRepo.findAll.mockResolvedValue([
+      etfRepository.findAll.mockResolvedValue([
         etf({ isin: 'ISIN-USD', ticker: 'USDF', currency: 'USD' }),
         etf({ isin: 'ISIN-EUR', ticker: 'EURF', currency: 'EUR' }),
       ]);
@@ -263,7 +263,7 @@ describe('AlertService', () => {
         { etfIsin: 'ISIN-USD', qty: 10, avgPrice: 100, currentPrice: 100 },
         { etfIsin: 'ISIN-EUR', qty: 10, avgPrice: 20, currentPrice: 20 },
       ]);
-      ruleRepo.findByUserId.mockResolvedValue([
+      alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'USD_CONCENTRATION', threshold: 0.7 }),
       ]);
 
@@ -278,8 +278,8 @@ describe('AlertService', () => {
 
   describe('DCA_PENDING rule', () => {
     it('generates DCA_PENDING warning when monthly target is set and no BUY exists this month', async () => {
-      prefsRepo.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
-      txRepo.findByUserId.mockResolvedValue([]); // no txs this month
+      preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
+      transactionRepository.findByUserId.mockResolvedValue([]); // no txs this month
 
       const list = await service.listForUser('user-1');
       const alert = list.find((a) => a.type === 'DCA_PENDING');
@@ -289,8 +289,8 @@ describe('AlertService', () => {
     });
 
     it('does not generate DCA_PENDING warning if a BUY exists this month', async () => {
-      prefsRepo.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
-      txRepo.findByUserId.mockResolvedValue([
+      preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
+      transactionRepository.findByUserId.mockResolvedValue([
         tx({ type: 'BUY', date: new Date() }), // buy today
       ]);
 
@@ -300,28 +300,28 @@ describe('AlertService', () => {
   });
 
   describe('Marking read and dismiss', () => {
-    it('markRead calls upsert on alertReadRepo', async () => {
+    it('markRead calls upsert on alertReadRepository', async () => {
       await service.markRead('user-1', 'hash-1');
-      expect(alertReadRepo.upsert).toHaveBeenCalledWith(
+      expect(alertReadRepository.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'user-1', alertHash: 'hash-1' }),
         expect.any(Object)
       );
     });
 
-    it('dismiss calls upsert on alertReadRepo', async () => {
+    it('dismiss calls upsert on alertReadRepository', async () => {
       await service.dismiss('user-1', 'hash-1');
-      expect(alertReadRepo.upsert).toHaveBeenCalledWith(
+      expect(alertReadRepository.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ userId: 'user-1', alertHash: 'hash-1', dismissedAt: expect.any(Date) }),
         expect.any(Object)
       );
     });
 
     it('readAll marks all active alerts as read', async () => {
-      prefsRepo.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
-      txRepo.findByUserId.mockResolvedValue([]); // DCA_PENDING will trigger
+      preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
+      transactionRepository.findByUserId.mockResolvedValue([]); // DCA_PENDING will trigger
 
       await service.readAll('user-1');
-      expect(alertReadRepo.upsert).toHaveBeenCalled();
+      expect(alertReadRepository.upsert).toHaveBeenCalled();
     });
   });
 });

@@ -40,7 +40,7 @@ const RISK_CHOICES: RiskChoice[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WelcomeComponent {
-  private readonly prefs  = inject(PreferencesService);
+  private readonly preferences  = inject(PreferencesService);
   private readonly router = inject(Router);
   private readonly toast  = inject(ToastService);
 
@@ -71,7 +71,7 @@ export class WelcomeComponent {
     if (this.submitting()) return;
     this.submitting.set(true);
     try {
-      await this.prefs.update({
+      await this.preferences.update({
         riskProfile:    this.riskProfile(),
         horizonYears:   Math.max(0, Math.min(100, Math.round(this.horizonYears()))),
         monthlyTarget:  Math.max(0, this.monthlyTarget()),
@@ -90,7 +90,7 @@ export class WelcomeComponent {
     if (this.submitting()) return;
     this.submitting.set(true);
     try {
-      await this.prefs.update({ onboardingDone: true });
+      await this.preferences.update({ onboardingDone: true });
     } catch {
       // Non-blocking: the dashboard zero-state still guides the user.
     } finally {

@@ -8,9 +8,9 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
-import { TxTypeDto } from '@patrimo/contracts';
+import { TransactionTypeDto } from '@patrimo/contracts';
 
-const TX_TYPES: TxTypeDto[] = ['BUY', 'SELL', 'DEPOSIT', 'WITHDRAWAL', 'DIVIDEND', 'INTEREST'];
+const TRANSACTION_TYPES: TransactionTypeDto[] = ['BUY', 'SELL', 'DEPOSIT', 'WITHDRAWAL', 'DIVIDEND', 'INTEREST'];
 
 export class CreateTransactionDtoBody {
   @IsUUID()
@@ -20,8 +20,8 @@ export class CreateTransactionDtoBody {
   @IsString()
   etfIsin?: string | null;
 
-  @IsIn(TX_TYPES)
-  type!: TxTypeDto;
+  @IsIn(TRANSACTION_TYPES)
+  type!: TransactionTypeDto;
 
   /** ISO date YYYY-MM-DD. */
   @IsDateString({ strict: true })

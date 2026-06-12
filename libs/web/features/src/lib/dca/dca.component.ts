@@ -18,10 +18,10 @@ const INVESTABLE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DcaComponent {
-  private readonly etfSvc   = inject(EtfService);
-  private readonly allocSvc = inject(AllocationService);
-  private readonly envSvc   = inject(EnvelopeService);
-  private readonly dcaPlanSvc = inject(DcaPlanService);
+  private readonly etfService   = inject(EtfService);
+  private readonly allocationService = inject(AllocationService);
+  private readonly envelopeService   = inject(EnvelopeService);
+  private readonly dcaPlanService = inject(DcaPlanService);
   private readonly dialog   = inject(MatDialog);
 
   protected readonly amount     = signal(800);
@@ -31,10 +31,10 @@ export class DcaComponent {
 
   protected readonly presets    = [300, 500, 800, 1000, 1500, 2000];
 
-  protected readonly activePlans = this.dcaPlanSvc.all;
+  protected readonly activePlans = this.dcaPlanService.all;
 
   protected readonly envelopes = computed(() =>
-    this.envSvc.all().filter(e => INVESTABLE_GLYPHS.has(e.glyph)),
+    this.envelopeService.all().filter(e => INVESTABLE_GLYPHS.has(e.glyph)),
   );
 
   protected readonly selectedEnvelope = computed(() => {
@@ -52,7 +52,7 @@ export class DcaComponent {
   }
 
   private readonly etfsWithTargets = computed(() =>
-    this.etfSvc.all().filter(e => this.allocSvc.targets().etf[e.ticker] != null),
+    this.etfService.all().filter(e => this.allocationService.targets().etf[e.ticker] != null),
   );
 
   private readonly total = computed(() =>
@@ -64,7 +64,7 @@ export class DcaComponent {
     const total      = this.total();
     const amount     = this.amount();
     const correction = this.correction();
-    const targets    = this.allocSvc.targets().etf;
+    const targets    = this.allocationService.targets().etf;
 
     return etfs.map(e => {
       const target  = targets[e.ticker];
@@ -120,9 +120,9 @@ export class DcaComponent {
     }, 0) / rows.length;
   });
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 
@@ -147,7 +147,7 @@ export class DcaComponent {
     }
 
     try {
-      await this.dcaPlanSvc.create({
+      await this.dcaPlanService.create({
         envelopeId: env.id,
         amount: this.amount(),
         frequency: 'MONTHLY',
@@ -164,7 +164,7 @@ export class DcaComponent {
   protected async deletePlan(id: string): Promise<void> {
     if (!confirm('Supprimer ce plan DCA ?')) return;
     try {
-      await this.dcaPlanSvc.remove(id);
+      await this.dcaPlanService.remove(id);
     } catch (err) {
       console.error(err);
     }

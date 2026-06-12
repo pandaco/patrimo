@@ -33,16 +33,16 @@ export class UserService {
       ? a.initials
       : computeInitials(firstName, lastName);
 
-    const prefs = this.preferences.current();
+    const currentPreferences = this.preferences.current();
 
     return {
       firstName,
       lastName,
       initials,
-      riskProfile:     prefs.riskProfile,
-      horizonYears:    prefs.horizonYears,
-      monthlyTarget:   prefs.monthlyTarget,
-      displayCurrency: prefs.displayCurrency,
+      riskProfile:     currentPreferences.riskProfile,
+      horizonYears:    currentPreferences.horizonYears,
+      monthlyTarget:   currentPreferences.monthlyTarget,
+      displayCurrency: currentPreferences.displayCurrency,
     };
   });
 }

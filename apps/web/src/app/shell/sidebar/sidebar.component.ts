@@ -73,17 +73,17 @@ export class SidebarComponent {
 
   private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly txSvc  = inject(TransactionService);
-  private readonly alertSvc = inject(AlertService);
-  private readonly prefs  = inject(PreferencesService);
+  private readonly transactionService  = inject(TransactionService);
+  private readonly alertService = inject(AlertService);
+  private readonly preferences  = inject(PreferencesService);
 
-  protected readonly uiMode = computed(() => this.prefs.current().uiMode);
+  protected readonly uiMode = computed(() => this.preferences.current().uiMode);
   protected readonly nav    = computed(() => this.uiMode() === 'simple' ? NAV_SIMPLE : NAV);
   protected readonly user = inject(UserService).currentUser;
   protected readonly menuOpen = signal(false);
 
-  private readonly txCount    = computed(() => this.txSvc.all().length);
-  private readonly alertCount = this.alertSvc.unreadCount;
+  private readonly txCount    = computed(() => this.transactionService.all().length);
+  private readonly alertCount = this.alertService.unreadCount;
 
   protected badge(id: string): string | null {
     const value = id === 'tx'      ? this.txCount()
@@ -107,7 +107,7 @@ export class SidebarComponent {
     const next = this.uiMode() === 'simple' ? 'expert' : 'simple';
     this.menuOpen.set(false);
     try {
-      await this.prefs.update({ uiMode: next });
+      await this.preferences.update({ uiMode: next });
     } catch {
       // Preference save failed — nav simply stays as it was.
     }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { Transaction, TransactionRepository, TransactionSeed, TxType } from '@patrimo/api-domain';
+import type { Transaction, TransactionRepository, TransactionSeed, TransactionType } from '@patrimo/api-domain';
 import { Repository } from 'typeorm';
 import { TransactionOrmEntity } from '../orm-entities/transaction.orm-entity';
 
@@ -16,7 +16,7 @@ function toDomain(row: TransactionOrmEntity): Transaction {
     userId: row.userId,
     envelopeId: row.envelopeId,
     etfIsin: row.etfIsin,
-    type: row.type as TxType,
+    type: row.type as TransactionType,
     date: toDate(row.date),
     quantity: row.quantity,
     price: row.price,

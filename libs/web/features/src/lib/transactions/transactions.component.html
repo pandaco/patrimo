@@ -124,18 +124,18 @@
           @for (tx of group.txs; track tx.id) {
             @let env = getEnv(tx.envelope);
             @let etf = getEtf(tx.etf);
-            @let lbl = labels[tx.type];
+            @let typeLabel = labels[tx.type];
             <tr>
               <td style="width:80px">
                 <div class="num small">{{ fmtDate(tx.date) }}</div>
               </td>
               <td style="width:36px">
                 <span class="env-glyph" style="width:24px;height:24px;font-size:11px"
-                  [style.background]="typeSymBg(tx.type)">{{ lbl.sym }}</span>
+                  [style.background]="typeSymBg(tx.type)">{{ typeLabel.sym }}</span>
               </td>
               <td>
                 <div style="font-size:14px">
-                  {{ lbl.label }}
+                  {{ typeLabel.label }}
                   @if (etf) { <span class="serif-italic"> — {{ etf.ticker }}</span> }
                 </div>
                 <div class="muted tiny">
@@ -161,8 +161,8 @@
                 @if (tx.fees > 0) { <span class="num small muted">{{ fmtNum(tx.fees, 2) }} €</span> }
               </td>
               <td class="r" style="width:130px">
-                <span class="num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">
-                  {{ lbl.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
+                <span class="num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
+                  {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
                 </span>
               </td>
               <td style="width:80px" class="r">

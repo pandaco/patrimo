@@ -40,7 +40,7 @@ export class TransactionOrmEntity {
   @JoinColumn({ name: 'etf_isin' })
   etf?: EtfOrmEntity | null;
 
-  // Domain narrows this to the TxType union; persistence keeps it loose so the
+  // Domain narrows this to the TransactionType union; persistence keeps it loose so the
   // CLI tools (migrations, seed) do not need to resolve the api-domain alias
   // through ts-node. Validation happens at the DTO boundary.
   @Column({ type: 'varchar', length: 16 })

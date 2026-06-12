@@ -74,26 +74,26 @@ async function run(): Promise<void> {
 
   try {
     await ds.transaction(async (em) => {
-      const userRepo = em.getRepository(UserOrmEntity);
-      const envRepo  = em.getRepository(EnvelopeOrmEntity);
-      const etfRepo  = em.getRepository(EtfOrmEntity);
-      const txRepo   = em.getRepository(TransactionOrmEntity);
+      const userRepository = em.getRepository(UserOrmEntity);
+      const envelopeRepository  = em.getRepository(EnvelopeOrmEntity);
+      const etfRepository  = em.getRepository(EtfOrmEntity);
+      const transactionRepository   = em.getRepository(TransactionOrmEntity);
 
-      const existing = await userRepo.findOne({ where: { googleId: SEED_USER.googleId } });
+      const existing = await userRepository.findOne({ where: { googleId: SEED_USER.googleId } });
       if (existing) {
         console.log(`Seed user already present (${existing.email}). Skipping.`);
         return;
       }
 
-      const user = await userRepo.save(userRepo.create(SEED_USER));
+      const user = await userRepository.save(userRepository.create(SEED_USER));
       console.log(`Inserted seed user: ${user.email} (${user.id})`);
 
-      await etfRepo.save(SEED_ETFS.map((e) => etfRepo.create(e)));
+      await etfRepository.save(SEED_ETFS.map((e) => etfRepository.create(e)));
       console.log(`Inserted ${SEED_ETFS.length} ETFs`);
 
-      const envelopeRows = await envRepo.save(
+      const envelopeRows = await envelopeRepository.save(
         SEED_ENVELOPES.map((e) =>
-          envRepo.create({
+          envelopeRepository.create({
             ...e,
             openedAt: new Date(e.openedAt),
             userId: user.id,
@@ -107,7 +107,7 @@ async function run(): Promise<void> {
       const txRows = SEED_TRANSACTIONS.map((tx) => {
         const envelopeId = envByCode.get(tx.envelopeCode);
         if (!envelopeId) throw new Error(`Unknown envelope code: ${tx.envelopeCode}`);
-        return txRepo.create({
+        return transactionRepository.create({
           userId: user.id,
           envelopeId,
           etfIsin: tx.etfIsin,
@@ -119,7 +119,7 @@ async function run(): Promise<void> {
           amount: tx.amount,
         });
       });
-      await txRepo.save(txRows);
+      await transactionRepository.save(txRows);
       console.log(`Inserted ${txRows.length} transactions`);
     });
   } finally {

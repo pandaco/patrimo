@@ -28,14 +28,14 @@ const WIZARD_STEPS: WizardStep[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AllocationSettingsComponent {
-  private readonly prefs  = inject(PreferencesService);
-  private readonly etfSvc = inject(EtfService);
-  private readonly envSvc = inject(EnvelopeService);
+  private readonly preferences  = inject(PreferencesService);
+  private readonly etfService = inject(EtfService);
+  private readonly envelopeService = inject(EnvelopeService);
   private readonly router = inject(Router);
 
-  protected readonly loading   = this.prefs.loading;
-  protected readonly catalog   = this.etfSvc.all;
-  protected readonly envelopes = this.envSvc.all;
+  protected readonly loading   = this.preferences.loading;
+  protected readonly catalog   = this.etfService.all;
+  protected readonly envelopes = this.envelopeService.all;
 
   protected stocksPct      = signal(DEFAULT_STRATEGIC.stocks);
   protected bondsStratPct  = signal(DEFAULT_STRATEGIC.bonds);
@@ -80,7 +80,7 @@ export class AllocationSettingsComponent {
 
   constructor() {
     effect(() => {
-      const current = this.prefs.current();
+      const current = this.preferences.current();
       if (!this.hydrated && current.allocationTargets) {
         const t = current.allocationTargets;
         this.stocksPct.set(t.strategic.stocks);
@@ -155,7 +155,7 @@ export class AllocationSettingsComponent {
       envelope:  Object.fromEntries(this.envTargets().filter(r => r.pct > 0).map(r => [r.glyph, r.pct])),
     };
 
-    const c = this.prefs.current();
+    const c = this.preferences.current();
     const payload: UpdateUserPreferencesDto = {
       riskProfile:       c.riskProfile,
       horizonYears:      c.horizonYears,
@@ -166,7 +166,7 @@ export class AllocationSettingsComponent {
 
     this.submitting.set(true);
     try {
-      await this.prefs.update(payload);
+      await this.preferences.update(payload);
       this.success.set(true);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');

@@ -28,8 +28,8 @@
       </div>
       <div class="grid" style="grid-template-columns:1fr">
         @for (alert of filteredAlerts(); track alert.id) {
-          <div class="nba" [class]="sevClass(alert.severity)" [style.opacity]="alert.read ? 0.75 : 1">
-            <div class="sev">{{ sevIcon(alert.severity) }}</div>
+          <div class="nba" [class]="severityClass(alert.severity)" [style.opacity]="alert.read ? 0.75 : 1">
+            <div class="sev">{{ severityIcon(alert.severity) }}</div>
             <div class="body">
               <h4>{{ alert.title }}</h4>
               <p>{{ alert.body }}</p>

@@ -73,7 +73,7 @@
               @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
             </div>
             <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
-              {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fx.symbol() }}</small>
+              {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fxService.symbol() }}</small>
             </div>
           </div>
           <div class="sub" style="flex-wrap:wrap">
@@ -410,8 +410,8 @@
   </div>
   <div class="grid" style="grid-template-columns:1fr">
     @for (alert of topAlerts(); track alert.id) {
-      <div class="nba" [class]="sevClass(alert.severity)">
-        <div class="sev">{{ sevIcon(alert.severity) }}</div>
+      <div class="nba" [class]="severityClass(alert.severity)">
+        <div class="sev">{{ severityIcon(alert.severity) }}</div>
         <div class="body">
           <h4>{{ alert.title }}</h4>
           <p>{{ alert.body }}</p>
@@ -454,13 +454,13 @@
         @for (tx of recentTx(); track tx.id) {
           @let env = getEnv(tx.envelope);
           @let etf = getEtf(tx.etf);
-          @let lbl = txLabels[tx.type];
+          @let typeLabel = txLabels[tx.type];
           <tr>
             <td class="muted small">{{ fmtDate(tx.date) }}</td>
             <td>
               <span class="pill soft">
-                <span class="serif-italic" style="font-size:13px">{{ lbl.sym }}</span>
-                {{ lbl.label }}
+                <span class="serif-italic" style="font-size:13px">{{ typeLabel.sym }}</span>
+                {{ typeLabel.label }}
               </span>
             </td>
             <td>
@@ -474,8 +474,8 @@
             <td class="serif-italic">{{ etf?.ticker || '—' }}</td>
             <td class="r num">{{ tx.etf ? fmtNum(tx.qty, 0) : '—' }}</td>
             <td class="r num">{{ tx.price ? fmtEur(tx.price, 2) : '—' }}</td>
-            <td class="r num" [class.pos]="lbl.dir === '+'" [class.neg]="lbl.dir === '−'">
-              {{ lbl.dir }}{{ fmtEur(tx.amount, 2) }}
+            <td class="r num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
+              {{ typeLabel.dir }}{{ fmtEur(tx.amount, 2) }}
             </td>
           </tr>
         }

@@ -43,12 +43,12 @@ export interface Etf {
   perfYtd: number;
 }
 
-export type TxType = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND' | 'INTEREST';
+export type TransactionType = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND' | 'INTEREST';
 
 export interface Transaction {
   id: string;
   date: string;
-  type: TxType;
+  type: TransactionType;
   envelope: string;
   etf: string | null;
   qty: number;
@@ -61,7 +61,7 @@ export interface Transaction {
   transferId: string | null;
 }
 
-export interface TxLabel {
+export interface TransactionLabel {
   label: string;
   sym: string;
   dir: '+' | '−';

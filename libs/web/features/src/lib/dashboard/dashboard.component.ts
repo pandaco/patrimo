@@ -48,16 +48,16 @@ export class DashboardComponent {
   private readonly etfs       = inject(EtfService);
   private readonly txService  = inject(TransactionService);
   private readonly alerts     = inject(AlertService);
-  private readonly perfSvc    = inject(PerformanceService);
-  private readonly allocSvc   = inject(AllocationService);
+  private readonly performanceService    = inject(PerformanceService);
+  private readonly allocationService   = inject(AllocationService);
   private readonly auth       = inject(AuthService);
-  private readonly prefs      = inject(PreferencesService);
+  private readonly preferences      = inject(PreferencesService);
   private readonly router     = inject(Router);
-  protected readonly fx       = inject(FxService);
+  protected readonly fxService       = inject(FxService);
 
   protected readonly firstName      = computed(() => this.auth.user()?.firstName ?? '');
-  protected readonly fxRate         = this.fx.rate;
-  protected readonly displayCurrency = this.fx.displayCurrency;
+  protected readonly fxRate         = this.fxService.rate;
+  protected readonly displayCurrency = this.fxService.displayCurrency;
 
   // Ticks every minute so the date and market state refresh without a reload.
   private readonly nowTick = signal(Date.now());
@@ -78,7 +78,7 @@ export class DashboardComponent {
     // dashboard. Only fires once the real preferences are loaded so the
     // pessimistic default (onboardingDone: true) never causes a flash.
     effect(() => {
-      if (!this.prefs.loading() && !this.prefs.current().onboardingDone && this.isEmpty()) {
+      if (!this.preferences.loading() && !this.preferences.current().onboardingDone && this.isEmpty()) {
         this.router.navigateByUrl('/welcome');
       }
     });
@@ -101,15 +101,15 @@ export class DashboardComponent {
 
   // "Configuration X/5" checklist — derived live, disappears at 5/5.
   protected readonly configSteps = computed(() => [
-    { label: 'Définir ton profil investisseur', done: this.prefs.current().onboardingDone,           route: '/welcome' },
+    { label: 'Définir ton profil investisseur', done: this.preferences.current().onboardingDone,           route: '/welcome' },
     { label: 'Créer ta première enveloppe',     done: this.envelopes.all().length > 0,               route: '/wealth' },
     { label: 'Saisir ta première opération',    done: this.txService.all().length > 0,               route: '/transactions' },
-    { label: 'Choisir ton allocation cible',    done: this.prefs.current().allocationTargets !== null, route: '/settings/allocation' },
-    { label: 'Fixer ton épargne mensuelle',     done: this.prefs.current().monthlyTarget > 0,        route: '/settings/preferences' },
+    { label: 'Choisir ton allocation cible',    done: this.preferences.current().allocationTargets !== null, route: '/settings/allocation' },
+    { label: 'Fixer ton épargne mensuelle',     done: this.preferences.current().monthlyTarget > 0,        route: '/settings/preferences' },
   ]);
   protected readonly configDone = computed(() => this.configSteps().filter((s) => s.done).length);
   protected readonly showChecklist = computed(() =>
-    !this.isEmpty() && !this.prefs.loading() && this.configDone() < this.configSteps().length
+    !this.isEmpty() && !this.preferences.loading() && this.configDone() < this.configSteps().length
   );
 
   protected readonly portfolioValue = computed(() =>
@@ -139,11 +139,11 @@ export class DashboardComponent {
   protected readonly recentTx     = computed(() => this.txService.all().slice(0, 5));
   protected readonly txLabels     = this.txService.labels;
 
-  protected readonly perfPortfolio  = computed(() => this.perfSvc.series().portfolio);
-  protected readonly perfBenchmark  = computed(() => this.perfSvc.series().benchmark);
+  protected readonly perfPortfolio  = computed(() => this.performanceService.series().portfolio);
+  protected readonly perfBenchmark  = computed(() => this.performanceService.series().benchmark);
   protected readonly dashPeriods    = DASH_PERIODS;
-  protected readonly dashPeriod     = this.perfSvc.period;
-  protected readonly annualized     = computed(() => this.perfSvc.raw().annualized);
+  protected readonly dashPeriod     = this.performanceService.period;
+  protected readonly annualized     = computed(() => this.performanceService.raw().annualized);
 
   protected readonly portfolioPct = computed(() => {
     const pts = this.perfPortfolio();
@@ -267,7 +267,7 @@ export class DashboardComponent {
   protected readonly driftMax = computed(() => {
     const total = this.totalBourse() + 0;
     if (total <= 0) return null;
-    const t = this.allocSvc.targets().strategic;
+    const t = this.allocationService.targets().strategic;
     if (!t || (t.stocks + t.bonds) === 0) return null;
     // Real shares: stocks = boursier (PEA/CTO/AV/PER), bonds ≈ obligations sleeve.
     // Without per-ETF asset-class metadata we approximate "stocks" as all bourse
@@ -279,7 +279,7 @@ export class DashboardComponent {
 
   protected readonly abs       = Math.abs;
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fx.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;
@@ -293,16 +293,16 @@ export class DashboardComponent {
     return isin ? this.etfs.all().find(e => e.isin === isin) : null;
   }
 
-  protected sevClass(sev: string): string {
+  protected severityClass(sev: string): string {
     return sev === 'warn' ? 'warn' : sev === 'gain' ? 'gain' : 'info';
   }
 
-  protected sevIcon(sev: string): string {
+  protected severityIcon(sev: string): string {
     return sev === 'warn' ? '!' : sev === 'gain' ? '✓' : 'i';
   }
 
   protected setPeriod(id: PerformancePeriod): void {
-    this.perfSvc.setPeriod(id);
+    this.performanceService.setPeriod(id);
   }
 
   protected async dismissAlert(id: string): Promise<void> {

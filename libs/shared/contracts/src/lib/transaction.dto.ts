@@ -1,10 +1,10 @@
-export type TxTypeDto = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND' | 'INTEREST';
+export type TransactionTypeDto = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND' | 'INTEREST';
 
 export interface TransactionDto {
   id: string;
   envelopeId: string;
   etfIsin: string | null;
-  type: TxTypeDto;
+  type: TransactionTypeDto;
   /** ISO date (YYYY-MM-DD). */
   date: string;
   quantity: number;
@@ -28,7 +28,7 @@ export interface CreateTransferDto {
 export interface CreateTransactionDto {
   envelopeId: string;
   etfIsin?: string | null;
-  type: TxTypeDto;
+  type: TransactionTypeDto;
   /** ISO date (YYYY-MM-DD). */
   date: string;
   quantity: number;

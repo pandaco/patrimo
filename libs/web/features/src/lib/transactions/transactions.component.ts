@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { API_BASE_URL, EnvelopeService, EtfService, FxService, ToastService, Transaction, TransactionService, TxType } from '@patrimo/data-access';
+import { API_BASE_URL, EnvelopeService, EtfService, FxService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
 import { EnvGlyphComponent, fmtDate, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
-type FilterType = TxType | 'ALL';
+type FilterType = TransactionType | 'ALL';
 
 const FILTER_OPTIONS: { id: FilterType; label: string }[] = [
   { id: 'ALL',        label: 'Toutes' },
@@ -32,9 +32,9 @@ export interface TxGroup {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionsComponent {
-  protected readonly txSvc  = inject(TransactionService);
-  private readonly envSvc  = inject(EnvelopeService);
-  private readonly etfSvc  = inject(EtfService);
+  protected readonly transactionService  = inject(TransactionService);
+  private readonly envelopeService  = inject(EnvelopeService);
+  private readonly etfService  = inject(EtfService);
   private readonly dialog  = inject(MatDialog);
   private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
@@ -42,21 +42,21 @@ export class TransactionsComponent {
   protected readonly filters   = FILTER_OPTIONS;
   protected readonly activeFilter = signal<FilterType>('ALL');
 
-  protected readonly loading   = this.txSvc.loading;
-  protected readonly envelopes = this.envSvc.all;
-  protected readonly etfs      = this.etfSvc.all;
-  protected readonly labels    = this.txSvc.labels;
+  protected readonly loading   = this.transactionService.loading;
+  protected readonly envelopes = this.envelopeService.all;
+  protected readonly etfs      = this.etfService.all;
+  protected readonly labels    = this.transactionService.labels;
 
-  protected readonly totalCount = computed(() => this.txSvc.all().length);
+  protected readonly totalCount = computed(() => this.transactionService.all().length);
   protected readonly txCount    = computed(() => {
     const f = this.activeFilter();
-    const all = this.txSvc.all();
+    const all = this.transactionService.all();
     return f === 'ALL' ? all.length : all.filter(t => t.type === f).length;
   });
 
   protected readonly groups = computed<TxGroup[]>(() => {
     const f    = this.activeFilter();
-    const all  = this.txSvc.all();
+    const all  = this.transactionService.all();
     const lbls = this.labels;
     const filtered = f === 'ALL' ? all : all.filter(t => t.type === f);
 
@@ -111,7 +111,7 @@ export class TransactionsComponent {
 
   protected readonly cashDetails = computed(() => {
     const envMap = new Map<string, { dep: number; wit: number; buy: number; sel: number; div: number }>();
-    for (const tx of this.txSvc.all()) {
+    for (const tx of this.transactionService.all()) {
       const e = envMap.get(tx.envelope) ?? { dep: 0, wit: 0, buy: 0, sel: 0, div: 0 };
       if (tx.type === 'DEPOSIT')    e.dep += tx.amount;
       if (tx.type === 'WITHDRAWAL') e.wit += tx.amount;
@@ -131,9 +131,9 @@ export class TransactionsComponent {
     })).sort((a, b) => Math.abs(b.cashBalance) - Math.abs(a.cashBalance));
   });
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtNum  = fmtNum;
   protected readonly fmtDate = fmtDate;
   protected readonly abs     = Math.abs;
@@ -146,7 +146,7 @@ export class TransactionsComponent {
     return isin ? this.etfs().find(e => e.isin === isin) : null;
   }
 
-  protected typeSymBg(type: TxType): string {
+  protected typeSymBg(type: TransactionType): string {
     return ['BUY','SELL'].includes(type) ? 'var(--ink)'
       : this.labels[type].dir === '+' ? 'var(--gain)' : 'var(--loss)';
   }
@@ -170,12 +170,12 @@ export class TransactionsComponent {
 
   protected async deleteTx(tx: Transaction): Promise<void> {
     const env  = this.getEnv(tx.envelope);
-    const lbl  = this.labels[tx.type].label;
+    const typeLabel  = this.labels[tx.type].label;
     const date = fmtDate(tx.date);
-    const target = env ? `${lbl} sur ${env.code} du ${date}` : `${lbl} du ${date}`;
+    const target = env ? `${typeLabel} sur ${env.code} du ${date}` : `${typeLabel} du ${date}`;
     if (!confirm(`Supprimer la transaction « ${target} » ?`)) return;
     try {
-      await this.txSvc.remove(tx.id);
+      await this.transactionService.remove(tx.id);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Suppression impossible');
     }
@@ -198,7 +198,7 @@ export class TransactionsComponent {
 
     this.importing.set(true);
     try {
-      const { count, skipped } = await this.txSvc.importCsv(file);
+      const { count, skipped } = await this.transactionService.importCsv(file);
       const skipNote = skipped > 0 ? ` (${skipped} ligne${skipped > 1 ? 's' : ''} ignorée${skipped > 1 ? 's' : ''})` : '';
       this.toasts.success(`${count} transactions importées${skipNote}.`);
     } catch (err) {

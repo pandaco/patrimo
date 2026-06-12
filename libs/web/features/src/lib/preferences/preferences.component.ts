@@ -22,12 +22,12 @@ const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'] as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreferencesComponent {
-  private readonly prefs  = inject(PreferencesService);
+  private readonly preferences  = inject(PreferencesService);
   private readonly router = inject(Router);
 
   protected readonly riskProfiles = RISK_PROFILES;
   protected readonly currencies   = CURRENCIES;
-  protected readonly loading      = this.prefs.loading;
+  protected readonly loading      = this.preferences.loading;
   protected readonly etfCatalog   = inject(EtfService).all;
 
   protected riskProfile     = signal('');
@@ -43,7 +43,7 @@ export class PreferencesComponent {
 
   constructor() {
     effect(() => {
-      const c = this.prefs.current();
+      const c = this.preferences.current();
       if (!this.riskProfile())     this.riskProfile.set(c.riskProfile);
       if (this.horizonYears() === 25 && c.horizonYears !== 25) this.horizonYears.set(c.horizonYears);
       if (!this.monthlyTarget() && c.monthlyTarget !== 0)      this.monthlyTarget.set(c.monthlyTarget);
@@ -65,12 +65,12 @@ export class PreferencesComponent {
       displayCurrency:   this.displayCurrency(),
       uiMode:            this.uiMode() || 'simple',
       benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
-      allocationTargets: this.prefs.current().allocationTargets,
+      allocationTargets: this.preferences.current().allocationTargets,
     };
 
     this.submitting.set(true);
     try {
-      await this.prefs.update(payload);
+      await this.preferences.update(payload);
       this.success.set(true);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');

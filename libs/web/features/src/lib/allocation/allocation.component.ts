@@ -30,8 +30,8 @@ const CURRENCY_COLORS: Record<string, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AllocationComponent {
-  private readonly allocSvc = inject(AllocationService);
-  private readonly etfSvc   = inject(EtfService);
+  private readonly allocationService = inject(AllocationService);
+  private readonly etfService   = inject(EtfService);
   private readonly http     = inject(HttpClient);
   private readonly baseUrl  = inject(API_BASE_URL);
 
@@ -40,17 +40,17 @@ export class AllocationComponent {
   protected readonly strategyVersions   = STRATEGY_VERSIONS;
   protected readonly selectedStrategyV  = signal<StrategyVersion | null>(null);
 
-  protected readonly targets = this.allocSvc.targets;
+  protected readonly targets = this.allocationService.targets;
 
   protected readonly total = computed(() =>
-    this.etfSvc.all().reduce((a, e) => a + etfValue(e), 0),
+    this.etfService.all().reduce((a, e) => a + etfValue(e), 0),
   );
 
   protected readonly realPct = computed(() => {
     const total = this.total();
     const m: Record<string, number> = {};
     if (!total) return m;
-    for (const e of this.etfSvc.all()) m[e.ticker] = (etfValue(e) / total) * 100;
+    for (const e of this.etfService.all()) m[e.ticker] = (etfValue(e) / total) * 100;
     return m;
   });
 
@@ -58,7 +58,7 @@ export class AllocationComponent {
     const total = this.total();
     const acc: Record<AllocBucket, number> = { Core: 0, Satellite: 0, Obligations: 0 };
     if (!total) return acc;
-    for (const e of this.etfSvc.all()) acc[e.alloc] += etfValue(e);
+    for (const e of this.etfService.all()) acc[e.alloc] += etfValue(e);
     return {
       Core:        (acc.Core        / total) * 100,
       Satellite:   (acc.Satellite   / total) * 100,
@@ -75,7 +75,7 @@ export class AllocationComponent {
     const total = this.total();
     if (!total) return [];
     const acc = new Map<string, number>();
-    for (const e of this.etfSvc.all()) {
+    for (const e of this.etfService.all()) {
       acc.set(e.currency, (acc.get(e.currency) ?? 0) + etfValue(e));
     }
     return Array.from(acc.entries())
@@ -93,7 +93,7 @@ export class AllocationComponent {
   );
 
   protected readonly etfsWithTargets = computed(() =>
-    this.etfSvc.all().filter(e => this.targets().etf[e.ticker] != null),
+    this.etfService.all().filter(e => this.targets().etf[e.ticker] != null),
   );
 
   protected readonly strategicDonut = computed(() => [
@@ -107,9 +107,9 @@ export class AllocationComponent {
     { value: this.targets().tactic.bonds,     color: 'var(--ink-3)', label: 'Obligations', unit: '%' },
   ]);
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
   protected readonly fmtPct = fmtPct;
   protected readonly abs    = Math.abs;

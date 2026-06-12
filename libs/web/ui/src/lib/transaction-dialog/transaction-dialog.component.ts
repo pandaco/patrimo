@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CreateTransactionDto, TxTypeDto } from '@patrimo/contracts';
+import { CreateTransactionDto, TransactionTypeDto } from '@patrimo/contracts';
 import {
   Envelope,
   EnvelopeService,
   EtfService,
   Transaction,
   TransactionService,
-  TxType,
+  TransactionType,
   etfValue,
 } from '@patrimo/data-access';
 import { fmtEur, fmtNum, fmtPctRaw } from '../format';
@@ -17,13 +17,13 @@ export interface TransactionDialogData {
   transaction?: Transaction;
   presetEnvelopeId?: string;
   presetEtfIsin?: string;
-  presetType?: TxType;
+  presetType?: TransactionType;
 }
 
-type DialogTxType = TxType | 'TRANSFER';
-type TxTypeEntry = { id: DialogTxType; label: string; sym: string };
+type DialogTransactionType = TransactionType | 'TRANSFER';
+type TransactionTypeEntry = { id: DialogTransactionType; label: string; sym: string };
 
-const TX_TYPES: TxTypeEntry[] = [
+const TRANSACTION_TYPES: TransactionTypeEntry[] = [
   { id: 'BUY',        label: 'Achat',     sym: '+' },
   { id: 'SELL',       label: 'Vente',     sym: '−' },
   { id: 'DEPOSIT',    label: 'Dépôt',     sym: '↘' },
@@ -52,11 +52,11 @@ export class TransactionDialogComponent {
 
   // Transfers are created as an atomic pair — editing a single leg would
   // unbalance the counterpart envelope, so the type is hidden in edit mode.
-  protected readonly types     = this.data?.transaction ? TX_TYPES.filter(t => t.id !== 'TRANSFER') : TX_TYPES;
+  protected readonly types     = this.data?.transaction ? TRANSACTION_TYPES.filter(t => t.id !== 'TRANSFER') : TRANSACTION_TYPES;
   protected readonly envelopes = this.envService.all;
   protected readonly etfs      = this.etfService.all;
 
-  protected type       = signal<DialogTxType>(this.data?.transaction?.type ?? this.data?.presetType ?? 'BUY');
+  protected type       = signal<DialogTransactionType>(this.data?.transaction?.type ?? this.data?.presetType ?? 'BUY');
   protected targetEnvelopeId = signal('');
   protected envelopeId = signal(this.data?.transaction?.envelope ?? this.data?.presetEnvelopeId ?? '');
   protected etfIsin    = signal(this.data?.transaction?.etf ?? this.data?.presetEtfIsin ?? '');
@@ -192,7 +192,7 @@ export class TransactionDialogComponent {
     const payload: CreateTransactionDto = {
       envelopeId: env.id,
       etfIsin: etf?.isin ?? null,
-      type: this.type() as TxTypeDto, // TRANSFER handled above — only real TxTypes reach here
+      type: this.type() as TransactionTypeDto, // TRANSFER handled above — only real transaction types reach here
       date: this.date(),
       quantity: showQtyPrice ? this.qty() : 1,
       price: showQtyPrice ? this.price() : null,

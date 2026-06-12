@@ -36,25 +36,25 @@ function fmtEur(n: number): string {
 @Injectable()
 export class AlertService {
   constructor(
-    @Inject(ENVELOPE_REPOSITORY)           private readonly envRepo:   EnvelopeRepository,
-    @Inject(TRANSACTION_REPOSITORY)        private readonly txRepo:    TransactionRepository,
-    @Inject(ETF_REPOSITORY)                private readonly etfRepo:   EtfRepository,
-    @Inject(ALERT_RULE_REPOSITORY)         private readonly ruleRepo:  AlertRuleRepository,
-    @Inject(USER_PREFERENCES_REPOSITORY)   private readonly prefsRepo: UserPreferencesRepository,
+    @Inject(ENVELOPE_REPOSITORY)           private readonly envelopeRepository:   EnvelopeRepository,
+    @Inject(TRANSACTION_REPOSITORY)        private readonly transactionRepository:    TransactionRepository,
+    @Inject(ETF_REPOSITORY)                private readonly etfRepository:   EtfRepository,
+    @Inject(ALERT_RULE_REPOSITORY)         private readonly alertRuleRepository:  AlertRuleRepository,
+    @Inject(USER_PREFERENCES_REPOSITORY)   private readonly preferencesRepository: UserPreferencesRepository,
     private readonly portfolio: PortfolioService,
     @InjectRepository(AlertReadOrmEntity)
-    private readonly alertReadRepo: Repository<AlertReadOrmEntity>,
+    private readonly alertReadRepository: Repository<AlertReadOrmEntity>,
   ) {}
 
   async listForUser(userId: string): Promise<AlertDto[]> {
-    const [envelopes, txs, etfs, positions, readRows, rules, prefs] = await Promise.all([
-      this.envRepo.findByUserId(userId),
-      this.txRepo.findByUserId(userId),
-      this.etfRepo.findAll(),
+    const [envelopes, txs, etfs, positions, readRows, rules, userPreferences] = await Promise.all([
+      this.envelopeRepository.findByUserId(userId),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
       this.portfolio.listForUser(userId),
-      this.alertReadRepo.findBy({ userId }),
-      this.ruleRepo.findByUserId(userId),
-      this.prefsRepo.findByUserId(userId),
+      this.alertReadRepository.findBy({ userId }),
+      this.alertRuleRepository.findByUserId(userId),
+      this.preferencesRepository.findByUserId(userId),
     ]);
 
     const ruleMap = new Map(rules.filter(r => r.enabled).map(r => [r.type, r.threshold]));
@@ -177,7 +177,7 @@ export class AlertService {
     }
 
     // 6. DCA_PENDING: monthly target set but no BUY this calendar month
-    const monthlyTarget = prefs?.monthlyTarget ?? 0;
+    const monthlyTarget = userPreferences?.monthlyTarget ?? 0;
     if (monthlyTarget > 0) {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const hasBuyThisMonth = txs.some(t => t.type === 'BUY' && t.date >= monthStart);
@@ -202,14 +202,14 @@ export class AlertService {
   }
 
   async markRead(userId: string, alertHash: string): Promise<void> {
-    await this.alertReadRepo.upsert(
+    await this.alertReadRepository.upsert(
       { userId, alertHash, readAt: new Date() },
       { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
     );
   }
 
   async dismiss(userId: string, alertHash: string): Promise<void> {
-    await this.alertReadRepo.upsert(
+    await this.alertReadRepository.upsert(
       { userId, alertHash, readAt: new Date(), dismissedAt: new Date() },
       { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
     );
@@ -219,7 +219,7 @@ export class AlertService {
     const alerts = await this.listForUser(userId);
     if (alerts.length === 0) return;
     const now = new Date();
-    await this.alertReadRepo.upsert(
+    await this.alertReadRepository.upsert(
       alerts.map(a => ({ userId, alertHash: a.id, readAt: now })),
       { conflictPaths: ['userId', 'alertHash'], skipUpdateIfNoValuesChanged: false },
     );

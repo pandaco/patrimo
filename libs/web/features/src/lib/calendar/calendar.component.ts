@@ -42,11 +42,11 @@ function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarComponent {
-  private readonly txSvc  = inject(TransactionService);
-  private readonly envSvc = inject(EnvelopeService);
-  private readonly etfSvc = inject(EtfService);
-  private readonly divSvc = inject(DividendService);
-  private readonly dcaPlanSvc = inject(DcaPlanService);
+  private readonly transactionService  = inject(TransactionService);
+  private readonly envelopeService = inject(EnvelopeService);
+  private readonly etfService = inject(EtfService);
+  private readonly dividendService = inject(DividendService);
+  private readonly dcaPlanService = inject(DcaPlanService);
 
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 
@@ -69,13 +69,13 @@ export class CalendarComponent {
 
   private readonly etfByIsin = computed(() => {
     const map = new Map<string, string>();
-    for (const e of this.etfSvc.all()) map.set(e.isin, e.ticker);
+    for (const e of this.etfService.all()) map.set(e.isin, e.ticker);
     return map;
   });
 
   private readonly envById = computed(() => {
     const map = new Map<string, { code: string; openedAt: string }>();
-    for (const e of this.envSvc.all()) map.set(e.id, { code: e.code, openedAt: e.openedAt });
+    for (const e of this.envelopeService.all()) map.set(e.id, { code: e.code, openedAt: e.openedAt });
     return map;
   });
 
@@ -86,7 +86,7 @@ export class CalendarComponent {
     const tickers = this.etfByIsin();
     const envs    = this.envById();
 
-    const past = this.txSvc.all()
+    const past = this.transactionService.all()
       .filter(tx => tx.type === 'DIVIDEND' && tx.etf)
       .map(tx => {
         const ticker = (tx.etf && tickers.get(tx.etf)) || (tx.etf ?? '');
@@ -101,7 +101,7 @@ export class CalendarComponent {
         };
       });
 
-    const upcoming = this.divSvc.upcoming().map((d: DividendDto) => ({
+    const upcoming = this.dividendService.upcoming().map((d: DividendDto) => ({
       date: d.date,
       type: 'DIV' as const,
       label: `Dividende ${d.ticker} · ${this.fmtEur(d.amount, 2)} (est.)`,
@@ -126,7 +126,7 @@ export class CalendarComponent {
     const hi     = `${last.y}-${String(last.m).padStart(2, '0')}-31`;
 
     const events: CalEvent[] = [];
-    for (const env of this.envSvc.all()) {
+    for (const env of this.envelopeService.all()) {
       if (env.code !== 'PEA' && env.code !== 'PEA-PME') continue;
       const opened = new Date(env.openedAt);
       const anniversary = new Date(opened);
@@ -149,7 +149,7 @@ export class CalendarComponent {
   private readonly allEvents = computed<CalEvent[]>(() => {
     const dcaEvents: CalEvent[] = [];
     const envs = this.envById();
-    const plans = this.dcaPlanSvc.all().filter((p: DcaPlanDto) => p.active);
+    const plans = this.dcaPlanService.all().filter((p: DcaPlanDto) => p.active);
     const window = this.windowMonths();
     const first  = window[0];
     const last   = window[window.length - 1];
@@ -217,7 +217,7 @@ export class CalendarComponent {
   /** DIVIDEND + INTEREST grouped by calendar year, newest first. */
   protected readonly paymentYears = computed(() => {
     const byYear = new Map<number, { dividends: number; interest: number; count: number }>();
-    for (const t of this.txSvc.all()) {
+    for (const t of this.transactionService.all()) {
       if (t.type !== 'DIVIDEND' && t.type !== 'INTEREST') continue;
       const year = Number(t.date.slice(0, 4));
       const acc  = byYear.get(year) ?? { dividends: 0, interest: 0, count: 0 };
@@ -235,7 +235,7 @@ export class CalendarComponent {
   protected readonly paymentsBySource = computed(() => {
     const year = String(new Date().getFullYear());
     const bySource = new Map<string, number>();
-    for (const t of this.txSvc.all()) {
+    for (const t of this.transactionService.all()) {
       if (t.type !== 'DIVIDEND' && t.type !== 'INTEREST') continue;
       if (!t.date.startsWith(year)) continue;
       const source = t.etf
@@ -252,15 +252,15 @@ export class CalendarComponent {
   protected readonly incomeRunRate = computed(() => {
     const cutoff = new Date();
     cutoff.setFullYear(cutoff.getFullYear() - 1);
-    return this.txSvc.all()
+    return this.transactionService.all()
       .filter(t => (t.type === 'DIVIDEND' || t.type === 'INTEREST') && new Date(t.date) >= cutoff)
       .reduce((a, t) => a + t.amount, 0);
   });
 
   protected readonly currentYear = new Date().getFullYear();
 
-  private readonly fxSvc = inject(FxService);
+  private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxSvc.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly eventColor = eventColor;
 }

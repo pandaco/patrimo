@@ -5,14 +5,14 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 import { EtfService } from './etf.service';
-import { TX_LABELS } from './mock-data';
-import { Transaction, TxLabel, TxType } from './models';
+import { TRANSACTION_LABELS } from './mock-data';
+import { Transaction, TransactionLabel, TransactionType } from './models';
 
 function fromDto(d: TransactionDto): Transaction {
   return {
     id: d.id,
     date: d.date,
-    type: d.type as TxType,
+    type: d.type as TransactionType,
     envelope: d.envelopeId,
     etf: d.etfIsin,
     qty: d.quantity,
@@ -39,7 +39,7 @@ export class TransactionService {
   readonly all     = computed(() => this.resource.value().map(fromDto));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
-  readonly labels: Record<TxType, TxLabel> = TX_LABELS;
+  readonly labels: Record<TransactionType, TransactionLabel> = TRANSACTION_LABELS;
 
   reload(): void { this.resource.reload(); }
 

@@ -17,11 +17,11 @@ export class DcaExecutorCron {
 
   constructor(
     @Inject(DCA_PLAN_REPOSITORY)
-    private readonly dcaRepo: DcaPlanRepository,
+    private readonly dcaPlanRepository: DcaPlanRepository,
     @Inject(TRANSACTION_REPOSITORY)
-    private readonly txRepo: TransactionRepository,
+    private readonly transactionRepository: TransactionRepository,
     @Inject(ETF_REPOSITORY)
-    private readonly etfRepo: EtfRepository,
+    private readonly etfRepository: EtfRepository,
     private readonly priceService: PriceService,
   ) {}
 
@@ -29,7 +29,7 @@ export class DcaExecutorCron {
   async executePlans() {
     this.logger.log('Starting DCA execution check...');
     const now = new Date();
-    const duePlans = await this.dcaRepo.findActiveDueForExecution(now);
+    const duePlans = await this.dcaPlanRepository.findActiveDueForExecution(now);
 
     if (duePlans.length === 0) {
       this.logger.log('No DCA plans due for execution today.');
@@ -52,7 +52,7 @@ export class DcaExecutorCron {
     for (const [isin, amountEur] of Object.entries(plan.allocations)) {
       if (typeof amountEur !== 'number' || amountEur <= 0) continue;
 
-      const etf = await this.etfRepo.findByIsin(isin);
+      const etf = await this.etfRepository.findByIsin(isin);
       if (!etf) {
         this.logger.warn(`DCA Execution: ETF ${isin} not found for plan ${plan.id}`);
         continue;
@@ -72,7 +72,7 @@ export class DcaExecutorCron {
 
       const txAmount = qty * quote.price;
 
-      await this.txRepo.create({
+      await this.transactionRepository.create({
         userId: plan.userId,
         envelopeId: plan.envelopeId,
         etfIsin: etf.isin,
@@ -95,7 +95,7 @@ export class DcaExecutorCron {
     // Let's assume DCA implies an automatic deposit for now, or just buys the ETFs.
     // We will create a DEPOSIT transaction to fund this DCA execution.
     if (totalInvested > 0) {
-      await this.txRepo.create({
+      await this.transactionRepository.create({
         userId: plan.userId,
         envelopeId: plan.envelopeId,
         etfIsin: null,
@@ -111,6 +111,6 @@ export class DcaExecutorCron {
     }
 
     // Update the next execution date
-    await this.dcaRepo.update(plan.id, { dayOfMonth: plan.dayOfMonth }); // Trigger the update hook for nextExecution
+    await this.dcaPlanRepository.update(plan.id, { dayOfMonth: plan.dayOfMonth }); // Trigger the update hook for nextExecution
   }
 }
