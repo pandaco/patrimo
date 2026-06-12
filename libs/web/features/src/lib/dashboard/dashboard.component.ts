@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { RouterLink } from '@angular/router';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, EnvGlyphComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtEur, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
@@ -39,7 +39,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, DonutComponent, EnvGlyphComponent, PerfChartComponent],
+  imports: [RouterLink, DeltaComponent, DonutComponent, EnvGlyphComponent, PerfChartComponent, TermComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

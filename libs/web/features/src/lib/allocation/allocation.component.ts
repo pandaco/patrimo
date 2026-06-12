@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AllocationService, API_BASE_URL, EtfService, etfValue } from '@patrimo/data-access';
 import { RebalancePlanDto } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, fmtEur, fmtNum, fmtPct } from '@patrimo/ui';
+import { DeltaComponent, DonutComponent, TermComponent, fmtEur, fmtNum, fmtPct } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
 
@@ -25,7 +25,7 @@ const CURRENCY_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-allocation',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, DonutComponent],
+  imports: [RouterLink, DeltaComponent, DonutComponent, TermComponent],
   templateUrl: './allocation.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
