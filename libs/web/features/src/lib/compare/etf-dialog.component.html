@@ -14,6 +14,40 @@
 
   <div class="modal-body">
 
+    <!-- YAHOO SEARCH — fills the form from a picked candidate -->
+    <div class="field">
+      <label for="etf-search">Recherche rapide — ISIN, ticker ou nom</label>
+      <div style="display:flex;gap:8px">
+        <input id="etf-search" type="text" placeholder="IE00B5BMR087, SXR8 ou « S&P 500 »"
+               style="flex:1"
+               [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+               (keydown.enter)="search()" />
+        <button class="btn sm" (click)="search()" [disabled]="searching() || searchQuery().trim().length < 2">
+          {{ searching() ? 'Recherche…' : 'Chercher' }}
+        </button>
+      </div>
+      @if (searchResults().length > 0) {
+        <ul style="list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--rule-soft);border-radius:6px;overflow:hidden">
+          @for (result of searchResults(); track result.symbol) {
+            <li>
+              <button type="button" (click)="pick(result)"
+                      style="display:flex;width:100%;gap:10px;align-items:baseline;background:none;border:none;border-bottom:1px solid var(--rule-soft);padding:8px 12px;cursor:pointer;text-align:left;font:inherit">
+                <b class="num">{{ result.symbol }}</b>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ result.name }}</span>
+                <span class="muted tiny">{{ result.exchange }}</span>
+                @if (result.price !== null) {
+                  <span class="num tiny">{{ result.price }} {{ result.currency ?? '' }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+        <span class="muted tiny">Clique un résultat : ticker, nom et devise sont remplis automatiquement.</span>
+      } @else if (searched() && !searching()) {
+        <span class="muted tiny">Aucun résultat Yahoo — vérifie l'orthographe ou saisis les champs à la main.</span>
+      }
+    </div>
+
     <div class="field-row">
       <div class="field">
         <label for="etf-isin">ISIN *</label>

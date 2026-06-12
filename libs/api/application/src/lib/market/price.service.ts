@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PriceCacheService, Quote } from './price-cache.service';
-import { HistoricalPoint, YahooPriceProvider } from './yahoo-price.provider';
+import { HistoricalPoint, SymbolCandidate, YahooPriceProvider } from './yahoo-price.provider';
 import { toYahooSymbol } from './yahoo-symbol';
+
+export interface SymbolSearchResult extends SymbolCandidate {
+  currency: string | null;
+  price:    number | null;
+}
 
 @Injectable()
 export class PriceService {
@@ -43,6 +48,25 @@ export class PriceService {
     const fresh = await this.provider.fetchHistorical(symbol, days, interval);
     if (fresh.length > 0) await this.cache.setHistory(symbol, days, fresh, interval);
     return fresh;
+  }
+
+  /**
+   * Free-text search (ISIN, ticker or name) for the add-ETF flow. ETFs are
+   * ranked first, the top candidates are enriched with currency + last price
+   * via parallel quotes. Uncached — this is a punctual, user-driven lookup.
+   */
+  async searchSymbols(query: string): Promise<SymbolSearchResult[]> {
+    const candidates = await this.provider.searchSymbols(query);
+    const ranked = [...candidates]
+      .sort((a, b) => Number(b.type === 'ETF') - Number(a.type === 'ETF'))
+      .slice(0, 6);
+
+    return Promise.all(
+      ranked.map(async candidate => ({
+        ...candidate,
+        ...(await this.provider.fetchSearchDetail(candidate.symbol)),
+      })),
+    );
   }
 
   private async refresh(symbol: string): Promise<Quote> {

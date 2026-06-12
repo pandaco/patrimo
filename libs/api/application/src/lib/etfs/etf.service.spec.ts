@@ -47,7 +47,7 @@ describe('EtfService', () => {
     deleteByIsin: jest.Mock;
   };
   let transactionRepository: { findByUserId: jest.Mock };
-  let priceService: { getQuote: jest.Mock };
+  let priceService: { getQuote: jest.Mock; searchSymbols: jest.Mock };
 
   beforeEach(async () => {
     etfRepository = {
@@ -58,7 +58,10 @@ describe('EtfService', () => {
       deleteByIsin: jest.fn().mockResolvedValue(undefined),
     };
     transactionRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
-    priceService = { getQuote: jest.fn().mockResolvedValue({ price: 540.2 }) };
+    priceService = {
+      getQuote: jest.fn().mockResolvedValue({ price: 540.2 }),
+      searchSymbols: jest.fn().mockResolvedValue([]),
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -103,6 +106,21 @@ describe('EtfService', () => {
       expect(etfRepository.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ issuer: '', index: '', repli: '' }),
       );
+    });
+  });
+
+  describe('lookup', () => {
+    it('rejects queries shorter than 2 characters', async () => {
+      await expect(service.lookup(' a ')).rejects.toBeInstanceOf(BadRequestException);
+      expect(priceService.searchSymbols).not.toHaveBeenCalled();
+    });
+
+    it('delegates the trimmed query to the price search', async () => {
+      const results = [{ symbol: 'SXR8.DE', name: 'iShares Core S&P 500', exchange: 'XETRA', type: 'ETF', currency: 'EUR', price: 540 }];
+      priceService.searchSymbols.mockResolvedValue(results);
+
+      await expect(service.lookup('  SXR8 ')).resolves.toEqual(results);
+      expect(priceService.searchSymbols).toHaveBeenCalledWith('SXR8');
     });
   });
 

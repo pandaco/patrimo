@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
-import { CreateEtfDto, EtfDto, PositionDto } from '@patrimo/contracts';
+import { CreateEtfDto, EtfDto, EtfLookupResultDto, PositionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
@@ -97,6 +97,15 @@ export class EtfService {
       this.http.patch<EtfDto>(`${this.baseUrl}/etfs/${isin}/watch`, { watchOnly }),
     );
     this.catalogResource.update(list => list.map(e => e.isin === updated.isin ? updated : e));
+  }
+
+  /** Yahoo free-text search (ISIN, ticker or name) for the add-ETF dialog. */
+  async lookup(query: string): Promise<EtfLookupResultDto[]> {
+    return firstValueFrom(
+      this.http.get<EtfLookupResultDto[]>(`${this.baseUrl}/etfs/lookup`, {
+        params: { query },
+      }),
+    );
   }
 
   /** Add a user-supplied ETF to the catalog (backend validates the Yahoo symbol first). */

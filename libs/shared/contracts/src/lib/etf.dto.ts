@@ -16,6 +16,18 @@ export interface EtfDto {
   watchOnly: boolean;
 }
 
+/** One Yahoo Finance candidate returned by `GET /etfs/lookup?query=…`. */
+export interface EtfLookupResultDto {
+  /** Full Yahoo symbol with its exchange suffix, e.g. `SXR8.DE`. */
+  symbol:   string;
+  name:     string;
+  exchange: string;
+  /** Yahoo quote type, e.g. `ETF`, `EQUITY`. */
+  type:     string;
+  currency: string | null;
+  price:    number | null;
+}
+
 /**
  * User-supplied ETF for the catalog. The backend validates the symbol
  * against Yahoo Finance before accepting it; metadata Yahoo cannot provide

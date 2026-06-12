@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { CreateEtfDto, EtfAllocationDto, EtfDto } from '@patrimo/contracts';
+import { CreateEtfDto, EtfAllocationDto, EtfDto, EtfLookupResultDto } from '@patrimo/contracts';
 import { EtfService, ToastService } from '@patrimo/data-access';
 
 const ISIN_PATTERN = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
@@ -31,6 +31,39 @@ export class EtfDialogComponent {
   protected readonly alloc   = signal<EtfAllocationDto>('Core');
 
   protected readonly submitting = signal(false);
+
+  // ─── Yahoo search — type an ISIN, ticker or name, pick a candidate ────────
+
+  protected readonly searchQuery   = signal('');
+  protected readonly searching     = signal(false);
+  protected readonly searched      = signal(false);
+  protected readonly searchResults = signal<EtfLookupResultDto[]>([]);
+
+  protected async search(): Promise<void> {
+    const query = this.searchQuery().trim();
+    if (query.length < 2 || this.searching()) return;
+    this.searching.set(true);
+    try {
+      this.searchResults.set(await this.etfService.lookup(query));
+      this.searched.set(true);
+    } catch {
+      this.searchResults.set([]);
+      this.searched.set(true);
+    } finally {
+      this.searching.set(false);
+    }
+  }
+
+  /** Fill the form from a Yahoo candidate; the ISIN is kept when it was the query. */
+  protected pick(result: EtfLookupResultDto): void {
+    this.ticker.set(result.symbol);
+    this.name.set(result.name);
+    if (result.currency) this.currency.set(result.currency);
+    const query = this.searchQuery().trim().toUpperCase();
+    if (ISIN_PATTERN.test(query)) this.isin.set(query);
+    this.searchResults.set([]);
+    this.searched.set(false);
+  }
 
   protected readonly isinValid = computed(() => ISIN_PATTERN.test(this.isin().trim().toUpperCase()));
   protected readonly canSave = computed(() => {

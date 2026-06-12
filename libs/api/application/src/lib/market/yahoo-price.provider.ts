@@ -16,6 +16,14 @@ export interface HistoricalPoint {
   close: number;
 }
 
+export interface SymbolCandidate {
+  symbol:   string;
+  name:     string;
+  exchange: string;
+  /** Yahoo quote type, e.g. `ETF`, `EQUITY`, `MUTUALFUND`. */
+  type:     string;
+}
+
 @Injectable()
 export class YahooPriceProvider {
   private readonly logger = new Logger(YahooPriceProvider.name);
@@ -44,6 +52,49 @@ export class YahooPriceProvider {
     } catch (err) {
       this.logger.warn(`Yahoo Finance metadata failed for ${symbol}: ${(err as Error).message}`);
       return null;
+    }
+  }
+
+  /** Currency + last price for a search candidate — no cache, lookup-time only. */
+  async fetchSearchDetail(symbol: string): Promise<{ currency: string | null; price: number | null }> {
+    try {
+      const response = await yahooFinance.quote(symbol);
+      const quote = Array.isArray(response) ? response[0] : response;
+      const record = quote as Record<string, unknown>;
+      return {
+        currency: typeof record['currency'] === 'string' ? record['currency'] : null,
+        price:    pickNumber(quote, 'regularMarketPrice'),
+      };
+    } catch {
+      return { currency: null, price: null };
+    }
+  }
+
+  /**
+   * Free-text symbol search — Yahoo accepts an ISIN, a ticker or a fund name
+   * and returns scored candidates. Empty array on failure.
+   */
+  async searchSymbols(query: string): Promise<SymbolCandidate[]> {
+    try {
+      const response = await yahooFinance.search(query, { quotesCount: 8, newsCount: 0 });
+      const quotes = Array.isArray(response?.quotes) ? response.quotes : [];
+      const out: SymbolCandidate[] = [];
+      for (const q of quotes) {
+        const record = q as Record<string, unknown>;
+        const symbol = typeof record['symbol'] === 'string' ? record['symbol'] : null;
+        if (!symbol) continue;
+        const name = (record['longname'] ?? record['shortname']) as string | undefined;
+        out.push({
+          symbol,
+          name:     name ?? symbol,
+          exchange: typeof record['exchDisp'] === 'string' ? record['exchDisp'] : '',
+          type:     typeof record['quoteType'] === 'string' ? record['quoteType'] : '',
+        });
+      }
+      return out;
+    } catch (err) {
+      this.logger.warn(`Yahoo Finance search failed for "${query}": ${(err as Error).message}`);
+      return [];
     }
   }
 

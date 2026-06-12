@@ -9,9 +9,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { EtfDto } from '@patrimo/contracts';
+import { EtfDto, EtfLookupResultDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -27,6 +28,11 @@ export class EtfController {
   @Get()
   list(): Promise<EtfDto[]> {
     return this.etfs.list();
+  }
+
+  @Get('lookup')
+  lookup(@Query('query') query = ''): Promise<EtfLookupResultDto[]> {
+    return this.etfs.lookup(query);
   }
 
   @Post()

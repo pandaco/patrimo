@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Etf, EtfRepository, TransactionRepository } from '@patrimo/api-domain';
-import { CreateEtfDto, EtfDto } from '@patrimo/contracts';
+import { CreateEtfDto, EtfDto, EtfLookupResultDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -32,6 +32,15 @@ export class EtfService {
   async list(): Promise<EtfDto[]> {
     const rows = await this.etfs.findAll();
     return rows.map(toDto);
+  }
+
+  /** Yahoo free-text search (ISIN, ticker or name) feeding the add-ETF dialog. */
+  async lookup(query: string): Promise<EtfLookupResultDto[]> {
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      throw new BadRequestException('query must be at least 2 characters');
+    }
+    return this.prices.searchSymbols(trimmed);
   }
 
   async setWatchOnly(isin: string, watchOnly: boolean): Promise<EtfDto | null> {
