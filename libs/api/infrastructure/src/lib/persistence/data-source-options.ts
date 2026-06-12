@@ -17,6 +17,7 @@ import { AddUiPrefs1781222400000 } from './migrations/1781222400000-AddUiPrefs';
 import { AddTransactionTaxes1781308800000 } from './migrations/1781308800000-AddTransactionTaxes';
 import { AddBenchmarkPref1781310000000 } from './migrations/1781310000000-AddBenchmarkPref';
 import { AddEtfWatchOnly1781311000000 } from './migrations/1781311000000-AddEtfWatchOnly';
+import { AddTransferId1781312000000 } from './migrations/1781312000000-AddTransferId';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -40,6 +41,7 @@ export const ORM_MIGRATIONS = [
   AddTransactionTaxes1781308800000,
   AddBenchmarkPref1781310000000,
   AddEtfWatchOnly1781311000000,
+  AddTransferId1781312000000,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {

@@ -20,7 +20,8 @@ export interface TransactionDialogData {
   presetType?: TxType;
 }
 
-type TxTypeEntry = { id: TxType; label: string; sym: string };
+type DialogTxType = TxType | 'TRANSFER';
+type TxTypeEntry = { id: DialogTxType; label: string; sym: string };
 
 const TX_TYPES: TxTypeEntry[] = [
   { id: 'BUY',        label: 'Achat',     sym: '+' },
@@ -29,6 +30,7 @@ const TX_TYPES: TxTypeEntry[] = [
   { id: 'WITHDRAWAL', label: 'Retrait',   sym: '↗' },
   { id: 'DIVIDEND',   label: 'Dividende', sym: '◆' },
   { id: 'INTEREST',   label: 'Intérêts',  sym: '◆' },
+  { id: 'TRANSFER',   label: 'Transfert', sym: '⇄' },
 ];
 
 @Component({
@@ -48,11 +50,14 @@ export class TransactionDialogComponent {
   protected readonly editing   = !!this.data?.transaction;
   private readonly editingId   = this.data?.transaction?.id ?? null;
 
-  protected readonly types     = TX_TYPES;
+  // Transfers are created as an atomic pair — editing a single leg would
+  // unbalance the counterpart envelope, so the type is hidden in edit mode.
+  protected readonly types     = this.data?.transaction ? TX_TYPES.filter(t => t.id !== 'TRANSFER') : TX_TYPES;
   protected readonly envelopes = this.envService.all;
   protected readonly etfs      = this.etfService.all;
 
-  protected type       = signal<TxType>(this.data?.transaction?.type ?? this.data?.presetType ?? 'BUY');
+  protected type       = signal<DialogTxType>(this.data?.transaction?.type ?? this.data?.presetType ?? 'BUY');
+  protected targetEnvelopeId = signal('');
   protected envelopeId = signal(this.data?.transaction?.envelope ?? this.data?.presetEnvelopeId ?? '');
   protected etfIsin    = signal(this.data?.transaction?.etf ?? this.data?.presetEtfIsin ?? '');
   protected qty        = signal(this.data?.transaction?.qty ?? 1);
@@ -82,6 +87,7 @@ export class TransactionDialogComponent {
     }
   }
 
+  protected readonly isTransfer   = computed(() => this.type() === 'TRANSFER');
   protected readonly showAsset    = computed(() => ['BUY','SELL','DIVIDEND'].includes(this.type()));
   protected readonly showQtyPrice = computed(() => ['BUY','SELL'].includes(this.type()));
 
@@ -153,6 +159,30 @@ export class TransactionDialogComponent {
     const env = this.selectedEnv();
     if (!env) { this.error.set('Aucune enveloppe sélectionnée'); return false; }
 
+    if (this.isTransfer()) {
+      const target = this.targetEnvelopeId();
+      if (!target || target === env.id) {
+        this.error.set('Choisis une enveloppe de destination différente');
+        return false;
+      }
+      if (this.amount() <= 0) { this.error.set('Montant invalide'); return false; }
+      this.submitting.set(true);
+      try {
+        await this.txService.transfer({
+          fromEnvelopeId: env.id,
+          toEnvelopeId:   target,
+          date:           this.date(),
+          amount:         this.amount(),
+        });
+        return true;
+      } catch (err) {
+        this.error.set(err instanceof Error ? err.message : 'Erreur lors du transfert');
+        return false;
+      } finally {
+        this.submitting.set(false);
+      }
+    }
+
     const showAsset    = this.showAsset();
     const showQtyPrice = this.showQtyPrice();
     const etf          = showAsset ? this.selectedEtf() : null;
@@ -162,7 +192,7 @@ export class TransactionDialogComponent {
     const payload: CreateTransactionDto = {
       envelopeId: env.id,
       etfIsin: etf?.isin ?? null,
-      type: this.type() as TxTypeDto,
+      type: this.type() as TxTypeDto, // TRANSFER handled above — only real TxTypes reach here
       date: this.date(),
       quantity: showQtyPrice ? this.qty() : 1,
       price: showQtyPrice ? this.price() : null,

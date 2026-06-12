@@ -70,6 +70,7 @@ function tx(overrides: Partial<Transaction>): Transaction {
     price: overrides.price ?? 40,
     fees: overrides.fees ?? 0,
     taxes: overrides.taxes ?? 0,
+    transferId: overrides.transferId ?? null,
     amount: overrides.amount ?? 400,
     createdAt: new Date(),
     updatedAt: new Date(),

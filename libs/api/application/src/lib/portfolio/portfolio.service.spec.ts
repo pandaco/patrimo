@@ -17,6 +17,7 @@ function tx(overrides: Partial<Transaction>): Transaction {
     price: 0,
     fees: 0,
     taxes: 0,
+    transferId: null,
     amount: 0,
     createdAt: new Date(),
     updatedAt: new Date(),

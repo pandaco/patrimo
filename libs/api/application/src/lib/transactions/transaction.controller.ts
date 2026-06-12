@@ -22,6 +22,7 @@ import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
 import { CreateTransactionDtoBody } from './dto/create-transaction.dto';
+import { CreateTransferDtoBody } from './dto/create-transfer.dto';
 import { UpdateTransactionDtoBody } from './dto/update-transaction.dto';
 import { TransactionService } from './transaction.service';
 
@@ -63,6 +64,14 @@ export class TransactionController {
   ): Promise<void> {
     const removed = await this.transactions.delete(id, user.id);
     if (!removed) throw new NotFoundException('Transaction not found');
+  }
+
+  @Post('transfer')
+  transfer(
+    @SessionUser() user: AuthUser,
+    @Body() body: CreateTransferDtoBody,
+  ): Promise<TransactionDto[]> {
+    return this.transactions.createTransfer(user.id, body);
   }
 
   @Post('import')

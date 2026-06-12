@@ -31,7 +31,7 @@
     <!-- ENVELOPE + DATE -->
     <div class="field-row">
       <div class="field">
-        <label for="tx-envelope">Enveloppe</label>
+        <label for="tx-envelope">{{ isTransfer() ? 'Depuis l\'enveloppe' : 'Enveloppe' }}</label>
         <select id="tx-envelope" [ngModel]="envelopeId()" (ngModelChange)="envelopeId.set($event)">
           @for (env of envelopes(); track env.id) {
             <option [value]="env.id">{{ env.label }} — {{ env.broker }}</option>
@@ -43,6 +43,22 @@
         <input id="tx-date" type="date" [ngModel]="date()" (ngModelChange)="date.set($event)" />
       </div>
     </div>
+
+    <!-- TRANSFER TARGET -->
+    @if (isTransfer()) {
+      <div class="field">
+        <label for="tx-target-env">Vers l'enveloppe</label>
+        <select id="tx-target-env" [ngModel]="targetEnvelopeId()" (ngModelChange)="targetEnvelopeId.set($event)">
+          <option value="" disabled>Choisir…</option>
+          @for (env of envelopes(); track env.id) {
+            @if (env.id !== envelopeId()) {
+              <option [value]="env.id">{{ env.label }} — {{ env.broker }}</option>
+            }
+          }
+        </select>
+        <div class="field-help">Crée un retrait sur la source et un dépôt sur la destination, liés — supprimer l'un supprime l'autre.</div>
+      </div>
+    }
 
     <!-- ETF / ASSET -->
     @if (showAsset()) {

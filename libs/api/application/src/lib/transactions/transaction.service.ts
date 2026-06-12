@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import type { EtfRepository, EnvelopeRepository, Transaction, TransactionRepository, TransactionSeed, TxType } from '@patrimo/api-domain';
-import { CreateTransactionDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
+import { CreateTransactionDto, CreateTransferDto, TransactionDto, TxTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 
 function toDto(tx: Transaction): TransactionDto {
@@ -15,6 +16,7 @@ function toDto(tx: Transaction): TransactionDto {
     fees: tx.fees,
     taxes: tx.taxes,
     amount: tx.amount,
+    transferId: tx.transferId,
   };
 }
 
@@ -76,6 +78,7 @@ export class TransactionService {
       fees: input.fees,
       taxes: input.taxes ?? 0,
       amount: input.amount,
+      transferId: null,
     });
     return toDto(created);
   }
@@ -86,7 +89,55 @@ export class TransactionService {
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
+    // Deleting one leg of a transfer would silently unbalance the cash of
+    // the counterpart envelope — always remove the pair.
+    const tx = await this.transactions.findById(id);
+    if (tx && tx.userId === userId && tx.transferId) {
+      return (await this.transactions.deleteByTransferId(tx.transferId, userId)) > 0;
+    }
     return this.transactions.deleteForUser(id, userId);
+  }
+
+  /**
+   * Atomic-in-intent inter-envelope transfer: one WITHDRAWAL leg on the
+   * source, one DEPOSIT leg on the target, both stamped with the same
+   * transferId. Reusing the existing types keeps every downstream cash and
+   * position computation untouched.
+   */
+  async createTransfer(userId: string, input: CreateTransferDto): Promise<TransactionDto[]> {
+    if (input.fromEnvelopeId === input.toEnvelopeId) {
+      throw new BadRequestException('Source and target envelopes must differ');
+    }
+    const owned = await this.envelopes.findByUserId(userId);
+    const ownedIds = new Set(owned.map(e => e.id));
+    if (!ownedIds.has(input.fromEnvelopeId) || !ownedIds.has(input.toEnvelopeId)) {
+      throw new BadRequestException('Unknown envelope');
+    }
+
+    const transferId = randomUUID();
+    const date = new Date(input.date);
+    const base = {
+      userId,
+      etfIsin: null,
+      quantity: 1,
+      price: null,
+      fees: 0,
+      taxes: 0,
+      amount: input.amount,
+      transferId,
+      date,
+    };
+    const out = await this.transactions.create({ ...base, envelopeId: input.fromEnvelopeId, type: 'WITHDRAWAL' });
+    try {
+      const inn = await this.transactions.create({ ...base, envelopeId: input.toEnvelopeId, type: 'DEPOSIT' });
+      return [toDto(out), toDto(inn)];
+    } catch (err) {
+      // Second leg failed — roll the first one back so no half-transfer
+      // survives. Best effort: if this delete also fails we surface the
+      // original error anyway.
+      await this.transactions.deleteForUser(out.id, userId).catch(() => undefined);
+      throw err;
+    }
   }
 
   async exportCsv(userId: string): Promise<string> {
@@ -164,6 +215,7 @@ export class TransactionService {
         fees: fee,
         taxes: tax,
         amount: amt,
+        transferId: null,
       });
       count++;
     }

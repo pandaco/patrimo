@@ -18,4 +18,5 @@ export interface TransactionRepository {
   ): Promise<Transaction | null>;
   /** Delete the transaction iff it belongs to `userId`. Returns `true` when a row was removed. */
   deleteForUser(id: string, userId: string): Promise<boolean>;
+  deleteByTransferId(transferId: string, userId: string): Promise<number>;
 }

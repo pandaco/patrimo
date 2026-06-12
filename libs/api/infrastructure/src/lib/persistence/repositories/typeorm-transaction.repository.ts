@@ -23,6 +23,7 @@ function toDomain(row: TransactionOrmEntity): Transaction {
     fees: row.fees,
     taxes: row.taxes,
     amount: row.amount,
+    transferId: row.transferId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -66,5 +67,10 @@ export class TypeOrmTransactionRepository implements TransactionRepository {
   async deleteForUser(id: string, userId: string): Promise<boolean> {
     const result = await this.repo.delete({ id, userId });
     return (result.affected ?? 0) > 0;
+  }
+
+  async deleteByTransferId(transferId: string, userId: string): Promise<number> {
+    const result = await this.repo.delete({ transferId, userId });
+    return result.affected ?? 0;
   }
 }

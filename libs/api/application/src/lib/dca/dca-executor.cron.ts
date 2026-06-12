@@ -82,6 +82,7 @@ export class DcaExecutorCron {
         price: quote.price,
         fees: 0, // Could be configured in plan or globally later
         taxes: 0,
+        transferId: null,
         amount: txAmount,
       });
 
@@ -104,6 +105,7 @@ export class DcaExecutorCron {
         price: null,
         fees: 0,
         taxes: 0,
+        transferId: null,
         amount: totalInvested, // Fund the envelope by the exact amount invested
       });
     }

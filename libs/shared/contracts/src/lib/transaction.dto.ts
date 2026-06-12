@@ -13,6 +13,16 @@ export interface TransactionDto {
   /** Taxes withheld (PFU, social levies) — separate from broker fees. */
   taxes: number;
   amount: number;
+  /** Set on both legs of an inter-envelope transfer; null otherwise. */
+  transferId: string | null;
+}
+
+export interface CreateTransferDto {
+  fromEnvelopeId: string;
+  toEnvelopeId: string;
+  /** ISO date (YYYY-MM-DD). */
+  date: string;
+  amount: number;
 }
 
 export interface CreateTransactionDto {

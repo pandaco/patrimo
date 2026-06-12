@@ -39,19 +39,19 @@ export const MOCK_ETFS: Etf[] = [
 ];
 
 export const MOCK_TRANSACTIONS: Transaction[] = [
-  { id:'tx-104', date:'2026-05-12', type:'BUY',      envelope:'pea',     etf:'ESE',  qty:12, price: 39.30, fees:0.99, taxes:0, amount: 472.59 },
-  { id:'tx-103', date:'2026-05-12', type:'DEPOSIT',  envelope:'pea',     etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 500.00 },
-  { id:'tx-102', date:'2026-05-05', type:'DIVIDEND', envelope:'cto',     etf:'IWDA', qty: 1, price:  null, fees:0, taxes:0,    amount:  18.42 },
-  { id:'tx-101', date:'2026-05-02', type:'INTEREST', envelope:'livreta', etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount:  57.38 },
-  { id:'tx-100', date:'2026-04-28', type:'BUY',      envelope:'pea',     etf:'PCEU', qty: 8, price: 25.51, fees:0.99, taxes:0, amount: 205.07 },
-  { id:'tx-099', date:'2026-04-28', type:'BUY',      envelope:'pea',     etf:'PAEEM',qty:14, price:  5.71, fees:0.99, taxes:0, amount:  80.93 },
-  { id:'tx-098', date:'2026-04-15', type:'DEPOSIT',  envelope:'pea',     etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 500.00 },
-  { id:'tx-097', date:'2026-04-12', type:'BUY',      envelope:'per',     etf:'CW8',  qty: 1, price:481.20, fees:1.50, taxes:0, amount: 482.70 },
-  { id:'tx-096', date:'2026-04-08', type:'SELL',     envelope:'cto',     etf:'IWDA', qty: 2, price: 86.20, fees:0.99, taxes:0, amount: 171.41 },
-  { id:'tx-095', date:'2026-03-30', type:'DIVIDEND', envelope:'cto',     etf:'IWDA', qty: 1, price:  null, fees:0, taxes:0,    amount:  16.84 },
-  { id:'tx-094', date:'2026-03-22', type:'BUY',      envelope:'pea',     etf:'ESE',  qty:10, price: 38.50, fees:0.99, taxes:0, amount: 385.99 },
-  { id:'tx-093', date:'2026-03-15', type:'DEPOSIT',  envelope:'av',      etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 300.00 },
-  { id:'tx-092', date:'2026-03-02', type:'INTEREST', envelope:'livreta', etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount:  54.21 },
+  { id:'tx-104', date:'2026-05-12', type:'BUY',      envelope:'pea',     etf:'ESE',  qty:12, price: 39.30, fees:0.99, taxes:0, amount: 472.59, transferId:null },
+  { id:'tx-103', date:'2026-05-12', type:'DEPOSIT',  envelope:'pea',     etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 500.00, transferId:null },
+  { id:'tx-102', date:'2026-05-05', type:'DIVIDEND', envelope:'cto',     etf:'IWDA', qty: 1, price:  null, fees:0, taxes:0,    amount:  18.42, transferId:null },
+  { id:'tx-101', date:'2026-05-02', type:'INTEREST', envelope:'livreta', etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount:  57.38, transferId:null },
+  { id:'tx-100', date:'2026-04-28', type:'BUY',      envelope:'pea',     etf:'PCEU', qty: 8, price: 25.51, fees:0.99, taxes:0, amount: 205.07, transferId:null },
+  { id:'tx-099', date:'2026-04-28', type:'BUY',      envelope:'pea',     etf:'PAEEM',qty:14, price:  5.71, fees:0.99, taxes:0, amount:  80.93, transferId:null },
+  { id:'tx-098', date:'2026-04-15', type:'DEPOSIT',  envelope:'pea',     etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 500.00, transferId:null },
+  { id:'tx-097', date:'2026-04-12', type:'BUY',      envelope:'per',     etf:'CW8',  qty: 1, price:481.20, fees:1.50, taxes:0, amount: 482.70, transferId:null },
+  { id:'tx-096', date:'2026-04-08', type:'SELL',     envelope:'cto',     etf:'IWDA', qty: 2, price: 86.20, fees:0.99, taxes:0, amount: 171.41, transferId:null },
+  { id:'tx-095', date:'2026-03-30', type:'DIVIDEND', envelope:'cto',     etf:'IWDA', qty: 1, price:  null, fees:0, taxes:0,    amount:  16.84, transferId:null },
+  { id:'tx-094', date:'2026-03-22', type:'BUY',      envelope:'pea',     etf:'ESE',  qty:10, price: 38.50, fees:0.99, taxes:0, amount: 385.99, transferId:null },
+  { id:'tx-093', date:'2026-03-15', type:'DEPOSIT',  envelope:'av',      etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount: 300.00, transferId:null },
+  { id:'tx-092', date:'2026-03-02', type:'INTEREST', envelope:'livreta', etf:null,   qty: 1, price:  null, fees:0, taxes:0,    amount:  54.21, transferId:null },
 ];
 
 export const TX_LABELS: Record<TxType, TxLabel> = {

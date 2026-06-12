@@ -73,6 +73,10 @@ export class TransactionOrmEntity {
   @Column({ type: 'numeric', precision: 18, scale: 6, transformer: decimalTransformer })
   amount!: number;
 
+  // Links the two legs (WITHDRAWAL + DEPOSIT) of an inter-envelope transfer.
+  @Column({ name: 'transfer_id', type: 'uuid', nullable: true })
+  transferId!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

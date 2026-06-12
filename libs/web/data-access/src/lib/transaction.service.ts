@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
-import { CreateTransactionDto, TransactionDto, UpdateTransactionDto } from '@patrimo/contracts';
+import { CreateTransactionDto, CreateTransferDto, TransactionDto, UpdateTransactionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
@@ -20,6 +20,7 @@ function fromDto(d: TransactionDto): Transaction {
     fees: d.fees,
     taxes: d.taxes,
     amount: d.amount,
+    transferId: d.transferId,
   };
 }
 
@@ -72,8 +73,22 @@ export class TransactionService {
   }
 
   async remove(id: string): Promise<void> {
+    // The backend removes both legs when the row belongs to a transfer, so
+    // mirror that locally instead of waiting for a reload.
+    const target = this.resource.value().find(x => x.id === id);
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/transactions/${id}`));
-    this.resource.update(list => list.filter(x => x.id !== id));
+    this.resource.update(list => list.filter(x =>
+      x.id !== id && (target?.transferId == null || x.transferId !== target.transferId),
+    ));
+    this.refreshPositions();
+  }
+
+  /** Inter-envelope transfer — creates the WITHDRAWAL + DEPOSIT pair. */
+  async transfer(input: CreateTransferDto): Promise<void> {
+    const legs = await firstValueFrom(
+      this.http.post<TransactionDto[]>(`${this.baseUrl}/transactions/transfer`, input),
+    );
+    this.resource.update(list => [...legs, ...list]);
     this.refreshPositions();
   }
 

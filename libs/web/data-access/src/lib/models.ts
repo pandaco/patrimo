@@ -57,6 +57,8 @@ export interface Transaction {
   /** Taxes withheld (PFU, social levies) — separate from broker fees. */
   taxes: number;
   amount: number;
+  /** Set on both legs of an inter-envelope transfer; null otherwise. */
+  transferId: string | null;
 }
 
 export interface TxLabel {
