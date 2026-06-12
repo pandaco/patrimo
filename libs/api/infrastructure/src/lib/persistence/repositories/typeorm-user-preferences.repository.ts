@@ -16,6 +16,8 @@ function toDomain(row: UserPreferencesOrmEntity): UserPreferences {
     horizonYears:    row.horizonYears,
     monthlyTarget:   row.monthlyTarget,
     displayCurrency: row.displayCurrency,
+    uiMode:          row.uiMode,
+    onboardingDone:  row.onboardingDone,
     allocationTargets: row.allocationTargets ? (row.allocationTargets as AllocationTargets) : null,
     createdAt:       row.createdAt,
     updatedAt:       row.updatedAt,
@@ -43,6 +45,8 @@ export class TypeOrmUserPreferencesRepository implements UserPreferencesReposito
     if (partial.horizonYears    !== undefined) existing.horizonYears    = partial.horizonYears;
     if (partial.monthlyTarget   !== undefined) existing.monthlyTarget   = partial.monthlyTarget;
     if (partial.displayCurrency !== undefined) existing.displayCurrency = partial.displayCurrency;
+    if (partial.uiMode          !== undefined) existing.uiMode          = partial.uiMode;
+    if (partial.onboardingDone  !== undefined) existing.onboardingDone  = partial.onboardingDone;
     if (partial.allocationTargets !== undefined) existing.allocationTargets = partial.allocationTargets;
     const saved: UserPreferencesOrmEntity = await this.repo.save(existing);
     return toDomain(saved);

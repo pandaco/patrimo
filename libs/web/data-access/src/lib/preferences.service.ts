@@ -10,6 +10,8 @@ const DEFAULTS: UserPreferencesDto = {
   horizonYears:    25,
   monthlyTarget:   0,
   displayCurrency: 'EUR',
+  uiMode:          'simple',
+  onboardingDone:  true, // pessimistic until the real prefs load — avoids a welcome-flow flash
   allocationTargets: null,
 };
 

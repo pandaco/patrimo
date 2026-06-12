@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsNumber,
@@ -34,6 +35,15 @@ export class UpdatePreferencesDtoBody {
   @IsString()
   @IsIn(['EUR', 'USD', 'GBP', 'CHF'])
   displayCurrency?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['simple', 'expert'])
+  uiMode?: 'simple' | 'expert';
+
+  @IsOptional()
+  @IsBoolean()
+  onboardingDone?: boolean;
 
   // The shape of `allocationTargets` is enforced at the service / domain
   // boundary; class-validator only confirms the field is a plain object so

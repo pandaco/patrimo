@@ -31,6 +31,12 @@ export class UserPreferencesOrmEntity {
   @Column({ name: 'display_currency', type: 'varchar', length: 8, default: 'EUR' })
   displayCurrency!: string;
 
+  @Column({ name: 'ui_mode', type: 'varchar', length: 8, default: 'simple' })
+  uiMode!: 'simple' | 'expert';
+
+  @Column({ name: 'onboarding_done', type: 'boolean', default: false })
+  onboardingDone!: boolean;
+
   @Column({ name: 'allocation_targets', type: 'jsonb', nullable: true })
   allocationTargets!: unknown | null;
 

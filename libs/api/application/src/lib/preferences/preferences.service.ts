@@ -12,6 +12,8 @@ const DEFAULTS: UserPreferencesDto = {
   horizonYears:    25,
   monthlyTarget:   0,
   displayCurrency: 'EUR',
+  uiMode:          'simple',
+  onboardingDone:  false,
   allocationTargets: null,
 };
 
@@ -22,6 +24,8 @@ function toDto(row: UserPreferences | null): UserPreferencesDto {
     horizonYears:      row.horizonYears,
     monthlyTarget:     row.monthlyTarget,
     displayCurrency:   row.displayCurrency,
+    uiMode:            row.uiMode,
+    onboardingDone:    row.onboardingDone,
     allocationTargets: row.allocationTargets,
   };
 }
@@ -45,6 +49,8 @@ export class PreferencesService {
       horizonYears:    input.horizonYears,
       monthlyTarget:   input.monthlyTarget,
       displayCurrency: input.displayCurrency,
+      uiMode:          input.uiMode,
+      onboardingDone:  input.onboardingDone,
       allocationTargets: input.allocationTargets === undefined
         ? undefined
         : (input.allocationTargets as AllocationTargets | null),

@@ -4,6 +4,10 @@ export interface UserPreferences {
   horizonYears:    number;
   monthlyTarget:   number;
   displayCurrency: string;
+  /** Sidebar density: 'simple' shows the beginner nav, 'expert' the full one. */
+  uiMode:          'simple' | 'expert';
+  /** True once the user completed (or skipped) the welcome flow. */
+  onboardingDone:  boolean;
   /** Optional allocation targets (strategic/tactic/etf). `null` while the user has not set them. */
   allocationTargets: AllocationTargets | null;
   createdAt: Date;

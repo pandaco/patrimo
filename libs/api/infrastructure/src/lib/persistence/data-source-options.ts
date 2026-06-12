@@ -13,6 +13,7 @@ import { AlertRead1780640000000 } from './migrations/1780640000000-AlertRead';
 import { AddEtfExposure1780657093906 } from './migrations/1780657093906-AddEtfExposure';
 import { AddAlertRule1780670633581 } from './migrations/1780670633581-AddAlertRule';
 import { AddDcaPlan1780677838544 } from './migrations/1780677838544-AddDcaPlan';
+import { AddUiPrefs1781222400000 } from './migrations/1781222400000-AddUiPrefs';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -32,6 +33,7 @@ export const ORM_MIGRATIONS = [
   AddEtfExposure1780657093906,
   AddAlertRule1780670633581,
   AddDcaPlan1780677838544,
+  AddUiPrefs1781222400000,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
