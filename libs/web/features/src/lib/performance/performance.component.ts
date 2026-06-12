@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EtfService, etfValue, FxService, PerformanceService } from '@patrimo/data-access';
+import { EtfService, etfValue, FxService, PerformanceService, PreferencesService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
@@ -66,6 +66,14 @@ function shortFr(iso: string): string {
 export class PerformanceComponent {
   private readonly perfSvc = inject(PerformanceService);
   private readonly etfSvc  = inject(EtfService);
+  private readonly prefsSvc = inject(PreferencesService);
+
+  // Human label of the user-selected benchmark, e.g. "CW8 — Amundi MSCI World".
+  protected readonly benchmarkLabel = computed(() => {
+    const isin = this.prefsSvc.current().benchmarkIsin;
+    const etf  = this.etfSvc.all().find(e => e.isin === isin);
+    return etf ? `${etf.ticker} — ${etf.name}` : 'CW8 — MSCI World';
+  });
 
   protected readonly periodOptions = PERIOD_OPTIONS;
   protected readonly activePeriod  = this.perfSvc.period;

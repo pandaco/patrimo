@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { EtfRepository, Transaction, TransactionRepository } from '@patrimo/api-domain';
+import type { EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
 import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
-import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
+import { ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
@@ -17,11 +17,11 @@ const PERIOD_DAYS: Record<PerformancePeriod, number> = {
 
 const LONG_PERIODS: PerformancePeriod[] = ['3Y', '5Y', 'MAX'];
 
-// MSCI World tracker used as the implicit benchmark: Amundi CW8 listed on
-// Euronext Paris. Hardcoded for now — the Allocation cible endpoint will let
-// the user pick another reference index later.
-const BENCHMARK_ISIN   = 'FR0010261198';
-const BENCHMARK_TICKER = 'CW8';
+// Default benchmark when the user has no preference yet: Amundi CW8 (MSCI
+// World) listed on Euronext Paris. Overridable per user via the
+// `benchmarkIsin` preference, resolved against the ETF catalog.
+const DEFAULT_BENCHMARK_ISIN   = 'FR0010261198';
+const DEFAULT_BENCHMARK_TICKER = 'CW8';
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -60,10 +60,26 @@ function computeAnnualized(series: number[], days: number): number | null {
 @Injectable()
 export class PerformanceService {
   constructor(
-    @Inject(TRANSACTION_REPOSITORY) private readonly txRepo:  TransactionRepository,
-    @Inject(ETF_REPOSITORY)         private readonly etfRepo: EtfRepository,
+    @Inject(TRANSACTION_REPOSITORY)      private readonly txRepo:   TransactionRepository,
+    @Inject(ETF_REPOSITORY)              private readonly etfRepo:  EtfRepository,
+    @Inject(USER_PREFERENCES_REPOSITORY) private readonly prefRepo: UserPreferencesRepository,
     private readonly priceService: PriceService,
   ) {}
+
+  /**
+   * Resolve the user's benchmark preference against the ETF catalog. Falls
+   * back to CW8 (MSCI World) when the preference is unset or points to an
+   * ISIN that left the catalog.
+   */
+  private async resolveBenchmark(userId: string): Promise<{ isin: string; ticker: string }> {
+    const prefs = await this.prefRepo.findByUserId(userId);
+    const isin  = prefs?.benchmarkIsin ?? DEFAULT_BENCHMARK_ISIN;
+    if (isin !== DEFAULT_BENCHMARK_ISIN) {
+      const etf = await this.etfRepo.findByIsin(isin);
+      if (etf) return { isin: etf.isin, ticker: etf.ticker };
+    }
+    return { isin: DEFAULT_BENCHMARK_ISIN, ticker: DEFAULT_BENCHMARK_TICKER };
+  }
 
   async getSeries(userId: string, period: PerformancePeriod): Promise<PerformanceSeriesDto> {
     const now    = new Date();
@@ -86,8 +102,9 @@ export class PerformanceService {
       ? Math.ceil((now.getTime() - (earliestTxDate?.getTime() ?? now.getTime())) / 86400000) + 1
       : Math.max(30, PERIOD_DAYS[period]);
 
+    const bench = await this.resolveBenchmark(userId);
     const benchmarkHistory = await this.priceService.getHistorical(
-      BENCHMARK_ISIN, BENCHMARK_TICKER, days, interval,
+      bench.isin, bench.ticker, days, interval,
     );
 
     const sortedTxs = txs
@@ -236,10 +253,11 @@ export class PerformanceService {
    * dropped on the chart).
    */
   async getEtfStats(userId: string): Promise<EtfStatsDto[]> {
+    const bench = await this.resolveBenchmark(userId);
     const [txs, etfs, benchHistory] = await Promise.all([
       this.txRepo.findByUserId(userId),
       this.etfRepo.findAll(),
-      this.priceService.getHistorical(BENCHMARK_ISIN, BENCHMARK_TICKER, 365),
+      this.priceService.getHistorical(bench.isin, bench.ticker, 365),
     ]);
 
     const heldIsins = new Set(

@@ -14,6 +14,7 @@ const DEFAULTS: UserPreferencesDto = {
   displayCurrency: 'EUR',
   uiMode:          'simple',
   onboardingDone:  false,
+  benchmarkIsin:   'FR0010261198',
   allocationTargets: null,
 };
 
@@ -26,6 +27,7 @@ function toDto(row: UserPreferences | null): UserPreferencesDto {
     displayCurrency:   row.displayCurrency,
     uiMode:            row.uiMode,
     onboardingDone:    row.onboardingDone,
+    benchmarkIsin:     row.benchmarkIsin,
     allocationTargets: row.allocationTargets,
   };
 }
@@ -51,6 +53,7 @@ export class PreferencesService {
       displayCurrency: input.displayCurrency,
       uiMode:          input.uiMode,
       onboardingDone:  input.onboardingDone,
+      benchmarkIsin:   input.benchmarkIsin,
       allocationTargets: input.allocationTargets === undefined
         ? undefined
         : (input.allocationTargets as AllocationTargets | null),

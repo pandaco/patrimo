@@ -12,6 +12,7 @@ const DEFAULTS: UserPreferencesDto = {
   displayCurrency: 'EUR',
   uiMode:          'simple',
   onboardingDone:  true, // pessimistic until the real prefs load — avoids a welcome-flow flash
+  benchmarkIsin:   'FR0010261198',
   allocationTargets: null,
 };
 

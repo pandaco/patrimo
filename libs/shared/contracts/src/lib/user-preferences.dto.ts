@@ -14,6 +14,8 @@ export interface UserPreferencesDto {
   displayCurrency:   string;
   uiMode:            UiMode;
   onboardingDone:    boolean;
+  /** ISIN of the catalog ETF used as the performance benchmark. */
+  benchmarkIsin:     string;
   allocationTargets: AllocationTargetsDto | null;
 }
 

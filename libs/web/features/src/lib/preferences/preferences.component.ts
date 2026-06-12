@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { UpdateUserPreferencesDto } from '@patrimo/contracts';
-import { PreferencesService } from '@patrimo/data-access';
+import { EtfService, PreferencesService } from '@patrimo/data-access';
 
 const RISK_PROFILES = [
   'Prudent',
@@ -28,12 +28,14 @@ export class PreferencesComponent {
   protected readonly riskProfiles = RISK_PROFILES;
   protected readonly currencies   = CURRENCIES;
   protected readonly loading      = this.prefs.loading;
+  protected readonly etfCatalog   = inject(EtfService).all;
 
   protected riskProfile     = signal('');
   protected horizonYears    = signal(25);
   protected monthlyTarget   = signal(0);
   protected displayCurrency = signal('EUR');
   protected uiMode          = signal<'simple' | 'expert' | ''>('');
+  protected benchmarkIsin   = signal('');
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -47,6 +49,7 @@ export class PreferencesComponent {
       if (!this.monthlyTarget() && c.monthlyTarget !== 0)      this.monthlyTarget.set(c.monthlyTarget);
       if (this.displayCurrency() === 'EUR' && c.displayCurrency !== 'EUR') this.displayCurrency.set(c.displayCurrency);
       if (!this.uiMode()) this.uiMode.set(c.uiMode);
+      if (!this.benchmarkIsin()) this.benchmarkIsin.set(c.benchmarkIsin);
     });
   }
 
@@ -61,6 +64,7 @@ export class PreferencesComponent {
       monthlyTarget:     Math.max(0, this.monthlyTarget()),
       displayCurrency:   this.displayCurrency(),
       uiMode:            this.uiMode() || 'simple',
+      benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
       allocationTargets: this.prefs.current().allocationTargets,
     };
 

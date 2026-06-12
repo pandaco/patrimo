@@ -45,6 +45,11 @@ export class UpdatePreferencesDtoBody {
   @IsBoolean()
   onboardingDone?: boolean;
 
+  @IsOptional()
+  @IsString()
+  @Length(12, 12)
+  benchmarkIsin?: string;
+
   // The shape of `allocationTargets` is enforced at the service / domain
   // boundary; class-validator only confirms the field is a plain object so
   // a malformed string / array / scalar is rejected at the controller.

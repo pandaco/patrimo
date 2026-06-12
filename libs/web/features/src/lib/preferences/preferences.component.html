@@ -43,6 +43,15 @@
         </select>
         <div class="field-help">Le mode simple masque les outils avancés (performance, comparateur, calendrier…).</div>
       </div>
+      <div class="field">
+        <label for="pref-benchmark">Benchmark de référence</label>
+        <select id="pref-benchmark" [ngModel]="benchmarkIsin()" (ngModelChange)="benchmarkIsin.set($event)">
+          @for (e of etfCatalog(); track e.isin) {
+            <option [value]="e.isin">{{ e.ticker }} — {{ e.name }}</option>
+          }
+        </select>
+        <div class="field-help">Indice de comparaison des pages Performance et Tableau de bord (défaut : CW8, MSCI World).</div>
+      </div>
     </div>
 
     <div class="field-row">

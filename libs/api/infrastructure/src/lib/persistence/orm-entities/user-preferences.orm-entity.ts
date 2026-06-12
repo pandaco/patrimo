@@ -37,6 +37,10 @@ export class UserPreferencesOrmEntity {
   @Column({ name: 'onboarding_done', type: 'boolean', default: false })
   onboardingDone!: boolean;
 
+  // ISIN of the catalog ETF used as the performance benchmark.
+  @Column({ name: 'benchmark_isin', type: 'varchar', length: 12, default: 'FR0010261198' })
+  benchmarkIsin!: string;
+
   @Column({ name: 'allocation_targets', type: 'jsonb', nullable: true })
   allocationTargets!: unknown | null;
 

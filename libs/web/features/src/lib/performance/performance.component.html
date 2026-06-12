@@ -14,7 +14,8 @@
     <summary>Comment lire cette page — métriques + ordres de grandeur</summary>
     <div class="explainer-body">
       <p>
-        Le <b>benchmark</b> est l'indice MSCI World (CW8) — la référence
+        Le <b>benchmark</b> est ton indice de référence ({{ benchmarkLabel() }},
+        modifiable dans les préférences) — par défaut le MSCI World, la référence
         actions monde diversifiée. Si ta courbe reste collée à la sienne,
         tu fais aussi bien que <em>l'indice global</em>. Au-dessus = tu
         surperformes, en dessous = sous-performe.
@@ -82,13 +83,13 @@
           @if (hasBenchmark()) {
             <span class="row" style="gap:6px">
               <span style="width:14px;height:2px;background:var(--ink-3);display:inline-block;border-top:1px dashed var(--ink-3)"></span>
-              <span class="muted tiny">MSCI World (CW8)</span>
+              <span class="muted tiny">{{ benchmarkLabel() }}</span>
               <span class="num small" [class.pos]="benchmarkPct() >= 0" [class.neg]="benchmarkPct() < 0">
                 {{ fmtPct(benchmarkPct(), 2) }}
               </span>
             </span>
             <span class="row" style="gap:6px">
-              <span class="muted tiny" data-tip="Surperformance par rapport à l'indice MSCI World (CW8). +2 pts = ton portefeuille a gagné 2 % de plus que l'indice sur la période.">Alpha</span>
+              <span class="muted tiny" data-tip="Surperformance par rapport à ton benchmark. +2 pts = ton portefeuille a gagné 2 % de plus que l'indice sur la période.">Alpha</span>
               <ui-delta [value]="alphaPct()" suffix=" pts" [digits]="2" />
             </span>
           }
@@ -297,7 +298,7 @@
         <li><b>Source des cours</b> : Yahoo Finance, mis en cache 24 h côté backend.</li>
         <li><b>Quantité à chaque date</b> : reconstituée en marchant les transactions BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
         <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
-        <li><b>Benchmark</b> : Amundi <code>CW8.PA</code> (MSCI World), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position est détenue. L'écart entre les deux courbes = ton alpha.</li>
+        <li><b>Benchmark</b> : {{ benchmarkLabel() }} (modifiable dans les préférences), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position est détenue. L'écart entre les deux courbes = ton alpha.</li>
         <li><b>TD</b> : return 1A ETF − return 1A CW8 (proxy). <b>TE</b> : écart-type annualisé des différences de rendements quotidiens vs CW8 (≈ std dev × √252).</li>
         <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur transactions BUY/SELL de l'année.</li>
       </ul>
@@ -312,7 +313,7 @@
     <div class="card">
       <div class="card-head">
         <div class="card-title">Tracking difference par ETF</div>
-        <span class="card-sub">vs CW8 MSCI World · 1 an</span>
+        <span class="card-sub">vs {{ benchmarkLabel() }} · 1 an</span>
       </div>
       @if (loadingStats()) {
         <p class="muted small">Chargement…</p>
