@@ -50,3 +50,9 @@ yarn-error.log*
 .angular
 
 vitest.config.*.timestamp*
+# =========================
+# AI assistant files (local only)
+# =========================
+CLAUDE.md
+GEMINI.md
+.gemini/
