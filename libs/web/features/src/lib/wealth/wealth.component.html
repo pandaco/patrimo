@@ -3,12 +3,20 @@
   <div class="page-head" style="display:flex;align-items:flex-start;gap:24px;justify-content:space-between">
     <div>
       <div class="page-eyebrow">Patrimoine global</div>
-      <h1 class="page-title">{{ allEnv().length }} enveloppe{{ allEnv().length === 1 ? '' : 's' }}, <em>une seule vue</em>.</h1>
-      <p class="page-sub">
-        Toutes tes poches d'épargne et d'investissement, des PEA aux livrets jusqu'à
-        l'or physique et la SCPI. La vraie source de vérité, c'est l'historique des
-        mouvements — chaque ligne en dérive.
-      </p>
+      @if (allEnv().length === 0) {
+        <h1 class="page-title">Déclare ta <em>première enveloppe</em>.</h1>
+        <p class="page-sub">
+          PEA, livret, assurance-vie, compte-titres, crypto… Commence par dire où
+          ton argent est placé — les montants se rempliront ensuite via tes mouvements.
+        </p>
+      } @else {
+        <h1 class="page-title">{{ allEnv().length }} enveloppe{{ allEnv().length === 1 ? '' : 's' }}, <em>une seule vue</em>.</h1>
+        <p class="page-sub">
+          Toutes tes poches d'épargne et d'investissement, des PEA aux livrets jusqu'à
+          l'or physique et la SCPI. La vraie source de vérité, c'est l'historique des
+          mouvements — chaque ligne en dérive.
+        </p>
+      }
     </div>
     <button type="button" class="btn primary" (click)="openNewEnvelope()" style="white-space:nowrap">
       + Nouvelle enveloppe

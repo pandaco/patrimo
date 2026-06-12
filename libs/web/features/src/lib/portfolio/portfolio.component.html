@@ -3,11 +3,18 @@
   <div class="page-head">
     <div class="page-eyebrow">Toutes enveloppes confondues</div>
     <h1 class="page-title">Portefeuille <em>boursier</em></h1>
-    <p class="page-sub">
-      {{ allEtfs().length }} lignes, {{ fmtEur(total(), 0) }} valorisés.
-      <ui-term term="PRU">PRU</ui-term> et plus-values
-      calculés à partir de tes mouvements — aucune saisie manuelle de position.
-    </p>
+    @if (allEtfs().length === 0) {
+      <p class="page-sub">
+        Aucune position pour l'instant — ton premier achat d'ETF en créera une,
+        avec <ui-term term="PRU">PRU</ui-term> et plus-values calculés automatiquement.
+      </p>
+    } @else {
+      <p class="page-sub">
+        {{ allEtfs().length }} ligne{{ allEtfs().length === 1 ? '' : 's' }}, {{ fmtEur(total(), 0) }} valorisés.
+        <ui-term term="PRU">PRU</ui-term> et plus-values
+        calculés à partir de tes mouvements — aucune saisie manuelle de position.
+      </p>
+    }
   </div>
 
   <!-- INFO CALLOUT — Position 101 -->
@@ -68,7 +75,10 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
         <div class="stat">
           <div class="label">Valeur portefeuille</div>
           <div class="value">{{ fmtEur(total(), 2) }}</div>
-          <div class="sub"><ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui</div>
+          <div class="sub">
+            @if (total() > 0) { <ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui }
+            @else { <span class="muted">—</span> }
+          </div>
         </div>
         <div class="stat">
           <div class="label">Coût total (PRU)</div>
@@ -78,7 +88,10 @@ PnL %     = (cours actuel / PRU − 1) × 100</pre>
         <div class="stat">
           <div class="label">PV latente</div>
           <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
-          <div class="sub"><span class="pos">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span></div>
+          <div class="sub">
+            @if (totalCost() > 0) { <span [class.pos]="totalPnl() >= 0" [class.neg]="totalPnl() < 0">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span> }
+            @else { <span class="muted">—</span> }
+          </div>
         </div>
         <div class="stat">
           <div class="label">
