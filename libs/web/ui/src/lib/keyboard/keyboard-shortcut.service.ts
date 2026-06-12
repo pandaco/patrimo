@@ -32,6 +32,11 @@ export class KeyboardShortcutService {
 
   readonly gMode = signal(false);
 
+  // Re-entrancy lock: the dialog components are lazy-imported, so a burst of
+  // keypresses could pass the `openDialogs.length` check before the first
+  // dialog actually opens.
+  private opening = false;
+
   private gTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly handler = (e: KeyboardEvent) => this.onKey(e);
 
@@ -97,23 +102,39 @@ export class KeyboardShortcutService {
   }
 
   async openSearch(): Promise<void> {
-    if (this.dialog.openDialogs.length > 0) return;
-    const { SearchDialogComponent } = await import('../search/search-dialog.component');
-    this.dialog.open(SearchDialogComponent, {
-      panelClass: 'search-dialog-panel',
-      maxWidth: '580px',
-      width: '100%',
-      position: { top: '80px' },
+    await this.openOnce(async () => {
+      const { SearchDialogComponent } = await import('../search/search-dialog.component');
+      this.dialog.open(SearchDialogComponent, {
+        panelClass: 'search-dialog-panel',
+        maxWidth: '580px',
+        width: '100%',
+        position: { top: '80px' },
+      });
     });
   }
 
   async openTx(): Promise<void> {
-    const { TransactionDialogComponent } = await import('../transaction-dialog/transaction-dialog.component');
-    this.dialog.open(TransactionDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '580px', width: '100%' });
+    await this.openOnce(async () => {
+      const { TransactionDialogComponent } = await import('../transaction-dialog/transaction-dialog.component');
+      this.dialog.open(TransactionDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '580px', width: '100%' });
+    });
   }
 
   async openShortcuts(): Promise<void> {
-    const { ShortcutsDialogComponent } = await import('./shortcuts-dialog.component');
-    this.dialog.open(ShortcutsDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '480px', width: '100%' });
+    await this.openOnce(async () => {
+      const { ShortcutsDialogComponent } = await import('./shortcuts-dialog.component');
+      this.dialog.open(ShortcutsDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '480px', width: '100%' });
+    });
+  }
+
+  /** Hammering N / ⌘K / ? (or the topbar button) must never stack dialogs. */
+  private async openOnce(open: () => Promise<void>): Promise<void> {
+    if (this.opening || this.dialog.openDialogs.length > 0) return;
+    this.opening = true;
+    try {
+      await open();
+    } finally {
+      this.opening = false;
+    }
   }
 }
