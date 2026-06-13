@@ -1,7 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Envelope, EnvelopeRepository, EnvelopeSeed } from '@patrimo/api-domain';
+import type {
+  Envelope,
+  EnvelopeRepository,
+  EnvelopeSeed,
+  EtfRepository,
+  Transaction,
+  TransactionRepository,
+} from '@patrimo/api-domain';
 import { CreateEnvelopeDto, EnvelopeDto, UpdateEnvelopeDto } from '@patrimo/contracts';
-import { ENVELOPE_REPOSITORY } from '@patrimo/infrastructure';
+import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
+import { PriceService } from '../market/price.service';
+
+interface Holding { qty: number; buyQty: number; buyCost: number }
 
 function toDto(envelope: Envelope): EnvelopeDto {
   return {
@@ -32,12 +42,116 @@ function toPatch(input: UpdateEnvelopeDto): Partial<EnvelopeSeed> {
 @Injectable()
 export class EnvelopeService {
   constructor(
-    @Inject(ENVELOPE_REPOSITORY) private readonly envelopes: EnvelopeRepository,
+    @Inject(ENVELOPE_REPOSITORY)    private readonly envelopes:    EnvelopeRepository,
+    @Inject(TRANSACTION_REPOSITORY) private readonly transactions: TransactionRepository,
+    @Inject(ETF_REPOSITORY)         private readonly etfs:         EtfRepository,
+    private readonly prices: PriceService,
   ) {}
 
   async listForUser(userId: string): Promise<EnvelopeDto[]> {
-    const rows = await this.envelopes.findByUserId(userId);
-    return rows.map(toDto);
+    const [rows, txs, etfList] = await Promise.all([
+      this.envelopes.findByUserId(userId),
+      this.transactions.findByUserId(userId),
+      this.etfs.findAll(),
+    ]);
+    const etfByIsin = new Map(etfList.map(e => [e.isin, e]));
+
+    const txByEnvelope = new Map<string, Transaction[]>();
+    for (const tx of txs) {
+      const list = txByEnvelope.get(tx.envelopeId) ?? [];
+      list.push(tx);
+      txByEnvelope.set(tx.envelopeId, list);
+    }
+
+    // Resolve every held ISIN's price once (Redis-cached), shared across envelopes.
+    const heldIsins = new Set(
+      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL')).map(t => t.etfIsin as string),
+    );
+    const priceByIsin = new Map<string, number>();
+    await Promise.all(
+      Array.from(heldIsins).map(async isin => {
+        const etf = etfByIsin.get(isin);
+        if (!etf) return;
+        try {
+          const quote = await this.prices.getQuote(isin, etf.ticker);
+          if (quote.price != null) priceByIsin.set(isin, quote.price);
+        } catch { /* leave unpriced — falls back to PRU */ }
+      }),
+    );
+
+    return rows.map(envelope => {
+      const valuation = this.valuate(txByEnvelope.get(envelope.id) ?? [], priceByIsin);
+      // An envelope with no ETF position keeps its stored value: it may hold
+      // manual / opaque assets (SCPI, gold, crypto, AV units) not modelled as
+      // ETF transactions, which deriving would wrongly zero out.
+      return valuation
+        ? toDto({ ...envelope, value: valuation.value, invested: valuation.invested, cash: valuation.cash })
+        : toDto(envelope);
+    });
+  }
+
+  /**
+   * Derive an envelope's value / invested / cash from its own transactions,
+   * or `null` when it never held an ETF (no BUY) so the caller keeps the
+   * stored value. Cash is the double-entry balance (deposits − withdrawals
+   * − buys + sells + income), floored at 0: a buy not covered by a recorded
+   * deposit is assumed funded externally rather than producing a phantom
+   * negative balance — the common case for users who only log their buys.
+   */
+  private valuate(
+    txs: Transaction[],
+    priceByIsin: Map<string, number>,
+  ): { value: number; invested: number; cash: number } | null {
+    const holdings = new Map<string, Holding>();
+    let rawCash = 0;
+    let hasBuy = false;
+
+    for (const tx of txs) {
+      const price = tx.price ?? 0;
+      const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
+      switch (tx.type) {
+        case 'BUY': {
+          hasBuy = true;
+          const gross = tx.quantity * price + costs;
+          rawCash -= gross;
+          if (!tx.etfIsin) break;
+          const h = holdings.get(tx.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
+          h.qty += tx.quantity; h.buyQty += tx.quantity; h.buyCost += gross;
+          holdings.set(tx.etfIsin, h);
+          break;
+        }
+        case 'SELL': {
+          rawCash += tx.quantity * price - costs;
+          if (!tx.etfIsin) break;
+          const h = holdings.get(tx.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
+          h.qty -= tx.quantity;
+          holdings.set(tx.etfIsin, h);
+          break;
+        }
+        case 'DEPOSIT':    rawCash += tx.amount; break;
+        case 'WITHDRAWAL': rawCash -= tx.amount; break;
+        case 'DIVIDEND':
+        case 'INTEREST':   rawCash += tx.amount; break;
+      }
+    }
+
+    if (!hasBuy) return null;
+
+    let securities = 0;
+    let invested = 0;
+    for (const [isin, h] of holdings) {
+      if (h.qty <= 0) continue;
+      const avg = h.buyQty > 0 ? h.buyCost / h.buyQty : 0;
+      invested   += h.qty * avg;
+      securities += h.qty * (priceByIsin.get(isin) ?? avg);
+    }
+
+    const cash = Math.max(0, rawCash);
+    return {
+      value:    Number((securities + cash).toFixed(2)),
+      invested: Number(invested.toFixed(2)),
+      cash:     Number(cash.toFixed(2)),
+    };
   }
 
   async create(userId: string, input: CreateEnvelopeDto): Promise<EnvelopeDto> {
