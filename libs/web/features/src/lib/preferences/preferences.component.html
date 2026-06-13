@@ -96,4 +96,28 @@
     </button>
   </div>
 
+  <!-- Recent account activity (audit log) -->
+  <div class="card" style="max-width:720px;padding:24px;margin-top:28px">
+    <div class="card-head">
+      <div class="card-title">Activité <em>récente</em></div>
+      <span class="card-sub">tes dernières modifications de compte</span>
+    </div>
+
+    @if (activityLoading()) {
+      <p class="muted small" style="margin:0">Chargement…</p>
+    } @else if (recentActivity().length === 0) {
+      <p class="muted small" style="margin:0">
+        Aucune activité pour l'instant. Tes créations, modifications et
+        suppressions apparaîtront ici.
+      </p>
+    } @else {
+      @for (a of recentActivity(); track a.id) {
+        <div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--rule-soft);font-size:13px">
+          <span>{{ a.label }}</span>
+          <span class="muted tiny num">{{ a.when }}</span>
+        </div>
+      }
+    }
+  </div>
+
 </div>

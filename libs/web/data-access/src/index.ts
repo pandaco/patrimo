@@ -18,6 +18,7 @@ export * from './lib/performance.service';
 export * from './lib/exposure.service';
 export * from './lib/dca-plan.service';
 export * from './lib/strategy-version.service';
+export * from './lib/audit-log.service';
 export * from './lib/broker.service';
 export * from './lib/glossary.service';
 export * from './lib/fx.service';

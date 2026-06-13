@@ -7,12 +7,14 @@ import {
   DCA_PLAN_REPOSITORY,
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
+  AUDIT_LOG_REPOSITORY,
   STRATEGY_VERSION_REPOSITORY,
   TRANSACTION_REPOSITORY,
   USER_PREFERENCES_REPOSITORY,
   USER_REPOSITORY,
 } from './repository-tokens';
 import { TypeOrmAlertRuleRepository } from './repositories/typeorm-alert-rule.repository';
+import { TypeOrmAuditLogRepository } from './repositories/typeorm-audit-log.repository';
 import { TypeOrmDcaPlanRepository } from './repositories/typeorm-dca-plan.repository';
 import { TypeOrmStrategyVersionRepository } from './repositories/typeorm-strategy-version.repository';
 import { TypeOrmEnvelopeRepository } from './repositories/typeorm-envelope.repository';
@@ -40,6 +42,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     { provide: ALERT_RULE_REPOSITORY,       useClass: TypeOrmAlertRuleRepository },
     { provide: DCA_PLAN_REPOSITORY,         useClass: TypeOrmDcaPlanRepository },
     { provide: STRATEGY_VERSION_REPOSITORY, useClass: TypeOrmStrategyVersionRepository },
+    { provide: AUDIT_LOG_REPOSITORY,        useClass: TypeOrmAuditLogRepository },
   ],
   exports: [
     USER_REPOSITORY,
@@ -50,6 +53,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     ALERT_RULE_REPOSITORY,
     DCA_PLAN_REPOSITORY,
     STRATEGY_VERSION_REPOSITORY,
+    AUDIT_LOG_REPOSITORY,
   ],
 })
 export class PersistenceModule {}

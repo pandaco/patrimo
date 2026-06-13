@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AlertModule } from './alerts/alert.module';
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import { DcaModule } from './dca/dca.module';
 import { EnvelopeModule } from './envelopes/envelope.module';
@@ -24,6 +25,7 @@ import { TransactionModule } from './transactions/transaction.module';
     AlertModule,
     DcaModule,
     StrategyModule,
+    AuditModule,
   ],
   exports: [
     AuthModule,
@@ -37,6 +39,7 @@ import { TransactionModule } from './transactions/transaction.module';
     AlertModule,
     DcaModule,
     StrategyModule,
+    AuditModule,
   ],
 })
 export class ApplicationModule {}

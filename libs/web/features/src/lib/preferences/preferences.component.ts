@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { UpdateUserPreferencesDto } from '@patrimo/contracts';
-import { EtfService, PreferencesService } from '@patrimo/data-access';
+import { AuditLogEntryDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
+import { AuditLogService, EtfService, PreferencesService } from '@patrimo/data-access';
 
 const RISK_PROFILES = [
   'Prudent',
@@ -14,6 +14,31 @@ const RISK_PROFILES = [
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'] as const;
 
+// Code resource (controller-derived) → French label for the activity feed.
+const RESOURCE_LABELS: Record<string, string> = {
+  Envelope:    'Enveloppe',
+  Transaction: 'Mouvement',
+  Etf:         'ETF',
+  Dca:         'Plan DCA',
+  Alert:       "Règle d'alerte",
+  Preferences: 'Préférences',
+  Strategy:    'Version de stratégie',
+  Portfolio:   'Portefeuille',
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  create:  'Création',
+  update:  'Modification',
+  delete:  'Suppression',
+  refresh: 'Rafraîchissement',
+};
+
+const ACTIVITY_DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
+  day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+});
+
+interface ActivityRow { id: string; label: string; when: string }
+
 @Component({
   selector: 'app-preferences',
   standalone: true,
@@ -23,12 +48,24 @@ const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'] as const;
 })
 export class PreferencesComponent {
   private readonly preferences  = inject(PreferencesService);
+  private readonly auditLog = inject(AuditLogService);
   private readonly router = inject(Router);
 
   protected readonly riskProfiles = RISK_PROFILES;
   protected readonly currencies   = CURRENCIES;
   protected readonly loading      = this.preferences.loading;
   protected readonly etfCatalog   = inject(EtfService).all;
+
+  protected readonly activityLoading = this.auditLog.loading;
+
+  /** Recent account mutations, French-labelled, newest first. */
+  protected readonly recentActivity = computed<ActivityRow[]>(() =>
+    this.auditLog.all().map((entry: AuditLogEntryDto) => ({
+      id:    entry.id,
+      label: `${ACTION_LABELS[entry.action] ?? entry.method} · ${RESOURCE_LABELS[entry.resource] ?? entry.resource}`,
+      when:  ACTIVITY_DATE_FMT.format(new Date(entry.createdAt)),
+    })),
+  );
 
   protected riskProfile     = signal('');
   protected horizonYears    = signal(25);

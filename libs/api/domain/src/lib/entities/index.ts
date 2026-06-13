@@ -6,3 +6,4 @@ export * from './transaction.entity';
 export * from './alert-rule.entity';
 export * from './dca-plan.entity';
 export * from './strategy-version.entity';
+export * from './audit-log.entity';
