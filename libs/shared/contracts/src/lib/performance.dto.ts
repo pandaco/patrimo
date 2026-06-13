@@ -26,10 +26,26 @@ export interface PerformanceSeriesDto {
   portfolio: number[];
   /** Daily benchmark index normalised to 100 on the first sample (`null` until wired). */
   benchmark: number[] | null;
+  /** Invested capital (cost basis of the holdings) per label — the "ce que tu as mis" line. */
+  invested: number[];
   /** Top 3 drawdowns over the window, ranked by absolute depth. */
   drawdowns: DrawdownDto[];
   /** CAGR (annualized return) in %. `null` for sub-1-year periods. */
   annualized: number | null;
+}
+
+export interface PerformanceMetricsDto {
+  period: PerformancePeriod;
+  /** True time-weighted return over the window, in % — flow-neutral performance. `null` if too few samples. */
+  twr: number | null;
+  /** Annualized volatility of daily returns, in %. */
+  volatility: number | null;
+  /** Sharpe ratio (annualized return / volatility, risk-free = 0). */
+  sharpe: number | null;
+  /** Sortino ratio (annualized return / downside deviation, risk-free = 0). */
+  sortino: number | null;
+  /** Worst peak-to-trough drawdown in the window, in % (negative). */
+  maxDrawdownPct: number | null;
 }
 
 export interface EtfStatsDto {

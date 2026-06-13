@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 
@@ -17,9 +17,22 @@ export class PerformanceService {
       ? `${this.baseUrl}/performance/series?period=${this.period()}`
       : undefined),
     {
-      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, drawdowns: [], annualized: null },
+      defaultValue: { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, invested: [], drawdowns: [], annualized: null },
     },
   );
+
+  /** Risk + flow-neutral return metrics, refetched whenever the period changes. */
+  private readonly metricsResource = httpResource<PerformanceMetricsDto>(
+    () => (this.auth.isAuthenticated()
+      ? `${this.baseUrl}/performance/metrics?period=${this.period()}`
+      : undefined),
+    {
+      defaultValue: { period: '6M', twr: null, volatility: null, sharpe: null, sortino: null, maxDrawdownPct: null },
+    },
+  );
+
+  readonly metrics        = this.metricsResource.value;
+  readonly loadingMetrics = this.metricsResource.isLoading;
 
   /**
    * Legacy view used by the dashboard's `PerfChartComponent`: a `{ portfolio,

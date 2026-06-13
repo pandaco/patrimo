@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -83,6 +83,41 @@ export class PerformanceService {
   }
 
   async getSeries(userId: string, period: PerformancePeriod): Promise<PerformanceSeriesDto> {
+    const { labels, portfolio, invested, days, isLong } = await this.buildValuation(userId, period);
+
+    const bench = await this.resolveBenchmark(userId);
+    const benchmarkHistory = await this.priceService.getHistorical(
+      bench.isin, bench.ticker, days, isLong ? '1wk' : '1d',
+    );
+
+    const benchmark  = this.buildBenchmark(labels, portfolio, benchmarkHistory);
+    const drawdowns  = this.buildDrawdowns(labels, portfolio);
+    const annualized = computeAnnualized(portfolio, days);
+
+    return {
+      period,
+      count: labels.length,
+      labels,
+      portfolio,
+      benchmark,
+      invested,
+      drawdowns,
+      annualized,
+    };
+  }
+
+  /**
+   * Daily valuation replay shared by the series and metrics endpoints. Walks
+   * BUY/SELL transactions onto the date axis and, per label, computes:
+   *  - `portfolio`: market value (qty × close)
+   *  - `invested`:  cost basis of the current holdings (qty × PRU), so
+   *    value − invested reads directly as latent P&L
+   *  - `flows`:     net external capital deployed that day (BUY cost − SELL
+   *    proceeds), used to make the TWR / volatility figures flow-neutral
+   */
+  private async buildValuation(userId: string, period: PerformancePeriod): Promise<{
+    labels: string[]; portfolio: number[]; invested: number[]; flows: number[]; days: number; isLong: boolean;
+  }> {
     const now    = new Date();
     const isLong = LONG_PERIODS.includes(period);
     const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
@@ -103,11 +138,6 @@ export class PerformanceService {
       ? Math.ceil((now.getTime() - (earliestTxDate?.getTime() ?? now.getTime())) / 86400000) + 1
       : Math.max(30, PERIOD_DAYS[period]);
 
-    const bench = await this.resolveBenchmark(userId);
-    const benchmarkHistory = await this.priceService.getHistorical(
-      bench.isin, bench.ticker, days, interval,
-    );
-
     const sortedTxs = txs
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null)
       .filter(t => t.type === 'BUY' || t.type === 'SELL')
@@ -126,41 +156,103 @@ export class PerformanceService {
       }),
     );
 
-    const qtyByIsin   = new Map<string, number>();
-    const lastClose   = new Map<string, number>();
+    const qtyByIsin     = new Map<string, number>();
+    const buyQtyByIsin  = new Map<string, number>();
+    const buyCostByIsin = new Map<string, number>();
+    const lastClose     = new Map<string, number>();
     const portfolio: number[] = [];
+    const invested:  number[] = [];
+    const flows:     number[] = [];
     let txCursor = 0;
 
     for (const label of labels) {
+      let dayFlow = 0;
       while (txCursor < sortedTxs.length && isoDate(sortedTxs[txCursor].date) <= label) {
-        const tx = sortedTxs[txCursor];
-        const sign = tx.type === 'BUY' ? 1 : -1;
+        const tx    = sortedTxs[txCursor];
+        const sign  = tx.type === 'BUY' ? 1 : -1;
+        const price = tx.price ?? 0;
+        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
+        // BUY raises cost by fees/taxes; SELL lowers proceeds by them.
+        const gross = tx.quantity * price + (tx.type === 'BUY' ? costs : -costs);
         qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
+        if (sign > 0) {
+          buyQtyByIsin.set(tx.etfIsin, (buyQtyByIsin.get(tx.etfIsin) ?? 0) + tx.quantity);
+          buyCostByIsin.set(tx.etfIsin, (buyCostByIsin.get(tx.etfIsin) ?? 0) + gross);
+        }
+        dayFlow += sign * gross; // BUY deploys capital, SELL returns it
         txCursor++;
       }
+
       let value = 0;
+      let cost  = 0;
       for (const [isin, qty] of qtyByIsin) {
         if (qty <= 0) continue;
         const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin);
-        if (close === undefined) continue;
-        lastClose.set(isin, close);
-        value += qty * close;
+        if (close !== undefined) { lastClose.set(isin, close); value += qty * close; }
+        const buyQty  = buyQtyByIsin.get(isin) ?? 0;
+        const buyCost = buyCostByIsin.get(isin) ?? 0;
+        if (buyQty > 0) cost += qty * (buyCost / buyQty);
       }
       portfolio.push(Number(value.toFixed(2)));
+      invested.push(Number(cost.toFixed(2)));
+      flows.push(Number(dayFlow.toFixed(2)));
     }
 
-    const benchmark  = this.buildBenchmark(labels, portfolio, benchmarkHistory);
-    const drawdowns  = this.buildDrawdowns(labels, portfolio);
-    const annualized = computeAnnualized(portfolio, days);
+    return { labels, portfolio, invested, flows, days, isLong };
+  }
+
+  /**
+   * Risk + flow-neutral return metrics over the window. TWR chains *pure
+   * market* daily returns (`V_t / V_{t-1} − 1`) and deliberately drops:
+   *  - contribution days (`flows[i] !== 0`): a buy/sell mixes cash movement
+   *    with market move and the two cannot be cleanly separated when prices
+   *    are end-of-day and forward-filled.
+   *  - implausible single-day jumps (> 25 %): on sparse / non-trading-day
+   *    data a new position's first valuation lands a day after its buy,
+   *    producing a catch-up spike that is a data artifact, not performance.
+   * What remains is genuine market movement. Volatility / Sharpe / Sortino
+   * annualize those returns (252 trading days, or 52 weeks for long periods).
+   * Risk-free = 0.
+   */
+  async getMetrics(userId: string, period: PerformancePeriod): Promise<PerformanceMetricsDto> {
+    const { labels, portfolio, flows, isLong } = await this.buildValuation(userId, period);
+
+    const MAX_DAILY_MOVE = 0.25;
+    const returns: number[] = [];
+    for (let i = 1; i < portfolio.length; i++) {
+      if (flows[i] !== 0) continue;                       // contribution day — skip
+      const prev = portfolio[i - 1];
+      if (prev <= 0 || portfolio[i] <= 0) continue;       // cold / fully-exited day
+      const r = portfolio[i] / prev - 1;
+      if (Number.isFinite(r) && Math.abs(r) <= MAX_DAILY_MOVE) returns.push(r);
+    }
+
+    if (returns.length < 5) {
+      return { period, twr: null, volatility: null, sharpe: null, sortino: null, maxDrawdownPct: null };
+    }
+
+    const ppy  = isLong ? 52 : 252;
+    const n    = returns.length;
+    const mean = returns.reduce((a, b) => a + b, 0) / n;
+    const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / (n - 1);
+    const std  = Math.sqrt(variance);
+    const downsideDev = Math.sqrt(returns.reduce((a, r) => a + (r < 0 ? r * r : 0), 0) / n);
+
+    const twr = (returns.reduce((a, r) => a * (1 + r), 1) - 1) * 100;
+    const annualizedReturn = mean * ppy;
+    const annualizedVol    = std * Math.sqrt(ppy);
+    const annualizedDownside = downsideDev * Math.sqrt(ppy);
+
+    const drawdowns = this.buildDrawdowns(labels, portfolio);
+    const round = (x: number) => Number(x.toFixed(2));
 
     return {
       period,
-      count: labels.length,
-      labels,
-      portfolio,
-      benchmark,
-      drawdowns,
-      annualized,
+      twr: round(twr),
+      volatility: round(annualizedVol * 100),
+      sharpe:  annualizedVol > 0      ? round(annualizedReturn / annualizedVol)      : null,
+      sortino: annualizedDownside > 0 ? round(annualizedReturn / annualizedDownside) : null,
+      maxDrawdownPct: drawdowns.length > 0 ? drawdowns[0].pct : 0,
     };
   }
 

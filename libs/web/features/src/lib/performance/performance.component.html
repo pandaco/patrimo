@@ -61,7 +61,7 @@
       </div>
     </div>
     @if (portfolio().length > 0) {
-      <app-perf-chart [portfolio]="portfolio()" [benchmark]="benchmark()" />
+      <app-perf-chart [portfolio]="portfolio()" [benchmark]="benchmark()" [invested]="invested()" />
       <div class="row" style="justify-content:space-between;margin-top:12px;padding:0 12px;gap:18px;flex-wrap:wrap">
         <span class="muted small">Période : {{ activePeriod() }}</span>
         <div class="row" style="gap:18px">
@@ -78,6 +78,20 @@
               <span class="num small" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
                 {{ fmtPct(annualized()!, 2) }}/an
               </span>
+            </span>
+          }
+          @if (metrics().twr !== null) {
+            <span class="row" style="gap:6px">
+              <span class="muted tiny" data-tip="Rendement temps-pondéré (True Time-Weighted Return) : la vraie performance de tes choix, neutralisée du moment et du montant de tes versements. C'est la mesure pour te comparer honnêtement à un indice.">TWR</span>
+              <span class="num small" [class.pos]="metrics().twr! >= 0" [class.neg]="metrics().twr! < 0">
+                {{ fmtPct(metrics().twr!, 2) }}
+              </span>
+            </span>
+          }
+          @if (invested().length > 0) {
+            <span class="row" style="gap:6px">
+              <span style="width:14px;height:2px;background:var(--ink-4);display:inline-block;border-top:1px dashed var(--ink-4)"></span>
+              <span class="muted tiny" data-tip="Le capital réellement déployé (prix de revient de tes positions). L'écart avec la courbe Portefeuille = ta plus-value latente.">Investi</span>
             </span>
           }
           @if (hasBenchmark()) {
@@ -176,18 +190,24 @@
   @if (periodStats(); as stats) {
     <div class="section-head" style="margin-top:24px">
       <h2 class="section-title">Statistiques <em>détaillées</em></h2>
-      <span class="section-sub">{{ activePeriod() }} · taux sans risque 2,5 %</span>
+      <span class="section-sub">{{ activePeriod() }} · indicateurs nets de versements (taux sans risque 0 %)</span>
     </div>
     <div class="card">
       <div class="row" style="flex-wrap:wrap;gap:20px 36px">
         <div class="stat-block">
-          <div class="k"><span data-tip="Amplitude moyenne des variations quotidiennes extrapolée sur 1 an. 15 % = les fluctuations journalières représentent environ 15 % par an. Plus faible = portefeuille plus stable.">Volatilité ann.</span></div>
-          <div class="v">{{ fmtPct(stats.volatility, 1) }}</div>
+          <div class="k"><span data-tip="Amplitude des variations quotidiennes extrapolée sur 1 an, neutralisée de tes versements. 15 % = les fluctuations journalières représentent environ 15 % par an. Plus faible = portefeuille plus stable.">Volatilité ann.</span></div>
+          <div class="v">{{ metrics().volatility !== null ? fmtPct(metrics().volatility!, 1) : '—' }}</div>
         </div>
         <div class="stat-block">
-          <div class="k"><span data-tip="Rapport rendement/risque (Sharpe). Mesure combien de rendement tu obtiens par unité de risque pris. Au-dessus de 1 = bon, au-dessus de 2 = excellent.">Sharpe ratio</span></div>
-          <div class="v" [class.pos]="(stats.sharpe ?? 0) > 0" [class.neg]="(stats.sharpe ?? 0) < 0">
-            {{ stats.sharpe !== null ? fmtNum(stats.sharpe, 2) : '—' }}
+          <div class="k"><span data-tip="Rapport rendement/risque (Sharpe), net de versements. Combien de rendement par unité de risque pris. Au-dessus de 1 = bon, au-dessus de 2 = excellent.">Sharpe ratio</span></div>
+          <div class="v" [class.pos]="(metrics().sharpe ?? 0) > 0" [class.neg]="(metrics().sharpe ?? 0) < 0">
+            {{ metrics().sharpe !== null ? fmtNum(metrics().sharpe!, 2) : '—' }}
+          </div>
+        </div>
+        <div class="stat-block">
+          <div class="k"><span data-tip="Comme le Sharpe mais ne pénalise que la volatilité à la baisse (les pertes). Plus pertinent quand tu te soucies surtout du risque de perte. Plus élevé = mieux.">Sortino ratio</span></div>
+          <div class="v" [class.pos]="(metrics().sortino ?? 0) > 0" [class.neg]="(metrics().sortino ?? 0) < 0">
+            {{ metrics().sortino !== null ? fmtNum(metrics().sortino!, 2) : '—' }}
           </div>
         </div>
         <div class="stat-block">

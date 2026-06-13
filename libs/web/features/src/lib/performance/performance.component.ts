@@ -117,6 +117,12 @@ export class PerformanceComponent {
   protected readonly benchmarkPct = computed(() => PerformanceComponent.totalReturn(this.benchmark()));
   protected readonly alphaPct     = computed(() => this.portfolioPct() - this.benchmarkPct());
   protected readonly annualized    = computed(() => this.performanceService.raw().annualized);
+  protected readonly invested      = computed(() => this.performanceService.raw().invested);
+  // Flow-neutral risk + return metrics (TWR, volatility, Sharpe, Sortino, max DD),
+  // computed server-side from the daily series. Canonical — preferred over the
+  // client-side estimates kept below for the monthly heatmap / win-rate only.
+  protected readonly metrics       = this.performanceService.metrics;
+  protected readonly loadingMetrics = this.performanceService.loadingMetrics;
   protected readonly etfStats      = this.performanceService.etfStats;
   protected readonly fees          = this.performanceService.fees;
   protected readonly loadingStats  = this.performanceService.loadingStats;

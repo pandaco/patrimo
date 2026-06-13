@@ -32,6 +32,10 @@ interface HoverState {
         <polygon [attr.points]="areaPts()" fill="var(--brand)" opacity="0.07" />
         <polyline [attr.points]="benchPts()" fill="none" stroke="var(--ink-3)"
           stroke-width="1.2" stroke-dasharray="3 4" />
+        @if (invested().length > 0) {
+          <polyline [attr.points]="investedPts()" fill="none" stroke="var(--ink-4)"
+            stroke-width="1.2" stroke-dasharray="5 3" />
+        }
         <polyline [attr.points]="portfolioPts()" fill="none" stroke="var(--brand)" stroke-width="2" />
         <circle [attr.cx]="endX()" [attr.cy]="endY()" r="4"
           fill="var(--brand)" stroke="var(--paper)" stroke-width="2" />
@@ -48,6 +52,10 @@ interface HoverState {
           <text x="20" y="6" font-size="11" fill="var(--ink-2)">Portefeuille</text>
           <line x1="100" x2="114" y1="3" y2="3" stroke="var(--ink-3)" stroke-width="1.2" stroke-dasharray="3 4" />
           <text x="120" y="6" font-size="11" fill="var(--ink-2)">MSCI World</text>
+          @if (invested().length > 0) {
+            <line x1="210" x2="224" y1="3" y2="3" stroke="var(--ink-4)" stroke-width="1.2" stroke-dasharray="5 3" />
+            <text x="230" y="6" font-size="11" fill="var(--ink-2)">Investi</text>
+          }
         </g>
 
         @if (hover(); as h) {
@@ -81,6 +89,8 @@ interface HoverState {
 export class PerfChartComponent {
   portfolio = input.required<number[]>();
   benchmark = input.required<number[]>();
+  /** Optional cost-basis line ("ce que tu as mis"). Empty = not drawn. */
+  invested = input<number[]>([]);
 
   protected readonly W = W;
   protected readonly H = H;
@@ -91,13 +101,14 @@ export class PerfChartComponent {
   protected readonly hover = signal<HoverState | null>(null);
 
   private minMax = computed(() => {
-    const all = [...this.portfolio(), ...this.benchmark()];
+    const all = [...this.portfolio(), ...this.benchmark(), ...this.invested()];
     if (all.length === 0) return { min: 0, max: 1 };
     return { min: Math.min(...all) - 2, max: Math.max(...all) + 2 };
   });
 
   protected portfolioPts = computed(() => this.toPoints(this.portfolio()));
   protected benchPts     = computed(() => this.toPoints(this.benchmark()));
+  protected investedPts  = computed(() => this.toPoints(this.invested()));
 
   private toPoints(series: number[]): string {
     if (series.length === 0) return '';
