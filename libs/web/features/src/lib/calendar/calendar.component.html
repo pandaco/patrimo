@@ -155,6 +155,62 @@
     </div>
   </div>
 
+  <!-- PROJECTED INCOME (yield on cost + 12-month forecast) -->
+  <div class="section-head" style="margin-top:28px">
+    <h2 class="section-title">Revenus <em>projetés</em></h2>
+    <span class="section-sub">rendement sur PRU + projection 12 mois</span>
+  </div>
+  @if (income().positions.length === 0) {
+    <div class="card">
+      <p class="muted small" style="margin:0">
+        Aucune ligne distributrice détectée. Tes ETF capitalisants réinvestissent
+        les dividendes en interne — il n'y a pas de revenu à projeter ici.
+      </p>
+    </div>
+  } @else {
+    <div class="grid cols-3" style="margin-bottom:12px">
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px" data-tip="Dividendes encaissés sur 12 mois rapportés à ton prix de revient (PRU). Mesure ce que ton capital investi te rapporte, indépendamment du cours actuel.">Rendement sur PRU</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ income().portfolioYieldOnCostPct.toFixed(2) }} %</div>
+        <div class="muted small" style="margin-top:4px">dividendes 12M / PRU</div>
+      </div>
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px" data-tip="Projection des revenus des 12 prochains mois : quantité détenue × taux de distribution annuel actuel de chaque fonds. Estimation, pas une garantie.">Revenus projetés 12M</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(income().totalForwardAnnual, 0) }}</div>
+        <div class="muted small" style="margin-top:4px">au taux de distribution actuel</div>
+      </div>
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px" data-tip="Revenus projetés rapportés à la valeur actuelle du portefeuille — le rendement courant si tu achetais aujourd'hui.">Rendement courant</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ income().portfolioForwardYieldPct.toFixed(2) }} %</div>
+        <div class="muted small" style="margin-top:4px">projection / valeur</div>
+      </div>
+    </div>
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr>
+            <th>ETF</th>
+            <th class="r">Reçu 12M</th>
+            <th class="r">Rdt/PRU</th>
+            <th class="r">Projeté 12M</th>
+            <th class="r">Rdt courant</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of income().positions; track row.etfIsin) {
+            <tr>
+              <td class="serif-italic">{{ row.ticker }}</td>
+              <td class="r num">{{ fmtEur(row.trailing12mDividends, 2) }}</td>
+              <td class="r num">{{ row.yieldOnCostPct.toFixed(2) }} %</td>
+              <td class="r num">{{ fmtEur(row.forwardAnnualIncome, 2) }}</td>
+              <td class="r num muted">{{ row.forwardYieldPct.toFixed(2) }} %</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
   <!-- LEGEND -->
   <div class="row" style="margin-top:16px;gap:14px;font-size:12px">
     <span class="row gap-12">

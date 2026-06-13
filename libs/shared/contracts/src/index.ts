@@ -12,3 +12,4 @@ export * from './lib/alert-rule.dto';
 export * from './lib/dca.dto';
 export * from './lib/strategy-version.dto';
 export * from './lib/audit-log.dto';
+export * from './lib/income.dto';

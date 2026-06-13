@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DcaPlanService, DividendService, EnvelopeService, EtfService, FxService, TransactionService } from '@patrimo/data-access';
+import { DcaPlanService, DividendService, EnvelopeService, EtfService, FxService, IncomeService, TransactionService } from '@patrimo/data-access';
 import { DcaPlanDto, DividendDto } from '@patrimo/contracts';
 
 type EventType = 'DIV' | 'MARK' | 'DCA';
@@ -47,6 +47,10 @@ export class CalendarComponent {
   private readonly etfService = inject(EtfService);
   private readonly dividendService = inject(DividendService);
   private readonly dcaPlanService = inject(DcaPlanService);
+  private readonly incomeService = inject(IncomeService);
+
+  /** Forward income + yield-on-cost per distributing position. */
+  protected readonly income = this.incomeService.forecast;
 
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 

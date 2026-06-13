@@ -1,5 +1,5 @@
 import { Controller, Get, Header, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto } from '@patrimo/contracts';
+import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto, IncomeForecastDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -39,6 +39,11 @@ export class PortfolioController {
   @Get('dividends')
   getDividends(@SessionUser() user: AuthUser): Promise<DividendDto[]> {
     return this.portfolio.getUpcomingDividends(user.id);
+  }
+
+  @Get('income')
+  getIncome(@SessionUser() user: AuthUser): Promise<IncomeForecastDto> {
+    return this.portfolio.getIncomeForecast(user.id);
   }
 
   @Get('sparks')

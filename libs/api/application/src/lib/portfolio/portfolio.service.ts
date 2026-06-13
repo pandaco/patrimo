@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EtfRepository, Transaction, TransactionRepository } from '@patrimo/api-domain';
-import { PositionDto, PortfolioExposureDto, ExposureDto, RebalancePlanDto, RebalanceTransactionDto, DividendDto } from '@patrimo/contracts';
+import { PositionDto, PortfolioExposureDto, ExposureDto, RebalancePlanDto, RebalanceTransactionDto, DividendDto, IncomeForecastDto, PositionIncomeDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 import { PreferencesService } from '../preferences/preferences.service';
@@ -275,6 +275,71 @@ export class PortfolioService {
               value.toFixed(2), pnl.toFixed(2), pnlPct].join(',');
     });
     return header + rows.join('\n');
+  }
+
+  /**
+   * Income view per held position: dividends actually received over the
+   * trailing 12 months (yield on cost) plus a forward projection from the
+   * fund's current annual distribution rate (Yahoo). Capitalising ETFs report
+   * zero on both — they reinvest internally — and are filtered out.
+   */
+  async getIncomeForecast(userId: string): Promise<IncomeForecastDto> {
+    const [positions, txs] = await Promise.all([
+      this.listForUser(userId),
+      this.transactionRepository.findByUserId(userId),
+    ]);
+
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+
+    const trailingByIsin = new Map<string, number>();
+    for (const t of txs) {
+      if (t.type !== 'DIVIDEND' || !t.etfIsin || t.date < cutoff) continue;
+      trailingByIsin.set(t.etfIsin, (trailingByIsin.get(t.etfIsin) ?? 0) + t.amount);
+    }
+
+    const rows = await Promise.all(positions.map(async (p): Promise<PositionIncomeDto> => {
+      const costBasis    = p.invested;
+      const currentValue = p.qty * (p.currentPrice ?? p.avgPrice);
+      const trailing12m  = trailingByIsin.get(p.etfIsin) ?? 0;
+
+      let annualRate = 0;
+      try {
+        const meta = await this.priceService.getMetadata(p.etfIsin, p.ticker);
+        annualRate = meta?.summaryDetail?.dividendRate
+          ?? meta?.summaryDetail?.trailingAnnualDividendRate
+          ?? 0;
+      } catch { /* unknown rate → treat as non-distributing */ }
+
+      const forwardAnnualIncome = Number((p.qty * annualRate).toFixed(2));
+      return {
+        etfIsin: p.etfIsin,
+        ticker:  p.ticker,
+        name:    p.name,
+        qty:     p.qty,
+        costBasis:            Number(costBasis.toFixed(2)),
+        currentValue:         Number(currentValue.toFixed(2)),
+        trailing12mDividends: Number(trailing12m.toFixed(2)),
+        yieldOnCostPct:  costBasis > 0 ? Number((trailing12m / costBasis * 100).toFixed(2)) : 0,
+        forwardAnnualIncome,
+        forwardYieldPct: currentValue > 0 ? Number((forwardAnnualIncome / currentValue * 100).toFixed(2)) : 0,
+      };
+    }));
+
+    const totalTrailing12m   = rows.reduce((a, r) => a + r.trailing12mDividends, 0);
+    const totalForwardAnnual = rows.reduce((a, r) => a + r.forwardAnnualIncome, 0);
+    const totalCostBasis     = rows.reduce((a, r) => a + r.costBasis, 0);
+    const totalValue         = rows.reduce((a, r) => a + r.currentValue, 0);
+
+    return {
+      positions: rows
+        .filter(r => r.trailing12mDividends > 0 || r.forwardAnnualIncome > 0)
+        .sort((a, b) => b.forwardAnnualIncome - a.forwardAnnualIncome),
+      totalTrailing12m:   Number(totalTrailing12m.toFixed(2)),
+      totalForwardAnnual: Number(totalForwardAnnual.toFixed(2)),
+      portfolioYieldOnCostPct:  totalCostBasis > 0 ? Number((totalTrailing12m / totalCostBasis * 100).toFixed(2)) : 0,
+      portfolioForwardYieldPct: totalValue > 0 ? Number((totalForwardAnnual / totalValue * 100).toFixed(2)) : 0,
+    };
   }
 
   async getUpcomingDividends(userId: string): Promise<DividendDto[]> {
