@@ -15,6 +15,21 @@ async function readTotalTxCount(page: Page): Promise<number> {
   return match ? Number(match[1]) : 0;
 }
 
+/**
+ * The database ships empty (no seed), so tests that need an envelope create
+ * one via the API using the session + CSRF cookie set by dev-login. Call
+ * after authenticating, then reload the target page so the frontend resource
+ * refetches the new envelope.
+ */
+async function createEnvelope(page: Page): Promise<void> {
+  const cookies = await page.context().cookies();
+  const csrf = cookies.find(c => c.name === 'patrimo_csrf')?.value ?? '';
+  await page.request.post(`${API_URL}/api/envelopes`, {
+    headers: { 'X-CSRF-Token': csrf },
+    data: { code: 'PEA', glyph: 'pea', label: 'PEA test', broker: 'Test', openedAt: '2024-01-01', plafond: 150000 },
+  });
+}
+
 test.describe('Patrimo E2E Tests', () => {
 
   test('should redirect unauthenticated users to the login page', async ({ page }) => {
@@ -95,8 +110,12 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto(DEV_LOGIN_URL);
     await page.waitForURL(/\/dashboard(\?|#|$)/);
 
-    // Navigate to transactions view using sidebar navigation link
-    await page.click('a[href="/transactions"]');
+    // The DB has no seed — a DEPOSIT needs an envelope to attach to, so create
+    // one via the API, then load transactions with a full navigation so the
+    // envelope resource refetches.
+    await createEnvelope(page);
+
+    await page.goto('/transactions');
     await page.waitForURL(/\/transactions(\?|#|$)/);
 
     // Wait for the journal header to render (signals data hydrated from API).

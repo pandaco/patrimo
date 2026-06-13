@@ -13,7 +13,6 @@ npm install
 cp .env.example .env        # remplir GOOGLE_CLIENT_ID / SECRET (voir docs/dev-setup.md §6)
 npm run docker:up           # postgres + redis
 npm run db:migrate          # schéma TypeORM
-npm run db:seed             # 1 user dev + 8 ETFs + 11 enveloppes + 13 transactions
 npm start                   # web :4200 + api :3333 en watch
 ```
 
