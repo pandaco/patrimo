@@ -39,6 +39,17 @@
       <p class="muted small" style="margin:0 0 14px">
         La décision la plus structurante : combien d'actions (risque + rendement) vs obligations (stabilité).
       </p>
+      <details class="explainer" style="margin:0 0 16px">
+        <summary>Comprendre l'allocation stratégique</summary>
+        <div class="explainer-body">
+          <p>C'est ta décision de fond, pour les années à venir : quelle part de ton argent prend du <b>risque</b> (actions, pour la croissance long terme) et quelle part reste <b>stable</b> (obligations, qui amortissent les chutes). Tout le reste en découle.</p>
+          <p>Règle simple : plus ton horizon est long et plus tu tolères de voir ton portefeuille baisser temporairement, plus la part actions peut être élevée. On la révise rarement — une fois par an suffit.</p>
+        </div>
+      </details>
+      <div class="recap" style="margin:0 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:13px">Suggestion pour ton profil « {{ riskProfile() }} » : <b>{{ suggestedStocks() }} % actions / {{ suggestedBonds() }} % obligations</b>.</span>
+        <button type="button" class="btn sm" (click)="applyStrategicSuggestion()">Appliquer</button>
+      </div>
       <div class="field-row">
         <div class="field">
           <label for="as-stocks">Actions (%)</label>
@@ -64,6 +75,18 @@
         Décompose la poche actions entre Core (MSCI World, S&amp;P 500) et Satellite
         (thématiques ciblés). Inclus aussi les obligations ici.
       </p>
+      <details class="explainer" style="margin:0 0 16px">
+        <summary>Comprendre Core / Satellite</summary>
+        <div class="explainer-body">
+          <p><b>Core (cœur)</b> : la base, large et diversifiée — un ETF monde (MSCI World) ou S&amp;P 500. C'est 70–90 % de tes actions : il porte la performance long terme sans paris.</p>
+          <p><b>Satellite</b> : des paris ciblés et plus volatils autour du cœur — small caps, marchés émergents, un secteur (tech, santé)… À garder minoritaire (≤ 30 %) : c'est le piment, pas le plat principal.</p>
+          <p>Les <b>obligations</b> reprennent ici la part fixée à l'étape stratégique.</p>
+        </div>
+      </details>
+      <div class="recap" style="margin:0 0 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:13px">Suggestion : <b>Core {{ suggestedTactic().core }} % / Satellite {{ suggestedTactic().satellite }} % / Oblig {{ suggestedTactic().bonds }} %</b> (Core = 80 % de tes actions).</span>
+        <button type="button" class="btn sm" (click)="applyTacticSuggestion()">Appliquer</button>
+      </div>
       <div class="field-row">
         <div class="field">
           <label for="as-core">Core (%)</label>
@@ -94,8 +117,29 @@
       <p class="muted small" style="margin:0 0 14px">
         Poids cible par ETF de ton catalogue. Σ doit faire 100 % si tu en saisis au moins un.
       </p>
+      <details class="explainer" style="margin:0 0 16px">
+        <summary>Comment choisir un ETF (surtout hors liste)</summary>
+        <div class="explainer-body">
+          <p>Un ETF réplique un <b>indice</b> (ex. MSCI World). Pour en choisir un, regarde&nbsp;:</p>
+          <ul>
+            <li><b>Éligibilité PEA</b> si tu veux le loger dans un PEA — la plupart des ETF World éligibles sont à réplication « synthétique ».</li>
+            <li><b>Frais (TER)</b> : les plus bas possibles, vise &lt; 0,40 %/an. Le lookup remplit ce champ tout seul.</li>
+            <li><b>Encours</b> (taille du fonds) : un gros encours = plus liquide et pérenne.</li>
+            <li><b>Capitalisant vs distribuant</b> : capitalisant réinvestit les dividendes — idéal en PEA et sur le long terme.</li>
+            <li><b>Indice</b> : large (World, S&amp;P 500) pour le Core ; spécifique (small caps, émergents, secteur) pour un Satellite.</li>
+          </ul>
+          <p>Ton ETF n'est pas dans la liste ? Ajoute-le ci-dessous : tape son <b>nom, ISIN ou ticker</b>, le reste se remplit depuis Yahoo.</p>
+        </div>
+      </details>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin:0 0 14px">
+        <button type="button" class="btn sm" (click)="openAddEtf()">+ Ajouter un ETF hors liste</button>
+        <a class="btn sm ghost" routerLink="/tools/compare">Comparer des ETF →</a>
+        @if (etfTargets().length > 1) {
+          <button type="button" class="btn sm ghost" (click)="distributeEtfEvenly()">Répartir à parts égales</button>
+        }
+      </div>
       @if (etfTargets().length === 0) {
-        <p class="muted small">Aucun ETF dans le catalogue.</p>
+        <p class="muted small">Aucun ETF dans le catalogue. Ajoute ta première ligne avec « + Ajouter un ETF hors liste ».</p>
       } @else {
         <table class="tbl" style="font-size:13px">
           <thead>
@@ -136,6 +180,13 @@
         Répartition cible par type d'enveloppe (PEA, CTO, AV, …). Utile si tu veux piloter
         l'optimisation fiscale en plus du couple actions/obligations.
       </p>
+      <details class="explainer" style="margin:0 0 16px">
+        <summary>Comprendre la répartition par enveloppe</summary>
+        <div class="explainer-body">
+          <p>Une <b>enveloppe</b> est le contenant fiscal (PEA, CTO, assurance-vie, PER, livret). Le même ETF n'est pas imposé pareil selon où tu le loges.</p>
+          <p>Repères : privilégie le <b>PEA</b> pour les actions éligibles (gains exonérés d'impôt sur le revenu après 5 ans), le <b>CTO</b> pour ce qui n'entre pas en PEA, l'<b>AV / PER</b> pour le long terme et la transmission, les <b>livrets</b> pour l'épargne de précaution disponible.</p>
+        </div>
+      </details>
       @if (envTargets().length === 0) {
         <div style="padding:4px 0">
           <p class="muted small" style="margin:0 0 10px">Aucune enveloppe trouvée — commence par déclarer où ton argent est placé.</p>

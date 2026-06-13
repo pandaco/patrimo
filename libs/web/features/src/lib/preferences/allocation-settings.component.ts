@@ -1,15 +1,27 @@
 import { UpperCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
 import { AllocationTargetsDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { EnvelopeService, EtfService, PreferencesService } from '@patrimo/data-access';
+import { EtfDialogComponent } from '../compare/etf-dialog.component';
 
 interface EtfTargetRow { ticker: string; pct: number }
 interface EnvTargetRow { glyph:  string; pct: number }
 
 const DEFAULT_STRATEGIC = { stocks: 90, bonds: 10 };
 const DEFAULT_TACTIC    = { core: 72, satellite: 18, bonds: 10 };
+
+// Suggested equity share per risk profile (the bonds share is the remainder).
+// A starting point, not advice — the user can override every number.
+const RISK_STOCKS: Record<string, number> = {
+  'Prudent':             35,
+  'Équilibré':           55,
+  'Équilibré dynamique': 70,
+  'Dynamique':           85,
+  'Offensif':            95,
+};
 
 type WizardStepId = 1 | 2 | 3 | 4;
 interface WizardStep { id: WizardStepId; label: string; hint: string }
@@ -32,10 +44,31 @@ export class AllocationSettingsComponent {
   private readonly etfService = inject(EtfService);
   private readonly envelopeService = inject(EnvelopeService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly loading   = this.preferences.loading;
   protected readonly catalog   = this.etfService.all;
   protected readonly envelopes = this.envelopeService.all;
+
+  protected readonly riskProfile = computed(() => this.preferences.current().riskProfile);
+
+  /** Suggested strategic split from the user's risk profile, nudged by horizon. */
+  protected readonly suggestedStocks = computed(() => {
+    let base = RISK_STOCKS[this.riskProfile()] ?? 70;
+    const horizon = this.preferences.current().horizonYears;
+    if (horizon >= 20)     base += 5;   // long horizon → can ride more volatility
+    else if (horizon < 8)  base -= 15;  // short horizon → de-risk
+    base = Math.max(0, Math.min(100, base));
+    return Math.round(base / 5) * 5;
+  });
+  protected readonly suggestedBonds = computed(() => 100 - this.suggestedStocks());
+
+  /** Suggested tactic from the current strategic split: Core = 80% of equities. */
+  protected readonly suggestedTactic = computed(() => {
+    const stocks = this.stocksPct();
+    const core = Math.round(stocks * 0.8);
+    return { core, satellite: stocks - core, bonds: this.bondsStratPct() };
+  });
 
   protected stocksPct      = signal(DEFAULT_STRATEGIC.stocks);
   protected bondsStratPct  = signal(DEFAULT_STRATEGIC.bonds);
@@ -128,6 +161,33 @@ export class AllocationSettingsComponent {
 
   protected removeEnv(glyph: string): void {
     this.envTargets.update(list => list.filter(r => r.glyph !== glyph));
+  }
+
+  protected applyStrategicSuggestion(): void {
+    this.stocksPct.set(this.suggestedStocks());
+    this.bondsStratPct.set(this.suggestedBonds());
+  }
+
+  protected applyTacticSuggestion(): void {
+    const s = this.suggestedTactic();
+    this.corePct.set(s.core);
+    this.satellitePct.set(s.satellite);
+    this.bondsTacticPct.set(s.bonds);
+  }
+
+  /** Open the Yahoo-backed add-ETF dialog; the new line joins the catalog and,
+   *  via the catalog effect, appears in the ETF target list automatically. */
+  protected openAddEtf(): void {
+    this.dialog.open(EtfDialogComponent, { panelClass: 'tx-dialog-panel' });
+  }
+
+  /** Split 100 % evenly across the listed ETFs (remainder on the first row). */
+  protected distributeEtfEvenly(): void {
+    const rows = this.etfTargets();
+    if (rows.length === 0) return;
+    const base = Math.floor(100 / rows.length);
+    const remainder = 100 - base * rows.length;
+    this.etfTargets.set(rows.map((r, i) => ({ ...r, pct: base + (i === 0 ? remainder : 0) })));
   }
 
   protected async save(): Promise<void> {
