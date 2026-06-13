@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, FxService } from '@patrimo/data-access';
-import { RebalancePlanDto } from '@patrimo/contracts';
+import {
+  AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, FxService,
+  PreferencesService, StrategyVersionService, ToastService,
+} from '@patrimo/data-access';
+import { AllocationTargetsDto, RebalancePlanDto, StrategyVersionDto } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, TermComponent, fmtNum, fmtPct } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
@@ -17,12 +20,21 @@ interface EnvelopeTargetRow {
 
 type AllocBucket = 'Core' | 'Satellite' | 'Obligations';
 
-interface StrategyVersion { v: string; date: string; desc: string; current: boolean }
-const STRATEGY_VERSIONS: StrategyVersion[] = [
-  { v: 'v3', date: '14 mars 2026',  desc: 'Core 72% / Satellite 18% / Oblig 10%', current: true  },
-  { v: 'v2', date: '02 janv. 2025', desc: 'Core 70% / Satellite 20% / Oblig 10%', current: false },
-  { v: 'v1', date: '20 août 2024',  desc: 'Core 60% / Satellite 30% / Oblig 10%', current: false },
-];
+interface StrategyVersionRow {
+  id:      string;
+  label:   string;
+  date:    string;
+  desc:    string;
+  current: boolean;
+}
+
+const VERSION_DATE_FMT = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+/** Human one-liner derived from a snapshot's tactic split. */
+function describeTargets(targets: AllocationTargetsDto): string {
+  const t = targets.tactic;
+  return `Core ${t.core}% / Satellite ${t.satellite}% / Oblig ${t.bonds}%`;
+}
 
 const CURRENCY_COLORS: Record<string, string> = {
   EUR: '#16A34A',
@@ -41,13 +53,58 @@ export class AllocationComponent {
   private readonly allocationService = inject(AllocationService);
   private readonly etfService   = inject(EtfService);
   private readonly envelopeService = inject(EnvelopeService);
+  private readonly strategyVersionService = inject(StrategyVersionService);
+  private readonly preferences  = inject(PreferencesService);
+  private readonly toast    = inject(ToastService);
   private readonly http     = inject(HttpClient);
   private readonly baseUrl  = inject(API_BASE_URL);
 
   protected readonly rebalancePlan      = signal<RebalancePlanDto | null>(null);
   protected readonly loadingRebalance   = signal(false);
-  protected readonly strategyVersions   = STRATEGY_VERSIONS;
-  protected readonly selectedStrategyV  = signal<StrategyVersion | null>(null);
+  protected readonly savingVersion      = signal(false);
+  /** Currently expanded version row, by id (null = none). */
+  protected readonly selectedStrategyV  = signal<string | null>(null);
+
+  /** Version-history rows from the backend; newest first, first row = active. */
+  protected readonly strategyVersions = computed<StrategyVersionRow[]>(() =>
+    this.strategyVersionService.all().map((v: StrategyVersionDto, i) => ({
+      id:      v.id,
+      label:   v.label,
+      date:    VERSION_DATE_FMT.format(new Date(v.createdAt)),
+      desc:    v.note?.trim() || describeTargets(v.targets),
+      current: i === 0,
+    })),
+  );
+
+  /** A version can only be saved once the user has defined allocation targets. */
+  protected readonly canSaveVersion = computed(() => this.preferences.hasAllocationTargets());
+
+  protected async saveVersion(): Promise<void> {
+    if (this.savingVersion() || !this.canSaveVersion()) return;
+    this.savingVersion.set(true);
+    try {
+      await this.strategyVersionService.create({});
+      this.toast.success('Version de stratégie enregistrée');
+    } catch {
+      this.toast.error('Échec de l’enregistrement de la version');
+    } finally {
+      this.savingVersion.set(false);
+    }
+  }
+
+  protected async deleteVersion(id: string): Promise<void> {
+    try {
+      await this.strategyVersionService.remove(id);
+      if (this.selectedStrategyV() === id) this.selectedStrategyV.set(null);
+      this.toast.success('Version supprimée');
+    } catch {
+      this.toast.error('Échec de la suppression');
+    }
+  }
+
+  protected toggleVersion(id: string): void {
+    this.selectedStrategyV.update(curr => (curr === id ? null : id));
+  }
 
   protected readonly targets = this.allocationService.targets;
 

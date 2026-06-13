@@ -5,3 +5,4 @@ export * from './etf.repository';
 export * from './transaction.repository';
 export * from './alert-rule.repository';
 export * from './dca-plan.repository';
+export * from './strategy-version.repository';

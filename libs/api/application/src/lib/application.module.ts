@@ -8,6 +8,7 @@ import { MarketModule } from './market/market.module';
 import { PerformanceModule } from './performance/performance.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { PreferencesModule } from './preferences/preferences.module';
+import { StrategyModule } from './strategy/strategy.module';
 import { TransactionModule } from './transactions/transaction.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { TransactionModule } from './transactions/transaction.module';
     PreferencesModule,
     AlertModule,
     DcaModule,
+    StrategyModule,
   ],
   exports: [
     AuthModule,
@@ -34,6 +36,7 @@ import { TransactionModule } from './transactions/transaction.module';
     PreferencesModule,
     AlertModule,
     DcaModule,
+    StrategyModule,
   ],
 })
 export class ApplicationModule {}

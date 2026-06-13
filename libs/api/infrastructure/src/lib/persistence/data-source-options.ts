@@ -7,6 +7,7 @@ import { EtfOrmEntity } from './orm-entities/etf.orm-entity';
 import { TransactionOrmEntity } from './orm-entities/transaction.orm-entity';
 import { UserOrmEntity } from './orm-entities/user.orm-entity';
 import { UserPreferencesOrmEntity } from './orm-entities/user-preferences.orm-entity';
+import { StrategyVersionOrmEntity } from './orm-entities/strategy-version.orm-entity';
 import { Init1780531200000 } from './migrations/1780531200000-Init';
 import { UserPreferences1780617600000 } from './migrations/1780617600000-UserPreferences';
 import { AlertRead1780640000000 } from './migrations/1780640000000-AlertRead';
@@ -18,6 +19,7 @@ import { AddTransactionTaxes1781308800000 } from './migrations/1781308800000-Add
 import { AddBenchmarkPref1781310000000 } from './migrations/1781310000000-AddBenchmarkPref';
 import { AddEtfWatchOnly1781311000000 } from './migrations/1781311000000-AddEtfWatchOnly';
 import { AddTransferId1781312000000 } from './migrations/1781312000000-AddTransferId';
+import { AddStrategyVersion1781400000000 } from './migrations/1781400000000-AddStrategyVersion';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -28,6 +30,7 @@ export const ORM_ENTITIES = [
   EnvelopeOrmEntity,
   EtfOrmEntity,
   TransactionOrmEntity,
+  StrategyVersionOrmEntity,
 ] as const;
 
 export const ORM_MIGRATIONS = [
@@ -42,6 +45,7 @@ export const ORM_MIGRATIONS = [
   AddBenchmarkPref1781310000000,
   AddEtfWatchOnly1781311000000,
   AddTransferId1781312000000,
+  AddStrategyVersion1781400000000,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
