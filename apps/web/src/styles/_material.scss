@@ -1,0 +1,25 @@
+// ============================================
+// Angular Material M3 — minimal theme
+// Provides Material internals only.
+// Visual identity comes from CSS custom properties below (from design/app.css).
+// ============================================
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$green-palette,
+      theme-type: light,
+    ),
+    typography: (
+      brand-family: '"Geist", "Helvetica Neue", Arial, sans-serif',
+      plain-family: '"Geist", "Helvetica Neue", Arial, sans-serif',
+    ),
+    density: 0,
+  ));
+
+  // Map Material's primary to the app's brand token
+  --mat-sys-primary: #0F8B3F;
+  --mat-sys-on-primary: #ffffff;
+}
+

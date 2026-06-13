@@ -1,0 +1,62 @@
+// ============================================
+// HERO HIGHLIGHT BLOCK (Dashboard)
+// ============================================
+
+.hero-stats {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); margin-bottom: 24px;
+  // NOTE: no `overflow: hidden` here — it would clip the absolute-positioned
+  // `[data-tip]` tooltips that float above the `.stat` labels. Rounded
+  // corners on the inner grid are honoured via the per-child rules below.
+}
+.hero-main {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  border-radius: inherit;
+  & > :first-child {
+    border-top-left-radius: inherit;
+    border-bottom-left-radius: inherit;
+  }
+  & > :last-child {
+    border-top-right-radius: inherit;
+    border-bottom-right-radius: inherit;
+  }
+}
+
+.hero-money {
+  padding: 28px 28px; background: var(--ink); color: #fff;
+  display: flex; flex-direction: column; justify-content: space-between;
+  gap: 16px; position: relative; isolation: isolate;
+  // No `overflow: hidden` — it would clip the `[data-tip]` tooltip on the
+  // "Patrimoine total" label. The radial decoration below is sized and
+  // positioned so it never visually extends beyond the card's rounded
+  // corners, so we don't need a clipping container any more.
+  &::after {
+    content: ""; position: absolute; inset: auto 0 0 auto;
+    width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle, var(--brand) 0%, transparent 60%);
+    opacity: 0.15; pointer-events: none; z-index: -1;
+  }
+  .label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; letter-spacing: -0.005em; }
+  .value {
+    font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+    small { font-size: 22px; color: rgba(255,255,255,0.55); font-weight: 600; }
+  }
+  .sub { display: flex; gap: 10px; align-items: center; font-size: 13px; color: rgba(255,255,255,0.65); }
+  .delta.up { background: rgba(22,163,74,0.2); color: #4ADE80; }
+  .delta.down { background: rgba(220,38,38,0.2); color: #FCA5A5; }
+}
+
+// NBA section header
+.nba-header {
+  display: flex; align-items: baseline; gap: 14px; margin: 36px 0 18px;
+  .count-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 12px; border-radius: 8px;
+    background: var(--ink); color: #fff; font-size: 16px; font-weight: 700;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  }
+  h2 { font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; margin: 0; em { font-style: normal; color: var(--ink-3); font-weight: 700; } }
+  .desc { color: var(--ink-3); font-size: 14px; }
+  .right { margin-left: auto; }
+}
+

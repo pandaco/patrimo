@@ -1,0 +1,274 @@
+// ============================================
+// CARDS / GRID
+// ============================================
+
+.grid { display: grid; gap: 16px; }
+.grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  &.tight { padding: 14px 16px; }
+  &.flat { background: transparent; border: 1px dashed var(--rule); }
+}
+
+.wizard-steps {
+  list-style: none; padding: 0; margin: 0 0 20px;
+  display: flex; gap: 8px; flex-wrap: wrap; max-width: 720px;
+  counter-reset: wizard-step;
+}
+.wizard-step {
+  flex: 1 1 140px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md, 8px);
+  background: var(--surface);
+  position: relative;
+  &.current { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; }
+  &.done    { border-color: var(--gain); }
+}
+.wizard-step-btn {
+  all: unset;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; width: 100%; cursor: pointer;
+  box-sizing: border-box;
+  &:disabled { cursor: not-allowed; opacity: 0.55; }
+  &:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+}
+.wizard-step-index {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--paper-2, var(--surface)); color: var(--ink-3);
+  font-size: 12px; font-weight: 600;
+  border: 1px solid var(--rule);
+  .wizard-step.current & { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .wizard-step.done    & { background: var(--gain);  color: #fff; border-color: var(--gain);  }
+}
+.wizard-step-label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wizard-step-name  { font-size: 13px; font-weight: 500; color: var(--ink); }
+.wizard-step-hint  { font-size: 11px; }
+
+.heat-cell {
+  padding: 3px 5px;
+  border-radius: 3px;
+}
+.heat-cell.heat-empty {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 4px,
+    var(--rule) 4px 5px
+  );
+  background-color: transparent !important;
+  opacity: 0.6;
+}
+
+.ui-switch {
+  width: 22px; height: 12px; border-radius: 999px;
+  position: relative; cursor: pointer;
+  border: 1px solid transparent;
+  &:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+.ui-switch-thumb {
+  position: absolute; top: 1px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--paper);
+  transition: left 0.2s;
+}
+
+.ui-toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+  padding: 12px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  display: inline-flex; align-items: center; gap: 12px;
+  &.ok  { background: var(--gain); }
+  &.err { background: var(--loss); }
+}
+.ui-toast-close {
+  all: unset; cursor: pointer;
+  font-size: 18px; line-height: 1; color: rgba(255, 255, 255, 0.8);
+  padding: 0 4px;
+  &:hover         { color: #fff; }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 4px; }
+}
+
+// Unified chart hover tooltip — instant, no native title delay.
+.chart-host {
+  position: relative;
+  display: inline-block;
+}
+// Dashboard "Indicateurs clés" tile — compact card with label + value + sub.
+.kpi-tile {
+  padding: 14px 14px 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  .label {
+    font-size: 11px; font-weight: 500; color: var(--ink-3);
+    letter-spacing: 0.02em; line-height: 1.2;
+    text-transform: none;
+  }
+  .value {
+    font-size: 22px; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    &.pos  { color: var(--gain); }
+    &.neg  { color: var(--loss); }
+    &.warn { color: #B8761A; }
+    small { color: var(--ink-3); margin-left: 2px; font-variant-numeric: normal; }
+  }
+  .sub {
+    font-size: 11.5px; color: var(--ink-3); line-height: 1.35;
+    a { text-decoration: none; }
+    a:hover { color: var(--ink); }
+  }
+}
+@media (max-width: 1180px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+@media (max-width: 880px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 540px) {
+  .kpi-grid { grid-template-columns: 1fr !important; }
+}
+
+// Drift bar — used on Allocation to show real vs target as a horizontal
+// track with a vertical tick at the target. The bar itself shows a track
+// background; the inner span is the filled portion driven by inline width.
+.bar {
+  position: relative;
+  background: var(--rule-soft);
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+  > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--brand);
+    transition: width 0.2s ease;
+  }
+}
+// Vertical target tick rendered as a sibling of `.bar` inside a wrapper.
+.bar-target-tick {
+  position: absolute;
+  top: -3px;
+  height: 12px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: var(--ink, #1d1d1f);
+  color: #f0f0f0;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 400;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.32);
+  white-space: nowrap;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -5px;
+    transform: translateX(-50%) rotate(45deg);
+    width: 8px; height: 8px;
+    background: inherit;
+  }
+  .chart-tooltip-label { font-weight: 600; color: #fff; }
+  .chart-tooltip-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-family: var(--font-mono); }
+  .chart-tooltip-row .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+}
+
+.onboarding-step {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md, 8px);
+  padding: 18px;
+  display: flex; flex-direction: column; gap: 8px;
+  h3 { margin: 0; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  p  { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+  .btn { align-self: flex-start; margin-top: auto; }
+}
+.onboarding-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  font-size: 13px; font-weight: 600;
+}
+
+.explainer {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--r-md, 8px);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+.explainer > summary {
+  cursor: pointer; list-style: none;
+  font-weight: 600; font-size: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.explainer > summary::-webkit-details-marker { display: none; }
+.explainer > summary::before {
+  content: 'ⓘ'; color: var(--brand); font-size: 16px;
+}
+.explainer[open] > summary::before { content: '▾'; font-size: 12px; }
+.explainer-body {
+  margin-top: 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  p  { margin: 0 0 10px; }
+  ul { margin: 0 0 10px 18px; padding: 0; }
+  b  { color: var(--ink); }
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  cursor: help;
+  &.defensive  { background: rgba(22, 163, 74, 0.12); color: var(--gain); }
+  &.balanced   { background: rgba(202, 138, 4, 0.14); color: #8C6E2A; }
+  &.aggressive { background: rgba(185, 28, 28, 0.12); color: var(--loss); }
+  &::before {
+    content: '●';
+    font-size: 8px;
+    line-height: 1;
+  }
+}
+@media (max-width: 720px) {
+  .onboarding-step { padding: 14px; }
+  .card ol[style*="grid-template-columns:repeat(3,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+.card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
+.card-title {
+  font-size: 15px; font-weight: 600; line-height: 1; letter-spacing: -0.02em;
+  em { font-style: normal; color: var(--ink-3); font-weight: 500; }
+}
+.card-sub { font-size: 12px; color: var(--ink-3); }
+.card-right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+

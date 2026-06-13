@@ -1,0 +1,66 @@
+// ============================================
+// PATRIMO — Design tokens & global styles
+// Ported verbatim from design/app.css (source of truth for visual identity).
+// ============================================
+
+// Fonts (Geist, Geist Mono) are loaded via <link rel="preconnect"> + <link rel="stylesheet">
+// in apps/web/src/index.html — avoids render-blocking @import and gets connection warm-up.
+
+:root {
+  /* Neutrals — warm-stone, contrast-tuned for WCAG AA */
+  --paper:       #F4F3EF;
+  --paper-2:     #ECEAE2;
+  --surface:     #FFFFFF;
+  --surface-2:   #F8F7F3;
+  --ink:         #09090A;   /* 19:1 on paper */
+  --ink-2:       #2E2D2A;   /* 12.5:1 */
+  --ink-3:       #5C5A53;   /* 6.3:1 — AA for normal text */
+  --ink-4:       #8A887F;   /* 4.6:1 — decorative only */
+  --rule:        #D5D2C7;
+  --rule-soft:   #E5E2D8;
+
+  /* Vivid financial accent + semantic (all hit 4.5:1+ on their soft bg or paper) */
+  --brand:       #0F8B3F;   /* darker than vivid green so white text passes 4.5:1 */
+  --brand-ink:   #0A6630;
+  --brand-soft:  #DCFCE7;
+  --brand-glow:  #BBF7D0;
+  --gain:        #15803D;   /* 4.8:1 on white, 6.0:1 on gain-soft */
+  --gain-soft:   #DCFCE7;
+  --loss:        #B91C1C;   /* 6.5:1 on white */
+  --loss-soft:   #FEE2E2;
+  --warn:        #A16207;   /* 5.2:1 on white, 6.0:1 on warn-soft */
+  --warn-soft:   #FEF3C7;
+  --info:        #1D4ED8;   /* 6.5:1 on white */
+  --info-soft:   #DBEAFE;
+  --hi:          #FDE047;
+
+  /* Focus ring */
+  --focus:       #0F8B3F;
+  --focus-glow:  rgba(15, 139, 63, 0.25);
+
+  /* Type */
+  --font-sans: "Geist", "Helvetica Neue", "Arial", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Layout */
+  --shell-w: 248px;
+  --r: 7px;
+  --r-lg: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.005em;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
