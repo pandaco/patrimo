@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Envelope, EnvelopeService, EtfService, etfValue, FxService } from '@patrimo/data-access';
+import { computeLivretInterest } from './livret-interest';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
@@ -49,6 +50,9 @@ export class WealthComponent {
   protected readonly activeView = signal<WealthView>('famille');
   protected readonly total      = this.envelopeService.total;
   protected readonly allEnv     = this.envelopeService.all;
+
+  /** Projected annual interest on regulated savings (Livret A, LDDS, …). */
+  protected readonly livretInterest = computed(() => computeLivretInterest(this.allEnv()));
 
   protected readonly families = computed<FamilyRow[]>(() => {
     const all   = this.allEnv();

@@ -177,4 +177,50 @@
     </div>
   }
 
+  <!-- Projected interest on regulated savings -->
+  @if (livretInterest().rows.length > 0) {
+    <div class="section-head" style="margin-top:28px">
+      <h2 class="section-title">Intérêts <em>projetés</em></h2>
+      <span class="section-sub">épargne réglementée · aux taux actuels</span>
+    </div>
+    <div class="grid cols-3" style="margin-bottom:12px">
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px" data-tip="Intérêts annuels estimés de tes livrets réglementés, calculés sur le cash détenu aux taux en vigueur. Versés une fois par an.">Intérêts projetés / an</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(livretInterest().totalAnnualInterest, 0) }}</div>
+        <div class="muted small" style="margin-top:4px">sur {{ fmtEur(livretInterest().totalCash, 0) }} de cash</div>
+      </div>
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px">Taux moyen pondéré</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ livretInterest().blendedRatePct.toFixed(2) }} %</div>
+        <div class="muted small" style="margin-top:4px">tous livrets confondus</div>
+      </div>
+      <div class="card tight">
+        <div class="eyebrow" style="margin-bottom:6px">Soit par mois</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(livretInterest().totalAnnualInterest / 12, 0) }}</div>
+        <div class="muted small" style="margin-top:4px">≈ moyenne mensuelle</div>
+      </div>
+    </div>
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr><th>Livret</th><th class="r">Cash</th><th class="r">Taux</th><th class="r">Intérêts / an</th></tr>
+        </thead>
+        <tbody>
+          @for (row of livretInterest().rows; track row.code) {
+            <tr>
+              <td class="serif-italic">{{ row.label }}</td>
+              <td class="r num">{{ fmtEur(row.cash, 0) }}</td>
+              <td class="r num">{{ row.ratePct.toFixed(2) }} %</td>
+              <td class="r num">{{ fmtEur(row.annualInterest, 2) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="muted tiny" style="margin:8px 4px">
+        Estimation aux taux réglementés actuels (Livret A / LDDS 3 %, LEP 5 %).
+        Les intérêts sont versés annuellement et les taux peuvent évoluer.
+      </p>
+    </div>
+  }
+
 </div>
