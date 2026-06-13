@@ -51,21 +51,47 @@ export class CalendarComponent {
   protected readonly weekDays = ['L','M','M','J','V','S','D'];
 
   /**
-   * Window: past 3 months → next 3 months from today, on month boundaries.
+   * How many months the displayed window is shifted from "today-centred".
+   * 0 = the default ±3-month window around the current month; the prev/next
+   * controls move it freely, "Aujourd'hui" snaps it back.
+   */
+  private readonly monthOffset = signal(0);
+
+  /**
+   * Window: 7 months wide (3 before → 3 after the centre month), on month
+   * boundaries. The centre is the current month shifted by `monthOffset`.
    * Re-derived as a computed so the user keeps seeing a relevant window even
-   * if the SPA stays open for days.
+   * if the SPA stays open for days, and so it tracks the offset signal.
    */
   private readonly windowMonths = computed(() => {
-    const today = new Date();
+    const today  = new Date();
+    const offset = this.monthOffset();
     const months: { y: number; m: number; label: string }[] = [];
     for (let i = -3; i <= 3; i++) {
-      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      const d = new Date(today.getFullYear(), today.getMonth() + offset + i, 1);
       const y = d.getFullYear();
       const m = d.getMonth();
-      months.push({ y, m: m + 1, label: `${MONTH_LABELS_FR[m]} ${y === today.getFullYear() ? '' : y}`.trim() });
+      // Hide the year only when the window still sits inside the current year
+      // (offset 0); once navigated away, show it on every cell to avoid ambiguity.
+      const showYear = offset !== 0 || y !== today.getFullYear();
+      months.push({ y, m: m + 1, label: `${MONTH_LABELS_FR[m]} ${showYear ? y : ''}`.trim() });
     }
     return months;
   });
+
+  /** True when the window is in its default today-centred position. */
+  protected readonly atToday = computed(() => this.monthOffset() === 0);
+
+  /** "Mars 2026 – Septembre 2026" — the span the grid currently shows. */
+  protected readonly windowRangeLabel = computed(() => {
+    const w = this.windowMonths();
+    const first = w[0];
+    const last  = w[w.length - 1];
+    return `${MONTH_LABELS_FR[first.m - 1]} ${first.y} – ${MONTH_LABELS_FR[last.m - 1]} ${last.y}`;
+  });
+
+  protected shiftWindow(delta: number): void { this.monthOffset.update(o => o + delta); }
+  protected resetWindow(): void { this.monthOffset.set(0); }
 
   private readonly etfByIsin = computed(() => {
     const map = new Map<string, string>();

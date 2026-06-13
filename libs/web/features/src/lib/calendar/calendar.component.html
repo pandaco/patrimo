@@ -1,7 +1,7 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">Calendrier · 6 mois glissants</div>
+    <div class="page-eyebrow">Calendrier · fenêtre navigable</div>
     <h1 class="page-title">Les <em>événements</em> qui<br>comptent pour ton patrimoine.</h1>
     <p class="page-sub">
       Reconstruit depuis ton historique de transactions : dividendes reçus,
@@ -23,13 +23,21 @@
       <div class="muted small" style="margin-top:4px">PEA / PEA-PME · 5 ans</div>
     </div>
     <div class="card tight">
-      <div class="eyebrow" style="margin-bottom:6px">Fenêtre</div>
-      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">±3 mois</div>
-      <div class="muted small" style="margin-top:4px">passé + à venir</div>
+      <div class="eyebrow" style="margin-bottom:6px">Fenêtre affichée</div>
+      <div class="serif" style="font-size:17px;line-height:1.15;letter-spacing:-0.01em">{{ windowRangeLabel() }}</div>
+      <div class="muted small" style="margin-top:4px">7 mois · passé + à venir</div>
     </div>
   </div>
 
   <!-- MONTH GRID -->
+  <div class="row" style="margin-bottom:12px;gap:8px;align-items:center">
+    <button class="btn sm ghost" (click)="shiftWindow(-1)" aria-label="Mois précédents">←</button>
+    <span class="serif-italic" style="font-size:14px;min-width:230px;text-align:center">{{ windowRangeLabel() }}</span>
+    <button class="btn sm ghost" (click)="shiftWindow(1)" aria-label="Mois suivants">→</button>
+    @if (!atToday()) {
+      <button class="btn sm ghost" (click)="resetWindow()" style="margin-left:8px">Aujourd'hui</button>
+    }
+  </div>
   <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:12px">
     @for (mo of months(); track mo.y * 100 + mo.m) {
       <div class="card" style="padding:14px">
