@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EtfService, etfValue, FxService, PerformanceService, PreferencesService } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, etfValue, FxService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
+import { computeTaxEstimate } from './tax-estimate';
+import { startOfYearISO } from '../portfolio/realized-pnl';
 
 interface StressScenario {
   id: string;
@@ -68,6 +70,18 @@ export class PerformanceComponent {
   private readonly performanceService = inject(PerformanceService);
   private readonly etfService  = inject(EtfService);
   private readonly preferencesService = inject(PreferencesService);
+  private readonly transactionService = inject(TransactionService);
+  private readonly envelopeService = inject(EnvelopeService);
+
+  /**
+   * French capital-gains tax estimate for the current calendar year. Only
+   * CTO / crypto realized gains are taxed in-year (flat PFU 30 %); gains
+   * realized inside a PEA / AV / PER / PEE are deferred. See tax-estimate.ts.
+   */
+  protected readonly taxEstimate = computed(() =>
+    computeTaxEstimate(this.transactionService.all(), this.envelopeService.all(), startOfYearISO()),
+  );
+  protected readonly currentYear = new Date().getFullYear();
 
   // Human label of the user-selected benchmark, e.g. "CW8 — Amundi MSCI World".
   protected readonly benchmarkLabel = computed(() => {
