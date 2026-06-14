@@ -23,6 +23,7 @@ import { AddTransferId1781312000000 } from './migrations/1781312000000-AddTransf
 import { AddStrategyVersion1781400000000 } from './migrations/1781400000000-AddStrategyVersion';
 import { AddAuditLog1781500000000 } from './migrations/1781500000000-AddAuditLog';
 import { WidenEtfTickerTo201781600000000 } from './migrations/1781600000000-Widen-etf-ticker-to-20';
+import { WidenEtfAllocTo321781601000000 } from './migrations/1781601000000-Widen-etf-alloc-to-32';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -52,6 +53,7 @@ export const ORM_MIGRATIONS = [
   AddStrategyVersion1781400000000,
   AddAuditLog1781500000000,
   WidenEtfTickerTo201781600000000,
+  WidenEtfAllocTo321781601000000,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
