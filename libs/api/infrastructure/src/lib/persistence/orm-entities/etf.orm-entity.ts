@@ -41,8 +41,8 @@ export class EtfOrmEntity {
   @Column({ type: 'boolean' })
   pea!: boolean;
 
-  @Column({ type: 'varchar', length: 16 })
-  alloc!: 'Core' | 'Satellite' | 'Obligations';
+  @Column({ type: 'varchar', length: 32 })
+  alloc!: 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
 
   // Followed without a position — excluded from portfolio analytics.
   @Column({ name: 'watch_only', type: 'boolean', default: false })
