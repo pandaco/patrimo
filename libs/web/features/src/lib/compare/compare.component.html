@@ -129,6 +129,11 @@
                   [attr.aria-label]="'Modifier ' + etf.ticker"
                   title="Modifier"
                   (click)="editEtf(etf)">✎</button>
+          <button type="button" class="btn ghost sm"
+                  style="padding:2px 6px;font-size:11px;color:#ef4444"
+                  [attr.aria-label]="'Supprimer ' + etf.ticker"
+                  title="Supprimer du catalogue"
+                  (click)="deleteEtf(etf)">✕</button>
         </span>
       }
     </div>

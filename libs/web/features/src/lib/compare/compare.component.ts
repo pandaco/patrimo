@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto } from '@patrimo/contracts';
-import { Etf, EtfService } from '@patrimo/data-access';
+import { Etf, EtfService, ToastService } from '@patrimo/data-access';
 import { EtfDialogComponent, TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
@@ -16,6 +16,7 @@ const MAX_SELECTION = 4;
 })
 export class CompareComponent {
   private readonly etfService = inject(EtfService);
+  private readonly toast      = inject(ToastService);
 
   /** ETFs followed without a position. */
   protected readonly watchlist = computed(() =>
@@ -111,6 +112,17 @@ export class CompareComponent {
         this.selectedIsins.set([...current, created.isin]);
       }
     });
+  }
+
+  protected async deleteEtf(etf: EtfDto): Promise<void> {
+    if (!confirm(`Supprimer ${etf.ticker} du catalogue ?`)) return;
+    try {
+      await this.etfService.remove(etf.isin);
+      this.selectedIsins.update(list => list.filter(i => i !== etf.isin));
+    } catch (err) {
+      const msg = (err as { error?: { message?: string } })?.error?.message;
+      this.toast.error(msg ?? `Impossible de supprimer ${etf.ticker}.`);
+    }
   }
 
   protected editEtf(etf: EtfDto): void {
