@@ -60,10 +60,14 @@
       </div>
     }
 
-    <!-- ETF / ASSET -->
+    <!-- INSTRUMENT (ETF / ETC / ASSET) -->
     @if (showAsset()) {
       <div class="field">
-        <label for="tx-etf">ETF / Actif</label>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+          <label for="tx-etf" style="margin:0">Instrument (ETF, ETC…)</label>
+          <button type="button" class="btn ghost sm" style="font-size:11px;padding:2px 8px"
+                  (click)="openAddInstrument()">+ Ajouter un instrument</button>
+        </div>
         <select id="tx-etf" [ngModel]="etfIsin()" (ngModelChange)="etfIsin.set($event)">
           @for (etf of etfs(); track etf.isin) {
             <option [value]="etf.isin">

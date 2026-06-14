@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CreateTransactionDto, TransactionTypeDto } from '@patrimo/contracts';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { CreateTransactionDto, EtfDto, TransactionTypeDto } from '@patrimo/contracts';
 import {
   Envelope,
   EnvelopeService,
@@ -11,6 +11,7 @@ import {
   TransactionType,
   etfValue,
 } from '@patrimo/data-access';
+import { EtfDialogComponent } from '../etf-dialog/etf-dialog.component';
 import { fmtEur, fmtNum, fmtPctRaw } from '../format';
 
 export interface TransactionDialogData {
@@ -43,6 +44,7 @@ const TRANSACTION_TYPES: TransactionTypeEntry[] = [
 export class TransactionDialogComponent {
   private readonly dialogRef   = inject(MatDialogRef<TransactionDialogComponent>);
   private readonly data        = inject<TransactionDialogData>(MAT_DIALOG_DATA, { optional: true });
+  private readonly dialog      = inject(MatDialog);
   private readonly envService  = inject(EnvelopeService);
   private readonly etfService  = inject(EtfService);
   private readonly txService   = inject(TransactionService);
@@ -133,6 +135,13 @@ export class TransactionDialogComponent {
   protected readonly fmtEur    = fmtEur;
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
+
+  protected openAddInstrument(): void {
+    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '580px', width: '100%' });
+    ref.afterClosed().subscribe((created: EtfDto | undefined) => {
+      if (created) this.etfIsin.set(created.isin);
+    });
+  }
 
   protected close(): void { this.dialogRef.close(); }
 
