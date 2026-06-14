@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterLink } from '@angular/router';
 import { AllocationTargetsDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { EnvelopeService, EtfService, PreferencesService } from '@patrimo/data-access';
-import { EtfDialogComponent } from '../compare/etf-dialog.component';
+import { EtfDialogComponent } from '@patrimo/ui';
 
 interface EtfTargetRow { ticker: string; pct: number }
 interface EnvTargetRow { glyph:  string; pct: number }

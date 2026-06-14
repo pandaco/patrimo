@@ -3,8 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto } from '@patrimo/contracts';
 import { Etf, EtfService } from '@patrimo/data-access';
-import { TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
-import { EtfDialogComponent } from './etf-dialog.component';
+import { EtfDialogComponent, TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 

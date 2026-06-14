@@ -13,4 +13,5 @@ export * from './lib/keyboard/gmode-badge.component';
 export * from './lib/keyboard/keyboard-shortcut.service';
 export * from './lib/keyboard/shortcuts-dialog.component';
 export * from './lib/envelope-dialog/envelope-dialog.component';
+export * from './lib/etf-dialog/etf-dialog.component';
 export * from './lib/transaction-dialog/transaction-dialog.component';

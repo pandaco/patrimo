@@ -1,0 +1,156 @@
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="etf-modal-title">
+
+  <div class="modal-head">
+    <div>
+      <div style="font-size:11.5px;font-weight:500;color:var(--ink-3);margin-bottom:4px">
+        Nouvel instrument
+      </div>
+      <div class="modal-title" id="etf-modal-title">
+        Ajoute un <em>instrument</em> au catalogue
+      </div>
+    </div>
+    <button class="btn ghost sm" (click)="close()" style="margin-left:auto" aria-label="Fermer le dialogue">✕</button>
+  </div>
+
+  <div class="modal-body">
+
+    <!-- YAHOO SEARCH — fills the form from a picked candidate -->
+    <div class="field">
+      <label for="etf-search">Recherche rapide — ISIN, ticker ou nom</label>
+      <div style="display:flex;gap:8px">
+        <input id="etf-search" type="text" placeholder="IE00B5BMR087, SXR8 ou « S&P 500 »"
+               style="flex:1"
+               [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
+               (keydown.enter)="search()" />
+        <button class="btn sm" (click)="search()" [disabled]="searching() || searchQuery().trim().length < 2">
+          {{ searching() ? 'Recherche…' : 'Chercher' }}
+        </button>
+      </div>
+      @if (searchResults().length > 0) {
+        <ul style="list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--rule-soft);border-radius:6px;overflow:hidden">
+          @for (result of searchResults(); track result.symbol) {
+            <li>
+              <button type="button" (click)="pick(result)"
+                      style="display:flex;width:100%;gap:10px;align-items:baseline;background:none;border:none;border-bottom:1px solid var(--rule-soft);padding:8px 12px;cursor:pointer;text-align:left;font:inherit">
+                <b class="num">{{ result.symbol }}</b>
+                <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ result.name }}</span>
+                <span class="muted tiny">{{ result.exchange }}</span>
+                @if (result.price !== null) {
+                  <span class="num tiny">{{ result.price }} {{ result.currency ?? '' }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+        <span class="muted tiny">Clique un résultat : ticker, nom et devise sont remplis automatiquement.</span>
+      } @else if (searched() && !searching()) {
+        <span class="muted tiny">Aucun résultat Yahoo — vérifie l'orthographe ou saisis les champs à la main.</span>
+      }
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-isin">ISIN *</label>
+        <input id="etf-isin" type="text" placeholder="IE00B4L5Y983" maxlength="12"
+               [ngModel]="isin()" (ngModelChange)="isin.set($event)"
+               style="text-transform:uppercase" />
+        @if (isin().length > 0 && !isinValid()) {
+          <span class="muted tiny" style="color:#FCA5A5">Format attendu : 2 lettres + 10 caractères (ex. FR0010315770)</span>
+        }
+      </div>
+      <div class="field">
+        <label for="etf-ticker">Ticker *</label>
+        <input id="etf-ticker" type="text" placeholder="ESE ou SXR8.DE" maxlength="12"
+               [ngModel]="ticker()" (ngModelChange)="ticker.set($event)"
+               style="text-transform:uppercase" />
+        <span class="muted tiny">Coté hors Paris ? Ajoute le suffixe Yahoo : .DE (Xetra), .AS (Amsterdam), .L (Londres), .MI (Milan)</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="etf-name">Nom *</label>
+      <input id="etf-name" type="text" placeholder="iShares Core MSCI World UCITS"
+             [ngModel]="name()" (ngModelChange)="name.set($event)" />
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-ter">Frais de gestion (TER, % par an) *</label>
+        <input id="etf-ter" type="number" step="0.01" min="0" max="5" placeholder="0.20"
+               [ngModel]="ter()" (ngModelChange)="ter.set($event)" />
+        <span class="muted tiny">Pré-rempli depuis Yahoo quand disponible — sinon, sur la fiche du fonds (DIC/KID). Ex. 0,07 pour le S&amp;P 500 iShares</span>
+      </div>
+      <div class="field">
+        <label for="etf-currency">Devise</label>
+        <select id="etf-currency" [ngModel]="currency()" (ngModelChange)="currency.set($event)">
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="GBP">GBP</option>
+          <option value="CHF">CHF</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-distrib">Distribution</label>
+        <select id="etf-distrib" [ngModel]="distrib()" (ngModelChange)="distrib.set($event)">
+          <option value="Capitalisant">Capitalisant — dividendes réinvestis</option>
+          <option value="Distribuant">Distribuant — dividendes versés</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="etf-alloc">Rôle dans ta stratégie</label>
+        <select id="etf-alloc" [ngModel]="alloc()" (ngModelChange)="alloc.set($event)">
+          <option value="Core">Core — base diversifiée</option>
+          <option value="Satellite">Satellite — poche tactique</option>
+          <option value="Obligations">Obligations — stabilité</option>
+          <option value="Matières premières">Matières premières — or, argent, énergie…</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-issuer">Émetteur <span class="muted">(optionnel)</span></label>
+        <input id="etf-issuer" type="text" placeholder="iShares, Amundi…"
+               [ngModel]="issuer()" (ngModelChange)="issuer.set($event)" />
+      </div>
+      <div class="field">
+        <label for="etf-index">Indice suivi <span class="muted">(optionnel)</span></label>
+        <input id="etf-index" type="text" placeholder="MSCI World"
+               [ngModel]="index()" (ngModelChange)="index.set($event)" />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="etf-repli">Réplication <span class="muted">(optionnel)</span></label>
+        <select id="etf-repli" [ngModel]="repli()" (ngModelChange)="repli.set($event)">
+          <option value="">—</option>
+          <option value="Physique">Physique</option>
+          <option value="Synthétique">Synthétique</option>
+        </select>
+      </div>
+      <div class="field" style="display:flex;align-items:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0 0 10px">
+          <input type="checkbox" [ngModel]="pea()" (ngModelChange)="pea.set($event)" />
+          Éligible PEA
+        </label>
+      </div>
+    </div>
+
+    <p class="muted tiny" style="margin:4px 0 0">
+      Seuls les champs marqués * sont requis. Le ticker est vérifié contre Yahoo
+      Finance à l'enregistrement — si aucun cours n'est trouvé, l'ajout est refusé
+      pour éviter un suivi silencieusement cassé.
+    </p>
+  </div>
+
+  <div class="modal-foot">
+    <button class="btn ghost" (click)="close()" [disabled]="submitting()">Annuler</button>
+    <button class="btn primary" data-testid="etf-save" (click)="save()" [disabled]="!canSave()">
+      {{ submitting() ? 'Vérification du cours…' : 'Ajouter au catalogue →' }}
+    </button>
+  </div>
+</div>
