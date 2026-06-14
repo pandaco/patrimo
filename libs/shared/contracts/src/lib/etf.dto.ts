@@ -1,4 +1,4 @@
-export type EtfAllocationDto = 'Core' | 'Satellite' | 'Obligations';
+export type EtfAllocationDto = 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
 
 export interface EtfDto {
   isin: string;

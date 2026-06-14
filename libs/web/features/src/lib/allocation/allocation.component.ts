@@ -18,7 +18,7 @@ interface EnvelopeTargetRow {
   drift:  number;
 }
 
-type AllocBucket = 'Core' | 'Satellite' | 'Obligations';
+type AllocBucket = 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
 
 interface StrategyVersionRow {
   id:      string;
@@ -122,19 +122,20 @@ export class AllocationComponent {
 
   protected readonly tacticReal = computed<Record<AllocBucket, number>>(() => {
     const total = this.total();
-    const acc: Record<AllocBucket, number> = { Core: 0, Satellite: 0, Obligations: 0 };
+    const acc: Record<AllocBucket, number> = { Core: 0, Satellite: 0, Obligations: 0, 'Matières premières': 0 };
     if (!total) return acc;
     for (const e of this.etfService.all()) acc[e.alloc] += etfValue(e);
     return {
-      Core:        (acc.Core        / total) * 100,
-      Satellite:   (acc.Satellite   / total) * 100,
-      Obligations: (acc.Obligations / total) * 100,
+      Core:                 (acc.Core                 / total) * 100,
+      Satellite:            (acc.Satellite            / total) * 100,
+      Obligations:          (acc.Obligations          / total) * 100,
+      'Matières premières': (acc['Matières premières'] / total) * 100,
     };
   });
 
   protected readonly strategicReal = computed(() => {
     const t = this.tacticReal();
-    return { stocks: t.Core + t.Satellite, bonds: t.Obligations };
+    return { stocks: t.Core + t.Satellite + t['Matières premières'], bonds: t.Obligations };
   });
 
   protected readonly byCurrency = computed<SliceRow[]>(() => {

@@ -149,10 +149,11 @@
         <ui-donut [data]="tacticDonut()" [size]="160" [thickness]="22" />
         <div style="flex:1">
           @for (row of [
-            { label: 'Core',        target: targets().tactic.core,      real: tacticReal().Core        },
-            { label: 'Satellite',   target: targets().tactic.satellite, real: tacticReal().Satellite   },
-            { label: 'Obligations', target: targets().tactic.bonds,     real: tacticReal().Obligations }
-          ]; track row.label) {
+            { label: 'Core',                target: targets().tactic.core,      real: tacticReal().Core                       },
+            { label: 'Satellite',           target: targets().tactic.satellite, real: tacticReal().Satellite                  },
+            { label: 'Obligations',         target: targets().tactic.bonds,     real: tacticReal().Obligations                },
+            { label: 'Matières premières',  target: 0,                          real: tacticReal()['Matières premières']      }
+          ].filter(r => r.label !== 'Matières premières' || r.real > 0); track row.label) {
             <div style="margin-bottom:8px">
               <div class="row" style="margin-bottom:4px">
                 <span style="font-size:13.5px">{{ row.label }}</span>

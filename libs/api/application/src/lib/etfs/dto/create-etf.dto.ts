@@ -54,6 +54,6 @@ export class CreateEtfDtoBody implements CreateEtfDto {
   @IsBoolean()
   pea!: boolean;
 
-  @IsIn(['Core', 'Satellite', 'Obligations'])
+  @IsIn(['Core', 'Satellite', 'Obligations', 'Matières premières'])
   alloc!: EtfAllocationDto;
 }

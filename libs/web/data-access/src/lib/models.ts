@@ -32,7 +32,7 @@ export interface Etf {
   repli: string;
   distrib: string;
   pea: boolean;
-  alloc: 'Core' | 'Satellite' | 'Obligations';
+  alloc: 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
   /** Followed without a position — excluded from portfolio analytics. */
   watchOnly: boolean;
   qty: number;
