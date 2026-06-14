@@ -18,6 +18,7 @@ import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
 import { CreateEtfDtoBody } from './dto/create-etf.dto';
 import { SetWatchOnlyDtoBody } from './dto/set-watch-only.dto';
+import { UpdateEtfDtoBody } from './dto/update-etf.dto';
 import { EtfService } from './etf.service';
 
 @Controller('etfs')
@@ -47,6 +48,14 @@ export class EtfController {
     @Param('isin') isin: string,
   ): Promise<void> {
     return this.etfs.delete(user.id, isin);
+  }
+
+  @Patch(':isin')
+  async update(
+    @Param('isin') isin: string,
+    @Body() body: UpdateEtfDtoBody,
+  ): Promise<EtfDto> {
+    return this.etfs.update(isin, body);
   }
 
   @Patch(':isin/watch')

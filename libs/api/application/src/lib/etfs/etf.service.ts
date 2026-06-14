@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Etf, EtfRepository, TransactionRepository } from '@patrimo/api-domain';
 import { CreateEtfDto, EtfDto, EtfLookupResultDto } from '@patrimo/contracts';
+import { UpdateEtfDtoBody } from './dto/update-etf.dto';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -86,6 +87,26 @@ export class EtfService {
       watchOnly: true,
     });
     return toDto(created);
+  }
+
+  async update(isin: string, input: UpdateEtfDtoBody): Promise<EtfDto> {
+    const existing = await this.etfs.findByIsin(isin);
+    if (!existing) throw new NotFoundException(`Unknown ETF: ${isin}`);
+    const updated = await this.etfs.upsert({
+      isin:      existing.isin,
+      ticker:    input.ticker   ?? existing.ticker,
+      name:      input.name     ?? existing.name,
+      issuer:    input.issuer   ?? existing.issuer,
+      index:     input.index    ?? existing.index,
+      ter:       input.ter      ?? existing.ter,
+      currency:  input.currency ?? existing.currency,
+      repli:     input.repli    ?? existing.repli,
+      distrib:   input.distrib  ?? existing.distrib,
+      pea:       input.pea      ?? existing.pea,
+      alloc:     input.alloc    ?? existing.alloc,
+      watchOnly: existing.watchOnly,
+    });
+    return toDto(updated);
   }
 
   /** Remove a catalog entry — refused while any of the user's transactions reference it. */
