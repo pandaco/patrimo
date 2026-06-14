@@ -114,15 +114,22 @@
         Watchlist ({{ watchlist().length }}) :
       </span>
       @for (etf of catalog(); track etf.isin) {
-        <button type="button"
-                class="pill"
-                [class.solid]="etf.watchOnly"
-                [class.soft]="!etf.watchOnly"
-                [attr.aria-pressed]="etf.watchOnly"
-                [attr.aria-label]="(etf.watchOnly ? 'Ne plus suivre ' : 'Suivre ') + etf.ticker"
-                (click)="toggleWatch(etf.isin, etf.watchOnly)">
-          {{ etf.watchOnly ? '★' : '☆' }} {{ etf.ticker }}
-        </button>
+        <span style="display:inline-flex;align-items:center;gap:2px">
+          <button type="button"
+                  class="pill"
+                  [class.solid]="etf.watchOnly"
+                  [class.soft]="!etf.watchOnly"
+                  [attr.aria-pressed]="etf.watchOnly"
+                  [attr.aria-label]="(etf.watchOnly ? 'Ne plus suivre ' : 'Suivre ') + etf.ticker"
+                  (click)="toggleWatch(etf.isin, etf.watchOnly)">
+            {{ etf.watchOnly ? '★' : '☆' }} {{ etf.ticker }}
+          </button>
+          <button type="button" class="btn ghost sm"
+                  style="padding:2px 6px;font-size:11px"
+                  [attr.aria-label]="'Modifier ' + etf.ticker"
+                  title="Modifier"
+                  (click)="editEtf(etf)">✎</button>
+        </span>
       }
     </div>
   </div>

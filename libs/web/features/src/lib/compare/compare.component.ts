@@ -113,6 +113,15 @@ export class CompareComponent {
     });
   }
 
+  protected editEtf(etf: EtfDto): void {
+    this.dialog.open(EtfDialogComponent, {
+      data: { etf },
+      panelClass: 'tx-dialog-panel',
+      maxWidth: '580px',
+      width: '100%',
+    });
+  }
+
   protected toggle(etf: Etf): void {
     const current = this.selectedIsins();
     if (current.includes(etf.isin)) {
