@@ -80,13 +80,13 @@ export class CompareComponent {
 
   protected readonly canAddMore = computed(() => this.selectedIsins().length < MAX_SELECTION);
 
+  private readonly seeded = signal(false);
+
   constructor() {
-    // Seed the comparator with the first three catalog rows as soon as it
-    // hydrates — gives the page some content on first paint without forcing
-    // the user to click.
     effect(() => {
-      if (this.selectedIsins().length === 0 && this.catalog().length > 0) {
+      if (!this.seeded() && this.catalog().length > 0) {
         this.selectedIsins.set(this.catalog().slice(0, 3).map(e => e.isin));
+        this.seeded.set(true);
       }
     });
   }
