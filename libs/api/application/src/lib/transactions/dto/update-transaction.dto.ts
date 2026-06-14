@@ -49,5 +49,11 @@ export class UpdateTransactionDtoBody {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
+  taxes?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   amount?: number;
 }
