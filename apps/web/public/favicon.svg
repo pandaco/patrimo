@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="9" fill="#0F8B3F"/>
+  <!-- Stem -->
+  <rect x="11" y="9.5" width="2.5" height="13" rx="1.25" fill="white"/>
+  <!-- Bowl outer -->
+  <path d="M11 9.5 h6 q4.5 0 4.5 4.5 q0 4.5-4.5 4.5 h-6 z" fill="white"/>
+  <!-- Bowl cutout -->
+  <path d="M13.5 11.5 h3.5 q2.5 0 2.5 2.5 q0 2.5-2.5 2.5 h-3.5 z" fill="#0F8B3F"/>
+</svg>
