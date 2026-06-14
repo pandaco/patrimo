@@ -18,11 +18,6 @@ export class CompareComponent {
   private readonly etfService = inject(EtfService);
   private readonly toast      = inject(ToastService);
 
-  /** ETFs followed without a position. */
-  protected readonly watchlist = computed(() =>
-    this.etfService.all().filter(e => e.watchOnly),
-  );
-
   protected async toggleWatch(isin: string, current: boolean): Promise<void> {
     try {
       await this.etfService.setWatchOnly(isin, !current);
