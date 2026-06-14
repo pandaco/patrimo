@@ -52,7 +52,7 @@ const NAV: NavGroup[] = [
     items: [
       { id: 'dca',       label: 'DCA helper',      route: '/tools/dca',      icon: 'dca' },
       { id: 'calendar',  label: 'Calendrier',      route: '/tools/calendar', icon: 'calendar',  shortcut: 'C' },
-      { id: 'compare',   label: 'Comparateur ETF', route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },
+      { id: 'compare',   label: 'Comparateur',     route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },
       { id: 'alerts',    label: 'Alertes',         route: '/tools/alerts',   icon: 'alert',     shortcut: 'A' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
       { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },

@@ -1,10 +1,10 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">Comparateur ETF</div>
-    <h1 class="page-title">Compare <em>côte à côte</em><br>jusqu'à 4 ETF du catalogue.</h1>
+    <div class="page-eyebrow">Comparateur d'instruments</div>
+    <h1 class="page-title">Compare <em>côte à côte</em><br>jusqu'à 4 instruments du catalogue.</h1>
     <p class="page-sub">
-      Sélectionne les ETF à confronter, puis lis les caractéristiques
+      Sélectionne les instruments à confronter, puis lis les caractéristiques
       structurelles (TER, réplication, devise, éligibilité PEA, indice…) et
       l'estimation du coût total de détention sur 5 ans pour un DCA mensuel.
     </p>
@@ -14,7 +14,7 @@
     <summary>Comment utiliser le comparateur</summary>
     <div class="explainer-body">
       <p>
-        <b>1. Sélectionne</b> jusqu'à 4 ETF parmi la liste pour les afficher côte
+        <b>1. Sélectionne</b> jusqu'à 4 instruments parmi la liste pour les afficher côte
         à côte avec leurs caractéristiques structurelles. Utilise les filtres
         pour réduire la liste si elle est trop longue.
       </p>
@@ -24,16 +24,16 @@
         en bas regroupe tous les critères pour un balayage rapide.
       </p>
       <p>
-        <b>3. Achète</b> via le bouton <em>+ Acheter cet ETF</em> sur chaque
+        <b>3. Achète</b> via le bouton <em>+ Acheter cet instrument</em> sur chaque
         carte : ça ouvre la boîte de saisie d'une transaction BUY pré-remplie
         avec l'ISIN. Choisis ton enveloppe (PEA, CTO, …), saisis quantité et
         prix d'achat, valide.
       </p>
       <p style="color:var(--ink-3);font-size:12.5px;margin:0">
-        <b>Catalogue.</b> Il te manque un ETF ? Clique
-        <em>+ Ajouter un ETF</em> : saisis son ISIN et son ticker, Patrimo
+        <b>Catalogue.</b> Il te manque un instrument ? Clique
+        <em>+ Ajouter un instrument</em> : saisis son ISIN et son ticker, Patrimo
         vérifie que Yahoo Finance connaît le cours avant de l'accepter. Le
-        nouvel ETF arrive en suivi (watchlist) — compare-le, puis achète-le
+        nouvel instrument arrive en suivi (watchlist) — compare-le, puis achète-le
         quand tu es prêt.
       </p>
     </div>
@@ -43,7 +43,7 @@
   <div class="card" style="margin-bottom:24px">
     <div class="card-head">
       <div class="card-title">Sélection</div>
-      <span class="card-sub">{{ selectedIsins().length }} / 4 ETF</span>
+      <span class="card-sub">{{ selectedIsins().length }} / 4 instruments</span>
       <div class="card-right" style="display:flex;gap:8px;align-items:center">
         @if (activeFilterCount() > 0) {
           <button class="btn ghost sm" (click)="resetFilters()">Réinitialiser</button>
@@ -52,7 +52,7 @@
           + Filtre @if (activeFilterCount() > 0) { <span class="pill" style="margin-left:4px">{{ activeFilterCount() }}</span> }
         </button>
         <button class="btn sm primary" data-testid="open-etf-dialog" (click)="addEtf()">
-          + Ajouter un ETF
+          + Ajouter un instrument
         </button>
       </div>
     </div>
@@ -105,7 +105,7 @@
       }
     </div>
     @if (catalog().length === 0) {
-      <div class="muted small" style="margin-top:8px">Aucun ETF dans le catalogue.</div>
+      <div class="muted small" style="margin-top:8px">Aucun instrument dans le catalogue.</div>
     }
 
     <!-- WATCHLIST -->
@@ -163,7 +163,7 @@
           <div class="kv"><dt><span data-tip="Ce que les frais de gestion (TER) te coûteraient en € cumulés sur 5 ans, avec l'hypothèse 500 €/mois investis et 7 %/an de rendement. Calcul Patrimo, identique quel que soit ton courtier — les frais d'ordre du courtier ne sont pas inclus. Sert uniquement à comparer deux ETFs entre eux.">Frais sur 5 ans</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
           <button type="button" class="btn primary sm" style="width:100%;margin-top:14px;justify-content:center"
                   (click)="buy(etf)">
-            + Acheter cet ETF
+            + Acheter cet instrument
           </button>
         </div>
       }
