@@ -108,6 +108,15 @@ export class EtfService {
     );
   }
 
+  /** Update catalog metadata for an existing instrument. */
+  async update(isin: string, input: Partial<CreateEtfDto>): Promise<EtfDto> {
+    const updated = await firstValueFrom(
+      this.http.patch<EtfDto>(`${this.baseUrl}/etfs/${encodeURIComponent(isin)}`, input),
+    );
+    this.catalogResource.update(list => list.map(e => e.isin === isin ? updated : e));
+    return updated;
+  }
+
   /** Add a user-supplied ETF to the catalog (backend validates the Yahoo symbol first). */
   async create(input: CreateEtfDto): Promise<EtfDto> {
     const created = await firstValueFrom(

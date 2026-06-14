@@ -3,10 +3,10 @@
   <div class="modal-head">
     <div>
       <div style="font-size:11.5px;font-weight:500;color:var(--ink-3);margin-bottom:4px">
-        Nouvel instrument
+        {{ editing ? 'Modifier un instrument' : 'Nouvel instrument' }}
       </div>
       <div class="modal-title" id="etf-modal-title">
-        Ajoute un <em>instrument</em> au catalogue
+        {{ editing ? 'Modifie les' : 'Ajoute un instrument au' }} <em>{{ editing ? 'métadonnées' : 'catalogue' }}</em>
       </div>
     </div>
     <button class="btn ghost sm" (click)="close()" style="margin-left:auto" aria-label="Fermer le dialogue">✕</button>
@@ -14,7 +14,8 @@
 
   <div class="modal-body">
 
-    <!-- YAHOO SEARCH — fills the form from a picked candidate -->
+    <!-- YAHOO SEARCH — hidden in edit mode (ISIN locked, no re-lookup needed) -->
+    @if (!editing) {
     <div class="field">
       <label for="etf-search">Recherche rapide — ISIN, ticker ou nom</label>
       <div style="display:flex;gap:8px">
@@ -47,14 +48,17 @@
         <span class="muted tiny">Aucun résultat Yahoo — vérifie l'orthographe ou saisis les champs à la main.</span>
       }
     </div>
+    } <!-- end @if (!editing) -->
 
     <div class="field-row">
       <div class="field">
-        <label for="etf-isin">ISIN *</label>
+        <label for="etf-isin">ISIN{{ editing ? '' : ' *' }}</label>
         <input id="etf-isin" type="text" placeholder="IE00B4L5Y983" maxlength="12"
                [ngModel]="isin()" (ngModelChange)="isin.set($event)"
+               [attr.readonly]="editing || null"
+               [style.opacity]="editing ? '0.6' : '1'"
                style="text-transform:uppercase" />
-        @if (isin().length > 0 && !isinValid()) {
+        @if (isin().length > 0 && !isinValid() && !editing) {
           <span class="muted tiny" style="color:#FCA5A5">Format attendu : 2 lettres + 10 caractères (ex. FR0010315770)</span>
         }
       </div>
@@ -150,7 +154,7 @@
   <div class="modal-foot">
     <button class="btn ghost" (click)="close()" [disabled]="submitting()">Annuler</button>
     <button class="btn primary" data-testid="etf-save" (click)="save()" [disabled]="!canSave()">
-      {{ submitting() ? 'Vérification du cours…' : 'Ajouter au catalogue →' }}
+      {{ submitting() ? (editing ? 'Sauvegarde…' : 'Vérification du cours…') : (editing ? 'Enregistrer →' : 'Ajouter au catalogue →') }}
     </button>
   </div>
 </div>
