@@ -64,7 +64,7 @@
       </div>
       <div class="field">
         <label for="etf-ticker">Ticker *</label>
-        <input id="etf-ticker" type="text" placeholder="ESE ou SXR8.DE" maxlength="12"
+        <input id="etf-ticker" type="text" placeholder="ESE ou SXR8.DE" maxlength="20"
                [ngModel]="ticker()" (ngModelChange)="ticker.set($event)"
                style="text-transform:uppercase" />
         <span class="muted tiny">Coté hors Paris ? Ajoute le suffixe Yahoo : .DE (Xetra), .AS (Amsterdam), .L (Londres), .MI (Milan)</span>

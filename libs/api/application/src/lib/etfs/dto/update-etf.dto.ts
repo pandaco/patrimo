@@ -15,7 +15,7 @@ import { EtfAllocationDto } from '@patrimo/contracts';
 export class UpdateEtfDtoBody {
   @IsOptional()
   @IsString()
-  @Length(1, 12)
+  @Length(1, 20)
   @Matches(/^[A-Z0-9.^-]+$/, { message: 'ticker must be uppercase letters, digits or . ^ -' })
   ticker?: string;
 

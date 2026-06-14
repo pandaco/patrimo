@@ -14,7 +14,7 @@ export class EtfOrmEntity {
   isin!: string;
 
   @Index('etfs_ticker_uq', { unique: true })
-  @Column({ type: 'varchar', length: 16 })
+  @Column({ type: 'varchar', length: 20 })
   ticker!: string;
 
   @Column({ type: 'varchar', length: 128 })

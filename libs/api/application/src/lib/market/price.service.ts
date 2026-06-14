@@ -59,9 +59,20 @@ export class PriceService {
    */
   async searchSymbols(query: string): Promise<SymbolSearchResult[]> {
     const candidates = await this.provider.searchSymbols(query);
+    const isFrenchIsin = /^FR[A-Z0-9]{10}$/i.test(query.trim());
     const ranked = [...candidates]
-      .sort((a, b) => Number(b.type === 'ETF') - Number(a.type === 'ETF'))
-      .slice(0, 6);
+      .sort((a, b) => {
+        const aFund = a.type === 'ETF' || a.type === 'FUND' ? 1 : 0;
+        const bFund = b.type === 'ETF' || b.type === 'FUND' ? 1 : 0;
+        if (bFund !== aFund) return bFund - aFund;
+        if (isFrenchIsin) {
+          const aPa = a.symbol.endsWith('.PA') ? 1 : 0;
+          const bPa = b.symbol.endsWith('.PA') ? 1 : 0;
+          return bPa - aPa;
+        }
+        return 0;
+      })
+      .slice(0, 8);
 
     return Promise.all(
       ranked.map(async candidate => ({

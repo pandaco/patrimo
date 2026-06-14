@@ -18,7 +18,7 @@ export class CreateEtfDtoBody implements CreateEtfDto {
   isin!: string;
 
   @IsString()
-  @Length(1, 12)
+  @Length(1, 20)
   @Matches(/^[A-Z0-9.^-]+$/, { message: 'ticker must be uppercase letters, digits or . ^ -' })
   ticker!: string;
 
