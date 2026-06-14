@@ -120,6 +120,19 @@
         </span>
       </div>
       <table class="tbl tbl-compact">
+        <thead>
+          <tr class="muted small">
+            <th style="width:80px">Date</th>
+            <th style="width:36px"></th>
+            <th>Opération</th>
+            <th style="width:110px">Enveloppe</th>
+            <th class="r" style="width:70px">Qté</th>
+            <th class="r" style="width:90px">Prix</th>
+            <th class="r" style="width:70px">Frais</th>
+            <th class="r" style="width:130px">Montant</th>
+            <th style="width:80px"></th>
+          </tr>
+        </thead>
         <tbody>
           @for (tx of group.txs; track tx.id) {
             @let env = getEnv(tx.envelope);
