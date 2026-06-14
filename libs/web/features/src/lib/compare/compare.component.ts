@@ -83,10 +83,27 @@ export class CompareComponent {
   private readonly seeded = signal(false);
 
   constructor() {
+    const STORAGE_KEY = 'compare:selected';
+
+    // Restore persisted selection before the catalog effect runs.
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) {
+      try { this.selectedIsins.set(JSON.parse(stored)); } catch { /* ignore */ }
+      this.seeded.set(true);
+    }
+
+    // Seed with the first 3 catalog entries only on a genuine first visit.
     effect(() => {
       if (!this.seeded() && this.catalog().length > 0) {
         this.selectedIsins.set(this.catalog().slice(0, 3).map(e => e.isin));
         this.seeded.set(true);
+      }
+    });
+
+    // Persist every selection change (including clearing to []).
+    effect(() => {
+      if (this.seeded()) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.selectedIsins()));
       }
     });
   }
