@@ -77,19 +77,25 @@
             </div>
           </div>
           <div class="sub" style="flex-wrap:wrap">
-            @if (heroPnlText() !== null) {
-              <button class="num bold"
-                      (click)="togglePnlDisplay()"
-                      style="background:none;border:none;cursor:pointer;padding:0;font:inherit;font-weight:inherit"
-                      [style.color]="heroPnlPositive() ? '#4ADE80' : '#FCA5A5'"
-                      data-tip="Plus ou moins-value de la période, corrigée de tes versements — un dépôt n'est pas un gain. Clique pour basculer entre € et %."
-                      aria-label="Basculer l'affichage entre euros et pourcentage">
-                {{ heroPnlText() }}
-              </button>
+            @if (heroPnlEurText() !== null) {
+              <span class="num bold"
+                    [style.color]="heroPnlPositive() ? '#4ADE80' : '#FCA5A5'"
+                    data-tip="Plus ou moins-value de la période, corrigée de tes versements — un dépôt n'est pas un gain.">
+                {{ heroPnlEurText() }}
+              </span>
+              @if (heroPnlPctText() !== null) {
+                <span class="num muted">{{ heroPnlPctText() }}</span>
+              }
             } @else {
               <span class="num muted">—</span>
             }
             <span data-tip="Variation de la part boursière uniquement — livrets et cash exclus.">{{ heroPnlCaption() }}</span>
+            @if (ytdAnnualizedPct() !== null) {
+              <span class="num muted" style="font-size:11px"
+                    data-tip="Rendement annualisé : si ce rythme YTD se maintient jusqu'au 31 déc.">
+                → {{ ytdAnnualizedPct()! >= 0 ? '+' : '' }}{{ fmtNum(ytdAnnualizedPct()!, 1) }} %/an projeté
+              </span>
+            }
             @if (portfolioCost() > 0) {
               <span style="opacity:0.35">•</span>
               <span class="num bold"

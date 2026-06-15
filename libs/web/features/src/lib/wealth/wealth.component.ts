@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Envelope, EnvelopeService, EtfService, etfValue, FxService } from '@patrimo/data-access';
+import { Envelope, EnvelopeService, EtfService, etfValue, FxService, TransactionService } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
+import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
@@ -45,6 +46,7 @@ export interface FamilyRow {
 export class WealthComponent {
   private readonly envelopeService = inject(EnvelopeService);
   private readonly etfService = inject(EtfService);
+  private readonly transactionService = inject(TransactionService);
   private readonly dialog = inject(MatDialog);
 
   protected readonly activeView = signal<WealthView>('famille');
@@ -115,6 +117,19 @@ export class WealthComponent {
   protected pnl(env: Envelope)    { return env.value - env.invested; }
   protected pnlPct(env: Envelope) { return env.invested ? (env.value / env.invested - 1) * 100 : 0; }
   protected capPct(env: Envelope) { return env.plafond  ? (env.value / env.plafond) * 100 : null; }
+
+  // Realized P&L YTD per envelope, computed via FIFO walk on the envelope's own transactions.
+  protected readonly ytdRealizedByEnvelope = computed(() => {
+    const jan1Iso = startOfYearISO();
+    const allTxs = this.transactionService.all();
+    const result = new Map<string, number>();
+    for (const env of this.allEnv()) {
+      const envTxs = allTxs.filter(t => t.envelope === env.id);
+      result.set(env.id, computeRealized(envTxs, jan1Iso).realizedSince);
+    }
+    return result;
+  });
+  protected ytdRealized(envId: string): number { return this.ytdRealizedByEnvelope().get(envId) ?? 0; }
 
   protected async openAddTx(env: Envelope): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {

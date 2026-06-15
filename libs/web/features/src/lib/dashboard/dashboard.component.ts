@@ -170,8 +170,6 @@ export class DashboardComponent {
   protected readonly activeHeroPeriod = computed<HeroPeriod>(() =>
     this.heroDayMode() ? '1D' : this.performanceService.period(),
   );
-  protected readonly pnlDisplayMode = signal<'eur' | 'pct'>('eur');
-
   protected readonly heroPnl = computed(() => {
     if (this.activeHeroPeriod() === '1D') {
       return { eur: this.dayValue(), pct: this.dayPct() };
@@ -185,15 +183,30 @@ export class DashboardComponent {
     return HERO_PERIODS.find(p => p.id === active)?.caption ?? `sur ${active}`;
   });
 
-  protected readonly heroPnlText = computed(() => {
+  protected readonly heroPnlEurText = computed(() => {
     const pnl = this.heroPnl();
     if (!pnl) return null;
-    if (this.pnlDisplayMode() === 'pct') {
-      return pnl.pct === null ? null : fmtPct(pnl.pct, 2);
-    }
     return `${pnl.eur >= 0 ? '+' : '−'}${this.fmtEur(Math.abs(pnl.eur), 2)}`;
   });
+  protected readonly heroPnlPctText = computed(() => {
+    const pnl = this.heroPnl();
+    if (!pnl || pnl.pct === null) return null;
+    return fmtPct(pnl.pct, 2);
+  });
   protected readonly heroPnlPositive = computed(() => (this.heroPnl()?.eur ?? 0) >= 0);
+
+  // Annualized projection of the YTD return. Only shown when YTD tab is active
+  // and at least 14 days have elapsed since Jan 1 (avoids absurd early-year numbers).
+  protected readonly ytdAnnualizedPct = computed(() => {
+    if (this.activeHeroPeriod() !== 'YTD') return null;
+    const pnl = this.heroPnl();
+    if (!pnl || pnl.pct === null) return null;
+    const jan1 = new Date(new Date().getFullYear(), 0, 1);
+    const daysElapsed = Math.max(1, Math.ceil((Date.now() - jan1.getTime()) / 86_400_000));
+    if (daysElapsed < 14) return null;
+    const ann = (Math.pow(1 + pnl.pct / 100, 365 / daysElapsed) - 1) * 100;
+    return Number.isFinite(ann) ? ann : null;
+  });
 
   protected setHeroPeriod(id: HeroPeriod): void {
     if (id === '1D') {
@@ -203,10 +216,6 @@ export class DashboardComponent {
       this.heroDayMode.set(false);
       this.performanceService.setPeriod(id);
     }
-  }
-
-  protected togglePnlDisplay(): void {
-    this.pnlDisplayMode.update(mode => (mode === 'eur' ? 'pct' : 'eur'));
   }
 
   protected readonly portfolioPct = computed(() => {
