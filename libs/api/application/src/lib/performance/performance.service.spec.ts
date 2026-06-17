@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import type { Etf, Transaction, TransactionType, UserPreferences } from '@patrimo/api-domain';
 import {
+  ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
   USER_PREFERENCES_REPOSITORY,
@@ -68,6 +69,7 @@ describe('PerformanceService', () => {
       getHistorical: jest.fn().mockResolvedValue([]),
       getQuote: jest.fn().mockResolvedValue({ price: null }),
     };
+    const envelopeRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -75,6 +77,7 @@ describe('PerformanceService', () => {
         { provide: TRANSACTION_REPOSITORY, useValue: transactionRepository },
         { provide: ETF_REPOSITORY, useValue: etfRepository },
         { provide: USER_PREFERENCES_REPOSITORY, useValue: preferencesRepository },
+        { provide: ENVELOPE_REPOSITORY, useValue: envelopeRepository },
         { provide: PriceService, useValue: priceService },
       ],
     }).compile();

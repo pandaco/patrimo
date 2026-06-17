@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
-import { AlertType, PerformancePeriod } from '@patrimo/contracts';
+import { AlertType, PerformancePeriod, WealthCategory } from '@patrimo/contracts';
 import { DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
+import { WealthChartComponent } from './wealth-chart.component';
 import { computePeriodPnl } from './period-pnl';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
@@ -33,6 +34,26 @@ const HERO_PERIODS: { id: HeroPeriod; label: string; caption: string }[] = [
   { id: '5Y',  label: '5A',  caption: 'sur 5 ans' },
 ];
 
+const WEALTH_PERIODS: { id: PerformancePeriod; label: string; caption: string }[] = [
+  { id: '1W',  label: '1S',  caption: 'sur 1 semaine' },
+  { id: '1M',  label: '1M',  caption: 'sur 1 mois' },
+  { id: '3M',  label: '3M',  caption: 'sur 3 mois' },
+  { id: '6M',  label: '6M',  caption: 'sur 6 mois' },
+  { id: 'YTD', label: 'YTD', caption: 'depuis le 1er janv.' },
+  { id: '1Y',  label: '1A',  caption: 'sur 1 an' },
+  { id: 'MAX', label: 'MAX', caption: 'depuis le début' },
+];
+
+const WEALTH_CATEGORIES: { id: 'all' | WealthCategory; label: string }[] = [
+  { id: 'all',    label: 'Toutes les catégories' },
+  { id: 'bourse', label: 'Investissements boursiers' },
+  { id: 'livret', label: 'Épargne réglementée' },
+  { id: 'immo',   label: 'Immobilier' },
+  { id: 'crypto', label: 'Crypto' },
+  { id: 'metal',  label: 'Métaux précieux' },
+  { id: 'cash',   label: 'Cash' },
+];
+
 const GLYPH_COLORS: Record<string, string> = {
   pea:'#16A34A', peapme:'#15803D', cto:'#EA580C', av:'#7C3AED',
   per:'#475569', pee:'#0284C7', livret:'#CA8A04', crypto:'#18181B',
@@ -56,7 +77,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, TermComponent],
+  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent],
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -161,6 +182,52 @@ export class DashboardComponent {
   protected readonly dashPeriods    = DASH_PERIODS;
   protected readonly dashPeriod     = this.performanceService.period;
   protected readonly annualized     = computed(() => this.performanceService.raw().annualized);
+
+  // ─── Wealth chart (Finary-style patrimoine total) ─────────────────────────
+
+  protected readonly wealthPeriods      = WEALTH_PERIODS;
+  protected readonly wealthCategoryOptions = WEALTH_CATEGORIES;
+  protected readonly wealthPeriod       = this.performanceService.wealthPeriod;
+  protected readonly wealthCategory     = signal<'all' | WealthCategory>('all');
+  protected readonly wealthLoading      = this.performanceService.wealthLoading;
+
+  protected readonly wealthChartData = computed(() => {
+    const w   = this.performanceService.wealth();
+    const cat = this.wealthCategory();
+    if (cat === 'all') return w.total;
+    return w.byCategory[cat] ?? [];
+  });
+
+  protected readonly wealthLabels = computed(() => this.performanceService.wealth().labels);
+
+  protected readonly wealthDelta = computed(() => {
+    const d = this.wealthChartData();
+    const last = d[d.length - 1];
+    if (last === undefined || last === 0) return null;
+    const first = d.find(v => v > 0);
+    if (first === undefined) return null;
+    const eur = last - first;
+    // Hide % when starting value was < 10 % of ending — means the period
+    // was mostly deposits, making the ratio nonsensical as a return figure.
+    const pct = first / last >= 0.1 ? (last / first - 1) * 100 : null;
+    return { eur, pct };
+  });
+
+  protected readonly wealthDeltaPositive = computed(() => (this.wealthDelta()?.eur ?? 0) >= 0);
+
+  protected readonly wealthPeriodCaption = computed(() => {
+    const id = this.wealthPeriod();
+    return WEALTH_PERIODS.find(p => p.id === id)?.caption ?? id;
+  });
+
+  protected setWealthPeriod(id: PerformancePeriod): void {
+    this.performanceService.setWealthPeriod(id);
+  }
+
+  protected setWealthCategory(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as 'all' | WealthCategory;
+    this.wealthCategory.set(value);
+  }
 
   // ─── Hero period P&L (Trade-Republic-style selector) ──────────────────────
 

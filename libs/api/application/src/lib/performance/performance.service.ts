@@ -1,8 +1,23 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
-import { ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
+import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthSeriesDto } from '@patrimo/contracts';
+import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
+
+const BOURSE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
+const LIVRET_GLYPHS = new Set(['livret']);
+const IMMO_GLYPHS   = new Set(['immo']);
+const CRYPTO_GLYPHS = new Set(['crypto']);
+const METAL_GLYPHS  = new Set(['metal']);
+
+function glyphToCategory(glyph: string): WealthCategory {
+  if (BOURSE_GLYPHS.has(glyph)) return 'bourse';
+  if (LIVRET_GLYPHS.has(glyph)) return 'livret';
+  if (IMMO_GLYPHS.has(glyph))   return 'immo';
+  if (CRYPTO_GLYPHS.has(glyph)) return 'crypto';
+  if (METAL_GLYPHS.has(glyph))  return 'metal';
+  return 'cash';
+}
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
   '1W':  7,
@@ -64,6 +79,7 @@ export class PerformanceService {
     @Inject(TRANSACTION_REPOSITORY)      private readonly transactionRepository:   TransactionRepository,
     @Inject(ETF_REPOSITORY)              private readonly etfRepository:  EtfRepository,
     @Inject(USER_PREFERENCES_REPOSITORY) private readonly preferencesRepository: UserPreferencesRepository,
+    @Inject(ENVELOPE_REPOSITORY)         private readonly envelopeRepository: EnvelopeRepository,
     private readonly priceService: PriceService,
   ) {}
 
@@ -398,6 +414,125 @@ export class PerformanceService {
       }),
     );
     return results.sort((a, b) => a.ticker.localeCompare(b.ticker));
+  }
+
+  async getWealthSeries(userId: string, period: PerformancePeriod): Promise<WealthSeriesDto> {
+    const now    = new Date();
+    const isLong = LONG_PERIODS.includes(period);
+    const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
+
+    const [envelopes, txs, etfs] = await Promise.all([
+      this.envelopeRepository.findByUserId(userId),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
+    ]);
+
+    const allDates      = txs.map(t => t.date.getTime());
+    const earliestDate  = allDates.length > 0 ? new Date(Math.min(...allDates)) : undefined;
+    const start         = computeStart(period, now, earliestDate);
+    const labels        = enumerateDates(start, now, isLong);
+    const days          = period === 'MAX'
+      ? Math.ceil((now.getTime() - (earliestDate?.getTime() ?? now.getTime())) / 86400000) + 1
+      : Math.max(30, PERIOD_DAYS[period]);
+
+    // Fetch price history once for all held ISINs (shared across bourse envelopes).
+    const heldIsins = new Set(
+      txs.filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
+         .map(t => t.etfIsin),
+    );
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const closesByIsin = new Map<string, Map<string, number>>();
+    await Promise.all(
+      Array.from(heldIsins).map(async isin => {
+        const etf = etfByIsin.get(isin);
+        if (!etf) return;
+        const history = await this.priceService.getHistorical(isin, etf.ticker, days, interval);
+        closesByIsin.set(isin, new Map(history.map(p => [p.date, p.close])));
+      }),
+    );
+
+    const txsByEnvelope = new Map<string, Transaction[]>();
+    for (const tx of txs) {
+      const list = txsByEnvelope.get(tx.envelopeId) ?? [];
+      list.push(tx);
+      txsByEnvelope.set(tx.envelopeId, list);
+    }
+
+    const byCategoryArrays = new Map<WealthCategory, number[]>();
+    const total = new Array<number>(labels.length).fill(0);
+
+    for (const envelope of envelopes) {
+      const category = glyphToCategory(envelope.glyph);
+      const envTxs   = (txsByEnvelope.get(envelope.id) ?? [])
+        .slice()
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      const series = category === 'bourse'
+        ? this.buildEnvelopeBoursSeries(labels, envTxs, closesByIsin)
+        : this.buildEnvelopeFlowSeries(labels, envTxs);
+
+      const existing = byCategoryArrays.get(category) ?? new Array<number>(labels.length).fill(0);
+      for (let i = 0; i < labels.length; i++) {
+        existing[i] = Number((existing[i] + series[i]).toFixed(2));
+        total[i]    = Number((total[i]    + series[i]).toFixed(2));
+      }
+      byCategoryArrays.set(category, existing);
+    }
+
+    const byCategory: Partial<Record<WealthCategory, number[]>> = {};
+    for (const [cat, series] of byCategoryArrays) byCategory[cat] = series;
+
+    return { period, labels, total, byCategory };
+  }
+
+  private buildEnvelopeBoursSeries(
+    labels: string[],
+    txs: Transaction[],
+    closesByIsin: Map<string, Map<string, number>>,
+  ): number[] {
+    const boursTxs = txs.filter(
+      (t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'),
+    );
+    const qtyByIsin = new Map<string, number>();
+    const lastClose = new Map<string, number>();
+    let cursor = 0;
+    const series: number[] = [];
+
+    for (const label of labels) {
+      while (cursor < boursTxs.length && isoDate(boursTxs[cursor].date) <= label) {
+        const tx   = boursTxs[cursor];
+        const sign = tx.type === 'BUY' ? 1 : -1;
+        qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
+        cursor++;
+      }
+      let value = 0;
+      for (const [isin, qty] of qtyByIsin) {
+        if (qty <= 0) continue;
+        const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin);
+        if (close !== undefined) { lastClose.set(isin, close); value += qty * close; }
+      }
+      series.push(Number(value.toFixed(2)));
+    }
+    return series;
+  }
+
+  private buildEnvelopeFlowSeries(labels: string[], txs: Transaction[]): number[] {
+    const flowTxs = txs.filter(
+      t => t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL' || t.type === 'INTEREST' || t.type === 'DIVIDEND',
+    );
+    let value  = 0;
+    let cursor = 0;
+    const series: number[] = [];
+
+    for (const label of labels) {
+      while (cursor < flowTxs.length && isoDate(flowTxs[cursor].date) <= label) {
+        const tx = flowTxs[cursor];
+        value += tx.type === 'WITHDRAWAL' ? -tx.amount : tx.amount;
+        cursor++;
+      }
+      series.push(Number(value.toFixed(2)));
+    }
+    return series;
   }
 
   async getFeesYtd(userId: string): Promise<FeesYtdDto> {

@@ -59,6 +59,17 @@ export interface EtfStatsDto {
   return1y:  number | null;
 }
 
+export type WealthCategory = 'bourse' | 'livret' | 'immo' | 'crypto' | 'metal' | 'cash';
+
+export interface WealthSeriesDto {
+  period: PerformancePeriod;
+  labels: string[];
+  /** Total patrimoine across all categories. */
+  total: number[];
+  /** Per-category series, each aligned to `labels`. Only categories with at least one envelope are present. */
+  byCategory: Partial<Record<WealthCategory, number[]>>;
+}
+
 export interface FeesYtdDto {
   /** Sum of `fees` on all BUY/SELL transactions since Jan 1st. */
   brokerageYtd: number;

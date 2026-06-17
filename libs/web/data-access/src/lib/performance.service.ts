@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 
@@ -50,6 +50,22 @@ export class PerformanceService {
   readonly raw     = this.resource.value;
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
+
+  readonly wealthPeriod = signal<PerformancePeriod>('1M');
+
+  private readonly wealthResource = httpResource<WealthSeriesDto>(
+    () => (this.auth.isAuthenticated()
+      ? `${this.baseUrl}/performance/wealth-series?period=${this.wealthPeriod()}`
+      : undefined),
+    {
+      defaultValue: { period: '1M', labels: [], total: [], byCategory: {} },
+    },
+  );
+
+  readonly wealth        = this.wealthResource.value;
+  readonly wealthLoading = this.wealthResource.isLoading;
+
+  setWealthPeriod(period: PerformancePeriod): void { this.wealthPeriod.set(period); }
 
   private readonly etfStatsResource = httpResource<EtfStatsDto[]>(
     () => (this.auth.isAuthenticated() ? `${this.baseUrl}/performance/etf-stats` : undefined),

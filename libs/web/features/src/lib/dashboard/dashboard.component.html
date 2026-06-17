@@ -63,99 +63,102 @@
       </p>
     </div>
   } @else {
-    <!-- HERO STATS -->
-    <div class="hero-stats">
-      <div class="hero-main">
-        <div class="hero-money">
-          <div>
+    <!-- WEALTH HERO (Finary-style: chart + P&L sidebar) -->
+    <div class="wealth-hero">
+      <div class="wealth-hero-main">
+        <div class="wealth-hero-header">
+          <div class="wealth-hero-value">
             <div class="label">
-              <span data-tip="Somme de toutes tes enveloppes — comptes boursiers, livrets et cash. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine total</span>
+              <span data-tip="Somme de toutes tes enveloppes — comptes boursiers, livrets et cash. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine net</span>
               @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
             </div>
-            <div class="value" style="margin-top:12px;font-variant-numeric:tabular-nums">
-              {{ fmtNum(fxRate() * totalValue(), 0) }}<small>,{{ fmtNum(fxRate() * totalValue(), 2).split(',')[1] }} {{ fxService.symbol() }}</small>
+            <div class="wealth-total" style="font-variant-numeric:tabular-nums">
+              {{ fmtNum(fxRate() * totalValue(), 0) }}<small> {{ fxService.symbol() }}</small>
             </div>
           </div>
-          <div class="sub" style="flex-wrap:wrap">
-            @if (heroPnlEurText() !== null) {
-              <span class="num bold"
-                    [style.color]="heroPnlPositive() ? '#4ADE80' : '#FCA5A5'"
-                    data-tip="Plus ou moins-value de la période, corrigée de tes versements — un dépôt n'est pas un gain.">
-                {{ heroPnlEurText() }}
-              </span>
-              @if (heroPnlPctText() !== null) {
-                <span class="num muted">{{ heroPnlPctText() }}</span>
+          <div class="wealth-hero-controls">
+            <select class="wealth-category-select" (change)="setWealthCategory($event)" aria-label="Filtrer par catégorie">
+              @for (cat of wealthCategoryOptions; track cat.id) {
+                <option [value]="cat.id" [selected]="cat.id === wealthCategory()">{{ cat.label }}</option>
               }
-            } @else {
-              <span class="num muted">—</span>
-            }
-            <span data-tip="Variation de la part boursière uniquement — livrets et cash exclus.">{{ heroPnlCaption() }}</span>
-            @if (ytdAnnualizedPct() !== null) {
-              <span class="num muted" style="font-size:11px"
-                    data-tip="Rendement annualisé : si ce rythme YTD se maintient jusqu'au 31 déc.">
-                → {{ ytdAnnualizedPct()! >= 0 ? '+' : '' }}{{ fmtNum(ytdAnnualizedPct()!, 1) }} %/an projeté
-              </span>
-            }
-            @if (portfolioCost() > 0) {
-              <span style="opacity:0.35">•</span>
-              <span class="num bold"
-                    [style.color]="pnlValue() >= 0 ? '#4ADE80' : '#FCA5A5'">
-                {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
-              </span>
-              <span data-tip="Plus-value latente totale — valeur actuelle moins coût d'achat. C'est ce que tu gagnerais en vendant tout maintenant, hors frais et fiscalité.">{{ pnlValue() >= 0 ? 'gagnés' : 'perdus' }} depuis l'achat</span>
-              <span class="num muted">({{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %)</span>
-            }
-          </div>
-          <div class="tabs" style="margin-top:14px" role="tablist" aria-label="Période de plus-value">
-            @for (p of heroPeriods; track p.id) {
-              <button [class.active]="p.id === activeHeroPeriod()"
-                      (click)="setHeroPeriod(p.id)"
-                      role="tab"
-                      [attr.aria-selected]="p.id === activeHeroPeriod()">{{ p.label }}</button>
-            }
+            </select>
+            <div class="tabs" role="tablist" aria-label="Période patrimoine">
+              @for (p of wealthPeriods; track p.id) {
+                <button [class.active]="p.id === wealthPeriod()"
+                        (click)="setWealthPeriod(p.id)"
+                        role="tab"
+                        [attr.aria-selected]="p.id === wealthPeriod()">{{ p.label }}</button>
+              }
+            </div>
           </div>
         </div>
-        <div class="stat">
-          <div class="label">
-            <span data-tip="Total des enveloppes PEA, CTO, PER, etc. — la partie de ton patrimoine exposée au marché actions/obligations. Évolue chaque jour avec les cours.">Investissements boursiers</span>
+
+        @if (wealthLoading() && wealthLabels().length === 0) {
+          <div style="height:200px;display:flex;align-items:center;justify-content:center">
+            <span class="muted small">Chargement…</span>
           </div>
-          <div class="value">{{ fmtEur(totalBourse(), 0) }}</div>
-          <div class="sub" style="display:block">
+        } @else if (wealthChartData().length > 1) {
+          <app-wealth-chart [data]="wealthChartData()" [labels]="wealthLabels()" />
+        } @else {
+          <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+            <p class="muted small" style="margin:0">Aucune donnée pour la période sélectionnée. Ajoute des transactions pour voir l'évolution.</p>
+            <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+          </div>
+        }
+
+        <div class="wealth-hero-breakdowns">
+          <div class="wealth-breakdown-chip">
+            <span class="label" data-tip="PEA, CTO, AV, PER — exposé aux marchés actions/obligations.">Boursier</span>
+            <span class="value">{{ fmtEur(totalBourse(), 0) }}</span>
             @if (totalValue() > 0) {
-              <span class="num bold">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
-              <span class="muted"> du total</span>
-            } @else {
-              <span class="muted">—</span>
+              <span class="muted small">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
             }
           </div>
-        </div>
-        <div class="stat">
-          <div class="label">
-            <span data-tip="Livret A, LDDS, LEP — comptes capital garanti, intérêts exonérés d'impôt et de prélèvements sociaux. Plafonds fixés par l'État.">Épargne réglementée</span>
-          </div>
-          <div class="value">{{ fmtEur(totalLivret(), 0) }}</div>
-          <div class="sub" style="display:block">
+          <div class="wealth-breakdown-chip">
+            <span class="label" data-tip="Livret A, LDDS, LEP — capital garanti, intérêts exonérés.">Épargne</span>
+            <span class="value">{{ fmtEur(totalLivret(), 0) }}</span>
             @if (totalValue() > 0) {
-              <span class="num bold">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
-              <span class="muted"> du total</span>
-            } @else {
-              <span class="muted">—</span>
+              <span class="muted small">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
             }
           </div>
-        </div>
-        <div class="stat">
-          <div class="label">
-            <span data-tip="Le cash hors livrets — il dort sur tes comptes courants et perd de la valeur face à l'inflation. Le DCA mensuel permet de le placer progressivement.">Cash dormant</span>
-          </div>
-          <div class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</div>
-          <div class="sub" style="display:block">
+          <div class="wealth-breakdown-chip">
+            <span class="label" data-tip="Cash dormant sur comptes courants — perd de la valeur face à l'inflation.">Cash</span>
+            <span class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</span>
             @if (totalCash() - totalLivret() > 0) {
-              <span class="pill warn"><span class="dot"></span>à investir</span>
-            } @else {
-              <span class="muted small">aucun cash hors livrets</span>
+              <span class="pill warn" style="font-size:10px"><span class="dot"></span>à investir</span>
             }
           </div>
         </div>
+      </div>
+
+      <div class="wealth-hero-sidebar">
+        <div class="label" style="font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;opacity:0.6;margin-bottom:12px">Performance</div>
+        @if (wealthDelta(); as delta) {
+          <div class="wealth-sidebar-eur" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()">
+            {{ delta.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(delta.eur), 0) }}
+          </div>
+          @if (delta.pct !== null) {
+            <div class="wealth-sidebar-pct" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()">
+              <span class="pill" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()" style="font-size:13px;font-weight:600">
+                {{ delta.pct >= 0 ? '+' : '' }}{{ fmtNum(delta.pct, 1) }} %
+              </span>
+            </div>
+          }
+          <div class="wealth-sidebar-caption">{{ wealthPeriodCaption() }}</div>
+          @if (portfolioCost() > 0) {
+            <div class="wealth-sidebar-latent">
+              <div style="border-top:1px solid var(--rule);margin:16px 0 12px"></div>
+              <div style="font-size:11px;opacity:0.55;margin-bottom:4px">PV latente totale</div>
+              <div class="num" style="font-size:15px;font-weight:600"
+                   [class.pos]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
+                {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
+              </div>
+              <div style="font-size:11px;opacity:0.55">depuis l'achat · {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %</div>
+            </div>
+          }
+        } @else {
+          <div class="muted" style="font-size:13px">Pas assez de données</div>
+        }
       </div>
     </div>
   }
