@@ -25,6 +25,21 @@ const RISK_STOCKS: Record<string, number> = {
 
 type WizardStepId = 1 | 2 | 3 | 4;
 interface WizardStep { id: WizardStepId; label: string; hint: string }
+
+/** In-progress wizard state, parked in sessionStorage so a refresh or crash
+ *  mid-wizard does not wipe the four steps. Dies with the tab. */
+interface WizardDraft {
+  step: WizardStepId;
+  stocksPct: number;
+  bondsStratPct: number;
+  corePct: number;
+  satellitePct: number;
+  bondsTacticPct: number;
+  etfTargets: EtfTargetRow[];
+  envTargets: EnvTargetRow[];
+}
+
+const DRAFT_STORAGE_KEY = 'allocation-wizard:draft';
 const WIZARD_STEPS: WizardStep[] = [
   { id: 1, label: 'Stratégique', hint: 'Actions vs Obligations'        },
   { id: 2, label: 'Tactique',    hint: 'Core / Satellite / Obligations' },
@@ -112,6 +127,44 @@ export class AllocationSettingsComponent {
   });
 
   constructor() {
+    // Resume an interrupted session (refresh, crash) before the server
+    // preferences hydrate — the draft wins over the persisted targets.
+    const storedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (storedDraft !== null) {
+      try {
+        const draft: WizardDraft = JSON.parse(storedDraft);
+        this.stocksPct.set(draft.stocksPct);
+        this.bondsStratPct.set(draft.bondsStratPct);
+        this.corePct.set(draft.corePct);
+        this.satellitePct.set(draft.satellitePct);
+        this.bondsTacticPct.set(draft.bondsTacticPct);
+        this.etfTargets.set(draft.etfTargets ?? []);
+        this.envTargets.set(draft.envTargets ?? []);
+        this.step.set(draft.step ?? 1);
+        this.hydrated = true;
+      } catch {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
+    }
+
+    // Park every subsequent change as the draft. The first run only takes the
+    // baseline snapshot: an untouched visit must not shadow the saved targets.
+    let baselineSnapshot: string | null = null;
+    effect(() => {
+      const snapshot = JSON.stringify({
+        step: this.step(),
+        stocksPct: this.stocksPct(),
+        bondsStratPct: this.bondsStratPct(),
+        corePct: this.corePct(),
+        satellitePct: this.satellitePct(),
+        bondsTacticPct: this.bondsTacticPct(),
+        etfTargets: this.etfTargets(),
+        envTargets: this.envTargets(),
+      } satisfies WizardDraft);
+      if (baselineSnapshot === null) { baselineSnapshot = snapshot; return; }
+      if (snapshot !== baselineSnapshot) sessionStorage.setItem(DRAFT_STORAGE_KEY, snapshot);
+    });
+
     effect(() => {
       const current = this.preferences.current();
       if (!this.hydrated && current.allocationTargets) {
@@ -227,6 +280,7 @@ export class AllocationSettingsComponent {
     this.submitting.set(true);
     try {
       await this.preferences.update(payload);
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
       this.success.set(true);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde');
