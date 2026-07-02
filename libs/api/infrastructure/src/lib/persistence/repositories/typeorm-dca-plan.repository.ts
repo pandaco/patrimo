@@ -43,11 +43,6 @@ export class TypeOrmDcaPlanRepository implements DcaPlanRepository {
     return rows.map(toDomain);
   }
 
-  async findById(id: string): Promise<DcaPlan | null> {
-    const row = await this.repo.findOne({ where: { id } });
-    return row ? toDomain(row) : null;
-  }
-
   async findActiveDueForExecution(beforeOrEqual: Date): Promise<DcaPlan[]> {
     const rows = await this.repo.find({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,18 +57,25 @@ export class TypeOrmDcaPlanRepository implements DcaPlanRepository {
     return toDomain(saved);
   }
 
-  async update(id: string, patch: Partial<DcaPlanSeed> & { nextExecution?: Date }): Promise<DcaPlan | null> {
+  async updateForUser(
+    id: string,
+    userId: string,
+    patch: Partial<DcaPlanSeed> & { nextExecution?: Date },
+  ): Promise<DcaPlan | null> {
+    const existing = await this.repo.findOne({ where: { id, userId } });
+    if (!existing) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatePayload: any = { ...patch };
     if (patch.dayOfMonth !== undefined && patch.nextExecution === undefined) {
-       updatePayload.nextExecution = computeNextExecution(patch.dayOfMonth);
+      updatePayload.nextExecution = computeNextExecution(patch.dayOfMonth);
     }
-    await this.repo.update(id, updatePayload);
-    return this.findById(id);
+    Object.assign(existing, updatePayload);
+    const saved = await this.repo.save(existing);
+    return toDomain(saved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.repo.delete(id);
-    return result.affected !== 0;
+  async deleteForUser(id: string, userId: string): Promise<boolean> {
+    const result = await this.repo.delete({ id, userId });
+    return (result.affected ?? 0) > 0;
   }
 }

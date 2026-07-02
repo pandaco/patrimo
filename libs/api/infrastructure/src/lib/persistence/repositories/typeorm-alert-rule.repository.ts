@@ -29,23 +29,25 @@ export class TypeOrmAlertRuleRepository implements AlertRuleRepository {
     return rows.map(toDomain);
   }
 
-  async findById(id: string): Promise<AlertRule | null> {
-    const row = await this.repo.findOne({ where: { id } });
-    return row ? toDomain(row) : null;
-  }
-
   async create(seed: AlertRuleSeed): Promise<AlertRule> {
     const saved = await this.repo.save(this.repo.create(seed));
     return toDomain(saved);
   }
 
-  async update(id: string, patch: Partial<AlertRuleSeed>): Promise<AlertRule | null> {
-    await this.repo.update(id, patch);
-    return this.findById(id);
+  async updateForUser(
+    id: string,
+    userId: string,
+    patch: Partial<AlertRuleSeed>,
+  ): Promise<AlertRule | null> {
+    const existing = await this.repo.findOne({ where: { id, userId } });
+    if (!existing) return null;
+    Object.assign(existing, patch);
+    const saved = await this.repo.save(existing);
+    return toDomain(saved);
   }
 
-  async delete(id: string): Promise<boolean> {
-    const result = await this.repo.delete(id);
-    return result.affected !== 0;
+  async deleteForUser(id: string, userId: string): Promise<boolean> {
+    const result = await this.repo.delete({ id, userId });
+    return (result.affected ?? 0) > 0;
   }
 }

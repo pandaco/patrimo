@@ -41,16 +41,11 @@ export class DcaService {
   }
 
   async update(id: string, userId: string, input: UpdateDcaPlanDto): Promise<DcaPlanDto | null> {
-    const plan = await this.repo.findById(id);
-    if (!plan || plan.userId !== userId) return null;
-
-    const updated = await this.repo.update(id, input);
+    const updated = await this.repo.updateForUser(id, userId, input);
     return updated ? toDto(updated) : null;
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
-    const plan = await this.repo.findById(id);
-    if (!plan || plan.userId !== userId) return false;
-    return this.repo.delete(id);
+    return this.repo.deleteForUser(id, userId);
   }
 }

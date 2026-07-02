@@ -36,16 +36,11 @@ export class AlertRuleService {
   }
 
   async update(id: string, userId: string, input: UpdateAlertRuleDto): Promise<AlertRuleDto | null> {
-    const rule = await this.repo.findById(id);
-    if (!rule || rule.userId !== userId) return null;
-
-    const updated = await this.repo.update(id, input);
+    const updated = await this.repo.updateForUser(id, userId, input);
     return updated ? toDto(updated) : null;
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
-    const rule = await this.repo.findById(id);
-    if (!rule || rule.userId !== userId) return false;
-    return this.repo.delete(id);
+    return this.repo.deleteForUser(id, userId);
   }
 }

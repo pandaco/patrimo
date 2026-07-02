@@ -4,8 +4,9 @@ export const ALERT_RULE_REPOSITORY = 'ALERT_RULE_REPOSITORY';
 
 export interface AlertRuleRepository {
   findByUserId(userId: string): Promise<AlertRule[]>;
-  findById(id: string): Promise<AlertRule | null>;
   create(seed: AlertRuleSeed): Promise<AlertRule>;
-  update(id: string, patch: Partial<AlertRuleSeed>): Promise<AlertRule | null>;
-  delete(id: string): Promise<boolean>;
+  /** Apply `patch` to the rule iff it belongs to `userId`. */
+  updateForUser(id: string, userId: string, patch: Partial<AlertRuleSeed>): Promise<AlertRule | null>;
+  /** Delete the rule iff it belongs to `userId`. */
+  deleteForUser(id: string, userId: string): Promise<boolean>;
 }

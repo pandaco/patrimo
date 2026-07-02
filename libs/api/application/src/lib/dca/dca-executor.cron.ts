@@ -111,6 +111,6 @@ export class DcaExecutorCron {
     }
 
     // Update the next execution date
-    await this.dcaPlanRepository.update(plan.id, { dayOfMonth: plan.dayOfMonth }); // Trigger the update hook for nextExecution
+    await this.dcaPlanRepository.updateForUser(plan.id, plan.userId, { dayOfMonth: plan.dayOfMonth }); // Trigger the update hook for nextExecution
   }
 }
