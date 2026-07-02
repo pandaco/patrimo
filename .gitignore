@@ -56,3 +56,4 @@ vitest.config.*.timestamp*
 CLAUDE.md
 GEMINI.md
 .gemini/
+.codegraph/
