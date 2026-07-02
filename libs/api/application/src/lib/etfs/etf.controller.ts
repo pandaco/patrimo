@@ -17,6 +17,7 @@ import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
 import { CreateEtfDtoBody } from './dto/create-etf.dto';
+import { LookupEtfQueryDto } from './dto/lookup-etf.dto';
 import { SetWatchOnlyDtoBody } from './dto/set-watch-only.dto';
 import { UpdateEtfDtoBody } from './dto/update-etf.dto';
 import { EtfService } from './etf.service';
@@ -32,7 +33,7 @@ export class EtfController {
   }
 
   @Get('lookup')
-  lookup(@Query('query') query = ''): Promise<EtfLookupResultDto[]> {
+  lookup(@Query() { query }: LookupEtfQueryDto): Promise<EtfLookupResultDto[]> {
     return this.etfs.lookup(query);
   }
 

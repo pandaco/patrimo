@@ -1,19 +1,20 @@
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
   Length,
 } from 'class-validator';
+import { ENVELOPE_GLYPHS } from '@patrimo/contracts';
 
 export class CreateEnvelopeDtoBody {
   @IsString()
   @Length(1, 32)
   code!: string;
 
-  @IsString()
-  @Length(1, 32)
+  @IsIn(ENVELOPE_GLYPHS)
   glyph!: string;
 
   @IsString()
