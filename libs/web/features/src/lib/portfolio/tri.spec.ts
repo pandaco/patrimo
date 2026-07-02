@@ -13,6 +13,7 @@ function tx(partial: Partial<Transaction> & { id: string; type: TransactionType;
     price:    partial.price ?? null,
     fees:     partial.fees ?? 0,
     taxes:    partial.taxes ?? 0,
+    transferId: partial.transferId ?? null,
     amount:   partial.amount,
   };
 }

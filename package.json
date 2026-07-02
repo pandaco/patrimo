@@ -13,7 +13,7 @@
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint --fix",
     "lint:affected": "nx affected -t lint",
-    "typecheck": "nx run-many -t typecheck",
+    "typecheck": "node tools/typecheck.mjs",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
