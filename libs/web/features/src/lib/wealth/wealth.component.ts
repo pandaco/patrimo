@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Envelope, EnvelopeService, EtfService, etfValue, FxService, TransactionService } from '@patrimo/data-access';
+import { Envelope, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
@@ -48,6 +48,7 @@ export class WealthComponent {
   private readonly etfService = inject(EtfService);
   private readonly transactionService = inject(TransactionService);
   private readonly dialog = inject(MatDialog);
+  private readonly toasts = inject(ToastService);
 
   protected readonly activeView = signal<WealthView>('famille');
   protected readonly total      = this.envelopeService.total;
@@ -183,7 +184,7 @@ export class WealthComponent {
       // out internally — the component does not need to chain them itself.
       await this.envelopeService.remove(env.id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Suppression impossible');
+      this.toasts.error(err instanceof Error ? err.message : 'Suppression impossible');
     }
   }
 }

@@ -177,7 +177,7 @@ export class TransactionsComponent {
     try {
       await this.transactionService.remove(tx.id);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Suppression impossible');
+      this.toasts.error(err instanceof Error ? err.message : 'Suppression impossible');
     }
   }
 
