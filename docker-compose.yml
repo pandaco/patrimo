@@ -4,9 +4,13 @@ services:
     image: postgres:18.4-alpine
     container_name: patrimo-postgres
     environment:
-      POSTGRES_DB: patrimo
-      POSTGRES_USER: patrimo
-      POSTGRES_PASSWORD: patrimo
+      # Local-dev defaults, aligned with DATABASE_URL in .env.example.
+      # Never reuse them outside localhost: override via POSTGRES_* in the
+      # root .env (docker compose loads it automatically) and update
+      # DATABASE_URL to match.
+      POSTGRES_DB: ${POSTGRES_DB:-patrimo}
+      POSTGRES_USER: ${POSTGRES_USER:-patrimo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patrimo}
     ports:
       - "5432:5432"
     volumes:
