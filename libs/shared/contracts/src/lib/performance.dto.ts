@@ -61,13 +61,61 @@ export interface EtfStatsDto {
 
 export type WealthCategory = 'bourse' | 'livret' | 'immo' | 'crypto' | 'metal' | 'cash';
 
+/** Key for the period-return map: every category plus the `all` aggregate. */
+export type WealthReturnKey = 'all' | WealthCategory;
+
+export interface WealthReturnDto {
+  /** Flow-adjusted euro gain over the period: value change minus contributions. */
+  eur: number;
+  /**
+   * Time-weighted return in %, computed on a clean invested base (ETF market
+   * value for boursier, balance for the rest) so contributions never inflate
+   * it. The figure comparable to an index. `null` when too few clean steps.
+   */
+  twrPct: number | null;
+  /**
+   * Return on invested capital, in %: `eur ÷ (opening value + net contributions)`.
+   * The intuitive "I put in X, I gained Y → Z %" figure — money-weighted but
+   * untimed, so it stays stable across window lengths (unlike a time-weighted
+   * Dietz, which explodes when capital is deployed late in a long window).
+   * `null` when the invested base is too small to divide.
+   */
+  investedReturnPct: number | null;
+  /** TWR extrapolated to a year, in %. `null` for windows shorter than ~1 year. */
+  annualizedPct: number | null;
+}
+
 export interface WealthSeriesDto {
   period: PerformancePeriod;
   labels: string[];
   /** Total patrimoine across all categories. */
   total: number[];
-  /** Per-category series, each aligned to `labels`. Only categories with at least one envelope are present. */
+  /**
+   * Net external inflows per label day, summed across ALL envelopes:
+   * sum(DEPOSIT) − sum(WITHDRAWAL). DIVIDEND and INTEREST are excluded — they
+   * are returns, not external capital. BUY/SELL are excluded too — they move
+   * cash inside an envelope, not in/out of the patrimoine. Use to strip
+   * contribution noise from a period's return.
+   */
+  flows: number[];
+  /**
+   * Same as `flows` but split per category, so a category-filtered view can
+   * strip only the contributions that belong to that category (a livret
+   * deposit must not pollute the boursier return). Aligned to `labels`.
+   */
+  flowsByCategory: Partial<Record<WealthCategory, number[]>>;
+  /** Per-category value series, each aligned to `labels`. Only categories with at least one envelope are present. */
   byCategory: Partial<Record<WealthCategory, number[]>>;
+  /** Per-envelope value series keyed by envelope id, aligned to `labels`. */
+  byEnvelope: Record<string, number[]>;
+  /**
+   * Period return per category plus the `all` aggregate, computed server-side
+   * on a clean invested base (not the cash-inclusive chart series, which can
+   * dip negative on unfunded buys and wreck a TWR). The UI just displays these.
+   */
+  returns: Partial<Record<WealthReturnKey, WealthReturnDto>>;
+  /** Period return per envelope, keyed by envelope id — same clean-base computation as `returns`. */
+  returnsByEnvelope: Record<string, WealthReturnDto>;
 }
 
 export interface FeesYtdDto {

@@ -58,7 +58,7 @@ export class PerformanceService {
       ? `${this.baseUrl}/performance/wealth-series?period=${this.wealthPeriod()}`
       : undefined),
     {
-      defaultValue: { period: '1M', labels: [], total: [], byCategory: {} },
+      defaultValue: { period: '1M', labels: [], total: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} },
     },
   );
 

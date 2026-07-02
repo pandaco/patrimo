@@ -70,7 +70,7 @@
 
 .wealth-hero-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
@@ -90,9 +90,10 @@
 
 .wealth-hero-controls {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .wealth-category-select {
@@ -130,28 +131,73 @@
   flex-direction: column;
 }
 
-.wealth-sidebar-eur {
-  font-size: 28px;
+.wealth-return-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 12px;
+}
+
+// Headline: the time-weighted return (%), the figure comparable to an index.
+.wealth-return-pct {
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  margin-bottom: 8px;
-  &.pos { color: #4ADE80; }
-  &.neg { color: #FCA5A5; }
+  &.pos { color: #16A34A; }
+  &.neg { color: #DC2626; }
 }
 
-.wealth-sidebar-pct {
-  margin-bottom: 10px;
-  .pill {
-    &.pos { background: rgba(74,222,128,0.15); color: #16A34A; }
-    &.neg { background: rgba(252,165,165,0.15); color: #DC2626; }
-  }
-}
-
-.wealth-sidebar-caption {
+.wealth-return-sub {
   font-size: 12px;
   color: var(--ink-3);
+  margin-top: 6px;
+}
+
+// The same period expressed in euros — concrete, secondary.
+.wealth-return-eur {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 10px;
+  &.pos { color: var(--ink); }
+  &.neg { color: var(--ink); }
+}
+
+.wealth-return-ann {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+// Money-weighted detail (Modified Dietz) — what the user's own money earned.
+.wealth-return-detail {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-soft);
+  font-variant-numeric: tabular-nums;
+  .pos { color: #16A34A; font-weight: 600; }
+  .neg { color: #DC2626; font-weight: 600; }
+}
+
+.wealth-sidebar-latent {
+  .wealth-latent-rule { border-top: 1px solid var(--rule); margin: 16px 0 12px; }
+  .wealth-latent-label { font-size: 11px; opacity: 0.55; margin-bottom: 4px; }
+  .num {
+    font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
+    &.pos { color: #16A34A; }
+    &.neg { color: #DC2626; }
+  }
+  .wealth-latent-cap { font-size: 11px; opacity: 0.55; }
 }
 
 // NBA section header

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthSeriesDto } from '@patrimo/contracts';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
 import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -17,6 +17,67 @@ function glyphToCategory(glyph: string): WealthCategory {
   if (CRYPTO_GLYPHS.has(glyph)) return 'crypto';
   if (METAL_GLYPHS.has(glyph))  return 'metal';
   return 'cash';
+}
+
+// Daily move beyond this is a data artifact (a position's first valuation
+// lands a day after its buy on sparse history), not performance — drop it
+// from the TWR chain. Mirrors the guard in `getMetrics`; the tight bound also
+// rejects a price-glitch spike AND its mirror-image correction the next day,
+// which an asymmetric (looser) bound would leave half-counted.
+const MAX_DAILY_MOVE = 0.25;
+
+/**
+ * Period return from a *clean invested base* and its external-flow series,
+ * both aligned to the same daily/weekly axis. `base[i]` is the value of the
+ * invested capital (ETF market value for boursier, balance for the rest) and
+ * `flows[i]` the external money moved into/out of it on that bucket. Bucket 0
+ * is the opening value, so the loops start at 1.
+ *
+ * Crucially the base is NEVER the cash-inclusive patrimoine series: an
+ * unfunded buy drives that negative and a TWR built on it explodes. On a clean
+ * base a contribution is neutralised (`base − flow − prev`) and only genuine
+ * market/interest moves remain.
+ */
+function periodReturn(base: number[], flows: number[], spanDays: number): WealthReturnDto {
+  const n = base.length;
+  if (n < 2) return { eur: 0, twrPct: null, investedReturnPct: null, annualizedPct: null };
+
+  const first = base[0] ?? 0;
+  const last  = base[n - 1] ?? 0;
+  let netFlows = 0;
+  for (let i = 1; i < n; i++) netFlows += flows[i] ?? 0;
+  const eur = Number((last - first - netFlows).toFixed(2));
+
+  // Time-weighted return: product of *pure market* daily returns. Skip days
+  // with a contribution (a buy/sell or deposit mixes the move with the cash
+  // event and end-of-day prices cannot separate them) and implausible jumps.
+  // Same rule as `getMetrics`, so the dashboard and the Performance page agree.
+  let growth = 1;
+  let steps  = 0;
+  for (let i = 1; i < n; i++) {
+    if ((flows[i] ?? 0) !== 0) continue;
+    const prev = base[i - 1];
+    if (prev <= 0 || base[i] <= 0) continue;
+    const r = base[i] / prev - 1;
+    if (!Number.isFinite(r) || Math.abs(r) > MAX_DAILY_MOVE) continue;
+    growth *= 1 + r;
+    steps++;
+  }
+  const twrPct = steps >= 1 ? Number(((growth - 1) * 100).toFixed(2)) : null;
+
+  // Return on invested capital: euro P&L over (opening value + net
+  // contributions). Untimed on purpose — a time-weighted denominator shrinks
+  // toward zero when money is deployed late in a long window and the ratio
+  // blows up (the "294 %" trap). This stays the intuitive gain-over-money-in.
+  const investedCapital = first + netFlows;
+  const investedReturnPct = investedCapital >= 100 ? Number(((eur / investedCapital) * 100).toFixed(2)) : null;
+
+  // Annualise only for windows of at least ~1 year (short-period extrapolation is noise).
+  const annualizedPct = twrPct !== null && spanDays >= 360 && growth > 0
+    ? Number(((Math.pow(growth, 365 / spanDays) - 1) * 100).toFixed(2))
+    : null;
+
+  return { eur, twrPct, investedReturnPct, annualizedPct };
 }
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
@@ -458,31 +519,83 @@ export class PerformanceService {
       txsByEnvelope.set(tx.envelopeId, list);
     }
 
-    const byCategoryArrays = new Map<WealthCategory, number[]>();
+    const byCategoryArrays      = new Map<WealthCategory, number[]>();
+    const flowsByCategoryArrays = new Map<WealthCategory, number[]>();
+    const byEnvelope: Record<string, number[]> = {};
+    const returnInputsByEnvelope = new Map<string, { base: number[]; flow: number[] }>();
     const total = new Array<number>(labels.length).fill(0);
+    const flows = new Array<number>(labels.length).fill(0);
+
+    // Parallel "clean" series, used only to compute returns. The base is the
+    // value of invested capital — ETF market value for boursier (never the
+    // cash-inclusive chart series, which goes negative on unfunded buys), the
+    // balance for everything else. Its flows are the money put into that
+    // capital: buys/sells for boursier, deposits/withdrawals elsewhere.
+    const returnBaseByCat = new Map<WealthCategory, number[]>();
+    const returnFlowByCat = new Map<WealthCategory, number[]>();
+    const returnBaseAll = new Array<number>(labels.length).fill(0);
+    const returnFlowAll = new Array<number>(labels.length).fill(0);
+
+    const addInto = (map: Map<WealthCategory, number[]>, cat: WealthCategory, src: number[]) => {
+      const acc = map.get(cat) ?? new Array<number>(labels.length).fill(0);
+      for (let i = 0; i < labels.length; i++) acc[i] = Number((acc[i] + src[i]).toFixed(2));
+      map.set(cat, acc);
+    };
 
     for (const envelope of envelopes) {
       const category = glyphToCategory(envelope.glyph);
       const envTxs   = (txsByEnvelope.get(envelope.id) ?? [])
         .slice()
         .sort((a, b) => a.date.getTime() - b.date.getTime());
+      const isBourse = category === 'bourse';
 
-      const series = category === 'bourse'
+      // Chart series: cash-inclusive value (boursier) / running balance (rest).
+      const chartValue = isBourse
         ? this.buildEnvelopeBoursSeries(labels, envTxs, closesByIsin)
         : this.buildEnvelopeFlowSeries(labels, envTxs);
+      // Chart flows: external patrimoine movements (DEPOSIT − WITHDRAWAL).
+      const chartFlow = this.buildEnvelopeFlowDeltas(labels, envTxs);
 
-      const existing = byCategoryArrays.get(category) ?? new Array<number>(labels.length).fill(0);
+      // Return base/flows: boursier uses ETF market value + buy/sell capital;
+      // every other category reuses its balance series and deposit flows.
+      const returnBase = isBourse ? this.buildEnvelopeEtfValueSeries(labels, envTxs, closesByIsin) : chartValue;
+      const returnFlow = isBourse ? this.buildEnvelopeInvestFlowDeltas(labels, envTxs)             : chartFlow;
+
+      byEnvelope[envelope.id] = chartValue;
+      returnInputsByEnvelope.set(envelope.id, { base: returnBase, flow: returnFlow });
+
+      addInto(byCategoryArrays, category, chartValue);
+      addInto(flowsByCategoryArrays, category, chartFlow);
+      addInto(returnBaseByCat, category, returnBase);
+      addInto(returnFlowByCat, category, returnFlow);
       for (let i = 0; i < labels.length; i++) {
-        existing[i] = Number((existing[i] + series[i]).toFixed(2));
-        total[i]    = Number((total[i]    + series[i]).toFixed(2));
+        total[i]         = Number((total[i]         + chartValue[i]).toFixed(2));
+        flows[i]         = Number((flows[i]         + chartFlow[i]).toFixed(2));
+        returnBaseAll[i] = Number((returnBaseAll[i] + returnBase[i]).toFixed(2));
+        returnFlowAll[i] = Number((returnFlowAll[i] + returnFlow[i]).toFixed(2));
       }
-      byCategoryArrays.set(category, existing);
     }
 
-    const byCategory: Partial<Record<WealthCategory, number[]>> = {};
-    for (const [cat, series] of byCategoryArrays) byCategory[cat] = series;
+    const byCategory:      Partial<Record<WealthCategory, number[]>> = {};
+    const flowsByCategory: Partial<Record<WealthCategory, number[]>> = {};
+    for (const [cat, series] of byCategoryArrays)      byCategory[cat]      = series;
+    for (const [cat, series] of flowsByCategoryArrays) flowsByCategory[cat] = series;
 
-    return { period, labels, total, byCategory };
+    const spanDays = labels.length >= 2
+      ? (new Date(labels[labels.length - 1]).getTime() - new Date(labels[0]).getTime()) / 86_400_000
+      : 0;
+    const returns: Partial<Record<WealthReturnKey, WealthReturnDto>> = {
+      all: periodReturn(returnBaseAll, returnFlowAll, spanDays),
+    };
+    for (const [cat, base] of returnBaseByCat) {
+      returns[cat] = periodReturn(base, returnFlowByCat.get(cat) ?? [], spanDays);
+    }
+    const returnsByEnvelope: Record<string, WealthReturnDto> = {};
+    for (const [envelopeId, { base, flow }] of returnInputsByEnvelope) {
+      returnsByEnvelope[envelopeId] = periodReturn(base, flow, spanDays);
+    }
+
+    return { period, labels, total, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
   }
 
   private buildEnvelopeBoursSeries(
@@ -490,28 +603,65 @@ export class PerformanceService {
     txs: Transaction[],
     closesByIsin: Map<string, Map<string, number>>,
   ): number[] {
-    const boursTxs = txs.filter(
-      (t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'),
-    );
-    const qtyByIsin = new Map<string, number>();
-    const lastClose = new Map<string, number>();
+    // Process ALL transaction types so the cash balance is tracked alongside
+    // ETF positions. Without this, a BUY with no prior DEPOSIT inflates the
+    // series (ETF value rises but the cash outflow is invisible), creating
+    // phantom "performance". Including cash means BUY is neutral: ETF +X,
+    // cash −X, net 0. Only market price movements and income (DIVIDEND/INTEREST)
+    // create real gains.
+    const sortedTxs = txs.slice().sort((a, b) => a.date.getTime() - b.date.getTime());
+    const qtyByIsin   = new Map<string, number>();
+    const lastClose   = new Map<string, number>();
+    const avgBuyPrice = new Map<string, number>(); // valuation fallback when no close exists
+    const buyQty      = new Map<string, number>();
+    const buyCost     = new Map<string, number>();
+    let cash   = 0;
     let cursor = 0;
     const series: number[] = [];
 
     for (const label of labels) {
-      while (cursor < boursTxs.length && isoDate(boursTxs[cursor].date) <= label) {
-        const tx   = boursTxs[cursor];
-        const sign = tx.type === 'BUY' ? 1 : -1;
-        qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
+      while (cursor < sortedTxs.length && isoDate(sortedTxs[cursor].date) <= label) {
+        const tx = sortedTxs[cursor];
+        const price = tx.price ?? 0;
+        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
+        switch (tx.type) {
+          case 'BUY':
+            if (tx.etfIsin) {
+              qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + tx.quantity);
+              cash -= tx.quantity * price + costs;
+              buyQty.set(tx.etfIsin, (buyQty.get(tx.etfIsin) ?? 0) + tx.quantity);
+              buyCost.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) + tx.quantity * price);
+              const bq = buyQty.get(tx.etfIsin) ?? 0;
+              if (bq > 0) avgBuyPrice.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) / bq);
+            }
+            break;
+          case 'SELL':
+            if (tx.etfIsin) {
+              qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) - tx.quantity);
+              cash += tx.quantity * price - costs;
+            }
+            break;
+          case 'DEPOSIT':    cash += tx.amount; break;
+          case 'WITHDRAWAL': cash -= tx.amount; break;
+          case 'DIVIDEND':
+          case 'INTEREST':   cash += tx.amount; break;
+        }
         cursor++;
       }
-      let value = 0;
+
+      let etfValue = 0;
       for (const [isin, qty] of qtyByIsin) {
         if (qty <= 0) continue;
-        const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin);
-        if (close !== undefined) { lastClose.set(isin, close); value += qty * close; }
+        const realClose = closesByIsin.get(isin)?.get(label);
+        // Real close → last known close → average buy price, so a missing
+        // price history values the position at cost rather than zero.
+        const close = realClose ?? lastClose.get(isin) ?? avgBuyPrice.get(isin);
+        if (realClose !== undefined) lastClose.set(isin, realClose);
+        if (close !== undefined) etfValue += qty * close;
       }
-      series.push(Number(value.toFixed(2)));
+      // Total = market value of ETF positions + cash balance.
+      // Cash can be negative (unfunded BUY) which correctly offsets the ETF gain.
+      series.push(Number((etfValue + cash).toFixed(2)));
     }
     return series;
   }
@@ -533,6 +683,109 @@ export class PerformanceService {
       series.push(Number(value.toFixed(2)));
     }
     return series;
+  }
+
+  /**
+   * Per-bucket net external flow (DEPOSIT − WITHDRAWAL) for one envelope,
+   * aligned to `labels`. Each flow lands in the first label on/after its date
+   * (same cursor logic as the value series, so daily and weekly axes agree).
+   * Transactions before the first label fall into bucket 0 (opening capital).
+   * Used to neutralise contributions when measuring a period's return.
+   */
+  private buildEnvelopeFlowDeltas(labels: string[], txs: Transaction[]): number[] {
+    const flowTxs = txs
+      .filter(t => t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    const deltas = new Array<number>(labels.length).fill(0);
+    let cursor = 0;
+
+    for (let i = 0; i < labels.length; i++) {
+      let bucket = 0;
+      while (cursor < flowTxs.length && isoDate(flowTxs[cursor].date) <= labels[i]) {
+        const tx = flowTxs[cursor];
+        bucket += tx.type === 'WITHDRAWAL' ? -tx.amount : tx.amount;
+        cursor++;
+      }
+      deltas[i] = Number(bucket.toFixed(2));
+    }
+    return deltas;
+  }
+
+  /**
+   * Market value of a boursier envelope's ETF positions per label (qty × close,
+   * last close carried over gaps). Unlike `buildEnvelopeBoursSeries` this holds
+   * NO cash, so the series never goes negative on an unfunded buy — the clean
+   * base a TWR needs. Buys/sells enter the return as flows, not value jumps.
+   */
+  private buildEnvelopeEtfValueSeries(
+    labels: string[],
+    txs: Transaction[],
+    closesByIsin: Map<string, Map<string, number>>,
+  ): number[] {
+    const sortedTxs = txs
+      .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    const qtyByIsin   = new Map<string, number>();
+    const lastClose   = new Map<string, number>();
+    const avgBuyPrice = new Map<string, number>(); // valuation fallback when no close exists
+    const buyQty      = new Map<string, number>();
+    const buyCost     = new Map<string, number>();
+    let cursor = 0;
+    const series: number[] = [];
+
+    for (const label of labels) {
+      while (cursor < sortedTxs.length && isoDate(sortedTxs[cursor].date) <= label) {
+        const tx   = sortedTxs[cursor];
+        const sign = tx.type === 'BUY' ? 1 : -1;
+        qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
+        if (tx.type === 'BUY') {
+          buyQty.set(tx.etfIsin, (buyQty.get(tx.etfIsin) ?? 0) + tx.quantity);
+          buyCost.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) + tx.quantity * (tx.price ?? 0));
+          const bq = buyQty.get(tx.etfIsin) ?? 0;
+          if (bq > 0) avgBuyPrice.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) / bq);
+        }
+        cursor++;
+      }
+      let value = 0;
+      for (const [isin, qty] of qtyByIsin) {
+        if (qty <= 0) continue;
+        // Real close → last known close → average buy price. The last fallback
+        // is critical: when price history is unavailable (Yahoo down, a weekly
+        // range that never cached), valuing at cost yields 0 P&L instead of a
+        // catastrophic −100 % (position priced at 0).
+        const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin) ?? avgBuyPrice.get(isin);
+        if (close !== undefined) { if (closesByIsin.get(isin)?.get(label) !== undefined) lastClose.set(isin, close); value += qty * close; }
+      }
+      series.push(Number(value.toFixed(2)));
+    }
+    return series;
+  }
+
+  /**
+   * Capital deployed into positions per bucket: BUY adds (cost incl. fees),
+   * SELL returns (proceeds net of fees). This is the flow that neutralises a
+   * purchase against the ETF-value base, leaving only the market move.
+   */
+  private buildEnvelopeInvestFlowDeltas(labels: string[], txs: Transaction[]): number[] {
+    const tradeTxs = txs
+      .filter(t => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    const deltas = new Array<number>(labels.length).fill(0);
+    let cursor = 0;
+
+    for (let i = 0; i < labels.length; i++) {
+      let bucket = 0;
+      while (cursor < tradeTxs.length && isoDate(tradeTxs[cursor].date) <= labels[i]) {
+        const tx    = tradeTxs[cursor];
+        const sign  = tx.type === 'BUY' ? 1 : -1;
+        const price = tx.price ?? 0;
+        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
+        bucket += sign * (tx.quantity * price) + (tx.type === 'BUY' ? costs : -costs);
+        cursor++;
+      }
+      deltas[i] = Number(bucket.toFixed(2));
+    }
+    return deltas;
   }
 
   async getFeesYtd(userId: string): Promise<FeesYtdDto> {

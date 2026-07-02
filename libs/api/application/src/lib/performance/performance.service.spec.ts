@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import type { Etf, Transaction, TransactionType, UserPreferences } from '@patrimo/api-domain';
+import type { Envelope, Etf, Transaction, TransactionType, UserPreferences } from '@patrimo/api-domain';
 import {
   ENVELOPE_REPOSITORY,
   ETF_REPOSITORY,
@@ -25,6 +25,25 @@ function etf(overrides: Partial<Etf>): Etf {
     pea: true,
     watchOnly: false,
     alloc: 'Core',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+function env(overrides: Partial<Envelope>): Envelope {
+  return {
+    id: overrides.id ?? 'env-1',
+    userId: 'user-1',
+    code: overrides.code ?? 'PEA',
+    glyph: overrides.glyph ?? 'pea',
+    label: overrides.label ?? 'PEA',
+    broker: 'Fortuneo',
+    value: 0,
+    invested: 0,
+    cash: 0,
+    openedAt: new Date('2020-01-01'),
+    plafond: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -57,6 +76,7 @@ describe('PerformanceService', () => {
   let etfRepository: { findAll: jest.Mock; findByIsin: jest.Mock };
   let preferencesRepository: { findByUserId: jest.Mock };
   let priceService: { getHistorical: jest.Mock; getQuote: jest.Mock };
+  let envelopeRepository: { findByUserId: jest.Mock };
 
   beforeEach(async () => {
     transactionRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
@@ -69,7 +89,7 @@ describe('PerformanceService', () => {
       getHistorical: jest.fn().mockResolvedValue([]),
       getQuote: jest.fn().mockResolvedValue({ price: null }),
     };
-    const envelopeRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
+    envelopeRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -302,6 +322,104 @@ describe('PerformanceService', () => {
       expect(fees.brokerageYtd).toBe(2);
       expect(fees.byEtf).toEqual([]);
       expect(fees.terDragYtd).toBe(0);
+    });
+  });
+
+  describe('getWealthSeries — patrimoine total', () => {
+    async function captureWealthLabels(): Promise<string[]> {
+      const probe = await service.getWealthSeries('user-1', '1M');
+      priceService.getHistorical.mockClear();
+      return probe.labels;
+    }
+
+    it('keeps a bourse envelope flat when a BUY has no matching deposit (cash offsets the position)', async () => {
+      const labels = await captureWealthLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 40 })) });
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      // ETF worth 400, cash −400 → zero net contribution to the patrimoine.
+      expect(w.total.every(v => v === 0)).toBe(true);
+      // No DEPOSIT recorded → the flow series stays empty (the BUY is internal).
+      expect(w.flows.every(v => v === 0)).toBe(true);
+    });
+
+    it('surfaces only the market move as performance, never the purchase itself', async () => {
+      const labels = await captureWealthLabels();
+      const mid = Math.floor(labels.length / 2);
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < mid ? 40 : 44 })) });
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      expect(w.total[0]).toBe(0);                          // buy day: neutral
+      expect(w.total[labels.length - 1]).toBe(40);         // +10 % on 10 units → +40 €, pure market gain
+    });
+
+    it('splits external flows per category so a livret deposit never pollutes the boursier return', async () => {
+      const labels = await captureWealthLabels();
+      const day5 = labels[5];
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea' }),
+        env({ id: 'env-2', glyph: 'livret' }),
+      ]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'DEPOSIT', amount: 1000, etfIsin: null, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        tx({ type: 'DEPOSIT', amount: 500,  etfIsin: null, envelopeId: 'env-2', date: new Date(day5 + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([]);
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      expect(w.flowsByCategory.bourse?.[0]).toBe(1000);
+      expect(w.flowsByCategory.livret?.[5]).toBe(500);
+      // Aggregate flow = sum across categories.
+      expect(w.flows[0]).toBe(1000);
+      expect(w.flows[5]).toBe(500);
+      // The livret deposit must not bleed into the boursier flow bucket.
+      expect(w.flowsByCategory.bourse?.[5] ?? 0).toBe(0);
+    });
+
+    it('computes a clean, non-inflated return for a buy with no matching deposit', async () => {
+      const labels = await captureWealthLabels();
+      const mid = Math.floor(labels.length / 2);
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      // Flat at 40 then +10 % to 44 — pure market move, no contribution mid-period.
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < mid ? 40 : 44 })) });
+
+      const r = (await service.getWealthSeries('user-1', '1M')).returns.bourse;
+      expect(r).toBeDefined();
+      // Clean ETF-value base (400 → 440): +10 % market, +40 € on 400 invested.
+      // The old cash-inclusive base would have started near zero and exploded.
+      expect(r?.twrPct).toBeCloseTo(10, 1);
+      expect(r?.investedReturnPct).toBeCloseTo(10, 1);
+      expect(r?.eur).toBeCloseTo(40, 1);
+    });
+
+    it('values held positions at cost when price history is missing, never as a total loss', async () => {
+      const labels = await captureWealthLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      mockHistory({}); // Yahoo returns no closes at all (down / uncached weekly range)
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      // Valued at the 40 € buy price, not 0 → P&L is 0, never −400 (the −cost
+      // "catastrophic loss" the MAX period showed before this guard).
+      expect(w.returns.bourse?.eur).toBeCloseTo(0, 1);
+      expect(w.total.every(v => Math.abs(v) < 0.01)).toBe(true); // ETF 400 − cash 400 = 0
     });
   });
 });

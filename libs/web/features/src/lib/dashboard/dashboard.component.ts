@@ -1,38 +1,12 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
-import { AlertType, PerformancePeriod, WealthCategory } from '@patrimo/contracts';
+import { AlertType, PerformancePeriod, WealthCategory, WealthReturnKey } from '@patrimo/contracts';
 import { DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
-import { computePeriodPnl } from './period-pnl';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
-
-const DASH_PERIODS: { id: PerformancePeriod; label: string }[] = [
-  { id: '1M', label: '1M' },
-  { id: '3M', label: '3M' },
-  { id: '6M', label: '6M' },
-  { id: '1Y', label: '1A' },
-  { id: 'YTD', label: 'YTD' },
-  { id: 'MAX', label: 'MAX' },
-];
-
-/**
- * Hero P&L selector. `1D` is frontend-only: the daily figure comes from
- * `price − prev` on the positions (no intraday history available), while the
- * chart below falls back to the 1-week series for context.
- */
-type HeroPeriod = '1D' | PerformancePeriod;
-const HERO_PERIODS: { id: HeroPeriod; label: string; caption: string }[] = [
-  { id: '1D',  label: '1J',  caption: "aujourd'hui" },
-  { id: '1W',  label: '1S',  caption: 'sur 1 semaine' },
-  { id: '1M',  label: '1M',  caption: 'sur 1 mois' },
-  { id: '3M',  label: '3M',  caption: 'sur 3 mois' },
-  { id: 'YTD', label: 'YTD', caption: 'depuis le 1er janv.' },
-  { id: '3Y',  label: '3A',  caption: 'sur 3 ans' },
-  { id: '5Y',  label: '5A',  caption: 'sur 5 ans' },
-];
 
 const WEALTH_PERIODS: { id: PerformancePeriod; label: string; caption: string }[] = [
   { id: '1W',  label: '1S',  caption: 'sur 1 semaine' },
@@ -53,6 +27,9 @@ const WEALTH_CATEGORIES: { id: 'all' | WealthCategory; label: string }[] = [
   { id: 'metal',  label: 'Métaux précieux' },
   { id: 'cash',   label: 'Cash' },
 ];
+
+/** Chart filter: whole patrimoine, one category, or one envelope (`env:<id>`). */
+type WealthFilter = 'all' | WealthCategory | `env:${string}`;
 
 const GLYPH_COLORS: Record<string, string> = {
   pea:'#16A34A', peapme:'#15803D', cto:'#EA580C', av:'#7C3AED',
@@ -79,6 +56,7 @@ function isParisMarketOpen(now: Date): boolean {
   standalone: true,
   imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent],
   templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent {
@@ -119,6 +97,24 @@ export class DashboardComponent {
       if (!this.preferences.loading() && !this.preferences.current().onboardingDone && this.isEmpty()) {
         this.router.navigateByUrl('/welcome');
       }
+    });
+
+    // Restore the last selected chart period so a reload does not silently
+    // reset the view (same pattern as compare:selected).
+    const PERIOD_STORAGE_KEY = 'dashboard:period';
+    const storedPeriod = localStorage.getItem(PERIOD_STORAGE_KEY);
+    if (storedPeriod !== null && WEALTH_PERIODS.some(p => p.id === storedPeriod)) {
+      this.dashboardPeriod.set(storedPeriod as PerformancePeriod);
+    }
+    effect(() => localStorage.setItem(PERIOD_STORAGE_KEY, this.dashboardPeriod()));
+
+    // Single source of truth for the evolution chart period: pushes the one
+    // dashboard period signal to both performance resources (wealth-series and
+    // perf-vs-benchmark) so the € and % views never drift out of sync.
+    effect(() => {
+      const p = this.dashboardPeriod();
+      this.performanceService.setPeriod(p);
+      this.performanceService.setWealthPeriod(p);
     });
   }
 
@@ -179,123 +175,108 @@ export class DashboardComponent {
 
   protected readonly perfPortfolio  = computed(() => this.performanceService.series().portfolio);
   protected readonly perfBenchmark  = computed(() => this.performanceService.series().benchmark);
-  protected readonly dashPeriods    = DASH_PERIODS;
-  protected readonly dashPeriod     = this.performanceService.period;
   protected readonly annualized     = computed(() => this.performanceService.raw().annualized);
 
-  // ─── Wealth chart (Finary-style patrimoine total) ─────────────────────────
+  // ─── Evolution chart (single card: € patrimoine ↔ % vs indice) ────────────
 
-  protected readonly wealthPeriods      = WEALTH_PERIODS;
-  protected readonly wealthCategoryOptions = WEALTH_CATEGORIES;
-  protected readonly wealthPeriod       = this.performanceService.wealthPeriod;
-  protected readonly wealthCategory     = signal<'all' | WealthCategory>('all');
+  /** One period drives both the wealth-series and perf-vs-benchmark resources. */
+  protected readonly dashboardPeriods = WEALTH_PERIODS;
+  protected readonly dashboardPeriod  = signal<PerformancePeriod>('1Y');
+  /** `wealth` = patrimoine en euros · `perf` = performance vs benchmark en %. */
+  protected readonly chartMode        = signal<'wealth' | 'perf'>('wealth');
+
+  /** Collapses the 7 secondary KPI tiles behind a "Plus d'indicateurs" toggle. */
+  protected readonly showAllKpis      = signal(false);
+
+  protected readonly wealthFilterCategories = WEALTH_CATEGORIES.filter(c => c.id !== 'all');
+  /** Envelope entries of the chart filter — the Trade Republic-style per-envelope view. */
+  protected readonly wealthFilterEnvelopes = computed(() =>
+    this.envelopes.all().map(e => ({ id: `env:${e.id}` as const, label: `${e.code} · ${e.label}` }))
+  );
+  protected readonly wealthFilter       = signal<WealthFilter>('all');
   protected readonly wealthLoading      = this.performanceService.wealthLoading;
 
   protected readonly wealthChartData = computed(() => {
-    const w   = this.performanceService.wealth();
-    const cat = this.wealthCategory();
-    if (cat === 'all') return w.total;
-    return w.byCategory[cat] ?? [];
+    const w      = this.performanceService.wealth();
+    const filter = this.wealthFilter();
+    if (filter === 'all') return w.total;
+    if (filter.startsWith('env:')) return w.byEnvelope[filter.slice(4)] ?? [];
+    return w.byCategory[filter as WealthCategory] ?? [];
   });
 
   protected readonly wealthLabels = computed(() => this.performanceService.wealth().labels);
 
-  protected readonly wealthDelta = computed(() => {
-    const d = this.wealthChartData();
-    const last = d[d.length - 1];
-    if (last === undefined || last === 0) return null;
-    const first = d.find(v => v > 0);
-    if (first === undefined) return null;
-    const eur = last - first;
-    // Hide % when starting value was < 10 % of ending — means the period
-    // was mostly deposits, making the ratio nonsensical as a return figure.
-    const pct = first / last >= 0.1 ? (last / first - 1) * 100 : null;
-    return { eur, pct };
+  /**
+   * Period return for the selected category, computed server-side on a clean
+   * invested base (see `performance.service`). The cash-inclusive chart series
+   * is unfit for a TWR — an unfunded buy drives it negative and the ratio
+   * explodes — so the backend builds a separate ETF-value/balance base and
+   * sends the finished figures here. `twrPct` is the headline (comparable to
+   * an index), `eur` the euro gain, `investedReturnPct` the money-weighted detail.
+   */
+  protected readonly wealthReturn = computed(() => {
+    const filter = this.wealthFilter();
+    if (this.wealthChartData().length < 2) return null;
+    const w = this.performanceService.wealth();
+    if (filter !== 'all' && filter.startsWith('env:')) return w.returnsByEnvelope[filter.slice(4)] ?? null;
+    return w.returns?.[filter as WealthReturnKey] ?? null;
   });
 
-  protected readonly wealthDeltaPositive = computed(() => (this.wealthDelta()?.eur ?? 0) >= 0);
+  // Colour follows the headline return (TWR when available, else euro P&L).
+  protected readonly wealthReturnPositive = computed(() => {
+    const r = this.wealthReturn();
+    if (!r) return true;
+    return (r.twrPct ?? r.eur) >= 0;
+  });
 
   protected readonly wealthPeriodCaption = computed(() => {
-    const id = this.wealthPeriod();
+    const id = this.dashboardPeriod();
     return WEALTH_PERIODS.find(p => p.id === id)?.caption ?? id;
   });
 
-  protected setWealthPeriod(id: PerformancePeriod): void {
-    this.performanceService.setWealthPeriod(id);
+  protected setDashboardPeriod(id: PerformancePeriod): void {
+    this.dashboardPeriod.set(id);
   }
 
-  protected setWealthCategory(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value as 'all' | WealthCategory;
-    this.wealthCategory.set(value);
+  protected setChartMode(mode: 'wealth' | 'perf'): void {
+    this.chartMode.set(mode);
   }
 
-  // ─── Hero period P&L (Trade-Republic-style selector) ──────────────────────
+  protected setWealthFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value as WealthFilter;
+    this.wealthFilter.set(value);
+  }
 
-  protected readonly heroPeriods = HERO_PERIODS;
-  /** Non-null only in `1D` mode — every other period maps 1:1 to the service period. */
-  private readonly heroDayMode = signal(false);
-  protected readonly activeHeroPeriod = computed<HeroPeriod>(() =>
-    this.heroDayMode() ? '1D' : this.performanceService.period(),
-  );
-  protected readonly heroPnl = computed(() => {
-    if (this.activeHeroPeriod() === '1D') {
-      return { eur: this.dayValue(), pct: this.dayPct() };
+  // ─── "Bats-tu le Livret A ?" verdict ──────────────────────────────────────
+
+  /** Reference Livret A rate (%/yr), user-configurable in preferences. */
+  protected readonly livretRatePct = computed(() => this.preferences.current().livretRatePct);
+
+  /** Span of the displayed wealth series, in days — derived from the labels. */
+  protected readonly wealthSpanDays = computed(() => {
+    const lbls = this.wealthLabels();
+    if (lbls.length < 2) return 0;
+    return (new Date(lbls[lbls.length - 1]).getTime() - new Date(lbls[0]).getTime()) / 86_400_000;
+  });
+
+  /**
+   * Period-matched Livret A reference: when the window is annualised (≥1 yr) we
+   * compare the annual rate directly; otherwise we pro-rate the annual rate to
+   * the actual span (no extrapolation — an honest "what the livret would have
+   * paid over this exact period").
+   */
+  protected readonly livretComparison = computed(() => {
+    const r = this.wealthReturn();
+    if (!r) return null;
+    const rate = this.livretRatePct();
+    if (r.annualizedPct !== null) {
+      return { mine: r.annualizedPct, livret: rate, beats: r.annualizedPct >= rate, annual: true };
     }
-    const raw = this.performanceService.raw();
-    return computePeriodPnl(raw.labels, raw.portfolio, this.txService.all());
-  });
-
-  protected readonly heroPnlCaption = computed(() => {
-    const active = this.activeHeroPeriod();
-    return HERO_PERIODS.find(p => p.id === active)?.caption ?? `sur ${active}`;
-  });
-
-  protected readonly heroPnlEurText = computed(() => {
-    const pnl = this.heroPnl();
-    if (!pnl) return null;
-    return `${pnl.eur >= 0 ? '+' : '−'}${this.fmtEur(Math.abs(pnl.eur), 2)}`;
-  });
-  protected readonly heroPnlPctText = computed(() => {
-    const pnl = this.heroPnl();
-    if (!pnl || pnl.pct === null) return null;
-    return fmtPct(pnl.pct, 2);
-  });
-  protected readonly heroPnlPositive = computed(() => (this.heroPnl()?.eur ?? 0) >= 0);
-
-  // Annualized projection of the YTD return. Only shown when YTD tab is active
-  // and at least 14 days have elapsed since Jan 1 (avoids absurd early-year numbers).
-  protected readonly ytdAnnualizedPct = computed(() => {
-    if (this.activeHeroPeriod() !== 'YTD') return null;
-    const pnl = this.heroPnl();
-    if (!pnl || pnl.pct === null) return null;
-    const jan1 = new Date(new Date().getFullYear(), 0, 1);
-    const daysElapsed = Math.max(1, Math.ceil((Date.now() - jan1.getTime()) / 86_400_000));
-    if (daysElapsed < 14) return null;
-    const ann = (Math.pow(1 + pnl.pct / 100, 365 / daysElapsed) - 1) * 100;
-    return Number.isFinite(ann) ? ann : null;
-  });
-
-  protected setHeroPeriod(id: HeroPeriod): void {
-    if (id === '1D') {
-      this.heroDayMode.set(true);
-      this.performanceService.setPeriod('1W');
-    } else {
-      this.heroDayMode.set(false);
-      this.performanceService.setPeriod(id);
-    }
-  }
-
-  protected readonly portfolioPct = computed(() => {
-    const pts = this.perfPortfolio();
-    if (pts.length < 2) return null;
-    const start = pts.find(v => v > 0) ?? 0;
-    const end   = pts[pts.length - 1];
-    // Need at least €1 of starting capital — otherwise tiny denominators
-    // (a stray decimal during the first hour of a fresh account) turn
-    // `end / start` into +Infinity and the headline shows nonsense.
-    if (start < 1) return null;
-    const ratio = (end / start - 1) * 100;
-    return Number.isFinite(ratio) ? ratio : null;
+    if (r.twrPct === null) return null;
+    const days = this.wealthSpanDays();
+    if (days <= 0) return null;
+    const livretForPeriod = rate * (days / 365);
+    return { mine: r.twrPct, livret: livretForPeriod, beats: r.twrPct >= livretForPeriod, annual: false };
   });
 
   protected readonly donutData = computed(() =>
@@ -439,13 +420,6 @@ export class DashboardComponent {
 
   protected severityIcon(sev: string): string {
     return sev === 'warn' ? '!' : sev === 'gain' ? '✓' : 'i';
-  }
-
-  protected setPeriod(id: PerformancePeriod): void {
-    // The chart card tabs and the hero selector share the service period;
-    // leaving day mode keeps the hero P&L consistent with the chart data.
-    this.heroDayMode.set(false);
-    this.performanceService.setPeriod(id);
   }
 
   protected async dismissAlert(id: string): Promise<void> {

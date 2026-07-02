@@ -1,0 +1,73 @@
+// Dashboard-local styles (ViewEncapsulation.Emulated). New structural styles
+// live here per the CSS convention; legacy layout classes (.wealth-hero,
+// .kpi-tile, .tabs, .card) still come from the global partials.
+
+// ─── Chart €/% segmented toggle (evolution card header) ─────────────────────
+.chart-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule-soft);
+
+  button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: var(--ink-3);
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover { color: var(--ink); }
+
+    &.active {
+      background: var(--brand);
+      color: var(--paper);
+    }
+  }
+}
+
+// ─── "Bats-tu le Livret A ?" verdict pill ───────────────────────────────────
+.wealth-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  margin-top: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+
+  &.pos { background: var(--gain-soft); color: var(--gain); }
+  &.neg { background: var(--loss-soft); color: var(--loss); }
+
+  .wealth-verdict-mark { font-size: 13px; }
+
+  .wealth-verdict-rate {
+    flex-basis: 100%;
+    font-weight: 500;
+    font-size: 11px;
+    opacity: 0.85;
+  }
+}
+
+// ─── "Plus d'indicateurs" disclosure button ─────────────────────────────────
+.kpi-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--ink-3);
+
+  &:hover { color: var(--ink); }
+}

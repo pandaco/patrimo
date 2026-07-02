@@ -63,7 +63,7 @@
       </p>
     </div>
   } @else {
-    <!-- WEALTH HERO (Finary-style: chart + P&L sidebar) -->
+    <!-- OÙ J'EN SUIS + ÉVOLUTION (chart patrimoine € ↔ perf vs indice %) -->
     <div class="wealth-hero">
       <div class="wealth-hero-main">
         <div class="wealth-hero-header">
@@ -77,33 +77,62 @@
             </div>
           </div>
           <div class="wealth-hero-controls">
-            <select class="wealth-category-select" (change)="setWealthCategory($event)" aria-label="Filtrer par catégorie">
-              @for (cat of wealthCategoryOptions; track cat.id) {
-                <option [value]="cat.id" [selected]="cat.id === wealthCategory()">{{ cat.label }}</option>
-              }
-            </select>
-            <div class="tabs" role="tablist" aria-label="Période patrimoine">
-              @for (p of wealthPeriods; track p.id) {
-                <button [class.active]="p.id === wealthPeriod()"
-                        (click)="setWealthPeriod(p.id)"
+            <div class="chart-mode-toggle" role="tablist" aria-label="Type de graphique">
+              <button [class.active]="chartMode() === 'wealth'" (click)="setChartMode('wealth')"
+                      role="tab" [attr.aria-selected]="chartMode() === 'wealth'">Patrimoine €</button>
+              <button [class.active]="chartMode() === 'perf'" (click)="setChartMode('perf')"
+                      role="tab" [attr.aria-selected]="chartMode() === 'perf'">vs indice %</button>
+            </div>
+            @if (chartMode() === 'wealth') {
+              <select class="wealth-category-select" (change)="setWealthFilter($event)" aria-label="Filtrer par catégorie ou enveloppe">
+                <option value="all" [selected]="wealthFilter() === 'all'">Toutes les catégories</option>
+                <optgroup label="Catégories">
+                  @for (cat of wealthFilterCategories; track cat.id) {
+                    <option [value]="cat.id" [selected]="cat.id === wealthFilter()">{{ cat.label }}</option>
+                  }
+                </optgroup>
+                @if (wealthFilterEnvelopes().length > 0) {
+                  <optgroup label="Enveloppes">
+                    @for (env of wealthFilterEnvelopes(); track env.id) {
+                      <option [value]="env.id" [selected]="env.id === wealthFilter()">{{ env.label }}</option>
+                    }
+                  </optgroup>
+                }
+              </select>
+            }
+            <div class="tabs" role="tablist" aria-label="Période">
+              @for (p of dashboardPeriods; track p.id) {
+                <button [class.active]="p.id === dashboardPeriod()"
+                        (click)="setDashboardPeriod(p.id)"
                         role="tab"
-                        [attr.aria-selected]="p.id === wealthPeriod()">{{ p.label }}</button>
+                        [attr.aria-selected]="p.id === dashboardPeriod()">{{ p.label }}</button>
               }
             </div>
           </div>
         </div>
 
-        @if (wealthLoading() && wealthLabels().length === 0) {
-          <div style="height:200px;display:flex;align-items:center;justify-content:center">
-            <span class="muted small">Chargement…</span>
-          </div>
-        } @else if (wealthChartData().length > 1) {
-          <app-wealth-chart [data]="wealthChartData()" [labels]="wealthLabels()" />
+        @if (chartMode() === 'wealth') {
+          @if (wealthLoading() && wealthLabels().length === 0) {
+            <div style="height:200px;display:flex;align-items:center;justify-content:center">
+              <span class="muted small">Chargement…</span>
+            </div>
+          } @else if (wealthChartData().length > 1) {
+            <app-wealth-chart [data]="wealthChartData()" [labels]="wealthLabels()" />
+          } @else {
+            <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+              <p class="muted small" style="margin:0">Aucune donnée pour la période sélectionnée. Ajoute des transactions pour voir l'évolution.</p>
+              <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+            </div>
+          }
         } @else {
-          <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-            <p class="muted small" style="margin:0">Aucune donnée pour la période sélectionnée. Ajoute des transactions pour voir l'évolution.</p>
-            <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
-          </div>
+          @if (totalValue() > 0) {
+            <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
+          } @else {
+            <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+              <p class="muted small" style="margin:0">Aucune position pour reconstituer la courbe. Crée une transaction d'achat pour démarrer.</p>
+              <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+            </div>
+          }
         }
 
         <div class="wealth-hero-breakdowns">
@@ -132,28 +161,53 @@
       </div>
 
       <div class="wealth-hero-sidebar">
-        <div class="label" style="font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;opacity:0.6;margin-bottom:12px">Performance</div>
-        @if (wealthDelta(); as delta) {
-          <div class="wealth-sidebar-eur" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()">
-            {{ delta.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(delta.eur), 0) }}
-          </div>
-          @if (delta.pct !== null) {
-            <div class="wealth-sidebar-pct" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()">
-              <span class="pill" [class.pos]="wealthDeltaPositive()" [class.neg]="!wealthDeltaPositive()" style="font-size:13px;font-weight:600">
-                {{ delta.pct >= 0 ? '+' : '' }}{{ fmtNum(delta.pct, 1) }} %
+        <div class="wealth-return-label"><ui-term term="TWR">Rendement</ui-term></div>
+        @if (wealthReturn(); as r) {
+          @if (r.twrPct !== null) {
+            <div class="wealth-return-pct" [class.pos]="wealthReturnPositive()" [class.neg]="!wealthReturnPositive()">
+              {{ r.twrPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.twrPct), 2) }} %
+            </div>
+            <div class="wealth-return-sub"><span data-tip="Tes dépôts et retraits ne comptent ni comme gain ni comme perte : seule la performance de tes placements est mesurée.">hors apports</span> · {{ wealthPeriodCaption() }}</div>
+            <div class="wealth-return-eur" [class.pos]="r.eur >= 0" [class.neg]="r.eur < 0">
+              {{ r.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(r.eur), 0) }} en euros
+            </div>
+            @if (r.annualizedPct !== null) {
+              <div class="wealth-return-ann">≈ {{ r.annualizedPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.annualizedPct), 1) }} %/an annualisé</div>
+            }
+          } @else {
+            <div class="wealth-return-pct" [class.pos]="wealthReturnPositive()" [class.neg]="!wealthReturnPositive()">
+              {{ r.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(r.eur), 0) }}
+            </div>
+            <div class="wealth-return-sub">{{ wealthPeriodCaption() }}</div>
+          }
+
+          <!-- VERDICT : bats-tu le Livret A ? -->
+          @if (livretComparison(); as lc) {
+            <div class="wealth-verdict" [class.pos]="lc.beats" [class.neg]="!lc.beats"
+                 data-tip="Compare ta performance à ce qu'aurait rapporté un Livret A (épargne sans risque) sur la même période. Battre ce taux, c'est ce qui justifie le risque pris en investissant. Taux modifiable dans Préférences.">
+              <span class="wealth-verdict-mark">{{ lc.beats ? '✓' : '✗' }}</span>
+              {{ lc.beats ? 'Tu bats le Livret A' : 'En-dessous du Livret A' }}
+              <span class="wealth-verdict-rate">
+                {{ lc.annual ? 'Livret A' : 'soit' }} {{ fmtNum(lc.livret, lc.annual ? 1 : 2) }} %{{ lc.annual ? '/an' : ' sur la période' }}
               </span>
             </div>
           }
-          <div class="wealth-sidebar-caption">{{ wealthPeriodCaption() }}</div>
+
+          @if (r.investedReturnPct !== null) {
+            <div class="wealth-return-detail">
+              <ui-term term="Capital investi">sur capital investi</ui-term>
+              <span [class.pos]="r.investedReturnPct >= 0" [class.neg]="r.investedReturnPct < 0">{{ r.investedReturnPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.investedReturnPct), 1) }} %</span>
+            </div>
+          }
+
           @if (portfolioCost() > 0) {
             <div class="wealth-sidebar-latent">
-              <div style="border-top:1px solid var(--rule);margin:16px 0 12px"></div>
-              <div style="font-size:11px;opacity:0.55;margin-bottom:4px">PV latente totale</div>
-              <div class="num" style="font-size:15px;font-weight:600"
-                   [class.pos]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
+              <div class="wealth-latent-rule"></div>
+              <div class="wealth-latent-label"><ui-term term="PV latente">PV latente totale</ui-term></div>
+              <div class="num" [class.pos]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
                 {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
               </div>
-              <div style="font-size:11px;opacity:0.55">depuis l'achat · {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %</div>
+              <div class="wealth-latent-cap">depuis l'achat · {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %</div>
             </div>
           }
         } @else {
@@ -163,271 +217,9 @@
     </div>
   }
 
-  @if (showChecklist()) {
-    <!-- CONFIGURATION CHECKLIST -->
-    <div class="card" style="padding:18px 22px;margin-bottom:24px;background:var(--paper-2)">
-      <div class="row" style="gap:12px;align-items:baseline;margin-bottom:12px">
-        <h2 style="font-size:15px;margin:0">Configuration</h2>
-        <span class="num small muted">{{ configDone() }}/{{ configSteps().length }}</span>
-        <div class="bar" style="flex:1;height:5px;max-width:160px">
-          <span [style.width.%]="configDone() / configSteps().length * 100"></span>
-        </div>
-      </div>
-      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px">
-        @for (step of configSteps(); track step.label) {
-          <li style="font-size:12.5px;display:flex;align-items:center;gap:6px">
-            @if (step.done) {
-              <span aria-hidden="true" style="color:#4ADE80">✓</span>
-              <span class="muted" style="text-decoration:line-through">{{ step.label }}</span>
-            } @else {
-              <span aria-hidden="true" class="muted">○</span>
-              <a [routerLink]="step.route" style="color:var(--ink)">{{ step.label }} →</a>
-            }
-          </li>
-        }
-      </ul>
-    </div>
-  }
-
   @if (!isEmpty()) {
 
-  <!-- KEY INDICATORS -->
-  <div class="section-head" style="margin-top:8px">
-    <h2 class="section-title">Indicateurs <em>clés</em></h2>
-    <span class="section-sub">10 chiffres pour piloter sans ouvrir 5 onglets</span>
-  </div>
-  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:24px">
-
-    <!-- 1. Vélocité épargne -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Moyenne mensuelle de tes versements (BUY + DEPOSIT) sur les 12 derniers mois. Ton effort d'épargne en un chiffre.">Vélocité épargne</span></div>
-      <div class="value">{{ fmtEur(savingsVelocity(), 0) }}</div>
-      <div class="sub">par mois · 12 derniers mois</div>
-    </div>
-
-    <!-- 2. Rente théorique 4 % -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Règle des 4 % (Safe Withdrawal Rate, étude Trinity) : un portefeuille bien diversifié peut durer 30 ans en retirant 4 %/an. Affiche ici le revenu mensuel équivalent.">Rente 4 %</span></div>
-      <div class="value">{{ fmtEur(swrIncome(), 0) }}</div>
-      <div class="sub">/ mois théorique (FIRE)</div>
-    </div>
-
-    <!-- 3. Drawdown actuel -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
-      @if (currentDrawdown() !== null) {
-        <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.pos]="currentDrawdown()! >= -0.5">
-          {{ fmtPct(currentDrawdown()!, 1) }}
-        </div>
-        <div class="sub">repère : −34 % au krach 2020</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">pas assez d'historique</div>
-      }
-    </div>
-
-    <!-- 4. PV réalisée YTD -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
-      <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
-        {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
-      </div>
-      <div class="sub">depuis le 1ᵉʳ janv.</div>
-    </div>
-
-    <!-- 5. Concentration top 3 -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Poids cumulé des 3 plus grosses positions ETF. Au-delà de 70 %, ton portefeuille tient sur peu de paris — réfléchis à diversifier.">Concentration top 3</span></div>
-      @if (concentrationTop3() !== null) {
-        <div class="value" [class.neg]="concentrationTop3()! > 75" [class.warn]="concentrationTop3()! > 60 && concentrationTop3()! <= 75">
-          {{ fmtNum(concentrationTop3()!, 0) }} %
-        </div>
-        <div class="sub">des positions ETF</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">aucune position</div>
-      }
-    </div>
-
-    <!-- 6. Dividendes 12M -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Total des DIVIDEND + INTEREST encaissés sur 12 mois glissants. Inclut les coupons obligataires et intérêts livrets si tu les saisis comme transactions.">Dividendes 12M</span></div>
-      <div class="value">{{ fmtEur(dividends12M().total, 0) }}</div>
-      <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
-    </div>
-
-    <!-- 7. Streak DCA -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Nombre de mois consécutifs avec au moins un BUY ou DEPOSIT. Indicateur de discipline — l'arme principale du DCA.">Streak DCA</span></div>
-      <div class="value">
-        {{ dcaStreak() }}<small style="font-size:0.55em;font-weight:500"> mois</small>
-      </div>
-      <div class="sub">
-        @if (dcaStreak() >= 12) { 🔥 routine en place }
-        @else if (dcaStreak() >= 3) { en construction }
-        @else { démarre une cadence régulière }
-      </div>
-    </div>
-
-    <!-- 8. Prochain palier -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Le prochain palier rond vers lequel tu te diriges. Affiche la progression depuis le palier précédent.">Prochain palier</span></div>
-      <div class="value">{{ fmtEur(milestoneProgress().target, 0) }}</div>
-      <div class="bar" style="margin-top:8px;height:6px">
-        <span [style.width.%]="milestoneProgress().pct"></span>
-      </div>
-      <div class="sub" style="margin-top:6px">{{ fmtNum(milestoneProgress().pct, 0) }} % parcouru</div>
-    </div>
-
-    <!-- 9. Vitesse de doublement (règle de 72) -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Règle de 72 : nombre d'années pour doubler ton capital au CAGR actuel. À 7 %/an, ton patrimoine double tous les ~10 ans.">Doublement</span></div>
-      @if (doublingYears() !== null) {
-        <div class="value">{{ fmtNum(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
-        <div class="sub">au rythme CAGR actuel</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">CAGR ≤ 0 ou indisponible</div>
-      }
-    </div>
-
-    <!-- 10. TRI / XIRR -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TRI</span></div>
-      @if (tri() !== null) {
-        <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
-          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
-        </div>
-        <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">pas assez de versements</div>
-      }
-    </div>
-
-    <!-- 10. Drift max -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Plus gros écart absolu entre ta cible Actions/Obligations et la réalité. Au-delà de 5 pts, rééquilibrage conseillé.">Drift allocation</span></div>
-      @if (driftMax() !== null) {
-        <div class="value" [class.neg]="driftMax()! > 10" [class.warn]="driftMax()! > 5 && driftMax()! <= 10" [class.pos]="driftMax()! <= 5">
-          {{ fmtNum(driftMax()!, 1) }}<small style="font-size:0.55em;font-weight:500"> pts</small>
-        </div>
-        <div class="sub">
-          @if (driftMax()! > 5) {
-            <a routerLink="/allocation" style="color:var(--ink-3)">Voir le plan →</a>
-          } @else {
-            aligné sur la cible
-          }
-        </div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">cible non définie</div>
-      }
-    </div>
-
-  </div>
-
-  <!-- TWO COLUMN: PERF + REPARTITION -->
-  <div class="grid" style="grid-template-columns:1.6fr 1fr">
-
-    <!-- Performance chart -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Performance <em><span data-tip="Comparaison avec ton benchmark (MSCI World par défaut, modifiable dans les préférences). Au-dessus de la courbe gris = tu surperformes l'indice ; en-dessous = sous-performance.">vs benchmark</span></em></div>
-        <span class="card-sub">{{ dashPeriod() === 'YTD' ? 'depuis le 1er janv.' : dashPeriod() }}</span>
-        <div class="card-right">
-          <div class="tabs">
-            @for (p of dashPeriods; track p.id) {
-              <button [class.active]="p.id === dashPeriod()" (click)="setPeriod(p.id)">{{ p.label }}</button>
-            }
-          </div>
-        </div>
-      </div>
-      @if (totalValue() > 0) {
-        <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
-      } @else {
-        <div style="padding:40px 0;text-align:center">
-          <p class="muted small" style="margin:0 0 14px">
-            Aucune position pour reconstituer la courbe.
-            Crée une transaction d'achat pour démarrer.
-          </p>
-          <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
-        </div>
-      }
-      @if (portfolioPct() !== null && totalValue() > 0) {
-        <div class="grid cols-2" style="margin-top:18px">
-          <div>
-            <div class="eyebrow" style="margin-bottom:6px">{{ dashPeriod() }}</div>
-            <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">
-              <span [class.pos]="portfolioPct()! >= 0" [class.neg]="portfolioPct()! < 0">
-                {{ portfolioPct()! >= 0 ? '+' : '' }}{{ fmtPct(portfolioPct()!, 2) }}
-              </span>
-            </div>
-          </div>
-          @if (annualized() !== null) {
-            <div>
-              <div class="eyebrow" style="margin-bottom:6px"><span data-tip="Taux de croissance annuel composé — rendement annuel moyen équivalent. Ex : +12 % CAGR = comme si le portefeuille avait gagné 12 % chaque année.">CAGR</span></div>
-              <div class="serif" style="font-size:22px;line-height:1;letter-spacing:-0.01em">
-                <span [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
-                  {{ annualized()! >= 0 ? '+' : '' }}{{ fmtPct(annualized()!, 2) }}/an
-                </span>
-              </div>
-              <div class="muted tiny" style="margin-top:4px">repère : actions monde ≈ 7–9 %/an sur 30 ans</div>
-            </div>
-          }
-        </div>
-      }
-    </div>
-
-    <!-- Répartition donut -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Répartition</div>
-        <span class="card-sub">par enveloppe</span>
-      </div>
-      @if (totalValue() <= 0 && !envLoading()) {
-        <div style="display:flex;flex-direction:column;gap:10px;padding:18px 0">
-          <p class="muted small" style="margin:0">
-            Tes enveloppes sont créées mais vides. Ajoute un dépôt ou un achat
-            pour voir la répartition apparaître.
-          </p>
-          <a class="btn sm primary" routerLink="/transactions" style="align-self:flex-start">
-            + Première transaction
-          </a>
-        </div>
-      } @else {
-      <div style="display:flex;gap:24px;align-items:center">
-        <ui-donut [data]="donutData()" [size]="150" [thickness]="22" />
-        <div style="flex:1;font-size:12.5px">
-          @if (envPreview().length === 0 && envLoading()) {
-            @for (i of [1,2,3,4,5,6]; track i) {
-              <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
-                <span class="skeleton" style="width:8px;height:8px;border-radius:2px"></span>
-                <span class="skeleton" style="flex:1;height:12px"></span>
-                <span class="skeleton" style="width:36px;height:12px"></span>
-              </div>
-            }
-          } @else {
-            @for (env of envPreview(); track env.id) {
-              <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
-                <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
-                  [style.background]="donutData()[$index]?.color"></span>
-                <span style="flex:1">{{ env.label }}</span>
-                <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
-              </div>
-            }
-          }
-          <a class="btn sm ghost" routerLink="/wealth" style="margin-top:6px;padding:0;color:var(--ink-3)">
-            Tout voir →
-          </a>
-        </div>
-      </div>
-      }
-    </div>
-
-  </div>
-
-  <!-- NEXT BEST ACTIONS -->
+  <!-- À FAIRE : recommandations + configuration -->
   <div class="nba-header">
     <span class="count-chip">{{ topAlerts().length }}</span>
     <h2>Prochaines <em>actions</em></h2>
@@ -457,7 +249,226 @@
     }
   </div>
 
-  <!-- RECENT TRANSACTIONS -->
+  @if (showChecklist()) {
+    <!-- CONFIGURATION CHECKLIST -->
+    <div class="card" style="padding:18px 22px;margin:16px 0 24px;background:var(--paper-2)">
+      <div class="row" style="gap:12px;align-items:baseline;margin-bottom:12px">
+        <h2 style="font-size:15px;margin:0">Configuration</h2>
+        <span class="num small muted">{{ configDone() }}/{{ configSteps().length }}</span>
+        <div class="bar" style="flex:1;height:5px;max-width:160px">
+          <span [style.width.%]="configDone() / configSteps().length * 100"></span>
+        </div>
+      </div>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px">
+        @for (step of configSteps(); track step.label) {
+          <li style="font-size:12.5px;display:flex;align-items:center;gap:6px">
+            @if (step.done) {
+              <span aria-hidden="true" style="color:#4ADE80">✓</span>
+              <span class="muted" style="text-decoration:line-through">{{ step.label }}</span>
+            } @else {
+              <span aria-hidden="true" class="muted">○</span>
+              <a [routerLink]="step.route" style="color:var(--ink)">{{ step.label }} →</a>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <!-- DÉTAIL : indicateurs clés -->
+  <div class="section-head" style="margin-top:8px">
+    <h2 class="section-title">Indicateurs <em>clés</em></h2>
+    <span class="section-sub">L'essentiel pour piloter, le reste à la demande</span>
+  </div>
+  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:14px">
+
+    <!-- TRI / XIRR -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TRI</span></div>
+      @if (tri() !== null) {
+        <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
+          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
+        </div>
+        <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">pas assez de versements</div>
+      }
+    </div>
+
+    <!-- Drawdown actuel -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
+      @if (currentDrawdown() !== null) {
+        <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.pos]="currentDrawdown()! >= -0.5">
+          {{ fmtPct(currentDrawdown()!, 1) }}
+        </div>
+        <div class="sub">repère : −34 % au krach 2020</div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">pas assez d'historique</div>
+      }
+    </div>
+
+    <!-- Vélocité épargne -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Moyenne mensuelle de tes versements (BUY + DEPOSIT) sur les 12 derniers mois. Ton effort d'épargne en un chiffre.">Vélocité épargne</span></div>
+      <div class="value">{{ fmtEur(savingsVelocity(), 0) }}</div>
+      <div class="sub">par mois · 12 derniers mois</div>
+    </div>
+
+    <!-- Drift max -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Plus gros écart absolu entre ta cible Actions/Obligations et la réalité. Au-delà de 5 pts, rééquilibrage conseillé.">Drift allocation</span></div>
+      @if (driftMax() !== null) {
+        <div class="value" [class.neg]="driftMax()! > 10" [class.warn]="driftMax()! > 5 && driftMax()! <= 10" [class.pos]="driftMax()! <= 5">
+          {{ fmtNum(driftMax()!, 1) }}<small style="font-size:0.55em;font-weight:500"> pts</small>
+        </div>
+        <div class="sub">
+          @if (driftMax()! > 5) {
+            <a routerLink="/allocation" style="color:var(--ink-3)">Voir le plan →</a>
+          } @else {
+            aligné sur la cible
+          }
+        </div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">cible non définie</div>
+      }
+    </div>
+
+  </div>
+
+  <button type="button" class="btn sm ghost kpi-toggle" (click)="showAllKpis.set(!showAllKpis())"
+          [attr.aria-expanded]="showAllKpis()">
+    {{ showAllKpis() ? 'Masquer les indicateurs secondaires' : 'Plus d’indicateurs (7)' }} {{ showAllKpis() ? '↑' : '↓' }}
+  </button>
+
+  @if (showAllKpis()) {
+  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin:14px 0 24px">
+
+    <!-- Rente théorique 4 % -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Règle des 4 % (Safe Withdrawal Rate, étude Trinity) : un portefeuille bien diversifié peut durer 30 ans en retirant 4 %/an. Affiche ici le revenu mensuel équivalent.">Rente 4 %</span></div>
+      <div class="value">{{ fmtEur(swrIncome(), 0) }}</div>
+      <div class="sub">/ mois théorique (FIRE)</div>
+    </div>
+
+    <!-- PV réalisée YTD -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
+      <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+        {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+      </div>
+      <div class="sub">depuis le 1ᵉʳ janv.</div>
+    </div>
+
+    <!-- Concentration top 3 -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Poids cumulé des 3 plus grosses positions ETF. Au-delà de 70 %, ton portefeuille tient sur peu de paris — réfléchis à diversifier.">Concentration top 3</span></div>
+      @if (concentrationTop3() !== null) {
+        <div class="value" [class.neg]="concentrationTop3()! > 75" [class.warn]="concentrationTop3()! > 60 && concentrationTop3()! <= 75">
+          {{ fmtNum(concentrationTop3()!, 0) }} %
+        </div>
+        <div class="sub">des positions ETF</div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">aucune position</div>
+      }
+    </div>
+
+    <!-- Dividendes 12M -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Total des DIVIDEND + INTEREST encaissés sur 12 mois glissants. Inclut les coupons obligataires et intérêts livrets si tu les saisis comme transactions.">Dividendes 12M</span></div>
+      <div class="value">{{ fmtEur(dividends12M().total, 0) }}</div>
+      <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
+    </div>
+
+    <!-- Streak DCA -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Nombre de mois consécutifs avec au moins un BUY ou DEPOSIT. Indicateur de discipline — l'arme principale du DCA.">Streak DCA</span></div>
+      <div class="value">
+        {{ dcaStreak() }}<small style="font-size:0.55em;font-weight:500"> mois</small>
+      </div>
+      <div class="sub">
+        @if (dcaStreak() >= 12) { 🔥 routine en place }
+        @else if (dcaStreak() >= 3) { en construction }
+        @else { démarre une cadence régulière }
+      </div>
+    </div>
+
+    <!-- Prochain palier -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Le prochain palier rond vers lequel tu te diriges. Affiche la progression depuis le palier précédent.">Prochain palier</span></div>
+      <div class="value">{{ fmtEur(milestoneProgress().target, 0) }}</div>
+      <div class="bar" style="margin-top:8px;height:6px">
+        <span [style.width.%]="milestoneProgress().pct"></span>
+      </div>
+      <div class="sub" style="margin-top:6px">{{ fmtNum(milestoneProgress().pct, 0) }} % parcouru</div>
+    </div>
+
+    <!-- Vitesse de doublement (règle de 72) -->
+    <div class="card kpi-tile">
+      <div class="label"><span data-tip="Règle de 72 : nombre d'années pour doubler ton capital au CAGR actuel. À 7 %/an, ton patrimoine double tous les ~10 ans.">Doublement</span></div>
+      @if (doublingYears() !== null) {
+        <div class="value">{{ fmtNum(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
+        <div class="sub">au rythme CAGR actuel</div>
+      } @else {
+        <div class="value">—</div>
+        <div class="sub">CAGR ≤ 0 ou indisponible</div>
+      }
+    </div>
+
+  </div>
+  }
+
+  <!-- DÉTAIL : répartition -->
+  <div class="card" style="margin-top:24px">
+    <div class="card-head">
+      <div class="card-title">Répartition</div>
+      <span class="card-sub">par enveloppe</span>
+    </div>
+    @if (totalValue() <= 0 && !envLoading()) {
+      <div style="display:flex;flex-direction:column;gap:10px;padding:18px 0">
+        <p class="muted small" style="margin:0">
+          Tes enveloppes sont créées mais vides. Ajoute un dépôt ou un achat
+          pour voir la répartition apparaître.
+        </p>
+        <a class="btn sm primary" routerLink="/transactions" style="align-self:flex-start">
+          + Première transaction
+        </a>
+      </div>
+    } @else {
+    <div style="display:flex;gap:24px;align-items:center">
+      <ui-donut [data]="donutData()" [size]="150" [thickness]="22" />
+      <div style="flex:1;font-size:12.5px">
+        @if (envPreview().length === 0 && envLoading()) {
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
+              <span class="skeleton" style="width:8px;height:8px;border-radius:2px"></span>
+              <span class="skeleton" style="flex:1;height:12px"></span>
+              <span class="skeleton" style="width:36px;height:12px"></span>
+            </div>
+          }
+        } @else {
+          @for (env of envPreview(); track env.id) {
+            <div style="display:flex;align-items:center;padding:4px 0;gap:8px">
+              <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0"
+                [style.background]="donutData()[$index]?.color"></span>
+              <span style="flex:1">{{ env.label }}</span>
+              <span class="num muted">{{ fmtPctRaw(env.value / totalValue() * 100, 1) }}</span>
+            </div>
+          }
+        }
+        <a class="btn sm ghost" routerLink="/wealth" style="margin-top:6px;padding:0;color:var(--ink-3)">
+          Tout voir →
+        </a>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- DÉTAIL : mouvements récents -->
   <div class="section-head">
     <h2 class="section-title">Mouvements <em>récents</em></h2>
     <span class="section-sub">7 derniers jours</span>
