@@ -13,6 +13,7 @@ const DEFAULTS: UserPreferencesDto = {
   uiMode:          'simple',
   onboardingDone:  true, // pessimistic until the real prefs load — avoids a welcome-flow flash
   benchmarkIsin:   'FR0010261198',
+  livretRatePct:   2.4,
   allocationTargets: null,
 };
 

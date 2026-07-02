@@ -73,6 +73,7 @@ export class PreferencesComponent {
   protected displayCurrency = signal('EUR');
   protected uiMode          = signal<'simple' | 'expert' | ''>('');
   protected benchmarkIsin   = signal('');
+  protected livretRatePct   = signal(2.4);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -87,6 +88,7 @@ export class PreferencesComponent {
       if (this.displayCurrency() === 'EUR' && c.displayCurrency !== 'EUR') this.displayCurrency.set(c.displayCurrency);
       if (!this.uiMode()) this.uiMode.set(c.uiMode);
       if (!this.benchmarkIsin()) this.benchmarkIsin.set(c.benchmarkIsin);
+      if (this.livretRatePct() === 2.4 && c.livretRatePct !== 2.4) this.livretRatePct.set(c.livretRatePct);
     });
   }
 
@@ -102,6 +104,7 @@ export class PreferencesComponent {
       displayCurrency:   this.displayCurrency(),
       uiMode:            this.uiMode() || 'simple',
       benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
+      livretRatePct:     Math.max(0, Math.min(20, this.livretRatePct())),
       allocationTargets: this.preferences.current().allocationTargets,
     };
 

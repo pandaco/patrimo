@@ -15,6 +15,7 @@ const DEFAULTS: UserPreferencesDto = {
   uiMode:          'simple',
   onboardingDone:  false,
   benchmarkIsin:   'FR0010261198',
+  livretRatePct:   2.4,
   allocationTargets: null,
 };
 
@@ -28,6 +29,7 @@ function toDto(row: UserPreferences | null): UserPreferencesDto {
     uiMode:            row.uiMode,
     onboardingDone:    row.onboardingDone,
     benchmarkIsin:     row.benchmarkIsin,
+    livretRatePct:     row.livretRatePct,
     allocationTargets: row.allocationTargets,
   };
 }
@@ -54,6 +56,7 @@ export class PreferencesService {
       uiMode:          input.uiMode,
       onboardingDone:  input.onboardingDone,
       benchmarkIsin:   input.benchmarkIsin,
+      livretRatePct:   input.livretRatePct,
       allocationTargets: input.allocationTargets === undefined
         ? undefined
         : (input.allocationTargets as AllocationTargets | null),

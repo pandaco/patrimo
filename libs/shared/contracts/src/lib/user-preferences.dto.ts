@@ -16,6 +16,8 @@ export interface UserPreferencesDto {
   onboardingDone:    boolean;
   /** ISIN of the catalog ETF used as the performance benchmark. */
   benchmarkIsin:     string;
+  /** Reference Livret A rate (%/yr) the dashboard compares the portfolio against. */
+  livretRatePct:     number;
   allocationTargets: AllocationTargetsDto | null;
 }
 

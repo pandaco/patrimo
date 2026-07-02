@@ -19,6 +19,7 @@ function toDomain(row: UserPreferencesOrmEntity): UserPreferences {
     uiMode:          row.uiMode,
     onboardingDone:  row.onboardingDone,
     benchmarkIsin:   row.benchmarkIsin,
+    livretRatePct:   row.livretRatePct,
     allocationTargets: row.allocationTargets ? (row.allocationTargets as AllocationTargets) : null,
     createdAt:       row.createdAt,
     updatedAt:       row.updatedAt,
@@ -49,6 +50,7 @@ export class TypeOrmUserPreferencesRepository implements UserPreferencesReposito
     if (partial.uiMode          !== undefined) existing.uiMode          = partial.uiMode;
     if (partial.onboardingDone  !== undefined) existing.onboardingDone  = partial.onboardingDone;
     if (partial.benchmarkIsin   !== undefined) existing.benchmarkIsin   = partial.benchmarkIsin;
+    if (partial.livretRatePct   !== undefined) existing.livretRatePct   = partial.livretRatePct;
     if (partial.allocationTargets !== undefined) existing.allocationTargets = partial.allocationTargets;
     const saved: UserPreferencesOrmEntity = await this.repo.save(existing);
     return toDomain(saved);

@@ -10,6 +10,8 @@ export interface UserPreferences {
   onboardingDone:  boolean;
   /** ISIN of the catalog ETF used as the performance benchmark. */
   benchmarkIsin:   string;
+  /** Reference Livret A rate (%/yr) the dashboard compares the portfolio against. */
+  livretRatePct:   number;
   /** Optional allocation targets (strategic/tactic/etf). `null` while the user has not set them. */
   allocationTargets: AllocationTargets | null;
   createdAt: Date;

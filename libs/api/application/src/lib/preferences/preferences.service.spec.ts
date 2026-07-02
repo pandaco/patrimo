@@ -13,6 +13,7 @@ function row(overrides: Partial<UserPreferences>): UserPreferences {
     uiMode: 'expert',
     onboardingDone: true,
     benchmarkIsin: 'ISIN-BENCH',
+    livretRatePct: 3,
     allocationTargets: { etf: { 'ISIN-ESE': 60 } },
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -51,6 +52,7 @@ describe('PreferencesService', () => {
         uiMode: 'simple',
         onboardingDone: false,
         benchmarkIsin: 'FR0010261198',
+        livretRatePct: 2.4,
         allocationTargets: null,
       });
     });

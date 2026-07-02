@@ -50,6 +50,13 @@ export class UpdatePreferencesDtoBody {
   @Length(12, 12)
   benchmarkIsin?: string;
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(20)
+  livretRatePct?: number;
+
   // The shape of `allocationTargets` is enforced at the service / domain
   // boundary; class-validator only confirms the field is a plain object so
   // a malformed string / array / scalar is rejected at the controller.

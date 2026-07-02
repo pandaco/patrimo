@@ -41,6 +41,10 @@ export class UserPreferencesOrmEntity {
   @Column({ name: 'benchmark_isin', type: 'varchar', length: 12, default: 'FR0010261198' })
   benchmarkIsin!: string;
 
+  // Reference Livret A rate (%/yr) the dashboard compares the portfolio against.
+  @Column({ name: 'livret_rate_pct', type: 'numeric', precision: 5, scale: 2, default: 2.4, transformer: decimalTransformer })
+  livretRatePct!: number;
+
   @Column({ name: 'allocation_targets', type: 'jsonb', nullable: true })
   allocationTargets!: unknown | null;
 
