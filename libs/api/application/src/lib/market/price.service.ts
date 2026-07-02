@@ -19,9 +19,21 @@ export class PriceService {
 
   async getQuote(isin: string, ticker: string): Promise<Quote> {
     const symbol = toYahooSymbol(isin, ticker);
-    const hit = await this.cache.getQuote(symbol);
-    if (hit) return hit;
-    return this.refresh(symbol);
+    const hit   = await this.cache.getQuote(symbol);
+    const quote = hit ?? await this.refresh(symbol);
+    if (quote.price !== null) return quote;
+
+    // Live quote unavailable (Yahoo unreachable, after-hours, illiquid line).
+    // Fall back to the most recent historical close — which is cached 24 h and
+    // survives a quote outage — so position value and PnL don't silently
+    // collapse to zero (value == cost → "plus-value latente" stuck at 0).
+    const history = await this.getHistorical(isin, ticker, 7);
+    if (history.length > 0) {
+      const lastClose = history[history.length - 1].close;
+      const prevClose = history.length > 1 ? history[history.length - 2].close : quote.prevClose;
+      return { price: lastClose, prevClose };
+    }
+    return quote;
   }
 
   /** Bypass the cache, fetch a fresh quote from Yahoo and overwrite the cached entry. */
