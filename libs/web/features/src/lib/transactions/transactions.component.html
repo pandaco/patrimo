@@ -11,7 +11,9 @@
         </div>
         <h1 class="page-title">Toutes les <em>opérations</em></h1>
         <p class="page-sub">
-          Une seule source de vérité. PRU, cash, positions, plus-values latentes —
+          Une seule source de vérité.
+          <span data-tip="Prix de Revient Unitaire : prix moyen d'achat de tes parts, frais inclus. Recalculé à chaque achat.">PRU</span>,
+          cash, positions, plus-values latentes —
           tout est recalculé à la volée depuis cette table.
         </p>
       </div>
@@ -31,7 +33,8 @@
     }
     <div style="margin-left:auto;display:flex;gap:6px">
       <input type="file" #fileInput hidden (change)="importFile($event)" accept=".csv" [disabled]="importing()">
-      <button class="btn sm" (click)="fileInput.click()" [disabled]="importing()" [attr.aria-busy]="importing()">
+      <button class="btn sm" (click)="fileInput.click()" [disabled]="importing()" [attr.aria-busy]="importing()"
+              data-tip="Réimporte un export Patrimo ou un CSV broker au même format — utilise « Exporter » pour voir les colonnes attendues.">
         @if (importing()) { Import en cours… } @else { Import CSV }
       </button>
       <button class="btn sm" (click)="exportCsv()">Exporter</button>
@@ -57,8 +60,8 @@
               <th class="r">Retraits</th>
               <th class="r">Achats</th>
               <th class="r">Ventes</th>
-              <th class="r">Div/Int</th>
-              <th class="r">Solde cash</th>
+              <th class="r" data-tip="Dividendes et intérêts encaissés — ils augmentent le cash de l'enveloppe.">Div/Int</th>
+              <th class="r" data-tip="Dépôts − retraits − achats + ventes + dividendes. Négatif = achat non financé par un dépôt.">Solde cash</th>
             </tr>
           </thead>
           <tbody>

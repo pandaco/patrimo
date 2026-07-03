@@ -22,6 +22,7 @@
             <option [value]="p">{{ p }}</option>
           }
         </select>
+        <div class="field-help">Ta tolérance aux baisses. Détermine la part actions suggérée par le wizard d'allocation (Prudent 35 % → Offensif 95 %).</div>
       </div>
       <div class="field">
         <label for="pref-currency">Devise d'affichage</label>
@@ -59,11 +60,13 @@
         <label for="pref-horizon">Horizon (années)</label>
         <input id="pref-horizon" type="number" min="0" max="100" step="1" class="num-input"
                [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set(+$event)" />
+        <div class="field-help">Dans combien d'années tu auras besoin de cet argent. Plus c'est loin, plus tu peux encaisser les baisses — le wizard ajuste la part actions en conséquence.</div>
       </div>
       <div class="field">
         <label for="pref-monthly">Objectif mensuel (€)</label>
         <input id="pref-monthly" type="number" min="0" step="50" class="num-input"
                [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set(+$event)" />
+        <div class="field-help">Ce que tu vises à investir chaque mois. Alimente le DCA helper et l'alerte « aucun achat ce mois-ci ».</div>
       </div>
     </div>
 
