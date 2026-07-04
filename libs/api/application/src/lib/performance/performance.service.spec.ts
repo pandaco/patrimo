@@ -5,6 +5,7 @@ import {
   ETF_REPOSITORY,
   TRANSACTION_REPOSITORY,
   USER_PREFERENCES_REPOSITORY,
+  WEALTH_SNAPSHOT_REPOSITORY,
 } from '@patrimo/infrastructure';
 import { PerformanceService } from './performance.service';
 import { PriceService } from '../market/price.service';
@@ -77,6 +78,7 @@ describe('PerformanceService', () => {
   let preferencesRepository: { findByUserId: jest.Mock };
   let priceService: { getHistorical: jest.Mock; getQuote: jest.Mock };
   let envelopeRepository: { findByUserId: jest.Mock };
+  let wealthSnapshotRepository: { findByUserId: jest.Mock; findLatestDate: jest.Mock; upsertForDate: jest.Mock };
 
   beforeEach(async () => {
     transactionRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
@@ -90,6 +92,11 @@ describe('PerformanceService', () => {
       getQuote: jest.fn().mockResolvedValue({ price: null }),
     };
     envelopeRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
+    wealthSnapshotRepository = {
+      findByUserId: jest.fn().mockResolvedValue([]),
+      findLatestDate: jest.fn().mockResolvedValue(null),
+      upsertForDate: jest.fn().mockResolvedValue(undefined),
+    };
 
     const mod = await Test.createTestingModule({
       providers: [
@@ -98,6 +105,7 @@ describe('PerformanceService', () => {
         { provide: ETF_REPOSITORY, useValue: etfRepository },
         { provide: USER_PREFERENCES_REPOSITORY, useValue: preferencesRepository },
         { provide: ENVELOPE_REPOSITORY, useValue: envelopeRepository },
+        { provide: WEALTH_SNAPSHOT_REPOSITORY, useValue: wealthSnapshotRepository },
         { provide: PriceService, useValue: priceService },
       ],
     }).compile();
@@ -384,6 +392,64 @@ describe('PerformanceService', () => {
       expect(w.flows[5]).toBe(500);
       // The livret deposit must not bleed into the boursier flow bucket.
       expect(w.flowsByCategory.bourse?.[5] ?? 0).toBe(0);
+    });
+
+    it('exposes per-envelope series and returns keyed by envelope id', async () => {
+      const labels = await captureWealthLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea' }),
+        env({ id: 'env-2', glyph: 'livret' }),
+      ]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([]);
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      expect(w.byEnvelope['env-2'][0]).toBe(500);
+      expect(w.byEnvelope['env-1'].every(v => v === 0)).toBe(true);
+      expect(w.returnsByEnvelope['env-2']).toBeDefined();
+    });
+
+    it('freezes today\'s valuation as a snapshot, once per user per day (PP8)', async () => {
+      const labels = await captureWealthLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-2', glyph: 'livret' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([]);
+
+      await service.getWealthSeries('user-1', '1M');
+      // The snapshot date follows the series label convention (local midnight → ISO).
+      expect(wealthSnapshotRepository.upsertForDate).toHaveBeenCalledWith({
+        userId: 'user-1',
+        date: labels[labels.length - 1],
+        total: 500,
+        byCategory: { livret: 500 },
+      });
+
+      // Same day, second chart load: the in-memory memo skips the write.
+      await service.getWealthSeries('user-1', '1M');
+      expect(wealthSnapshotRepository.upsertForDate).toHaveBeenCalledTimes(1);
+    });
+
+    it('never snapshots an account without envelopes', async () => {
+      await service.getWealthSeries('user-1', '1M');
+      expect(wealthSnapshotRepository.upsertForDate).not.toHaveBeenCalled();
+    });
+
+    it('maps stored snapshots to the DTO shape with a bounded date window', async () => {
+      wealthSnapshotRepository.findByUserId.mockResolvedValue([
+        { id: 's1', userId: 'user-1', date: '2026-07-01', total: 1500, byCategory: { livret: 500, bourse: 1000 }, createdAt: new Date() },
+      ]);
+
+      const snapshots = await service.getWealthSnapshots('user-1', 30);
+      expect(snapshots).toEqual([
+        { date: '2026-07-01', total: 1500, byCategory: { livret: 500, bourse: 1000 } },
+      ]);
+      const [userId, fromDate] = wealthSnapshotRepository.findByUserId.mock.calls[0];
+      expect(userId).toBe('user-1');
+      expect(fromDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
     it('computes a clean, non-inflated return for a buy with no matching deposit', async () => {

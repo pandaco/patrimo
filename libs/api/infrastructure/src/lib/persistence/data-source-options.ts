@@ -25,6 +25,8 @@ import { AddAuditLog1781500000000 } from './migrations/1781500000000-AddAuditLog
 import { WidenEtfTickerTo201781600000000 } from './migrations/1781600000000-Widen-etf-ticker-to-20';
 import { WidenEtfAllocTo321781601000000 } from './migrations/1781601000000-Widen-etf-alloc-to-32';
 import { AddLivretRatePct1781700000000 } from './migrations/1781700000000-AddLivretRatePct';
+import { AddWealthSnapshot1782172800000 } from './migrations/1782172800000-AddWealthSnapshot';
+import { WealthSnapshotOrmEntity } from './orm-entities/wealth-snapshot.orm-entity';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -37,6 +39,7 @@ export const ORM_ENTITIES = [
   TransactionOrmEntity,
   StrategyVersionOrmEntity,
   AuditLogOrmEntity,
+  WealthSnapshotOrmEntity,
 ] as const;
 
 export const ORM_MIGRATIONS = [
@@ -56,6 +59,7 @@ export const ORM_MIGRATIONS = [
   WidenEtfTickerTo201781600000000,
   WidenEtfAllocTo321781601000000,
   AddLivretRatePct1781700000000,
+  AddWealthSnapshot1782172800000,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {

@@ -118,6 +118,20 @@ export interface WealthSeriesDto {
   returnsByEnvelope: Record<string, WealthReturnDto>;
 }
 
+/**
+ * One persisted end-of-day valuation (PP8). Unlike WealthSeriesDto, which is
+ * recomputed on every request, snapshots are immutable history: they survive
+ * transaction edits and price-source gaps.
+ */
+export interface WealthSnapshotDto {
+  /** ISO date (YYYY-MM-DD). */
+  date: string;
+  /** Total patrimoine in EUR. */
+  total: number;
+  /** Value split by category on that day. */
+  byCategory: Partial<Record<WealthCategory, number>>;
+}
+
 export interface FeesYtdDto {
   /** Sum of `fees` on all BUY/SELL transactions since Jan 1st. */
   brokerageYtd: number;

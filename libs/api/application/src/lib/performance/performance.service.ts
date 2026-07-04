@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
-import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY } from '@patrimo/infrastructure';
+import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository, WealthSnapshotRepository } from '@patrimo/api-domain';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
+import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY, WEALTH_SNAPSHOT_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
 const BOURSE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
@@ -141,8 +141,12 @@ export class PerformanceService {
     @Inject(ETF_REPOSITORY)              private readonly etfRepository:  EtfRepository,
     @Inject(USER_PREFERENCES_REPOSITORY) private readonly preferencesRepository: UserPreferencesRepository,
     @Inject(ENVELOPE_REPOSITORY)         private readonly envelopeRepository: EnvelopeRepository,
+    @Inject(WEALTH_SNAPSHOT_REPOSITORY)  private readonly wealthSnapshotRepository: WealthSnapshotRepository,
     private readonly priceService: PriceService,
   ) {}
+
+  /** Last date a snapshot was persisted per user — avoids one upsert per chart load. */
+  private readonly snapshotCapturedOn = new Map<string, string>();
 
   /**
    * Resolve the user's benchmark preference against the ETF catalog. Falls
@@ -595,7 +599,58 @@ export class PerformanceService {
       returnsByEnvelope[envelopeId] = periodReturn(base, flow, spanDays);
     }
 
+    if (envelopes.length > 0) {
+      await this.captureSnapshot(userId, labels, total, byCategory);
+    }
+
     return { period, labels, total, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
+  }
+
+  /**
+   * Freeze today's valuation as an immutable snapshot (PP8). The chart series
+   * recomputes history from transactions + whatever prices Yahoo still serves;
+   * the snapshot records what the patrimoine was actually worth today, so
+   * long-range charts keep an exact trace even after edits or price-source
+   * gaps. Piggybacked on the series computation: no extra fetch, idempotent
+   * per day, and never allowed to break the chart response.
+   */
+  private async captureSnapshot(
+    userId: string,
+    labels: string[],
+    total: number[],
+    byCategory: Partial<Record<WealthCategory, number[]>>,
+  ): Promise<void> {
+    // Same convention as enumerateDates: local midnight, then ISO — otherwise
+    // a UTC+N timezone would compare today's label against tomorrow's date.
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const today = isoDate(todayMidnight);
+    if (labels.length === 0 || labels[labels.length - 1] !== today) return;
+    if (this.snapshotCapturedOn.get(userId) === today) return;
+    try {
+      const last = labels.length - 1;
+      const byCategoryToday: Record<string, number> = {};
+      for (const [category, series] of Object.entries(byCategory)) {
+        byCategoryToday[category] = series[last];
+      }
+      await this.wealthSnapshotRepository.upsertForDate({
+        userId,
+        date: today,
+        total: total[last],
+        byCategory: byCategoryToday,
+      });
+      this.snapshotCapturedOn.set(userId, today);
+    } catch {
+      // Snapshot persistence is best-effort; the chart response must not fail on it.
+    }
+  }
+
+  /** Stored daily snapshots from `days` ago until today, oldest first. */
+  async getWealthSnapshots(userId: string, days: number): Promise<WealthSnapshotDto[]> {
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    const snapshots = await this.wealthSnapshotRepository.findByUserId(userId, isoDate(from));
+    return snapshots.map(s => ({ date: s.date, total: s.total, byCategory: s.byCategory }));
   }
 
   private buildEnvelopeBoursSeries(

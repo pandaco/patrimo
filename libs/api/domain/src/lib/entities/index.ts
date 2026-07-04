@@ -7,3 +7,4 @@ export * from './alert-rule.entity';
 export * from './dca-plan.entity';
 export * from './strategy-version.entity';
 export * from './audit-log.entity';
+export * from './wealth-snapshot.entity';

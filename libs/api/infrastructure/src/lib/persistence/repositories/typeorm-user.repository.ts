@@ -36,6 +36,11 @@ export class TypeOrmUserRepository implements UserRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findAll(): Promise<User[]> {
+    const rows = await this.repo.find({ order: { createdAt: 'ASC' } });
+    return rows.map(toDomain);
+  }
+
   async upsertFromGoogle(seed: UserSeed): Promise<User> {
     const existing = await this.repo.findOne({ where: { googleId: seed.googleId } });
     const entity: UserOrmEntity = existing

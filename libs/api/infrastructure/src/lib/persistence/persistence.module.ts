@@ -12,7 +12,9 @@ import {
   TRANSACTION_REPOSITORY,
   USER_PREFERENCES_REPOSITORY,
   USER_REPOSITORY,
+  WEALTH_SNAPSHOT_REPOSITORY,
 } from './repository-tokens';
+import { TypeOrmWealthSnapshotRepository } from './repositories/typeorm-wealth-snapshot.repository';
 import { TypeOrmAlertRuleRepository } from './repositories/typeorm-alert-rule.repository';
 import { TypeOrmAuditLogRepository } from './repositories/typeorm-audit-log.repository';
 import { TypeOrmDcaPlanRepository } from './repositories/typeorm-dca-plan.repository';
@@ -43,6 +45,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     { provide: DCA_PLAN_REPOSITORY,         useClass: TypeOrmDcaPlanRepository },
     { provide: STRATEGY_VERSION_REPOSITORY, useClass: TypeOrmStrategyVersionRepository },
     { provide: AUDIT_LOG_REPOSITORY,        useClass: TypeOrmAuditLogRepository },
+    { provide: WEALTH_SNAPSHOT_REPOSITORY,  useClass: TypeOrmWealthSnapshotRepository },
   ],
   exports: [
     USER_REPOSITORY,
@@ -54,6 +57,7 @@ import { TypeOrmUserRepository } from './repositories/typeorm-user.repository';
     DCA_PLAN_REPOSITORY,
     STRATEGY_VERSION_REPOSITORY,
     AUDIT_LOG_REPOSITORY,
+    WEALTH_SNAPSHOT_REPOSITORY,
   ],
 })
 export class PersistenceModule {}
