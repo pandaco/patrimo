@@ -186,6 +186,61 @@
     </table>
   </div>
 
+  <!-- TWR vs TRI — le marché vs ton timing (PP9) -->
+  @if (tri() !== null || metrics().twr !== null) {
+    <div class="section-head" style="margin-top:24px">
+      <h2 class="section-title">Le marché <em>vs ton timing</em></h2>
+      <span class="section-sub">TWR juge tes choix · TRI juge tes versements</span>
+    </div>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap;gap:20px 36px">
+        <div class="stat-block">
+          <div class="k"><span data-tip="Rendement temps-pondéré sur la période active : la performance de tes choix, comme si tout avait été investi au premier jour. Insensible au calendrier de tes versements — comparable à un indice.">TWR · {{ activePeriod() }}</span></div>
+          <div class="v" [class.pos]="(metrics().twr ?? 0) >= 0" [class.neg]="(metrics().twr ?? 0) < 0">
+            {{ metrics().twr !== null ? fmtPct(metrics().twr!, 2) : '—' }}
+          </div>
+          <div class="sub">la note de tes choix</div>
+        </div>
+        <div class="stat-block">
+          <div class="k"><span data-tip="Taux de rendement interne (XIRR) depuis le début : pèse chaque euro par sa durée d'exposition. Le rendement annuel que TON argent a réellement connu, timing des versements inclus.">TRI · depuis le début</span></div>
+          <div class="v" [class.pos]="(tri() ?? 0) >= 0" [class.neg]="(tri() ?? 0) < 0">
+            {{ tri() !== null ? fmtPct(tri()!, 2) + '/an' : '—' }}
+          </div>
+          <div class="sub">la note de ton timing</div>
+        </div>
+        @if (annualized() !== null) {
+          <div class="stat-block">
+            <div class="k"><span data-tip="Le rendement de la période active ramené à un taux annuel moyen composé — le terme de comparaison annualisé du TRI.">CAGR · {{ activePeriod() }}</span></div>
+            <div class="v" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
+              {{ fmtPct(annualized()!, 2) }}/an
+            </div>
+          </div>
+        }
+        @if (timingVerdict(); as verdict) {
+          <div class="stat-block">
+            <div class="k"><span data-tip="TRI − CAGR sur l'historique complet : ce que ton calendrier de versements a ajouté ou retiré par rapport à un rendement régulier.">Effet timing</span></div>
+            <div class="v" [class.pos]="verdict.helped" [class.neg]="!verdict.helped">
+              {{ verdict.deltaPts >= 0 ? '+' : '−' }}{{ fmtNum(abs(verdict.deltaPts), 1) }} pts/an
+            </div>
+            <div class="sub">{{ verdict.helped ? 'ton calendrier t\'a aidé' : 'ton calendrier t\'a coûté' }}</div>
+          </div>
+        }
+      </div>
+      <p class="muted small" style="margin:14px 4px 4px">
+        <b>TWR</b> juge le marché et tes choix d'ETF : il neutralise le moment et le montant de tes
+        versements. <b>TRI</b> juge ton calendrier : un gros apport juste avant une hausse le gonfle,
+        juste avant une baisse le plombe. TRI &gt; TWR annualisé → tes apports sont plutôt bien
+        tombés ; TRI &lt; TWR → le calendrier t'a coûté du rendement (souvent : argent investi tard,
+        ou gros apport avant une baisse). Un DCA régulier rapproche naturellement les deux.
+      </p>
+      @if (timingVerdict() === null && tri() !== null) {
+        <p class="muted tiny" style="margin:8px 4px 0">
+          Passe la période en MAX pour comparer TRI et CAGR sur la même durée — l'« effet timing » s'affichera ici.
+        </p>
+      }
+    </div>
+  }
+
   <!-- PERIOD STATS -->
   @if (periodStats(); as stats) {
     <div class="section-head" style="margin-top:24px">

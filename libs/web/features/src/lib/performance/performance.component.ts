@@ -6,6 +6,7 @@ import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { computeTaxEstimate } from './tax-estimate';
 import { startOfYearISO } from '../portfolio/realized-pnl';
+import { computeTri } from '../portfolio/tri';
 
 interface StressScenario {
   id: string;
@@ -137,6 +138,26 @@ export class PerformanceComponent {
   // client-side estimates kept below for the monthly heatmap / win-rate only.
   protected readonly metrics       = this.performanceService.metrics;
   protected readonly loadingMetrics = this.performanceService.loadingMetrics;
+
+  // ─── TWR vs TRI (PP9) — le marché vs ton timing ───────────────────────────
+
+  /** Money-weighted return (XIRR) since inception — annualised by construction. */
+  protected readonly tri = computed(() =>
+    computeTri(this.transactionService.all(), this.envelopeService.total()),
+  );
+
+  /**
+   * Timing effect: TRI − CAGR, in points per year. Only meaningful when both
+   * figures cover the same span, i.e. the MAX period — TRI always spans the
+   * full history while the CAGR follows the active window.
+   */
+  protected readonly timingVerdict = computed(() => {
+    if (this.activePeriod() !== 'MAX') return null;
+    const tri  = this.tri();
+    const cagr = this.annualized();
+    if (tri === null || cagr === null) return null;
+    return { deltaPts: tri - cagr, helped: tri >= cagr };
+  });
   protected readonly etfStats      = this.performanceService.etfStats;
   protected readonly fees          = this.performanceService.fees;
   protected readonly loadingStats  = this.performanceService.loadingStats;
@@ -239,6 +260,7 @@ export class PerformanceComponent {
   private readonly fxService = inject(FxService);
   // FX-aware: converts EUR-base amounts into the display currency.
   protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  protected readonly abs       = Math.abs;
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;
   protected readonly fmtNum    = fmtNum;
