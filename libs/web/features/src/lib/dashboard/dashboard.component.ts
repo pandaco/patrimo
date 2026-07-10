@@ -386,15 +386,18 @@ export class DashboardComponent {
 
   /** 11. Biggest absolute drift between strategic-level target and reality. */
   protected readonly driftMax = computed(() => {
-    const total = this.totalBourse() + 0;
-    if (total <= 0) return null;
+    const portfolio = this.portfolioValue();
+    if (portfolio <= 0) return null;
     const t = this.allocationService.targets().strategic;
     if (!t || (t.stocks + t.bonds) === 0) return null;
-    // Real shares: stocks = boursier (PEA/CTO/AV/PER), bonds ≈ obligations sleeve.
-    // Without per-ETF asset-class metadata we approximate "stocks" as all bourse
-    // and "bonds" as 0 — refined when allocation-by-asset-class lands.
-    const realStocksPct = 100;
-    const driftStocks   = realStocksPct - t.stocks;
+    // No per-ETF stocks/bonds split exists yet, so we approximate using the
+    // existing `alloc` tag: ETFs tagged "Obligations" count as bonds, every
+    // other alloc (Core/Satellite/Matières premières) counts as stocks.
+    const bondsValue    = this.etfs.all()
+      .filter(e => e.alloc === 'Obligations')
+      .reduce((a, e) => a + etfValue(e), 0);
+    const realStocksPct = ((portfolio - bondsValue) / portfolio) * 100;
+    const driftStocks    = realStocksPct - t.stocks;
     return Math.abs(driftStocks);
   });
 
