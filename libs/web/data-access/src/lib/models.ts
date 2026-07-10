@@ -35,6 +35,12 @@ export interface Liability {
   endDate: string | null;
 }
 
+export interface EtfExposureBreakdown {
+  geo: Record<string, number>;
+  sector: Record<string, number>;
+  currency: Record<string, number>;
+}
+
 export interface Etf {
   isin: string;
   ticker: string;
@@ -49,6 +55,8 @@ export interface Etf {
   alloc: 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
   /** Followed without a position — excluded from portfolio analytics. */
   watchOnly: boolean;
+  /** Geo/sector/currency breakdown, cached from Yahoo. Absent until first computed. */
+  exposure?: EtfExposureBreakdown;
   qty: number;
   pru: number;
   price: number;

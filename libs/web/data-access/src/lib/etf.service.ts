@@ -29,6 +29,7 @@ function fromCatalog(d: EtfDto): Etf {
     pea: d.pea,
     alloc: d.alloc,
     watchOnly: d.watchOnly,
+    exposure: d.exposure,
     qty: 0,
     pru: 0,
     price: 0,

@@ -258,6 +258,37 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
     }
   </div>
 
+  <!-- CHEVAUCHEMENT ETF -->
+  @if (overlaps().length > 0) {
+    <div class="section-head" style="margin-top:24px">
+      <h2 class="section-title">Chevauchement <em>entre ETF</em></h2>
+      <span class="section-sub">deux tickers différents, le même pari</span>
+    </div>
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr>
+            <th>Paire</th>
+            <th>Dimension</th>
+            <th class="r">Chevauchement</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of overlaps(); track o.tickerA + o.tickerB + o.dimension) {
+            <tr>
+              <td><span class="pill solid">{{ o.tickerA }}</span> × <span class="pill solid">{{ o.tickerB }}</span></td>
+              <td class="muted small">{{ o.dimension === 'geo' ? 'Géographique' : 'Sectorielle' }}</td>
+              <td class="r num" [class.warn]="o.overlapPct < 70" [class.neg]="o.overlapPct >= 70">{{ fmtNum(o.overlapPct, 0) }} %</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <p class="muted tiny" style="margin:8px 0 4px">
+        Au-delà de 50 %, deux ETF exposent au même risque sous des noms différents — diversification en apparence seulement.
+      </p>
+    </div>
+  }
+
   <!-- POSITIONS FERMÉES -->
   @if (closedPositions().length > 0) {
     <div class="section-head" style="margin-top:32px">

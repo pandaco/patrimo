@@ -19,6 +19,7 @@ function toDto(etf: Etf): EtfDto {
     pea: etf.pea,
     alloc: etf.alloc,
     watchOnly: etf.watchOnly,
+    exposure: etf.exposure,
   };
 }
 

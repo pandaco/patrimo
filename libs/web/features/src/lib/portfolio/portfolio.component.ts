@@ -4,6 +4,7 @@ import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, e
 import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-pnl';
+import { computeEtfOverlaps } from './overlap';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 
@@ -71,6 +72,10 @@ export class PortfolioComponent {
       };
     });
   });
+
+  // Two different tickers can still be the same bet — flags held ETF pairs
+  // sharing heavy geo/sector exposure. Pure fn + spec in `overlap.ts`.
+  protected readonly overlaps = computed(() => computeEtfOverlaps(this.allEtfs()));
 
   protected readonly dividends12M = computed(() => {
     const cutoff = new Date();
