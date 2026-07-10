@@ -51,6 +51,7 @@ const NAV: NavGroup[] = [
   {
     label: 'Outils',
     items: [
+      { id: 'cashflow',  label: 'Cash-flow',       route: '/tools/cashflow', icon: 'cashflow' },
       { id: 'dca',       label: 'DCA helper',      route: '/tools/dca',      icon: 'dca' },
       { id: 'calendar',  label: 'Calendrier',      route: '/tools/calendar', icon: 'calendar',  shortcut: 'C' },
       { id: 'compare',   label: 'Comparateur',     route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },

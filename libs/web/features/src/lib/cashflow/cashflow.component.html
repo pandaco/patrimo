@@ -1,0 +1,61 @@
+<div class="page">
+
+  <div class="page-head">
+    <h1 class="page-title">Cash-flow <em>mensuel</em></h1>
+    <p class="page-sub">
+      Ce que tu verses et retires réellement, mois par mois — hors performance des placements.
+    </p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+    <div class="card kpi-tile">
+      <div class="label">Versements moyens</div>
+      <div class="value pos">+{{ fmtEur(avgIn(), 0) }}</div>
+      <div class="sub">par mois · 12 derniers mois</div>
+    </div>
+    <div class="card kpi-tile">
+      <div class="label">Retraits moyens</div>
+      <div class="value neg">−{{ fmtEur(avgOut(), 0) }}</div>
+      <div class="sub">par mois · 12 derniers mois</div>
+    </div>
+    <div class="card kpi-tile">
+      <div class="label">Effort d'épargne net</div>
+      <div class="value" [class.pos]="avgNet() >= 0" [class.neg]="avgNet() < 0">
+        {{ avgNet() >= 0 ? '+' : '−' }}{{ fmtEur(abs(avgNet()), 0) }}
+      </div>
+      <div class="sub">versements − retraits, par mois</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:20px">
+    <div class="card-head">
+      <div class="card-title">Entrées / sorties</div>
+      <span class="card-sub">12 derniers mois</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:180px;padding-top:12px">
+      @for (row of rows(); track row.month) {
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end">
+          <div style="display:flex;align-items:flex-end;gap:2px;height:140px;width:100%;justify-content:center">
+            <div [style.height.%]="inHeight(row.in)" style="width:40%;background:var(--gain);border-radius:2px 2px 0 0;min-height:1px"
+                 [attr.title]="'Versements : ' + fmtEur(row.in, 0)"></div>
+            <div [style.height.%]="outHeight(row.out)" style="width:40%;background:var(--loss);border-radius:2px 2px 0 0;min-height:1px"
+                 [attr.title]="'Retraits : ' + fmtEur(row.out, 0)"></div>
+          </div>
+          <span class="muted tiny">{{ monthLabel(row.month) }}</span>
+        </div>
+      }
+    </div>
+    <div class="row muted" style="gap:16px;margin-top:14px;font-size:11px">
+      <span><span class="dot" style="background:var(--gain);display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px"></span>Versements</span>
+      <span><span class="dot" style="background:var(--loss);display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px"></span>Retraits</span>
+    </div>
+  </div>
+
+  <div class="card" style="padding:16px 20px;margin-top:16px">
+    <p class="muted small" style="margin:0">
+      Dividendes et intérêts perçus sur la période : <b>{{ fmtEur(totalRevenus(), 0) }}</b> —
+      comptés comme rendement de tes placements, pas comme un versement externe.
+    </p>
+  </div>
+
+</div>

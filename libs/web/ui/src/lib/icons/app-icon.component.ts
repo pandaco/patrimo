@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 export type AppIconName =
   | 'dashboard' | 'wealth' | 'portfolio' | 'tx' | 'alloc' | 'perf'
   | 'dca' | 'calendar' | 'compare' | 'alert' | 'glossary' | 'settings'
-  | 'search' | 'plus' | 'bell' | 'chevron' | 'upload' | 'liability';
+  | 'search' | 'plus' | 'bell' | 'chevron' | 'upload' | 'liability' | 'cashflow';
 
 const PATHS: Record<AppIconName, string> = {
   dashboard: 'M2 8 L8 3 L14 8 M3.5 7 V13.5 H6.5 V10 H9.5 V13.5 H12.5 V7',
@@ -24,6 +24,7 @@ const PATHS: Record<AppIconName, string> = {
   chevron:   'M6 4 L10 8 L6 12',
   upload:    'M8 2.5 V10 M8 2.5 L5 5.5 M8 2.5 L11 5.5 M3 13 H13',
   liability: 'M8 2.5 A5.5 5.5 0 1 0 13.5 8 A5.5 5.5 0 0 0 8 2.5 Z M5.5 8 H10.5',
+  cashflow:  'M2.5 6 H9 M9 6 L6.5 3.5 M9 6 L6.5 8.5 M13.5 10 H7 M7 10 L9.5 7.5 M7 10 L9.5 12.5',
 };
 
 @Component({

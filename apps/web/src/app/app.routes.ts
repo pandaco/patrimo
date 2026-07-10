@@ -81,6 +81,11 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'tools/cashflow',
+        loadComponent: () =>
+          import('@patrimo/features').then((m) => m.CashflowComponent),
+      },
+      {
         path: 'tools/dca',
         loadComponent: () =>
           import('@patrimo/features').then((m) => m.DcaComponent),
