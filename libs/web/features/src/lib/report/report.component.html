@@ -1,0 +1,129 @@
+<div class="page">
+
+  <div class="page-head row" style="justify-content:space-between;align-items:flex-start">
+    <div>
+      <h1 class="page-title">Bilan <em>patrimonial</em></h1>
+      <p class="page-sub">{{ firstName() }} · {{ todayLabel }}</p>
+    </div>
+    <button class="btn primary no-print" (click)="print()">Exporter en PDF</button>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div class="card-head">
+      <div class="card-title">Patrimoine net</div>
+    </div>
+    <div style="font-size:26px;font-weight:700">{{ fmtEur(netWorth(), 0) }}</div>
+    @if (totalLiabilities() > 0) {
+      <div class="muted small" style="margin-top:4px">
+        {{ fmtEur(totalValue(), 0) }} d'actifs − {{ fmtEur(totalLiabilities(), 0) }} de crédits
+      </div>
+    }
+  </div>
+
+  <div class="card" style="padding:4px 12px;margin-bottom:20px">
+    <div class="card-head" style="padding-top:12px">
+      <div class="card-title">Répartition par enveloppe</div>
+    </div>
+    <table class="tbl tbl-compact">
+      <thead>
+        <tr>
+          <th>Enveloppe</th>
+          <th class="r">Valeur</th>
+          <th class="r">Part</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of envRows(); track e.id) {
+          <tr>
+            <td>{{ e.label }}</td>
+            <td class="r num">{{ fmtEur(e.value, 0) }}</td>
+            <td class="r num muted">{{ fmtNum(e.pct, 1) }} %</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (liabilityRows().length > 0) {
+    <div class="card" style="padding:4px 12px;margin-bottom:20px">
+      <div class="card-head" style="padding-top:12px">
+        <div class="card-title">Crédits en cours</div>
+      </div>
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr>
+            <th>Libellé</th>
+            <th class="r">Restant dû</th>
+            <th class="r">Mensualité</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of liabilityRows(); track l.id) {
+            <tr>
+              <td>{{ l.label }}</td>
+              <td class="r num">{{ fmtEur(l.currentBalance, 0) }}</td>
+              <td class="r num">{{ fmtEur(l.monthlyPayment, 0) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px">
+    <div class="card kpi-tile">
+      <div class="label">TRI (XIRR)</div>
+      @if (tri() !== null) {
+        <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
+          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} % <small>/an</small>
+        </div>
+      } @else {
+        <div class="value">—</div>
+      }
+      <div class="sub">depuis le 1ᵉʳ versement</div>
+    </div>
+    <div class="card kpi-tile">
+      <div class="label">PV réalisée cette année</div>
+      <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+        {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+      </div>
+      <div class="sub">depuis le 1ᵉʳ janv.</div>
+    </div>
+  </div>
+
+  <div class="card" style="padding:4px 12px">
+    <div class="card-head" style="padding-top:12px">
+      <div class="card-title">Mouvements</div>
+      <span class="card-sub">{{ monthLabel }}</span>
+    </div>
+    @if (monthlyTx().length === 0) {
+      <p class="muted small" style="padding:12px 0">Aucun mouvement ce mois-ci.</p>
+    } @else {
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr>
+            <th style="width:90px">Date</th>
+            <th>Type</th>
+            <th>Enveloppe</th>
+            <th class="r">Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tx of monthlyTx(); track tx.id) {
+            @let env = getEnv(tx.envelope);
+            @let typeLabel = txLabels[tx.type];
+            <tr>
+              <td class="muted small">{{ fmtDate(tx.date) }}</td>
+              <td>{{ typeLabel.label }}</td>
+              <td>{{ env?.label || '—' }}</td>
+              <td class="r num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
+                {{ typeLabel.dir }}{{ fmtEur(tx.amount, 2) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+</div>

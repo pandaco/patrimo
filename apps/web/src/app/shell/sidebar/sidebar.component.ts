@@ -59,6 +59,7 @@ const NAV: NavGroup[] = [
       { id: 'alerts',    label: 'Alertes',         route: '/tools/alerts',   icon: 'alert',     shortcut: 'A' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
       { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
+      { id: 'report',    label: 'Bilan PDF',       route: '/tools/report',   icon: 'report' },
     ],
   },
 ];

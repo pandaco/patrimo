@@ -1,0 +1,22 @@
+// Print stylesheet: only the printable-report page content should reach
+// paper — sidebar, topbar, bottom nav and toasts are screen-only chrome.
+@media print {
+  app-sidebar, app-topbar, .bottom-nav, ui-toast, .no-print {
+    display: none !important;
+  }
+
+  .app { display: block; }
+  .main { margin: 0; }
+  main { padding: 0; }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
