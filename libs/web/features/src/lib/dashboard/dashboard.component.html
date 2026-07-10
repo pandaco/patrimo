@@ -69,12 +69,17 @@
         <div class="wealth-hero-header">
           <div class="wealth-hero-value">
             <div class="label">
-              <span data-tip="Somme de toutes tes enveloppes — comptes boursiers, livrets et cash. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine net</span>
+              <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash) moins le capital restant dû sur tes crédits en cours. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine net</span>
               @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
             </div>
             <div class="wealth-total" style="font-variant-numeric:tabular-nums">
-              {{ fmtNum(fxRate() * totalValue(), 0) }}<small> {{ fxService.symbol() }}</small>
+              {{ fmtNum(fxRate() * netWorth(), 0) }}<small> {{ fxService.symbol() }}</small>
             </div>
+            @if (totalLiabilities() > 0) {
+              <div class="muted small">
+                {{ fmtEur(totalValue(), 0) }} d'actifs − {{ fmtEur(totalLiabilities(), 0) }} de crédits
+              </div>
+            }
           </div>
           <div class="wealth-hero-controls">
             <div class="chart-mode-toggle" role="tablist" aria-label="Type de graphique">
@@ -157,6 +162,13 @@
               <span class="pill warn" style="font-size:10px"><span class="dot"></span>à investir</span>
             }
           </div>
+          @if (totalLiabilities() > 0) {
+            <div class="wealth-breakdown-chip">
+              <span class="label" data-tip="Capital restant dû sur tes crédits en cours (prêt immobilier, crédit conso).">Crédits</span>
+              <span class="value neg">− {{ fmtEur(totalLiabilities(), 0) }}</span>
+              <a routerLink="/liabilities" class="muted small">Gérer →</a>
+            </div>
+          }
         </div>
       </div>
 

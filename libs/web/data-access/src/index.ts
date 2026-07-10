@@ -24,3 +24,4 @@ export * from './lib/broker.service';
 export * from './lib/glossary.service';
 export * from './lib/fx.service';
 export * from './lib/toast.service';
+export * from './lib/liability.service';

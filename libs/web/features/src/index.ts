@@ -15,3 +15,4 @@ export * from './lib/login/login.component';
 export * from './lib/allocation/allocation.component';
 export * from './lib/tips/tips.component';
 export * from './lib/welcome/welcome.component';
+export * from './lib/liabilities/liabilities.component';

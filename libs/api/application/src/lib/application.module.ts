@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { DcaModule } from './dca/dca.module';
 import { EnvelopeModule } from './envelopes/envelope.module';
 import { EtfModule } from './etfs/etf.module';
+import { LiabilityModule } from './liability/liability.module';
 import { MarketModule } from './market/market.module';
 import { PerformanceModule } from './performance/performance.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
@@ -26,6 +27,7 @@ import { TransactionModule } from './transactions/transaction.module';
     DcaModule,
     StrategyModule,
     AuditModule,
+    LiabilityModule,
   ],
   exports: [
     AuthModule,
@@ -40,6 +42,7 @@ import { TransactionModule } from './transactions/transaction.module';
     DcaModule,
     StrategyModule,
     AuditModule,
+    LiabilityModule,
   ],
 })
 export class ApplicationModule {}

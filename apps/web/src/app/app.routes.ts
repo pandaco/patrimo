@@ -53,6 +53,13 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'liabilities',
+        loadComponent: () =>
+          import('@patrimo/features').then(
+            (m) => m.LiabilitiesComponent,
+          ),
+      },
+      {
         path: 'transactions',
         loadComponent: () =>
           import('@patrimo/features').then(

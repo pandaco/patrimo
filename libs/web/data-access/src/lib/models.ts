@@ -21,6 +21,20 @@ export interface Envelope {
   plafond: number | null;
 }
 
+export type LiabilityKind = 'mortgage' | 'consumer_loan' | 'other';
+
+export interface Liability {
+  id: string;
+  label: string;
+  kind: LiabilityKind;
+  initialAmount: number;
+  currentBalance: number;
+  ratePct: number;
+  monthlyPayment: number;
+  startDate: string;
+  endDate: string | null;
+}
+
 export interface Etf {
   isin: string;
   ticker: string;

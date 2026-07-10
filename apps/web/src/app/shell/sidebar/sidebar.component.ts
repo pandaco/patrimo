@@ -34,8 +34,9 @@ const NAV: NavGroup[] = [
   {
     label: 'Aperçu',
     items: [
-      { id: 'dashboard', label: 'Tableau de bord', route: '/dashboard', icon: 'dashboard', shortcut: 'D' },
-      { id: 'wealth',    label: 'Patrimoine',       route: '/wealth',    icon: 'wealth',    shortcut: 'W' },
+      { id: 'dashboard',   label: 'Tableau de bord', route: '/dashboard',   icon: 'dashboard', shortcut: 'D' },
+      { id: 'wealth',      label: 'Patrimoine',       route: '/wealth',      icon: 'wealth',    shortcut: 'W' },
+      { id: 'liabilities', label: 'Crédits',          route: '/liabilities', icon: 'liability' },
     ],
   },
   {

@@ -1,0 +1,113 @@
+<div class="page">
+
+  <div class="page-head">
+    <h1 class="page-title">Crédits <em>en cours</em></h1>
+    <p class="page-sub">
+      Prêts immobiliers, crédits conso — soustraits de ton patrimoine net sur le tableau de bord.
+    </p>
+  </div>
+
+  <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div class="card" style="padding:14px 20px;flex:1;margin-right:16px">
+      <div class="muted small">Total restant dû</div>
+      <div style="font-size:22px;font-weight:600">{{ fmtEur(total(), 0) }}</div>
+    </div>
+    <button class="btn primary" (click)="openCreate()">+ Ajouter un crédit</button>
+  </div>
+
+  @if (isEmpty()) {
+    <div class="card" style="padding:28px;text-align:center">
+      <p class="muted small" style="margin:0">
+        Aucun crédit enregistré. Ajoute un prêt immobilier ou un crédit conso pour
+        voir ton patrimoine net (actifs − dettes) sur le tableau de bord.
+      </p>
+    </div>
+  } @else {
+    <div class="card" style="padding:4px 12px">
+      <table class="tbl tbl-compact">
+        <thead>
+          <tr>
+            <th>Libellé</th>
+            <th>Type</th>
+            <th class="r">Montant initial</th>
+            <th class="r">Restant dû</th>
+            <th class="r">Taux</th>
+            <th class="r">Mensualité</th>
+            <th>Progression</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of all(); track l.id) {
+            <tr>
+              <td>{{ l.label }}</td>
+              <td><span class="pill soft">{{ kindLabel(l.kind) }}</span></td>
+              <td class="r num">{{ fmtEur(l.initialAmount, 0) }}</td>
+              <td class="r num">{{ fmtEur(l.currentBalance, 0) }}</td>
+              <td class="r num">{{ fmtNum(l.ratePct, 2) }} %</td>
+              <td class="r num">{{ fmtEur(l.monthlyPayment, 0) }}</td>
+              <td style="min-width:120px">
+                <div class="bar" style="height:6px">
+                  <span [style.width.%]="progressPct(l)"></span>
+                </div>
+              </td>
+              <td class="r">
+                <button class="btn sm ghost" (click)="openEdit(l)">Éditer</button>
+                <button class="btn sm ghost" (click)="remove(l)">Suppr.</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (formOpen()) {
+    <div class="card" style="padding:20px;margin-top:20px;max-width:520px">
+      <h2 style="font-size:16px;margin:0 0 14px">{{ editingId() ? 'Éditer le crédit' : 'Nouveau crédit' }}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <label style="grid-column:1/-1">
+          Libellé
+          <input type="text" [ngModel]="form().label" (ngModelChange)="form.set({ ...form(), label: $event })" placeholder="Prêt appartement Paris" />
+        </label>
+        <label>
+          Type
+          <select [ngModel]="form().kind" (ngModelChange)="form.set({ ...form(), kind: $event })">
+            @for (k of kindOptions; track k.id) {
+              <option [value]="k.id">{{ k.label }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Taux (%/an)
+          <input type="number" step="0.01" [ngModel]="form().ratePct" (ngModelChange)="form.set({ ...form(), ratePct: $event })" />
+        </label>
+        <label>
+          Montant initial (€)
+          <input type="number" step="1" [ngModel]="form().initialAmount" (ngModelChange)="form.set({ ...form(), initialAmount: $event })" />
+        </label>
+        <label>
+          Restant dû (€)
+          <input type="number" step="1" [ngModel]="form().currentBalance" (ngModelChange)="form.set({ ...form(), currentBalance: $event })" />
+        </label>
+        <label>
+          Mensualité (€)
+          <input type="number" step="1" [ngModel]="form().monthlyPayment" (ngModelChange)="form.set({ ...form(), monthlyPayment: $event })" />
+        </label>
+        <label>
+          Date de départ
+          <input type="date" [ngModel]="form().startDate" (ngModelChange)="form.set({ ...form(), startDate: $event })" />
+        </label>
+        <label>
+          Échéance (optionnel)
+          <input type="date" [ngModel]="form().endDate" (ngModelChange)="form.set({ ...form(), endDate: $event })" />
+        </label>
+      </div>
+      <div class="row" style="justify-content:flex-end;gap:10px;margin-top:18px">
+        <button class="btn sm" (click)="cancel()">Annuler</button>
+        <button class="btn sm primary" [disabled]="saving()" (click)="save()">{{ saving() ? '…' : 'Enregistrer' }}</button>
+      </div>
+    </div>
+  }
+
+</div>

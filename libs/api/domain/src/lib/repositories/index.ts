@@ -8,3 +8,4 @@ export * from './dca-plan.repository';
 export * from './strategy-version.repository';
 export * from './audit-log.repository';
 export * from './wealth-snapshot.repository';
+export * from './liability.repository';
