@@ -86,6 +86,11 @@ export const appRoutes: Route[] = [
           import('@patrimo/features').then((m) => m.CashflowComponent),
       },
       {
+        path: 'tools/projection',
+        loadComponent: () =>
+          import('@patrimo/features').then((m) => m.ProjectionComponent),
+      },
+      {
         path: 'tools/dca',
         loadComponent: () =>
           import('@patrimo/features').then((m) => m.DcaComponent),

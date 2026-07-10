@@ -1,0 +1,64 @@
+<div class="page">
+
+  <div class="page-head">
+    <h1 class="page-title">Simulateur <em>de projection</em></h1>
+    <p class="page-sub">
+      Où mène ton rythme d'épargne actuel — une hypothèse de croissance linéaire, pas une garantie.
+    </p>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <label>
+        Versement mensuel (€)
+        <input type="number" step="50" [ngModel]="effectiveContribution()" (ngModelChange)="setContribution($event)" />
+      </label>
+      <label>
+        Rendement annuel supposé (%)
+        <input type="number" step="0.5" [ngModel]="effectiveRate()" (ngModelChange)="setRate($event)" />
+      </label>
+      <label>
+        Horizon (années)
+        <input type="range" min="5" max="40" step="1" [ngModel]="years()" (ngModelChange)="setYears($event)" />
+        <span class="muted small">{{ years() }} ans</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div class="card-head">
+      <div class="card-title">Patrimoine projeté</div>
+      <span class="card-sub">départ : {{ fmtEur(totalValue(), 0) }}</span>
+    </div>
+    <app-wealth-chart [data]="chartData()" [labels]="chartLabels()" />
+  </div>
+
+  @if (finalPoint(); as f) {
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px">
+      <div class="card kpi-tile">
+        <div class="label">Dans {{ years() }} ans</div>
+        <div class="value">{{ fmtEur(f.value, 0) }}</div>
+        <div class="sub">valeur projetée</div>
+      </div>
+      <div class="card kpi-tile">
+        <div class="label">Dont versé</div>
+        <div class="value muted">{{ fmtEur(f.contributed, 0) }}</div>
+        <div class="sub">{{ fmtNum(f.value - f.contributed >= 0 ? (f.value / f.contributed - 1) * 100 : 0, 0) }} % de gain composé</div>
+      </div>
+      <div class="card kpi-tile">
+        <div class="label">Rente 4 % équivalente</div>
+        <div class="value">{{ fmtEur(f.swrMonthly, 0) }}</div>
+        <div class="sub">/ mois à ce terme</div>
+      </div>
+    </div>
+  }
+
+  <div class="card" style="padding:16px 20px;margin-top:16px">
+    <p class="muted small" style="margin:0">
+      Hypothèse : croissance composée mensuelle au taux ci-dessus, versement constant, aucune fiscalité ni frais
+      déduits. Une vraie trajectoire de marché n'est jamais une droite — sers-toi de ce chiffre comme d'un ordre
+      de grandeur, pas d'une promesse.
+    </p>
+  </div>
+
+</div>
