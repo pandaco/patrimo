@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, WealthCategory, WealthReturnKey } from '@patrimo/contracts';
 import { DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
@@ -31,6 +32,9 @@ const WEALTH_CATEGORIES: { id: 'all' | WealthCategory; label: string }[] = [
 /** Chart filter: whole patrimoine, one category, or one envelope (`env:<id>`). */
 type WealthFilter = 'all' | WealthCategory | `env:${string}`;
 
+const KPI_IDS = ['rente', 'realized', 'concentration', 'dividends', 'streak', 'milestone', 'doubling'] as const;
+type KpiId = (typeof KPI_IDS)[number];
+
 const GLYPH_COLORS: Record<string, string> = {
   pea:'#16A34A', peapme:'#15803D', cto:'#EA580C', av:'#7C3AED',
   per:'#475569', pee:'#0284C7', livret:'#CA8A04', crypto:'#18181B',
@@ -54,7 +58,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent],
+  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent, DragDropModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -117,6 +121,29 @@ export class DashboardComponent {
       this.performanceService.setPeriod(p);
       this.performanceService.setWealthPeriod(p);
     });
+
+    // Restore the user's own ordering of the secondary KPI tiles. Anything
+    // stale (old id set, corrupt JSON) falls back to the default order
+    // rather than crashing on a partial/mismatched list.
+    const KPI_ORDER_KEY = 'dashboard:kpiOrder';
+    const storedOrder = localStorage.getItem(KPI_ORDER_KEY);
+    if (storedOrder) {
+      try {
+        const parsed = JSON.parse(storedOrder) as string[];
+        if (Array.isArray(parsed) && parsed.length === KPI_IDS.length && KPI_IDS.every(id => parsed.includes(id))) {
+          this.kpiOrder.set(parsed as KpiId[]);
+        }
+      } catch { /* corrupt value — keep the default order */ }
+    }
+    effect(() => localStorage.setItem(KPI_ORDER_KEY, JSON.stringify(this.kpiOrder())));
+  }
+
+  protected readonly kpiOrder = signal<KpiId[]>([...KPI_IDS]);
+
+  protected onKpiDrop(event: CdkDragDrop<KpiId[]>): void {
+    const next = [...this.kpiOrder()];
+    moveItemInArray(next, event.previousIndex, event.currentIndex);
+    this.kpiOrder.set(next);
   }
 
   protected readonly envAll       = this.envelopes.all;

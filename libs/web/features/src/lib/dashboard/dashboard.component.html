@@ -357,79 +357,89 @@
   </button>
 
   @if (showAllKpis()) {
-  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin:14px 0 24px">
+  <div class="grid kpi-grid" cdkDropList cdkDropListOrientation="mixed"
+       (cdkDropListDropped)="onKpiDrop($event)"
+       style="grid-template-columns:repeat(4, 1fr);gap:14px;margin:14px 0 24px">
 
-    <!-- Rente théorique 4 % -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Règle des 4 % (Safe Withdrawal Rate, étude Trinity) : un portefeuille bien diversifié peut durer 30 ans en retirant 4 %/an. Affiche ici le revenu mensuel équivalent.">Rente 4 %</span></div>
-      <div class="value">{{ fmtEur(swrIncome(), 0) }}</div>
-      <div class="sub">/ mois théorique (FIRE)</div>
-    </div>
+    @for (id of kpiOrder(); track id) {
+      <div class="card kpi-tile" cdkDrag cdkDragBoundary=".kpi-grid" style="cursor:grab">
+        @switch (id) {
 
-    <!-- PV réalisée YTD -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
-      <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
-        {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+          @case ('rente') {
+            <!-- Rente théorique 4 % -->
+            <div class="label"><span data-tip="Règle des 4 % (Safe Withdrawal Rate, étude Trinity) : un portefeuille bien diversifié peut durer 30 ans en retirant 4 %/an. Affiche ici le revenu mensuel équivalent.">Rente 4 %</span></div>
+            <div class="value">{{ fmtEur(swrIncome(), 0) }}</div>
+            <div class="sub">/ mois théorique (FIRE)</div>
+          }
+
+          @case ('realized') {
+            <!-- PV réalisée YTD -->
+            <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
+            <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+              {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+            </div>
+            <div class="sub">depuis le 1ᵉʳ janv.</div>
+          }
+
+          @case ('concentration') {
+            <!-- Concentration top 3 -->
+            <div class="label"><span data-tip="Poids cumulé des 3 plus grosses positions ETF. Au-delà de 70 %, ton portefeuille tient sur peu de paris — réfléchis à diversifier.">Concentration top 3</span></div>
+            @if (concentrationTop3() !== null) {
+              <div class="value" [class.neg]="concentrationTop3()! > 75" [class.warn]="concentrationTop3()! > 60 && concentrationTop3()! <= 75">
+                {{ fmtNum(concentrationTop3()!, 0) }} %
+              </div>
+              <div class="sub">des positions ETF · <a routerLink="/portfolio" style="color:var(--ink-3)">détail →</a></div>
+            } @else {
+              <div class="value">—</div>
+              <div class="sub">aucune position</div>
+            }
+          }
+
+          @case ('dividends') {
+            <!-- Dividendes 12M -->
+            <div class="label"><span data-tip="Total des DIVIDEND + INTEREST encaissés sur 12 mois glissants. Inclut les coupons obligataires et intérêts livrets si tu les saisis comme transactions.">Dividendes 12M</span></div>
+            <div class="value">{{ fmtEur(dividends12M().total, 0) }}</div>
+            <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
+          }
+
+          @case ('streak') {
+            <!-- Streak DCA -->
+            <div class="label"><span data-tip="Nombre de mois consécutifs avec au moins un BUY ou DEPOSIT. Indicateur de discipline — l'arme principale du DCA.">Streak DCA</span></div>
+            <div class="value">
+              {{ dcaStreak() }}<small style="font-size:0.55em;font-weight:500"> mois</small>
+            </div>
+            <div class="sub">
+              @if (dcaStreak() >= 12) { 🔥 routine en place }
+              @else if (dcaStreak() >= 3) { en construction }
+              @else { démarre une cadence régulière }
+            </div>
+          }
+
+          @case ('milestone') {
+            <!-- Prochain palier -->
+            <div class="label"><span data-tip="Le prochain palier rond vers lequel tu te diriges. Affiche la progression depuis le palier précédent.">Prochain palier</span></div>
+            <div class="value">{{ fmtEur(milestoneProgress().target, 0) }}</div>
+            <div class="bar" style="margin-top:8px;height:6px">
+              <span [style.width.%]="milestoneProgress().pct"></span>
+            </div>
+            <div class="sub" style="margin-top:6px">{{ fmtNum(milestoneProgress().pct, 0) }} % parcouru</div>
+          }
+
+          @case ('doubling') {
+            <!-- Vitesse de doublement (règle de 72) -->
+            <div class="label"><span data-tip="Règle de 72 : nombre d'années pour doubler ton capital au CAGR actuel. À 7 %/an, ton patrimoine double tous les ~10 ans.">Doublement</span></div>
+            @if (doublingYears() !== null) {
+              <div class="value">{{ fmtNum(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
+              <div class="sub">au rythme CAGR actuel</div>
+            } @else {
+              <div class="value">—</div>
+              <div class="sub">CAGR ≤ 0 ou indisponible</div>
+            }
+          }
+
+        }
       </div>
-      <div class="sub">depuis le 1ᵉʳ janv.</div>
-    </div>
-
-    <!-- Concentration top 3 -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Poids cumulé des 3 plus grosses positions ETF. Au-delà de 70 %, ton portefeuille tient sur peu de paris — réfléchis à diversifier.">Concentration top 3</span></div>
-      @if (concentrationTop3() !== null) {
-        <div class="value" [class.neg]="concentrationTop3()! > 75" [class.warn]="concentrationTop3()! > 60 && concentrationTop3()! <= 75">
-          {{ fmtNum(concentrationTop3()!, 0) }} %
-        </div>
-        <div class="sub">des positions ETF</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">aucune position</div>
-      }
-    </div>
-
-    <!-- Dividendes 12M -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Total des DIVIDEND + INTEREST encaissés sur 12 mois glissants. Inclut les coupons obligataires et intérêts livrets si tu les saisis comme transactions.">Dividendes 12M</span></div>
-      <div class="value">{{ fmtEur(dividends12M().total, 0) }}</div>
-      <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
-    </div>
-
-    <!-- Streak DCA -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Nombre de mois consécutifs avec au moins un BUY ou DEPOSIT. Indicateur de discipline — l'arme principale du DCA.">Streak DCA</span></div>
-      <div class="value">
-        {{ dcaStreak() }}<small style="font-size:0.55em;font-weight:500"> mois</small>
-      </div>
-      <div class="sub">
-        @if (dcaStreak() >= 12) { 🔥 routine en place }
-        @else if (dcaStreak() >= 3) { en construction }
-        @else { démarre une cadence régulière }
-      </div>
-    </div>
-
-    <!-- Prochain palier -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Le prochain palier rond vers lequel tu te diriges. Affiche la progression depuis le palier précédent.">Prochain palier</span></div>
-      <div class="value">{{ fmtEur(milestoneProgress().target, 0) }}</div>
-      <div class="bar" style="margin-top:8px;height:6px">
-        <span [style.width.%]="milestoneProgress().pct"></span>
-      </div>
-      <div class="sub" style="margin-top:6px">{{ fmtNum(milestoneProgress().pct, 0) }} % parcouru</div>
-    </div>
-
-    <!-- Vitesse de doublement (règle de 72) -->
-    <div class="card kpi-tile">
-      <div class="label"><span data-tip="Règle de 72 : nombre d'années pour doubler ton capital au CAGR actuel. À 7 %/an, ton patrimoine double tous les ~10 ans.">Doublement</span></div>
-      @if (doublingYears() !== null) {
-        <div class="value">{{ fmtNum(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
-        <div class="sub">au rythme CAGR actuel</div>
-      } @else {
-        <div class="value">—</div>
-        <div class="sub">CAGR ≤ 0 ou indisponible</div>
-      }
-    </div>
+    }
 
   </div>
   }
