@@ -136,7 +136,9 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  opacity: 0.6;
+  // Fade via color, not `opacity`: the label hosts a <ui-term> whose tooltip
+  // card would inherit the group opacity and become see-through.
+  color: color-mix(in srgb, var(--ink) 60%, transparent);
   margin-bottom: 12px;
 }
 
@@ -191,7 +193,8 @@
 
 .wealth-sidebar-latent {
   .wealth-latent-rule { border-top: 1px solid var(--rule); margin: 16px 0 12px; }
-  .wealth-latent-label { font-size: 11px; opacity: 0.55; margin-bottom: 4px; }
+  // Fade via color, not `opacity` — same reason as .wealth-return-label.
+  .wealth-latent-label { font-size: 11px; color: color-mix(in srgb, var(--ink) 55%, transparent); margin-bottom: 4px; }
   .num {
     font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
     &.pos { color: #16A34A; }
