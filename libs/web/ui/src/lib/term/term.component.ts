@@ -4,6 +4,8 @@ import {
   ElementRef,
   HostListener,
   InjectionToken,
+  OnDestroy,
+  Renderer2,
   computed,
   effect,
   inject,
@@ -11,7 +13,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 export interface GlossaryTermDef {
   term: string;
@@ -29,38 +31,28 @@ export const GLOSSARY_LOOKUP = new InjectionToken<(term: string) => GlossaryTerm
   'GLOSSARY_LOOKUP',
 );
 
+const MARGIN = 8;
+
 @Component({
   selector: 'ui-term',
   standalone: true,
-  imports: [RouterLink],
   template: `
     <span class="term-wrap"
           (mouseenter)="hover.set(true)"
           (mouseleave)="hover.set(false)">
       <button type="button"
               class="term"
+              #trigger
               [attr.aria-expanded]="open()"
               [attr.aria-label]="'Définition de ' + term()"
               (click)="pinned.set(!pinned())">
         <ng-content />
       </button>
-      @if (open() && def(); as d) {
-        <span class="term-card" role="tooltip" #card [style.transform]="'translateX(calc(-50% + ' + shiftX() + 'px))'">
-          <span class="term-title">{{ d.title }}</span>
-          <span class="term-body">{{ d.body }}</span>
-          @if (d.example) {
-            <span class="term-example">Ex. : {{ d.example }}</span>
-          }
-          <a class="term-link" routerLink="/tools/glossary" (click)="pinned.set(false)">
-            Voir le glossaire →
-          </a>
-        </span>
-      }
     </span>
   `,
   styles: `
     :host { display: inline; }
-    .term-wrap { position: relative; display: inline-block; }
+    .term-wrap { display: inline-block; }
     .term {
       all: unset;
       cursor: help;
@@ -73,45 +65,16 @@ export const GLOSSARY_LOOKUP = new InjectionToken<(term: string) => GlossaryTerm
       outline-offset: 2px;
       border-radius: 2px;
     }
-    .term-card {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 50%;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      width: 280px;
-      padding: 12px 14px;
-      background: var(--paper, #fff);
-      border: 1px solid var(--rule-soft, #ddd);
-      border-radius: var(--r, 8px);
-      box-shadow: var(--shadow-sm, 0 4px 16px rgba(0, 0, 0, 0.12));
-      z-index: 80;
-      text-align: left;
-      white-space: normal;
-      font-weight: 400;
-      letter-spacing: 0;
-    }
-    .term-title { font-size: 12.5px; font-weight: 600; color: var(--ink, #111); }
-    .term-body  { font-size: 12px; line-height: 1.45; color: var(--ink-2, #444); }
-    .term-example {
-      font-size: 11.5px;
-      line-height: 1.4;
-      color: var(--ink-3, #777);
-      font-style: italic;
-      border-left: 2px solid var(--rule, #e5e5e5);
-      padding-left: 8px;
-    }
-    .term-link { font-size: 11.5px; color: var(--ink-3, #777); text-decoration: none; }
-    .term-link:hover { color: var(--ink, #111); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TermComponent {
+export class TermComponent implements OnDestroy {
   /** Glossary key, e.g. "PRU", "Drift", "DCA". */
   readonly term = input.required<string>();
 
-  private readonly lookup = inject(GLOSSARY_LOOKUP, { optional: true });
+  private readonly lookup   = inject(GLOSSARY_LOOKUP, { optional: true });
+  private readonly renderer = inject(Renderer2);
+  private readonly router   = inject(Router);
 
   protected readonly hover  = signal(false);
   protected readonly pinned = signal(false);
@@ -119,26 +82,89 @@ export class TermComponent {
 
   protected readonly def = computed(() => this.lookup?.(this.term()));
 
-  private readonly cardRef = viewChild<ElementRef<HTMLElement>>('card');
-  /** Horizontal nudge added on top of the CSS `translateX(-50%)` centering,
-   *  so the card stays clear of the viewport edge near the page's sides. */
-  protected readonly shiftX = signal(0);
+  private readonly triggerRef = viewChild<ElementRef<HTMLElement>>('trigger');
+  private cardEl: HTMLElement | null = null;
 
   constructor() {
+    // Renders the definition card as a real `position: fixed` element
+    // appended to <body> — not an in-template absolutely-positioned span —
+    // so an ancestor `overflow: hidden` (used for rounded card corners, e.g.
+    // `.wealth-hero`) can never clip it. Same approach as `TipDirective`.
     effect(() => {
-      if (!this.open()) { this.shiftX.set(0); return; }
-      // The card renders on the same tick this effect runs; defer the
-      // measurement so `cardRef()` has a real element to read.
-      queueMicrotask(() => {
-        const el = this.cardRef()?.nativeElement;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const margin = 8;
-        if (rect.left < margin) this.shiftX.set(margin - rect.left);
-        else if (rect.right > window.innerWidth - margin) this.shiftX.set(window.innerWidth - margin - rect.right);
-        else this.shiftX.set(0);
-      });
+      const d = this.def();
+      if (this.open() && d) this.show(d);
+      else this.hide();
     });
+  }
+
+  private show(d: GlossaryTermDef): void {
+    const trigger = this.triggerRef()?.nativeElement;
+    if (!trigger || this.cardEl) return;
+
+    const card = this.renderer.createElement('div') as HTMLElement;
+    card.className = 'term-card-popup';
+    card.setAttribute('role', 'tooltip');
+    // Moving the mouse off the trigger and onto the card must not close it —
+    // the card hosts a real link the user needs to reach and click.
+    card.addEventListener('mouseenter', () => this.hover.set(true));
+    card.addEventListener('mouseleave', () => this.hover.set(false));
+
+    const title = this.renderer.createElement('div') as HTMLElement;
+    title.className = 'term-title';
+    title.textContent = d.title;
+    card.appendChild(title);
+
+    const body = this.renderer.createElement('div') as HTMLElement;
+    body.className = 'term-body';
+    body.textContent = d.body;
+    card.appendChild(body);
+
+    if (d.example) {
+      const example = this.renderer.createElement('div') as HTMLElement;
+      example.className = 'term-example';
+      example.textContent = `Ex. : ${d.example}`;
+      card.appendChild(example);
+    }
+
+    const link = this.renderer.createElement('a') as HTMLAnchorElement;
+    link.className = 'term-link';
+    link.href = '/tools/glossary';
+    link.textContent = 'Voir le glossaire →';
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.pinned.set(false);
+      this.router.navigateByUrl('/tools/glossary');
+    });
+    card.appendChild(link);
+
+    this.renderer.appendChild(document.body, card);
+    this.cardEl = card;
+
+    const hostRect = trigger.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+
+    let left = hostRect.left + hostRect.width / 2 - cardRect.width / 2;
+    left = Math.max(MARGIN, Math.min(window.innerWidth - cardRect.width - MARGIN, left));
+
+    let top = hostRect.bottom + 8;
+    // Not enough room below (card near the bottom of the viewport) — flip above.
+    if (top + cardRect.height > window.innerHeight - MARGIN) {
+      const above = hostRect.top - cardRect.height - 8;
+      top = above < MARGIN ? Math.max(MARGIN, window.innerHeight - cardRect.height - MARGIN) : above;
+    }
+
+    this.renderer.setStyle(card, 'left', `${left}px`);
+    this.renderer.setStyle(card, 'top', `${top}px`);
+  }
+
+  private hide(): void {
+    if (!this.cardEl) return;
+    this.renderer.removeChild(document.body, this.cardEl);
+    this.cardEl = null;
+  }
+
+  ngOnDestroy(): void {
+    this.hide();
   }
 
   @HostListener('document:keydown.escape')
