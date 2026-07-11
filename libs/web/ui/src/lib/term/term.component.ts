@@ -1,12 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   InjectionToken,
   computed,
+  effect,
   inject,
   input,
   signal,
+  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -42,7 +45,7 @@ export const GLOSSARY_LOOKUP = new InjectionToken<(term: string) => GlossaryTerm
         <ng-content />
       </button>
       @if (open() && def(); as d) {
-        <span class="term-card" role="tooltip">
+        <span class="term-card" role="tooltip" #card [style.transform]="'translateX(calc(-50% + ' + shiftX() + 'px))'">
           <span class="term-title">{{ d.title }}</span>
           <span class="term-body">{{ d.body }}</span>
           @if (d.example) {
@@ -74,7 +77,6 @@ export const GLOSSARY_LOOKUP = new InjectionToken<(term: string) => GlossaryTerm
       position: absolute;
       top: calc(100% + 8px);
       left: 50%;
-      transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -116,6 +118,28 @@ export class TermComponent {
   protected readonly open   = computed(() => this.hover() || this.pinned());
 
   protected readonly def = computed(() => this.lookup?.(this.term()));
+
+  private readonly cardRef = viewChild<ElementRef<HTMLElement>>('card');
+  /** Horizontal nudge added on top of the CSS `translateX(-50%)` centering,
+   *  so the card stays clear of the viewport edge near the page's sides. */
+  protected readonly shiftX = signal(0);
+
+  constructor() {
+    effect(() => {
+      if (!this.open()) { this.shiftX.set(0); return; }
+      // The card renders on the same tick this effect runs; defer the
+      // measurement so `cardRef()` has a real element to read.
+      queueMicrotask(() => {
+        const el = this.cardRef()?.nativeElement;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const margin = 8;
+        if (rect.left < margin) this.shiftX.set(margin - rect.left);
+        else if (rect.right > window.innerWidth - margin) this.shiftX.set(window.innerWidth - margin - rect.right);
+        else this.shiftX.set(0);
+      });
+    });
+  }
 
   @HostListener('document:keydown.escape')
   closeOnEscape(): void {

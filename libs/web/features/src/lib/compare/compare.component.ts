@@ -3,14 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto } from '@patrimo/contracts';
 import { Etf, EtfService, ToastService } from '@patrimo/data-access';
-import { EtfDialogComponent, TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 
 @Component({
   selector: 'app-compare',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TipDirective],
   templateUrl: './compare.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

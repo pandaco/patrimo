@@ -109,9 +109,13 @@ export class DonutComponent {
     const host = (event.currentTarget as SVGElement).ownerSVGElement?.parentElement;
     if (!host) return;
     const rect = host.getBoundingClientRect();
+    // Tooltip is centered on x via CSS transform: translateX(-50%); clamp it
+    // so it doesn't overflow the host's left/right edge near a small donut.
+    const TOOLTIP_HALF_WIDTH = 85;
+    const x = Math.max(TOOLTIP_HALF_WIDTH, Math.min(rect.width - TOOLTIP_HALF_WIDTH, event.clientX - rect.left));
     this.hover.set({
       index,
-      x: event.clientX - rect.left,
+      x,
       y: event.clientY - rect.top,
       label:     slice.label,
       valueText: slice.valueText,

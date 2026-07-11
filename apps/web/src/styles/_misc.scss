@@ -7,44 +7,36 @@
 
 // ── Tooltips sémantiques ──────────────────────────────────────────────────────
 // Usage : <span data-tip="Explication claire">TERME</span>
-// Affiche un tooltip sombre au survol. Préférer un <span> à l'intérieur d'un <th>
-// pour éviter les contraintes du layout tableau.
+// `TipDirective` (libs/web/ui) rend le popup comme un vrai élément DOM en
+// position:fixed sur <body>, positionné en JS et pincé aux bords de l'écran —
+// un ::after ne peut pas être mesuré/repositionné, il débordait silencieusement
+// près des bords de page.
 [data-tip] {
-  position: relative;
   cursor: help;
   text-decoration: underline dotted var(--ink-3);
   text-underline-offset: 3px;
+}
 
-  &::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 9px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1d1d1f;
-    color: #f0f0f0;
-    padding: 7px 11px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 1.5;
-    white-space: normal;
-    width: max-content;
-    max-width: 260px;
-    min-width: 120px;
-    text-align: left;
-    pointer-events: none;
-    opacity: 0;
-    z-index: 9999;
-    transition: opacity 0.12s ease;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.3);
-    text-decoration: none;
-    font-family: var(--font-sans);
-    letter-spacing: 0;
-    font-variant-numeric: normal;
-  }
-
-  &:hover::after, &:focus-visible::after { opacity: 1; }
+.data-tip-popup {
+  position: fixed;
+  background: #1d1d1f;
+  color: #f0f0f0;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
+  min-width: 120px;
+  text-align: left;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+  font-variant-numeric: normal;
 }
 
 .kv { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }

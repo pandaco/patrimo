@@ -3,7 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AlertService, AllocationService, AuthService, EnvelopeService, EtfService, FxService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, WealthCategory, WealthReturnKey } from '@patrimo/contracts';
-import { DonutComponent, EnvGlyphComponent, TermComponent, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DonutComponent, EnvGlyphComponent, TermComponent, TipDirective, fmtDate, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
@@ -58,7 +58,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent, DragDropModule],
+  imports: [RouterLink, DonutComponent, EnvGlyphComponent, PerfChartComponent, WealthChartComponent, TermComponent, DragDropModule, TipDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

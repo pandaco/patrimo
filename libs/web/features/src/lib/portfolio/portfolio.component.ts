@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, FxService, TransactionService } from '@patrimo/data-access';
-import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-pnl';
 import { computeEtfOverlaps } from './overlap';
@@ -11,7 +11,7 @@ type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent],
+  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective],
   templateUrl: './portfolio.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { API_BASE_URL, EnvelopeService, EtfService, FxService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
-import { EnvGlyphComponent, fmtDate, fmtNum, TransactionDialogComponent } from '@patrimo/ui';
+import { EnvGlyphComponent, fmtDate, fmtNum, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
 type FilterType = TransactionType | 'ALL';
@@ -27,7 +27,7 @@ export interface TxGroup {
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [EnvGlyphComponent],
+  imports: [EnvGlyphComponent, TipDirective],
   templateUrl: './transactions.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -6,7 +6,7 @@ import {
   PreferencesService, StrategyVersionService, ToastService,
 } from '@patrimo/data-access';
 import { AllocationTargetsDto, RebalancePlanDto, StrategyVersionDto } from '@patrimo/contracts';
-import { DeltaComponent, DonutComponent, TermComponent, fmtNum, fmtPct } from '@patrimo/ui';
+import { DeltaComponent, DonutComponent, TermComponent, TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
 
 interface SliceRow { label: string; value: number; pct: number; color: string }
 
@@ -45,7 +45,7 @@ const CURRENCY_COLORS: Record<string, string> = {
 @Component({
   selector: 'app-allocation',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, DonutComponent, TermComponent],
+  imports: [RouterLink, DeltaComponent, DonutComponent, TermComponent, TipDirective],
   templateUrl: './allocation.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

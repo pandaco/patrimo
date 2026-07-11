@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, FxService, ToastService } from '@patrimo/data-access';
-import { BarComponent, fmtNum, fmtPctRaw, TransactionDialogComponent } from '@patrimo/ui';
+import { BarComponent, fmtNum, fmtPctRaw, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -13,7 +13,7 @@ const INVESTABLE_GLYPHS = new Set(['pea', 'peapme', 'cto', 'av', 'per', 'pee']);
 @Component({
   selector: 'app-dca',
   standalone: true,
-  imports: [FormsModule, RouterLink, BarComponent, DatePipe, KeyValuePipe],
+  imports: [FormsModule, RouterLink, BarComponent, DatePipe, KeyValuePipe, TipDirective],
   templateUrl: './dca.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

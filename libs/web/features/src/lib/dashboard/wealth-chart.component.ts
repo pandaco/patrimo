@@ -172,8 +172,13 @@ export class WealthChartComponent {
       ? new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
       : '';
 
+    // Tooltip is centered on hostX via CSS transform: translateX(-50%); clamp
+    // it so it doesn't overflow the chart's left/right edge near the ends.
+    const TOOLTIP_HALF_WIDTH = 85;
+    const hostX = Math.max(TOOLTIP_HALF_WIDTH, Math.min(rect.width - TOOLTIP_HALF_WIDTH, snapped / ratio));
+
     this.hover.set({
-      hostX:    snapped / ratio,
+      hostX,
       hostY:    svgY    / ratio,
       svgX:     snapped,
       svgY,

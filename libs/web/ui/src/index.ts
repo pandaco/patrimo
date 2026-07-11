@@ -6,6 +6,7 @@ export * from './lib/bar/bar.component';
 export * from './lib/donut/donut.component';
 export * from './lib/kbd/kbd.component';
 export * from './lib/term/term.component';
+export * from './lib/tooltip/tip.directive';
 export * from './lib/toast/toast.component';
 export * from './lib/format';
 

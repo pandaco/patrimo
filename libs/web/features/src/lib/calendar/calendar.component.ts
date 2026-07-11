@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DcaPlanService, DividendService, EnvelopeService, EtfService, FxService, IncomeService, TransactionService } from '@patrimo/data-access';
 import { DcaPlanDto, DividendDto } from '@patrimo/contracts';
+import { TipDirective } from '@patrimo/ui';
 
 type EventType = 'DIV' | 'MARK' | 'DCA';
 
@@ -37,7 +38,7 @@ function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [],
+  imports: [TipDirective],
   templateUrl: './calendar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

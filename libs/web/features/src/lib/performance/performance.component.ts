@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { EnvelopeService, EtfService, etfValue, FxService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { computeTaxEstimate } from './tax-estimate';
 import { startOfYearISO } from '../portfolio/realized-pnl';
@@ -63,7 +63,7 @@ function shortFr(iso: string): string {
 @Component({
   selector: 'app-performance',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, PerfChartComponent],
+  imports: [RouterLink, DeltaComponent, PerfChartComponent, TipDirective],
   templateUrl: './performance.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

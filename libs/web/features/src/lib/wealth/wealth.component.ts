@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Envelope, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
-import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TransactionDialogComponent } from '@patrimo/ui';
+import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 
@@ -39,7 +39,7 @@ export interface FamilyRow {
 @Component({
   selector: 'app-wealth',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, EnvGlyphComponent],
+  imports: [RouterLink, DeltaComponent, EnvGlyphComponent, TipDirective],
   templateUrl: './wealth.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

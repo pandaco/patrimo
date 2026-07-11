@@ -176,8 +176,11 @@ export class PerfChartComponent {
     const vPort  = port[clamped];
     const vBench = bench[clamped] ?? port[clamped];
 
-    // SVG → host pixel ratio for the HTML tooltip overlay.
-    const hostX = (snappedSvgX / ratio);
+    // SVG → host pixel ratio for the HTML tooltip overlay. Tooltip is
+    // centered on hostX via CSS transform: translateX(-50%); clamp it so it
+    // doesn't overflow the chart's left/right edge near the ends.
+    const TOOLTIP_HALF_WIDTH = 85;
+    const hostX = Math.max(TOOLTIP_HALF_WIDTH, Math.min(rect.width - TOOLTIP_HALF_WIDTH, snappedSvgX / ratio));
     const hostY = (yFor(vPort) / ratio);
 
     this.hover.set({
