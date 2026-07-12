@@ -5,7 +5,7 @@ import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
 import { PerformanceService } from './performance.service';
 
-const ALLOWED: PerformancePeriod[] = ['1W', '1M', '3M', '6M', '1Y', 'YTD', '3Y', '5Y', 'MAX'];
+const ALLOWED: PerformancePeriod[] = ['1D', '1W', '1M', '3M', '6M', '1Y', 'YTD', '3Y', '5Y', 'MAX'];
 
 @Controller('performance')
 @UseGuards(SessionGuard)

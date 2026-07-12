@@ -334,8 +334,8 @@ describe('PerformanceService', () => {
   });
 
   describe('getWealthSeries — patrimoine total', () => {
-    async function captureWealthLabels(): Promise<string[]> {
-      const probe = await service.getWealthSeries('user-1', '1M');
+    async function captureWealthLabels(period: '1D' | '1M' = '1M'): Promise<string[]> {
+      const probe = await service.getWealthSeries('user-1', period);
       priceService.getHistorical.mockClear();
       return probe.labels;
     }
@@ -487,5 +487,28 @@ describe('PerformanceService', () => {
       expect(w.returns.bourse?.eur).toBeCloseTo(0, 1);
       expect(w.total.every(v => Math.abs(v) < 0.01)).toBe(true); // ETF 400 − cash 400 = 0
     });
+
+    it('serves the 1D period as a two-sample window (yesterday close → today)', async () => {
+      const labels = await captureWealthLabels('1D');
+      expect(labels).toHaveLength(2);
+
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      const buyDate = new Date();
+      buyDate.setDate(buyDate.getDate() - 30);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      // Yesterday 40 → today 44: a +10 % pure market day.
+      mockHistory({ 'ISIN-ESE': [
+        { date: labels[0], close: 40 },
+        { date: labels[1], close: 44 },
+      ] });
+
+      const w = await service.getWealthSeries('user-1', '1D');
+      expect(w.returns.bourse?.twrPct).toBeCloseTo(10, 1);
+      expect(w.returns.bourse?.eur).toBeCloseTo(40, 1);
+    });
   });
 });
+

@@ -81,6 +81,7 @@ function periodReturn(base: number[], flows: number[], spanDays: number): Wealth
 }
 
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
+  '1D':  1,
   '1W':  7,
   '1M':  30,
   '3M':  90,
