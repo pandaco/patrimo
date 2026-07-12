@@ -510,6 +510,43 @@ describe('PerformanceService', () => {
       expect(w.returns.bourse?.twrPct).toBeCloseTo(10, 1);
       expect(w.returns.bourse?.eur).toBeCloseTo(40, 1);
     });
+
+    it('captures market appreciation on MAX even when Yahoo\'s weekly candles never land exactly on the label axis', async () => {
+      const buyDate = new Date();
+      buyDate.setDate(buyDate.getDate() - 60);
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+
+      const probe  = await service.getWealthSeries('user-1', 'MAX');
+      const labels = probe.labels;
+      priceService.getHistorical.mockClear();
+      expect(labels.length).toBeGreaterThan(2);
+
+      // The MAX label axis is anchored on the purchase date, stepped every 7
+      // days — Yahoo's own weekly candles land on their own boundary, so they
+      // never coincide with a label. Simulate that by shifting every close 3
+      // days earlier than its corresponding label, ramping 40 € → 44 € (a
+      // clean +10 % market move).
+      const closes = labels.map((label, i) => {
+        const d = new Date(label + 'T00:00:00Z');
+        d.setDate(d.getDate() - 3);
+        const close = 40 + (44 - 40) * (i / (labels.length - 1));
+        return { date: d.toISOString().slice(0, 10), close };
+      });
+      mockHistory({ 'ISIN-ESE': closes });
+
+      const w = await service.getWealthSeries('user-1', 'MAX');
+      // Before the fix, an exact-date match never happened on this offset
+      // axis, so every point silently fell back to the 40 € cost basis — the
+      // 10 % market move never showed up, however far prices actually moved.
+      expect(w.returns.bourse?.twrPct).not.toBeNull();
+      expect(w.returns.bourse?.twrPct).toBeGreaterThan(5);
+      expect(w.returns.bourse?.eur).toBeGreaterThan(20);
+      expect(w.total[w.total.length - 1]).toBeGreaterThan(20);
+    });
   });
 });
 

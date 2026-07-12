@@ -126,6 +126,28 @@ function enumerateDates(from: Date, to: Date, weekly = false): string[] {
   return out;
 }
 
+/**
+ * Per-ISIN close lookup that returns, for each `label` called in ascending
+ * date order, the latest close at or before that date. Needed because the
+ * label axis is computed independently from Yahoo's own candle dates —
+ * weekly periods (MAX/3Y/5Y) anchor their labels on the user's first
+ * transaction, not on Yahoo's weekly-candle boundary, so an *exact* date
+ * match would miss almost every label and silently fall back to cost for
+ * the whole series.
+ */
+function closeWalker(history: Map<string, number>): (label: string) => number | undefined {
+  const sorted = Array.from(history.entries()).sort(([a], [b]) => a.localeCompare(b));
+  let cursor = 0;
+  let last: number | undefined;
+  return (label: string) => {
+    while (cursor < sorted.length && sorted[cursor][0] <= label) {
+      last = sorted[cursor][1];
+      cursor++;
+    }
+    return last;
+  };
+}
+
 function computeAnnualized(series: number[], days: number): number | null {
   if (days < 365) return null;
   const start = series.find(v => v > 0);
@@ -241,7 +263,8 @@ export class PerformanceService {
     const qtyByIsin     = new Map<string, number>();
     const buyQtyByIsin  = new Map<string, number>();
     const buyCostByIsin = new Map<string, number>();
-    const lastClose     = new Map<string, number>();
+    const closeAt = new Map<string, (label: string) => number | undefined>();
+    for (const [isin, history] of closesByIsin) closeAt.set(isin, closeWalker(history));
     const portfolio: number[] = [];
     const invested:  number[] = [];
     const flows:     number[] = [];
@@ -269,8 +292,8 @@ export class PerformanceService {
       let cost  = 0;
       for (const [isin, qty] of qtyByIsin) {
         if (qty <= 0) continue;
-        const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin);
-        if (close !== undefined) { lastClose.set(isin, close); value += qty * close; }
+        const close = closeAt.get(isin)?.(label);
+        if (close !== undefined) value += qty * close;
         const buyQty  = buyQtyByIsin.get(isin) ?? 0;
         const buyCost = buyCostByIsin.get(isin) ?? 0;
         if (buyQty > 0) cost += qty * (buyCost / buyQty);
@@ -667,10 +690,11 @@ export class PerformanceService {
     // create real gains.
     const sortedTxs = txs.slice().sort((a, b) => a.date.getTime() - b.date.getTime());
     const qtyByIsin   = new Map<string, number>();
-    const lastClose   = new Map<string, number>();
     const avgBuyPrice = new Map<string, number>(); // valuation fallback when no close exists
     const buyQty      = new Map<string, number>();
     const buyCost     = new Map<string, number>();
+    const closeAt = new Map<string, (label: string) => number | undefined>();
+    for (const [isin, history] of closesByIsin) closeAt.set(isin, closeWalker(history));
     let cash   = 0;
     let cursor = 0;
     const series: number[] = [];
@@ -708,11 +732,9 @@ export class PerformanceService {
       let etfValue = 0;
       for (const [isin, qty] of qtyByIsin) {
         if (qty <= 0) continue;
-        const realClose = closesByIsin.get(isin)?.get(label);
-        // Real close → last known close → average buy price, so a missing
-        // price history values the position at cost rather than zero.
-        const close = realClose ?? lastClose.get(isin) ?? avgBuyPrice.get(isin);
-        if (realClose !== undefined) lastClose.set(isin, realClose);
+        // Latest close at or before this label → average buy price, so a
+        // missing price history values the position at cost rather than zero.
+        const close = closeAt.get(isin)?.(label) ?? avgBuyPrice.get(isin);
         if (close !== undefined) etfValue += qty * close;
       }
       // Total = market value of ETF positions + cash balance.
@@ -782,10 +804,11 @@ export class PerformanceService {
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     const qtyByIsin   = new Map<string, number>();
-    const lastClose   = new Map<string, number>();
     const avgBuyPrice = new Map<string, number>(); // valuation fallback when no close exists
     const buyQty      = new Map<string, number>();
     const buyCost     = new Map<string, number>();
+    const closeAt = new Map<string, (label: string) => number | undefined>();
+    for (const [isin, history] of closesByIsin) closeAt.set(isin, closeWalker(history));
     let cursor = 0;
     const series: number[] = [];
 
@@ -805,12 +828,12 @@ export class PerformanceService {
       let value = 0;
       for (const [isin, qty] of qtyByIsin) {
         if (qty <= 0) continue;
-        // Real close → last known close → average buy price. The last fallback
-        // is critical: when price history is unavailable (Yahoo down, a weekly
-        // range that never cached), valuing at cost yields 0 P&L instead of a
-        // catastrophic −100 % (position priced at 0).
-        const close = closesByIsin.get(isin)?.get(label) ?? lastClose.get(isin) ?? avgBuyPrice.get(isin);
-        if (close !== undefined) { if (closesByIsin.get(isin)?.get(label) !== undefined) lastClose.set(isin, close); value += qty * close; }
+        // Latest close at or before this label → average buy price. The
+        // second fallback is critical: when price history is unavailable
+        // (Yahoo down, a weekly range that never cached), valuing at cost
+        // yields 0 P&L instead of a catastrophic −100 % (position priced at 0).
+        const close = closeAt.get(isin)?.(label) ?? avgBuyPrice.get(isin);
+        if (close !== undefined) value += qty * close;
       }
       series.push(Number(value.toFixed(2)));
     }
