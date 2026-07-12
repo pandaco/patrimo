@@ -11,9 +11,15 @@ interface HoverState {
   valueStr: string;
 }
 
-function fmtK(v: number): string {
-  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1).replace('.', ',') + ' M€';
-  if (v >= 1_000)     return Math.round(v / 1_000) + ' k€';
+/** Axis tick label — precision adapts to the range so ticks never collide
+ *  into identical labels (a 2,6–3,1 k€ window used to print "3 k€" thrice). */
+function fmtTick(v: number, range: number): string {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return (v / 1_000_000).toFixed(1).replace('.', ',') + ' M€';
+  if (abs >= 1_000) {
+    const decimals = range < 5_000 ? 1 : 0;
+    return (v / 1_000).toFixed(decimals).replace('.', ',') + ' k€';
+  }
   return Math.round(v) + ' €';
 }
 
@@ -87,11 +93,14 @@ export class WealthChartComponent {
   protected readonly P = P;
 
   private readonly minMax = computed(() => {
-    const d = this.data().filter(v => v > 0);
+    const d = this.data();
     if (d.length === 0) return { min: 0, max: 1 };
+    // Zeros and negative values are real samples (days before the first
+    // transaction, unfunded buys) — they MUST be part of the domain,
+    // otherwise `toY` maps them below the axis line, outside the plot.
     const min = Math.min(...d);
     const max = Math.max(...d);
-    const pad = (max - min) * 0.05 || max * 0.01 || 1;
+    const pad = (max - min) * 0.05 || Math.abs(max) * 0.01 || 1;
     return { min: min - pad, max: max + pad };
   });
 
@@ -132,7 +141,7 @@ export class WealthChartComponent {
     const { min, max } = this.minMax();
     return [0, 0.25, 0.5, 0.75, 1].map(t => ({
       y: H - P - t * (H - P * 2),
-      label: fmtK(min + t * (max - min)),
+      label: fmtTick(min + t * (max - min), max - min),
     }));
   });
 
