@@ -1,52 +1,4 @@
 // ============================================
-// HERO HIGHLIGHT BLOCK (Dashboard)
-// ============================================
-
-.hero-stats {
-  background: var(--surface); border: 1px solid var(--rule);
-  border-radius: var(--r-lg); margin-bottom: 24px;
-  // NOTE: no `overflow: hidden` here — it would clip the absolute-positioned
-  // `[data-tip]` tooltips that float above the `.stat` labels. Rounded
-  // corners on the inner grid are honoured via the per-child rules below.
-}
-.hero-main {
-  display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr;
-  border-radius: inherit;
-  & > :first-child {
-    border-top-left-radius: inherit;
-    border-bottom-left-radius: inherit;
-  }
-  & > :last-child {
-    border-top-right-radius: inherit;
-    border-bottom-right-radius: inherit;
-  }
-}
-
-.hero-money {
-  padding: 28px 28px; background: var(--ink); color: #fff;
-  display: flex; flex-direction: column; justify-content: space-between;
-  gap: 16px; position: relative; isolation: isolate;
-  // No `overflow: hidden` — it would clip the `[data-tip]` tooltip on the
-  // "Patrimoine total" label. The radial decoration below is sized and
-  // positioned so it never visually extends beyond the card's rounded
-  // corners, so we don't need a clipping container any more.
-  &::after {
-    content: ""; position: absolute; inset: auto 0 0 auto;
-    width: 180px; height: 180px; border-radius: 50%;
-    background: radial-gradient(circle, var(--brand) 0%, transparent 60%);
-    opacity: 0.15; pointer-events: none; z-index: -1;
-  }
-  .label { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; letter-spacing: -0.005em; }
-  .value {
-    font-size: 48px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
-    small { font-size: 22px; color: rgba(255,255,255,0.55); font-weight: 600; }
-  }
-  .sub { display: flex; gap: 10px; align-items: center; font-size: 13px; color: rgba(255,255,255,0.65); }
-  .delta.up { background: rgba(22,163,74,0.2); color: #4ADE80; }
-  .delta.down { background: rgba(220,38,38,0.2); color: #FCA5A5; }
-}
-
-// ============================================
 // WEALTH HERO (Finary-style: chart + sidebar)
 // ============================================
 
@@ -68,32 +20,26 @@
   gap: 0;
 }
 
+// The net-worth headline lives in the sidebar (`.hero-networth`,
+// dashboard.component.scss); the header only hosts the chart controls.
 .wealth-hero-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
-}
-
-.wealth-hero-value {
-  .label { font-size: 12px; color: var(--ink-3); font-weight: 500; margin-bottom: 6px; }
-}
-
-.wealth-total {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  small { font-size: 16px; color: var(--ink-3); font-weight: 500; }
 }
 
 .wealth-hero-controls {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex: 1;
+
+  // Period tabs pinned right so they don't shift when the category select
+  // (wealth mode only) appears/disappears with the €/% toggle.
+  > .tabs { margin-left: auto; }
 }
 
 .wealth-category-select {
@@ -131,77 +77,8 @@
   flex-direction: column;
 }
 
-.wealth-return-label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  // Fade via color, not `opacity`: the label hosts a <ui-term> whose tooltip
-  // card would inherit the group opacity and become see-through.
-  color: color-mix(in srgb, var(--ink) 60%, transparent);
-  margin-bottom: 12px;
-}
-
-// Headline: the time-weighted return (%), the figure comparable to an index.
-.wealth-return-pct {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  &.pos { color: #16A34A; }
-  &.neg { color: #DC2626; }
-}
-
-.wealth-return-sub {
-  font-size: 12px;
-  color: var(--ink-3);
-  margin-top: 6px;
-}
-
-// The same period expressed in euros — concrete, secondary.
-.wealth-return-eur {
-  font-size: 15px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  margin-top: 10px;
-  &.pos { color: var(--ink); }
-  &.neg { color: var(--ink); }
-}
-
-.wealth-return-ann {
-  font-size: 11.5px;
-  color: var(--ink-3);
-  margin-top: 4px;
-}
-
-// Money-weighted detail (Modified Dietz) — what the user's own money earned.
-.wealth-return-detail {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--ink-3);
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule-soft);
-  font-variant-numeric: tabular-nums;
-  .pos { color: #16A34A; font-weight: 600; }
-  .neg { color: #DC2626; font-weight: 600; }
-}
-
-.wealth-sidebar-latent {
-  .wealth-latent-rule { border-top: 1px solid var(--rule); margin: 16px 0 12px; }
-  // Fade via color, not `opacity` — same reason as .wealth-return-label.
-  .wealth-latent-label { font-size: 11px; color: color-mix(in srgb, var(--ink) 55%, transparent); margin-bottom: 4px; }
-  .num {
-    font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
-    &.pos { color: #16A34A; }
-    &.neg { color: #DC2626; }
-  }
-  .wealth-latent-cap { font-size: 11px; opacity: 0.55; }
-}
+// The sidebar's metric styles (`.hero-metric*`, « Mes titres ») are
+// component-scoped in dashboard.component.scss per the CSS convention.
 
 // NBA section header
 .nba-header {

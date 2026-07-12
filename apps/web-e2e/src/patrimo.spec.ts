@@ -69,9 +69,22 @@ test.describe('Patrimo E2E Tests', () => {
     // Verify page content shows the seeded user first name "Antoine"
     await expect(page.locator('h1.page-title')).toContainText('Bonjour Antoine.');
 
-    // Verify some parts of the dashboard are loaded
-    await expect(page.locator('.hero-money .value')).toBeVisible();
-    await expect(page.locator('app-perf-chart')).toBeVisible();
+    // Verify some parts of the dashboard are loaded: the net-worth headline
+    // (sidebar), the period tabs (1J … MAX) and the selection's performance line.
+    await expect(page.locator('.hero-networth-value')).toBeVisible();
+    await expect(page.locator('.tabs[aria-label="Période"] button')).toHaveCount(8);
+    await expect(page.locator('.perf-line')).toBeVisible();
+  });
+
+  test('should show the 11 KPI tiles on the Indicateurs page', async ({ page }) => {
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    await page.goto('/tools/indicators');
+    await expect(page.locator('h1.page-title')).toContainText('Indicateurs');
+    // 4 primary tiles + 7 drag-reorderable secondary tiles.
+    await expect(page.locator('.kpi-tile')).toHaveCount(11);
+    await expect(page.locator('.cdk-drop-list .kpi-tile')).toHaveCount(7);
   });
 
   test('should surface the toast service from the shell after a transaction is saved', async ({ page }) => {
