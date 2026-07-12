@@ -299,6 +299,66 @@ describe('AlertService', () => {
     });
   });
 
+  describe('ALLOCATION_DRIFT rule', () => {
+    const strategicPrefs = {
+      monthlyTarget: 0,
+      allocationTargets: { strategic: { stocks: 60, bonds: 40 }, tactic: { core: 0, satellite: 0, bonds: 0 }, etf: {} },
+    } as UserPreferences;
+
+    it('alerts with a rebalancing CTA when the stocks share drifts past the threshold', async () => {
+      preferencesRepository.findByUserId.mockResolvedValue(strategicPrefs);
+      etfRepository.findAll.mockResolvedValue([
+        etf({ isin: 'ISIN-STOCK', alloc: 'Core' }),
+        etf({ isin: 'ISIN-BOND', alloc: 'Obligations' }),
+      ]);
+      // 100 % stocks vs a 60/40 target → 40 pts drift.
+      portfolio.listForUser.mockResolvedValue([
+        { etfIsin: 'ISIN-STOCK', qty: 10, avgPrice: 100, currentPrice: 100 },
+      ]);
+
+      const list = await service.listForUser('user-1');
+      const alert = list.find((a) => a.type === 'ALLOCATION_DRIFT');
+      expect(alert).toBeDefined();
+      expect(alert?.severity).toBe('warn'); // ≥ 10 pts
+      expect(alert?.body).toContain('40 pts');
+      expect(alert?.cta).toBe('Voir le plan de rééquilibrage');
+    });
+
+    it('stays silent below the threshold and without a strategic target', async () => {
+      // 62 % stocks vs 60 % target → 2 pts < 5 pts default threshold.
+      preferencesRepository.findByUserId.mockResolvedValue(strategicPrefs);
+      etfRepository.findAll.mockResolvedValue([
+        etf({ isin: 'ISIN-STOCK', alloc: 'Core' }),
+        etf({ isin: 'ISIN-BOND', alloc: 'Obligations' }),
+      ]);
+      portfolio.listForUser.mockResolvedValue([
+        { etfIsin: 'ISIN-STOCK', qty: 62, avgPrice: 10, currentPrice: 10 },
+        { etfIsin: 'ISIN-BOND', qty: 38, avgPrice: 10, currentPrice: 10 },
+      ]);
+      let list = await service.listForUser('user-1');
+      expect(list.find((a) => a.type === 'ALLOCATION_DRIFT')).toBeUndefined();
+
+      // No allocation target set → never fires, whatever the positions.
+      preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 0, allocationTargets: null } as UserPreferences);
+      list = await service.listForUser('user-1');
+      expect(list.find((a) => a.type === 'ALLOCATION_DRIFT')).toBeUndefined();
+    });
+
+    it('respects a disabled rule', async () => {
+      preferencesRepository.findByUserId.mockResolvedValue(strategicPrefs);
+      etfRepository.findAll.mockResolvedValue([etf({ isin: 'ISIN-STOCK', alloc: 'Core' })]);
+      portfolio.listForUser.mockResolvedValue([
+        { etfIsin: 'ISIN-STOCK', qty: 10, avgPrice: 100, currentPrice: 100 },
+      ]);
+      alertRuleRepository.findByUserId.mockResolvedValue([
+        rule({ type: 'ALLOCATION_DRIFT', enabled: false }),
+      ]);
+
+      const list = await service.listForUser('user-1');
+      expect(list.find((a) => a.type === 'ALLOCATION_DRIFT')).toBeUndefined();
+    });
+  });
+
   describe('Marking read and dismiss', () => {
     it('markRead calls upsert on alertReadRepository', async () => {
       await service.markRead('user-1', 'hash-1');

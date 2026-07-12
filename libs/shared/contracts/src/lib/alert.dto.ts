@@ -6,7 +6,8 @@ export type AlertType =
   | 'DIVIDEND_RECENT'
   | 'PEA_AGE_NEAR'
   | 'USD_CONCENTRATION'
-  | 'DCA_PENDING';
+  | 'DCA_PENDING'
+  | 'ALLOCATION_DRIFT';
 
 export interface AlertDto {
   id: string;                    // stable, derived from rule + entity ids

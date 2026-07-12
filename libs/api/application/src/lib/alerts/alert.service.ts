@@ -196,6 +196,41 @@ export class AlertService {
       }
     }
 
+    // 7. ALLOCATION_DRIFT: strategic stocks/bonds target vs reality. Active by
+    // default (like PEA_AGE_NEAR) unless the user explicitly disabled the rule.
+    if (ruleMap.has('ALLOCATION_DRIFT') || !rules.some(r => r.type === 'ALLOCATION_DRIFT')) {
+      const driftThreshold = ruleMap.get('ALLOCATION_DRIFT') ?? 5; // points
+      const strategic = userPreferences?.allocationTargets?.strategic;
+      if (strategic && strategic.stocks + strategic.bonds > 0 && positions.length > 0) {
+        const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+        let totalValue = 0;
+        let bondsValue = 0;
+        for (const p of positions) {
+          const value = p.qty * (p.currentPrice ?? p.avgPrice);
+          totalValue += value;
+          // Same approximation as the Indicateurs page: no per-ETF
+          // stocks/bonds split exists, the `alloc` tag stands in.
+          if (etfByIsin.get(p.etfIsin)?.alloc === 'Obligations') bondsValue += value;
+        }
+        if (totalValue > 0) {
+          const realStocksPct = ((totalValue - bondsValue) / totalValue) * 100;
+          const drift = Math.abs(realStocksPct - strategic.stocks);
+          if (drift >= driftThreshold) {
+            alerts.push(buildAlert(
+              'allocation_drift',
+              'ALLOCATION_DRIFT',
+              drift >= 10 ? 'warn' : 'info',
+              'Allocation éloignée de ta cible',
+              `Ta poche Actions est à ${Math.round(realStocksPct)} % pour une cible de ${Math.round(strategic.stocks)} %, soit ${Math.round(drift)} pts d'écart. Rééquilibre en orientant tes prochains versements plutôt qu'en vendant (zéro frais, zéro fiscalité).`,
+              'Voir le plan de rééquilibrage',
+              'info',
+              readMap,
+            ));
+          }
+        }
+      }
+    }
+
     const order: Record<AlertSeverity, number> = { warn: 0, gain: 1, info: 2 };
     alerts.sort((a, b) => order[a.severity] - order[b.severity]);
     return alerts;

@@ -27,6 +27,7 @@ const METAS: RuleMeta[] = [
   { type: 'PEA_AGE_NEAR',      label: 'Anniversaire PEA',   desc: 'Alerte 5 ans approche', unit: '', defaultThreshold: 1 },
   { type: 'USD_CONCENTRATION', label: 'Concentration USD',  desc: 'Alerte si exposition USD > X %', unit: '%', defaultThreshold: 70 },
   { type: 'DCA_PENDING',       label: 'DCA mensuel',        desc: 'Alerte si aucun achat ce mois-ci (objectif mensuel configuré)', unit: '', defaultThreshold: 0 },
+  { type: 'ALLOCATION_DRIFT',  label: 'Drift allocation',   desc: "Alerte si l'écart Actions/Obligations à ta cible dépasse X points — propose un plan de rééquilibrage", unit: 'pts', defaultThreshold: 5 },
 ];
 
 @Component({
