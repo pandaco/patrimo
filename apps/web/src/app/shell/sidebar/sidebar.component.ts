@@ -51,6 +51,7 @@ const NAV: NavGroup[] = [
   {
     label: 'Outils',
     items: [
+      { id: 'indicators', label: 'Indicateurs',     route: '/tools/indicators', icon: 'perf' },
       { id: 'cashflow',   label: 'Cash-flow',       route: '/tools/cashflow',   icon: 'cashflow' },
       { id: 'projection', label: 'Projection',      route: '/tools/projection', icon: 'projection' },
       { id: 'dca',       label: 'DCA helper',      route: '/tools/dca',      icon: 'dca' },

@@ -103,7 +103,8 @@
   position: relative;
   display: inline-block;
 }
-// Dashboard "Indicateurs clés" tile — compact card with label + value + sub.
+// Stat tile — compact card with label + value + sub. Shared by the
+// Indicateurs page, cash-flow, projection and the PDF report.
 .kpi-tile {
   padding: 14px 14px 12px;
   display: flex; flex-direction: column; gap: 4px;

@@ -14,6 +14,7 @@ const CRUMB_MAP: Record<string, string[]> = {
   '/transactions':   ['Investir', 'Transactions'],
   '/allocation':     ['Investir', 'Allocation'],
   '/performance':    ['Investir', 'Performance'],
+  '/tools/indicators': ['Outils', 'Indicateurs'],
   '/tools/dca':      ['Outils',   'DCA helper'],
   '/tools/calendar': ['Outils',   'Calendrier'],
   '/tools/compare':  ['Outils',   'Comparateur'],

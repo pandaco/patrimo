@@ -81,6 +81,11 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'tools/indicators',
+        loadComponent: () =>
+          import('@patrimo/features').then((m) => m.IndicatorsComponent),
+      },
+      {
         path: 'tools/cashflow',
         loadComponent: () =>
           import('@patrimo/features').then((m) => m.CashflowComponent),
