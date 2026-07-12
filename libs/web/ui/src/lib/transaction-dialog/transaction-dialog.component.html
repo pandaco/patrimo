@@ -82,7 +82,7 @@
         }
         @if (selectedEtf()) {
           <div class="field-help">
-            Dernier cours {{ fmtEur(selectedEtf()!.price, 2) }} · TER {{ fmtPctRaw(selectedEtf()!.ter * 100, 2) }} · {{ selectedEtf()!.distrib }}
+            Dernier cours {{ fmtEur(selectedEtf()!.price, 2) }} · TER {{ fmtPctRaw(selectedEtf()!.ter, 2) }} · {{ selectedEtf()!.distrib }}
           </div>
         }
       </div>

@@ -139,7 +139,7 @@
           </div>
           <div class="serif-italic" style="font-size:16px;line-height:1.2;margin-bottom:6px">{{ etf.name }}</div>
           <div class="muted tiny num" style="margin-bottom:14px">{{ etf.isin }}</div>
-          <div class="kv"><dt><span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span></dt><dd>{{ fmtPctRaw(etf.ter * 100, 2) }}</dd></div>
+          <div class="kv"><dt><span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span></dt><dd>{{ fmtPctRaw(etf.ter, 2) }}</dd></div>
           <div class="kv"><dt>Indice</dt><dd>{{ etf.index }}</dd></div>
           <div class="kv"><dt>Réplication</dt><dd>{{ etf.repli }}</dd></div>
           <div class="kv"><dt>Distribution</dt><dd>{{ etf.distrib }}</dd></div>
@@ -180,7 +180,7 @@
             @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.index }}</td> }
           </tr>
           <tr><td class="muted small">TER annuel</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ fmtPctRaw(etf.ter * 100, 2) }}</td> }
+            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ fmtPctRaw(etf.ter, 2) }}</td> }
           </tr>
           <tr><td class="muted small">Réplication</td>
             @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.repli }}</td> }

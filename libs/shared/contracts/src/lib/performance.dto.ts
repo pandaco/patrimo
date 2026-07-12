@@ -135,8 +135,9 @@ export interface WealthSnapshotDto {
 export interface FeesYtdDto {
   /** Sum of `fees` on all BUY/SELL transactions since Jan 1st. */
   brokerageYtd: number;
-  /** TER × position_value × (days_elapsed / 365) for all held ETFs. */
+  /** (TER / 100) × position_value × (days_elapsed / 365) for all held ETFs — TER is in percent points. */
   terDragYtd:   number;
   totalYtd:     number;
+  /** `ter` in percent points (0.15 = 0.15 %/yr). */
   byEtf: { ticker: string; name: string; ter: number; value: number; terDragYtd: number }[];
 }

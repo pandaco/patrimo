@@ -12,6 +12,7 @@ export interface EtfDto {
   name: string;
   issuer: string;
   index: string;
+  /** Annual expense ratio in percent points, e.g. `0.15` for 0.15 %/yr — never a fraction. */
   ter: number;
   currency: string;
   repli: string;

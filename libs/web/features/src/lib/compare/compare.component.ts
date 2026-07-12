@@ -62,7 +62,7 @@ export class CompareComponent {
       if (pea  === 'yes' && !e.pea)                    return false;
       if (pea  === 'no'  && e.pea)                     return false;
       if (dist !== 'all' && e.distrib !== dist)         return false;
-      if (ter  !== null  && e.ter * 100 > ter)          return false;
+      if (ter  !== null  && e.ter > ter)                return false;
       if (alloc !== 'all' && e.alloc !== alloc)         return false;
       return true;
     });
@@ -176,7 +176,8 @@ export class CompareComponent {
       const yearContrib = monthly * 12;
       aum = (aum + yearContrib) * (1 + annualReturn);
       const aumEnd = aum;
-      drag += ((aumStart + aumEnd) / 2) * ter;
+      // `ter` is in percent points (0.15 = 0.15 %/yr) — convert to a fraction.
+      drag += ((aumStart + aumEnd) / 2) * (ter / 100);
     }
     return drag;
   }

@@ -292,7 +292,8 @@ describe('PerformanceService', () => {
       const todayThisYear = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const lastYear = new Date(now.getFullYear() - 1, 11, 1);
 
-      etfRepository.findAll.mockResolvedValue([etf({ ter: 0.002 })]);
+      // `ter` is in percent points: 0.2 = 0.20 %/yr (canonical convention).
+      etfRepository.findAll.mockResolvedValue([etf({ ter: 0.2 })]);
       transactionRepository.findByUserId.mockResolvedValue([
         tx({ type: 'BUY', quantity: 10, fees: 2.5, date: todayThisYear }),
         tx({ type: 'BUY', quantity: 5, fees: 1.5, date: todayThisYear }),
@@ -306,12 +307,12 @@ describe('PerformanceService', () => {
 
       const row = fees.byEtf[0];
       expect(row.ticker).toBe('ESE');
-      expect(row.ter).toBeCloseTo(0.2, 5); // 0.002 → displayed in %
+      expect(row.ter).toBeCloseTo(0.2, 5); // passed through unchanged, already in %
       expect(row.value).toBe(16 * 100); // 10 + 5 + 1 shares × 100 €
       // Drag is prorated on the elapsed fraction of the year; recompute with
       // the same formula rather than pinning a date-dependent constant.
       const elapsed = (Date.now() - new Date(now.getFullYear(), 0, 1).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-      expect(row.terDragYtd).toBeCloseTo(Number((0.002 * 1600 * elapsed).toFixed(2)), 1);
+      expect(row.terDragYtd).toBeCloseTo(Number(((0.2 / 100) * 1600 * elapsed).toFixed(2)), 1);
 
       expect(fees.totalYtd).toBeCloseTo(fees.brokerageYtd + fees.terDragYtd, 5);
     });

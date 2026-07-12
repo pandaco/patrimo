@@ -183,7 +183,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                 <div class="muted tiny" style="margin-top:3px">
                   <span data-tip="International Securities Identification Number — code unique à 12 caractères qui identifie ce titre boursier dans le monde entier.">{{ etf.isin }}</span>
                   · {{ etf.issuer }} ·
-                  <span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span> {{ fmtNum(etf.ter * 100, 2) }} %
+                  <span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span> {{ fmtNum(etf.ter, 2) }} %
                 </div>
               </div>
             </td>

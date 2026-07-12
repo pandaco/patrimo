@@ -875,13 +875,14 @@ export class PerformanceService {
           const quote = await this.priceService.getQuote(isin, etf.ticker);
           const price = quote.price ?? 0;
           const value = qty * price;
+          // `etf.ter` is expressed in percent points (0.15 = 0.15 %/yr).
           const ter   = etf.ter ?? 0;
           byEtf.push({
             ticker:    etf.ticker,
             name:      etf.name,
-            ter:       ter * 100,
+            ter,
             value,
-            terDragYtd: Number((ter * value * elapsed).toFixed(2)),
+            terDragYtd: Number(((ter / 100) * value * elapsed).toFixed(2)),
           });
         }),
     );
