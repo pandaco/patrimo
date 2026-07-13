@@ -4,6 +4,7 @@ import type {
   AlertRuleRepository,
   EnvelopeRepository,
   EtfRepository,
+  Transaction,
   TransactionRepository,
   UserPreferencesRepository,
 } from '@patrimo/api-domain';
@@ -91,11 +92,24 @@ export class AlertService {
 
     // 2. PLAFOND_NEAR
     const plafondNearThreshold = ruleMap.get('PLAFOND_NEAR') ?? 0.8;
+    const txByEnv = new Map<string, Transaction[]>();
+    for (const t of transactions) {
+      const list = txByEnv.get(t.envelopeId) ?? [];
+      list.push(t);
+      txByEnv.set(t.envelopeId, list);
+    }
+
     for (const env of envelopes) {
       if (!env.plafond) continue;
-      const ratio = env.value / env.plafond;
+      const txs = txByEnv.get(env.id) ?? [];
+      const contributed = txs.reduce((sum, t) => {
+        if (t.type === 'DEPOSIT') return sum + t.amount;
+        if (t.type === 'WITHDRAWAL') return sum - t.amount;
+        return sum;
+      }, 0);
+      const ratio = contributed / env.plafond;
       if (ratio < plafondNearThreshold) continue;
-      const remaining = env.plafond - env.value;
+      const remaining = env.plafond - contributed;
       alerts.push(buildAlert(
         `plafond:${env.id}`,
         'PLAFOND_NEAR',

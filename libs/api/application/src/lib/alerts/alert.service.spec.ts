@@ -188,6 +188,9 @@ describe('AlertService', () => {
       alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'PLAFOND_NEAR', threshold: 0.8 }),
       ]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ envelopeId: 'env-1', type: 'DEPOSIT', amount: 140000 }),
+      ]);
 
       const list = await service.listForUser('user-1');
       const alert = list.find((a) => a.type === 'PLAFOND_NEAR');
@@ -201,6 +204,9 @@ describe('AlertService', () => {
       ]);
       alertRuleRepository.findByUserId.mockResolvedValue([
         rule({ type: 'PLAFOND_NEAR', threshold: 0.8 }),
+      ]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ envelopeId: 'env-1', type: 'DEPOSIT', amount: 145000 }),
       ]);
 
       const list = await service.listForUser('user-1');
