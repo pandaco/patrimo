@@ -128,7 +128,7 @@ export class PortfolioService {
       const weight = posValue / totalValue;
 
       let exposure = etf.exposure;
-      if (!exposure || Object.keys(exposure.geography).length === 0) {
+      if (!exposure || !exposure.geography || Object.keys(exposure.geography).length === 0) {
         const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
         if (meta) {
           exposure = this.parseYahooExposure(meta);
@@ -137,9 +137,9 @@ export class PortfolioService {
       }
 
       if (exposure) {
-        this.accumulate(geoMap, exposure.geography, weight);
-        this.accumulate(sectorMap, exposure.sector, weight);
-        this.accumulate(currMap, exposure.currency, weight);
+        this.accumulate(geoMap, exposure.geography || {}, weight);
+        this.accumulate(sectorMap, exposure.sector || {}, weight);
+        this.accumulate(currMap, exposure.currency || {}, weight);
       }
     }
 
