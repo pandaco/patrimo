@@ -167,5 +167,55 @@
 
   </div>
 
+  <!-- STRESS TEST -->
+  <div class="section-head" style="margin-top:32px">
+    <h2 class="section-title">Stress test <em>historique</em></h2>
+    <span class="section-sub">si un krach passé se reproduisait aujourd'hui</span>
+  </div>
+  <div class="card">
+    @if (stressBaseValue() > 0) {
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        @for (s of stressScenarios; track s.id) {
+          <button class="pill"
+                  [class.solid]="activeStress().id === s.id"
+                  style="cursor:pointer;padding:6px 12px;font-size:12.5px"
+                  (click)="selectStress(s)">
+            {{ s.label }} · {{ s.drawdownPct }}%
+          </button>
+        }
+      </div>
+      <div class="grid" style="grid-template-columns:repeat(3, 1fr);gap:18px;align-items:end">
+        <div>
+          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur boursière avant</div>
+          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressBaseValue(), 0) }}</div>
+          <div class="muted tiny" style="margin-top:4px">Livrets et cash exclus — non exposés au marché.</div>
+        </div>
+        <div>
+          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Perte théorique</div>
+          <div class="serif neg" style="font-size:24px;line-height:1">{{ fmtEur(stressLoss(), 0) }}</div>
+          <div class="muted tiny" style="margin-top:4px">{{ activeStress().drawdownPct }} % du portefeuille boursier.</div>
+        </div>
+        <div>
+          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur après krach</div>
+          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressAfter(), 0) }}</div>
+          <div class="muted tiny" style="margin-top:4px">Ce que vaudrait ta poche actions au creux.</div>
+        </div>
+      </div>
+      <p class="muted small" style="margin:18px 0 0;line-height:1.5">
+        <b>{{ activeStress().label }}.</b> {{ activeStress().blurb }}
+      </p>
+      <p class="muted tiny" style="margin:14px 0 0;line-height:1.5;color:var(--ink-3)">
+        Simulation simpliste : on applique uniformément le drawdown à toute la poche
+        actions. Un portefeuille majoritairement obligataire ou défensif aurait
+        un drawdown moindre. Ce chiffre n'est pas une prédiction — c'est un
+        exercice de préparation psychologique pour le prochain krach.
+      </p>
+    } @else {
+      <p class="muted small" style="margin:0">
+        Pas encore de positions boursières. Crée une transaction pour activer le stress test.
+      </p>
+    }
+  </div>
+
   }
 </div>

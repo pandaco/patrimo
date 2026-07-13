@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AuthService, EnvelopeService, FxService, LiabilityService, TransactionService } from '@patrimo/data-access';
-import { fmtDate, fmtNum } from '@patrimo/ui';
+import { TipDirective, fmtDate, fmtNum } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
+import { computeTaxEstimate } from '../performance/tax-estimate';
 import { computeTri } from '../portfolio/tri';
 
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [],
+  imports: [TipDirective],
   templateUrl: './report.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -40,6 +41,16 @@ export class ReportComponent {
   protected readonly realizedYtd = computed(() =>
     computeRealized(this.txService.all(), startOfYearISO()).realizedSince,
   );
+
+  /**
+   * French capital-gains tax estimate for the current calendar year. Only
+   * CTO / crypto realized gains are taxed in-year (flat PFU 30 %); gains
+   * realized inside a PEA / AV / PER / PEE are deferred. See tax-estimate.ts.
+   */
+  protected readonly taxEstimate = computed(() =>
+    computeTaxEstimate(this.txService.all(), this.envelopes.all(), startOfYearISO()),
+  );
+  protected readonly currentYear = new Date().getFullYear();
 
   protected readonly monthLabel = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   protected readonly monthlyTx = computed(() => {

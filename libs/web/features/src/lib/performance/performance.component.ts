@@ -1,32 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EnvelopeService, EtfService, etfValue, FxService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
-import { computeTaxEstimate } from './tax-estimate';
-import { startOfYearISO } from '../portfolio/realized-pnl';
 import { computeTri } from '../portfolio/tri';
-
-interface StressScenario {
-  id: string;
-  label: string;
-  drawdownPct: number;
-  blurb: string;
-}
-
-// Pic-à-creux historiques de l'indice MSCI World en €. Sources :
-// MSCI factsheet & investing.com (2000, 2008, 2020, 2022).
-const STRESS_SCENARIOS: StressScenario[] = [
-  { id: '2000', label: 'Krach dot-com (2000–2002)', drawdownPct: -49,
-    blurb: 'Éclatement de la bulle tech. ~3 ans de baisse, lente reprise — l\'indice ne retrouve son plus haut qu\'en 2007.' },
-  { id: '2008', label: 'Crise financière (2008–2009)', drawdownPct: -44,
-    blurb: 'Faillite Lehman, contagion bancaire. Creux atteint en mars 2009 — récupération en ~2,5 ans.' },
-  { id: '2020', label: 'Choc COVID (févr.–mars 2020)', drawdownPct: -34,
-    blurb: 'Chute la plus rapide de l\'histoire moderne. Récupération en ~5 mois grâce aux relances massives.' },
-  { id: '2022', label: 'Inflation + hausse des taux (2022)', drawdownPct: -20,
-    blurb: 'Resserrement monétaire post-COVID. Drawdown lent et étalé, sortie en 2023.' },
-];
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
   { id: '1W',  label: '1S'  },
@@ -74,16 +52,6 @@ export class PerformanceComponent {
   private readonly transactionService = inject(TransactionService);
   private readonly envelopeService = inject(EnvelopeService);
 
-  /**
-   * French capital-gains tax estimate for the current calendar year. Only
-   * CTO / crypto realized gains are taxed in-year (flat PFU 30 %); gains
-   * realized inside a PEA / AV / PER / PEE are deferred. See tax-estimate.ts.
-   */
-  protected readonly taxEstimate = computed(() =>
-    computeTaxEstimate(this.transactionService.all(), this.envelopeService.all(), startOfYearISO()),
-  );
-  protected readonly currentYear = new Date().getFullYear();
-
   // Human label of the user-selected benchmark, e.g. "CW8 — Amundi MSCI World".
   protected readonly benchmarkLabel = computed(() => {
     const isin = this.preferencesService.current().benchmarkIsin;
@@ -94,24 +62,6 @@ export class PerformanceComponent {
   protected readonly periodOptions = PERIOD_OPTIONS;
   protected readonly activePeriod  = this.performanceService.period;
   protected readonly loading       = this.performanceService.loading;
-
-  // Stress test — apply a historical-drawdown shock to the current
-  // boursier book. Livrets and cash dormant are not exposed to market risk
-  // so they're excluded from the shock.
-  protected readonly stressScenarios = STRESS_SCENARIOS;
-  protected readonly activeStress    = signal<StressScenario>(STRESS_SCENARIOS[2]);
-
-  protected readonly stressBaseValue = computed(() =>
-    this.etfService.all().reduce((a, e) => a + etfValue(e), 0),
-  );
-  protected readonly stressLoss = computed(() =>
-    this.stressBaseValue() * (this.activeStress().drawdownPct / 100),
-  );
-  protected readonly stressAfter = computed(() =>
-    this.stressBaseValue() + this.stressLoss(),
-  );
-
-  protected selectStress(s: StressScenario): void { this.activeStress.set(s); }
 
   protected readonly portfolio    = computed(() => this.performanceService.series().portfolio);
   protected readonly benchmark    = computed(() => this.performanceService.series().benchmark);
@@ -158,11 +108,6 @@ export class PerformanceComponent {
     if (tri === null || cagr === null) return null;
     return { deltaPts: tri - cagr, helped: tri >= cagr };
   });
-  protected readonly etfStats      = this.performanceService.etfStats;
-  protected readonly fees          = this.performanceService.fees;
-  protected readonly loadingStats  = this.performanceService.loadingStats;
-  protected readonly loadingFees   = this.performanceService.loadingFees;
-
   protected readonly periodRows = computed<PeriodRow[]>(() =>
     PERIOD_OPTIONS.map(opt => ({
       id: opt.id,

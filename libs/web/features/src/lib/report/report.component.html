@@ -91,6 +91,50 @@
     </div>
   </div>
 
+  <div class="card" style="padding:20px;margin-bottom:20px">
+    <div class="card-head">
+      <div class="card-title">Fiscalité estimée</div>
+      <span class="card-sub">plus-values réalisées {{ currentYear }} · estimation</span>
+    </div>
+    <div class="row" style="flex-wrap:wrap;gap:20px 36px">
+      <div class="stat-block">
+        <div class="k"><span data-tip="Plus-values réalisées cette année sur tes comptes-titres (CTO) et crypto — les seules imposables dans l'année. Les ventes dans un PEA, une assurance-vie ou un PER ne déclenchent pas d'impôt.">PV taxable {{ currentYear }}</span></div>
+        <div class="v">{{ fmtEur(taxEstimate().taxableRealizedYtd, 2) }}</div>
+        <div class="sub">CTO + crypto</div>
+      </div>
+      <div class="stat-block">
+        <div class="k"><span data-tip="Flat tax (PFU) de 30 % sur les plus-values imposables : 12,8 % d'impôt sur le revenu + 17,2 % de prélèvements sociaux.">Impôt estimé (PFU 30 %)</span></div>
+        <div class="v neg">{{ fmtEur(taxEstimate().pfuTotal, 2) }}</div>
+        <div class="sub">IR {{ fmtEur(taxEstimate().incomeTax, 0) }} + PS {{ fmtEur(taxEstimate().socialTax, 0) }}</div>
+      </div>
+      <div class="stat-block">
+        <div class="k"><span data-tip="Plus-values réalisées dans tes enveloppes fiscalement avantagées (PEA, AV, PER, PEE). Non imposées dans l'année — l'impôt est différé, et souvent réduit, au moment du retrait.">PV différée</span></div>
+        <div class="v">{{ fmtEur(taxEstimate().deferredRealizedYtd, 2) }}</div>
+        <div class="sub">PEA · AV · PER · PEE</div>
+      </div>
+    </div>
+
+    @if (taxEstimate().peaStatuses.length > 0) {
+      <div class="divider-soft" style="margin:16px 0 12px"></div>
+      @for (pea of taxEstimate().peaStatuses; track pea.openedAt) {
+        <div class="row" style="justify-content:space-between;padding:5px 0;font-size:13px">
+          <span class="serif-italic">{{ pea.code }} · ouvert le {{ pea.openedAt }}</span>
+          @if (pea.eligible) {
+            <span class="pill gain">5 ans atteints — retrait sans impôt</span>
+          } @else {
+            <span class="pill warn">retrait sans impôt dans ~{{ pea.monthsLeft }} mois</span>
+          }
+        </div>
+      }
+    }
+
+    <p class="muted tiny" style="margin:12px 0 0">
+      Estimation simplifiée : flat tax 30 % sur les plus-values nettes positives
+      des comptes imposables. Ni l'option barème, ni l'abattement assurance-vie,
+      ni le report des moins-values ne sont pris en compte. À vérifier avec ton IFU.
+    </p>
+  </div>
+
   <div class="card" style="padding:4px 12px">
     <div class="card-head" style="padding-top:12px">
       <div class="card-title">Mouvements</div>

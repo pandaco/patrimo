@@ -9,6 +9,26 @@ import { computeTri } from '../portfolio/tri';
 const KPI_IDS = ['rente', 'realized', 'concentration', 'dividends', 'streak', 'milestone', 'doubling'] as const;
 type KpiId = (typeof KPI_IDS)[number];
 
+interface StressScenario {
+  id: string;
+  label: string;
+  drawdownPct: number;
+  blurb: string;
+}
+
+// Pic-à-creux historiques de l'indice MSCI World en €. Sources :
+// MSCI factsheet & investing.com (2000, 2008, 2020, 2022).
+const STRESS_SCENARIOS: StressScenario[] = [
+  { id: '2000', label: 'Krach dot-com (2000–2002)', drawdownPct: -49,
+    blurb: 'Éclatement de la bulle tech. ~3 ans de baisse, lente reprise — l\'indice ne retrouve son plus haut qu\'en 2007.' },
+  { id: '2008', label: 'Crise financière (2008–2009)', drawdownPct: -44,
+    blurb: 'Faillite Lehman, contagion bancaire. Creux atteint en mars 2009 — récupération en ~2,5 ans.' },
+  { id: '2020', label: 'Choc COVID (févr.–mars 2020)', drawdownPct: -34,
+    blurb: 'Chute la plus rapide de l\'histoire moderne. Récupération en ~5 mois grâce aux relances massives.' },
+  { id: '2022', label: 'Inflation + hausse des taux (2022)', drawdownPct: -20,
+    blurb: 'Resserrement monétaire post-COVID. Drawdown lent et étalé, sortie en 2023.' },
+];
+
 @Component({
   selector: 'app-indicators',
   standalone: true,
@@ -160,6 +180,22 @@ export class IndicatorsComponent {
   protected readonly tri = computed(() =>
     computeTri(this.txService.all(), this.totalValue()),
   );
+
+  // Stress test — apply a historical-drawdown shock to the current
+  // boursier book. Livrets and cash dormant are not exposed to market risk
+  // so they're excluded from the shock.
+  protected readonly stressScenarios = STRESS_SCENARIOS;
+  protected readonly activeStress    = signal<StressScenario>(STRESS_SCENARIOS[2]);
+
+  protected readonly stressBaseValue = this.portfolioValue;
+  protected readonly stressLoss = computed(() =>
+    this.stressBaseValue() * (this.activeStress().drawdownPct / 100),
+  );
+  protected readonly stressAfter = computed(() =>
+    this.stressBaseValue() + this.stressLoss(),
+  );
+
+  protected selectStress(s: StressScenario): void { this.activeStress.set(s); }
 
   /** 11. Biggest absolute drift between strategic-level target and reality. */
   protected readonly driftMax = computed(() => {

@@ -222,4 +222,94 @@
     </div>
   }
 
+  <!-- TRACKING DIFFERENCE + FRAIS — qualité et coût réels des fonds détenus -->
+  <div class="grid cols-2" style="margin-top:24px">
+
+    <!-- ETF Stats (TD/TE) -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Tracking difference par ETF</div>
+        <span class="card-sub">vs {{ benchmarkLabel() }} · 1 an</span>
+      </div>
+      @if (loadingStats()) {
+        <p class="muted small">Chargement…</p>
+      } @else if (etfStats().length === 0) {
+        <div style="padding:8px 0">
+          <p class="muted small" style="margin:0 0 10px">Aucune position trouvée — le tracking se calcule dès ton premier achat d'ETF.</p>
+          <a class="btn sm" routerLink="/transactions">+ Nouvelle transaction</a>
+        </div>
+      } @else {
+        <table class="tbl" style="font-size:12px">
+          <thead>
+            <tr>
+              <th>ETF</th>
+              <th class="r">Return 1A</th>
+              <th class="r"><span data-tip="Tracking Difference — écart entre la performance de l'ETF et celle de son indice (CW8) sur 1 an. Un TD négatif (-0,1 %) signifie que l'ETF fait légèrement mieux que son indice. Idéalement proche de 0.">TD</span></th>
+              <th class="r"><span data-tip="Tracking Error — volatilité de l'écart de suivi au fil du temps. Plus faible = l'ETF réplique son indice de façon régulière et prévisible.">TE</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of etfStats(); track s.ticker) {
+              <tr>
+                <td><span class="pill solid">{{ s.ticker }}</span></td>
+                <td class="r num small" [class.pos]="(s.return1y ?? 0) >= 0" [class.neg]="(s.return1y ?? 0) < 0">
+                  {{ s.return1y !== null ? fmtPct(s.return1y, 1) : '—' }}
+                </td>
+                <td class="r num small" [class.pos]="(s.td ?? 0) >= 0" [class.neg]="(s.td ?? 0) < 0">
+                  {{ s.td !== null ? fmtPctRaw(s.td, 2) : '—' }}
+                </td>
+                <td class="r num small muted">
+                  {{ s.te !== null ? fmtPctRaw(s.te, 2) : '—' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Frais cumulés YTD -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Frais cumulés <em>cette année</em></div>
+        <span class="card-sub">frais de gestion + courtage depuis le 1ᵉʳ janv.</span>
+      </div>
+      @if (loadingFees()) {
+        <p class="muted small">Chargement…</p>
+      } @else {
+        <div class="row" style="gap:24px;margin-bottom:14px">
+          <div class="stat-block">
+            <div class="k"><span data-tip="Frottement des frais de gestion (TER) sur la valeur actuelle des positions — en anglais « drag ». C'est le coût réel des frais depuis le 1ᵉʳ janvier : de l'argent qui quitte silencieusement le fonds chaque jour.">Frais de gestion</span></div>
+            <div class="v neg">{{ fmtEur(fees().terDragYtd, 2) }}</div>
+          </div>
+          <div class="stat-block">
+            <div class="k">Courtage</div>
+            <div class="v neg">{{ fmtEur(fees().brokerageYtd, 2) }}</div>
+          </div>
+          <div class="stat-block">
+            <div class="k">Total</div>
+            <div class="v neg bold">{{ fmtEur(fees().totalYtd, 2) }}</div>
+          </div>
+        </div>
+        @if (fees().byEtf.length > 0) {
+          <table class="tbl" style="font-size:12px">
+            <thead>
+              <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1ᵉʳ janvier de l'année (en anglais : « drag »).">Coût cette année</span></th></tr>
+            </thead>
+            <tbody>
+              @for (r of fees().byEtf; track r.ticker) {
+                <tr>
+                  <td><span class="pill solid">{{ r.ticker }}</span></td>
+                  <td class="r muted small">{{ fmtPctRaw(r.ter, 2) }}</td>
+                  <td class="r num small">{{ fmtEur(r.value, 0) }}</td>
+                  <td class="r num small neg">{{ fmtEur(r.terDragYtd, 2) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+    </div>
+  </div>
+
 </div>

@@ -1,22 +1,44 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto } from '@patrimo/contracts';
-import { Etf, EtfService, ToastService } from '@patrimo/data-access';
-import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { Etf, EtfService, FxService, PerformanceService, PreferencesService, ToastService } from '@patrimo/data-access';
+import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 
 @Component({
   selector: 'app-compare',
   standalone: true,
-  imports: [FormsModule, TipDirective],
+  imports: [FormsModule, RouterLink, TipDirective],
   templateUrl: './compare.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompareComponent {
   private readonly etfService = inject(EtfService);
   private readonly toast      = inject(ToastService);
+  private readonly performanceService = inject(PerformanceService);
+  private readonly preferencesService = inject(PreferencesService);
+  private readonly fxService  = inject(FxService);
+
+  // Qualité de réplication + coût réel des fonds détenus — thématiquement à
+  // leur place ici, à côté du comparatif TER du catalogue.
+  protected readonly etfStats     = this.performanceService.etfStats;
+  protected readonly fees         = this.performanceService.fees;
+  protected readonly loadingStats = this.performanceService.loadingStats;
+  protected readonly loadingFees  = this.performanceService.loadingFees;
+
+  // Human label of the user-selected benchmark, e.g. "CW8 — Amundi MSCI World".
+  protected readonly benchmarkLabel = computed(() => {
+    const isin = this.preferencesService.current().benchmarkIsin;
+    const etf  = this.etfService.all().find(e => e.isin === isin);
+    return etf ? `${etf.ticker} — ${etf.name}` : 'CW8 — MSCI World';
+  });
+
+  // FX-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  protected readonly fmtPct = fmtPct;
 
   protected async toggleWatch(isin: string, current: boolean): Promise<void> {
     try {

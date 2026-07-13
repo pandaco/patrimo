@@ -364,12 +364,12 @@
     </div>
 
     <!-- Methodology note -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Méthodologie</div>
-        <span class="card-sub">comment on calcule</span>
-      </div>
-      <ul style="margin:0 0 0 18px;padding:0;font-size:13px;line-height:1.55;color:var(--ink-2)">
+    <details class="card">
+      <summary style="cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px">
+        <span class="card-title">Méthodologie</span>
+        <span class="card-sub">comment on calcule — déplier</span>
+      </summary>
+      <ul style="margin:14px 0 0 18px;padding:0;font-size:13px;line-height:1.55;color:var(--ink-2)">
         <li><b>Source des cours</b> : Yahoo Finance, mis en cache 24 h côté backend.</li>
         <li><b>Quantité à chaque date</b> : reconstituée en marchant les transactions BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
         <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
@@ -377,196 +377,8 @@
         <li><b>TD</b> : return 1A ETF − return 1A CW8 (proxy). <b>TE</b> : écart-type annualisé des différences de rendements quotidiens vs CW8 (≈ std dev × √252).</li>
         <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur transactions BUY/SELL de l'année.</li>
       </ul>
-    </div>
+    </details>
 
-  </div>
-
-  <!-- TRACKING DIFFERENCE + FRAIS -->
-  <div class="grid cols-2" style="margin-top:24px">
-
-    <!-- ETF Stats (TD/TE) -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Tracking difference par ETF</div>
-        <span class="card-sub">vs {{ benchmarkLabel() }} · 1 an</span>
-      </div>
-      @if (loadingStats()) {
-        <p class="muted small">Chargement…</p>
-      } @else if (etfStats().length === 0) {
-        <div style="padding:8px 0">
-          <p class="muted small" style="margin:0 0 10px">Aucune position trouvée — le tracking se calcule dès ton premier achat d'ETF.</p>
-          <a class="btn sm" routerLink="/transactions">+ Nouvelle transaction</a>
-        </div>
-      } @else {
-        <table class="tbl" style="font-size:12px">
-          <thead>
-            <tr>
-              <th>ETF</th>
-              <th class="r">Return 1A</th>
-              <th class="r"><span data-tip="Tracking Difference — écart entre la performance de l'ETF et celle de son indice (CW8) sur 1 an. Un TD négatif (-0,1 %) signifie que l'ETF fait légèrement mieux que son indice. Idéalement proche de 0.">TD</span></th>
-              <th class="r"><span data-tip="Tracking Error — volatilité de l'écart de suivi au fil du temps. Plus faible = l'ETF réplique son indice de façon régulière et prévisible.">TE</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (s of etfStats(); track s.ticker) {
-              <tr>
-                <td><span class="pill solid">{{ s.ticker }}</span></td>
-                <td class="r num small" [class.pos]="(s.return1y ?? 0) >= 0" [class.neg]="(s.return1y ?? 0) < 0">
-                  {{ s.return1y !== null ? fmtPct(s.return1y, 1) : '—' }}
-                </td>
-                <td class="r num small" [class.pos]="(s.td ?? 0) >= 0" [class.neg]="(s.td ?? 0) < 0">
-                  {{ s.td !== null ? fmtPctRaw(s.td, 2) : '—' }}
-                </td>
-                <td class="r num small muted">
-                  {{ s.te !== null ? fmtPctRaw(s.te, 2) : '—' }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </div>
-
-    <!-- Frais cumulés YTD -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Frais cumulés <em>cette année</em></div>
-        <span class="card-sub">frais de gestion + courtage depuis le 1ᵉʳ janv.</span>
-      </div>
-      @if (loadingFees()) {
-        <p class="muted small">Chargement…</p>
-      } @else {
-        <div class="row" style="gap:24px;margin-bottom:14px">
-          <div class="stat-block">
-            <div class="k"><span data-tip="Frottement des frais de gestion (TER) sur la valeur actuelle des positions — en anglais « drag ». C'est le coût réel des frais depuis le 1ᵉʳ janvier : de l'argent qui quitte silencieusement le fonds chaque jour.">Frais de gestion</span></div>
-            <div class="v neg">{{ fmtEur(fees().terDragYtd, 2) }}</div>
-          </div>
-          <div class="stat-block">
-            <div class="k">Courtage</div>
-            <div class="v neg">{{ fmtEur(fees().brokerageYtd, 2) }}</div>
-          </div>
-          <div class="stat-block">
-            <div class="k">Total</div>
-            <div class="v neg bold">{{ fmtEur(fees().totalYtd, 2) }}</div>
-          </div>
-        </div>
-        @if (fees().byEtf.length > 0) {
-          <table class="tbl" style="font-size:12px">
-            <thead>
-              <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1ᵉʳ janvier de l'année (en anglais : « drag »).">Coût cette année</span></th></tr>
-            </thead>
-            <tbody>
-              @for (r of fees().byEtf; track r.ticker) {
-                <tr>
-                  <td><span class="pill solid">{{ r.ticker }}</span></td>
-                  <td class="r muted small">{{ fmtPctRaw(r.ter, 2) }}</td>
-                  <td class="r num small">{{ fmtEur(r.value, 0) }}</td>
-                  <td class="r num small neg">{{ fmtEur(r.terDragYtd, 2) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        }
-      }
-    </div>
-  </div>
-
-  <!-- ESTIMATED TAX (French capital-gains, current year) -->
-  <div class="section-head" style="margin-top:32px">
-    <h2 class="section-title">Fiscalité <em>estimée</em></h2>
-    <span class="section-sub">plus-values réalisées {{ currentYear }} · estimation</span>
-  </div>
-  <div class="card">
-    <div class="row" style="flex-wrap:wrap;gap:20px 36px">
-      <div class="stat-block">
-        <div class="k"><span data-tip="Plus-values réalisées cette année sur tes comptes-titres (CTO) et crypto — les seules imposables dans l'année. Les ventes dans un PEA, une assurance-vie ou un PER ne déclenchent pas d'impôt.">PV taxable {{ currentYear }}</span></div>
-        <div class="v">{{ fmtEur(taxEstimate().taxableRealizedYtd, 2) }}</div>
-        <div class="sub">CTO + crypto</div>
-      </div>
-      <div class="stat-block">
-        <div class="k"><span data-tip="Flat tax (PFU) de 30 % sur les plus-values imposables : 12,8 % d'impôt sur le revenu + 17,2 % de prélèvements sociaux.">Impôt estimé (PFU 30 %)</span></div>
-        <div class="v neg">{{ fmtEur(taxEstimate().pfuTotal, 2) }}</div>
-        <div class="sub">IR {{ fmtEur(taxEstimate().incomeTax, 0) }} + PS {{ fmtEur(taxEstimate().socialTax, 0) }}</div>
-      </div>
-      <div class="stat-block">
-        <div class="k"><span data-tip="Plus-values réalisées dans tes enveloppes fiscalement avantagées (PEA, AV, PER, PEE). Non imposées dans l'année — l'impôt est différé, et souvent réduit, au moment du retrait.">PV différée</span></div>
-        <div class="v">{{ fmtEur(taxEstimate().deferredRealizedYtd, 2) }}</div>
-        <div class="sub">PEA · AV · PER · PEE</div>
-      </div>
-    </div>
-
-    @if (taxEstimate().peaStatuses.length > 0) {
-      <div class="divider-soft" style="margin:16px 0 12px"></div>
-      @for (pea of taxEstimate().peaStatuses; track pea.openedAt) {
-        <div class="row" style="justify-content:space-between;padding:5px 0;font-size:13px">
-          <span class="serif-italic">{{ pea.code }} · ouvert le {{ pea.openedAt }}</span>
-          @if (pea.eligible) {
-            <span class="pill gain">5 ans atteints — retrait sans impôt</span>
-          } @else {
-            <span class="pill warn">retrait sans impôt dans ~{{ pea.monthsLeft }} mois</span>
-          }
-        </div>
-      }
-    }
-
-    <p class="muted tiny" style="margin:12px 0 0">
-      Estimation simplifiée : flat tax 30 % sur les plus-values nettes positives
-      des comptes imposables. Ni l'option barème, ni l'abattement assurance-vie,
-      ni le report des moins-values ne sont pris en compte. À vérifier avec ton IFU.
-    </p>
-  </div>
-
-  <!-- STRESS TEST -->
-  <div class="section-head" style="margin-top:32px">
-    <h2 class="section-title">Stress test <em>historique</em></h2>
-    <span class="section-sub">si un krach passé se reproduisait aujourd'hui</span>
-  </div>
-  <div class="card">
-    @if (stressBaseValue() > 0) {
-      <div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:16px">
-        @for (s of stressScenarios; track s.id) {
-          <button class="pill"
-                  [class.solid]="activeStress().id === s.id"
-                  style="cursor:pointer;padding:6px 12px;font-size:12.5px"
-                  (click)="selectStress(s)">
-            {{ s.label }} · {{ s.drawdownPct }}%
-          </button>
-        }
-      </div>
-    }
-
-    @if (stressBaseValue() > 0) {
-      <div class="grid" style="grid-template-columns:repeat(3, 1fr);gap:18px;align-items:end">
-        <div>
-          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur boursière avant</div>
-          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressBaseValue(), 0) }}</div>
-          <div class="muted tiny" style="margin-top:4px">Livrets et cash exclus — non exposés au marché.</div>
-        </div>
-        <div>
-          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Perte théorique</div>
-          <div class="serif neg" style="font-size:24px;line-height:1">{{ fmtEur(stressLoss(), 0) }}</div>
-          <div class="muted tiny" style="margin-top:4px">{{ activeStress().drawdownPct }} % du portefeuille boursier.</div>
-        </div>
-        <div>
-          <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur après krach</div>
-          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressAfter(), 0) }}</div>
-          <div class="muted tiny" style="margin-top:4px">Ce que vaudrait ta poche actions au creux.</div>
-        </div>
-      </div>
-      <p class="muted small" style="margin:18px 0 0;line-height:1.5">
-        <b>{{ activeStress().label }}.</b> {{ activeStress().blurb }}
-      </p>
-      <p class="muted tiny" style="margin:14px 0 0;line-height:1.5;color:var(--ink-3)">
-        Simulation simpliste : on applique uniformément le drawdown à toute la poche
-        actions. Un portefeuille majoritairement obligataire ou défensif aurait
-        un drawdown moindre. Ce chiffre n'est pas une prédiction — c'est un
-        exercice de préparation psychologique pour le prochain krach.
-      </p>
-    } @else {
-      <p class="muted small" style="margin:0">
-        Pas encore de positions boursières. Crée une transaction pour activer le stress test.
-      </p>
-    }
   </div>
 
 </div>
