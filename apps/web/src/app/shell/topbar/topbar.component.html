@@ -1,6 +1,6 @@
 <header class="topbar" role="banner">
   <nav aria-label="Fil d'Ariane" class="crumb">
-    @for (crumb of crumbs(); track crumb; let i = $index, last = $last) {
+    @for (crumb of crumbs(); track $index; let i = $index, last = $last) {
       @if (i > 0) {
         <span aria-hidden="true" style="margin:0 8px;opacity:.4">/</span>
       }
