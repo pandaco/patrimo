@@ -81,20 +81,32 @@ export const appRoutes: Route[] = [
           ),
       },
       {
-        path: 'tools/indicators',
+        path: 'tools/analyses',
         loadComponent: () =>
-          import('@patrimo/features').then((m) => m.IndicatorsComponent),
+          import('@patrimo/features').then((m) => m.AnalysesComponent),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'indicators' },
+          {
+            path: 'indicators',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.IndicatorsComponent),
+          },
+          {
+            path: 'cashflow',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.CashflowComponent),
+          },
+          {
+            path: 'projection',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.ProjectionComponent),
+          },
+        ],
       },
-      {
-        path: 'tools/cashflow',
-        loadComponent: () =>
-          import('@patrimo/features').then((m) => m.CashflowComponent),
-      },
-      {
-        path: 'tools/projection',
-        loadComponent: () =>
-          import('@patrimo/features').then((m) => m.ProjectionComponent),
-      },
+      // Anciennes URLs (bookmarks, raccourcis) — redirigées vers les onglets Analyses.
+      { path: 'tools/indicators', redirectTo: 'tools/analyses/indicators' },
+      { path: 'tools/cashflow',   redirectTo: 'tools/analyses/cashflow' },
+      { path: 'tools/projection', redirectTo: 'tools/analyses/projection' },
       {
         path: 'tools/report',
         loadComponent: () =>

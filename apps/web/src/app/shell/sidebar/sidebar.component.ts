@@ -51,11 +51,9 @@ const NAV: NavGroup[] = [
   {
     label: 'Outils',
     items: [
-      { id: 'indicators', label: 'Indicateurs',     route: '/tools/indicators', icon: 'perf' },
-      { id: 'cashflow',   label: 'Cash-flow',       route: '/tools/cashflow',   icon: 'cashflow' },
-      { id: 'projection', label: 'Projection',      route: '/tools/projection', icon: 'projection' },
+      { id: 'analyses',  label: 'Analyses',        route: '/tools/analyses', icon: 'perf' },
       { id: 'dca',       label: 'DCA helper',      route: '/tools/dca',      icon: 'dca' },
-      { id: 'calendar',  label: 'Calendrier',      route: '/tools/calendar', icon: 'calendar',  shortcut: 'C' },
+      { id: 'calendar',  label: 'Calendrier & revenus', route: '/tools/calendar', icon: 'calendar', shortcut: 'C' },
       { id: 'compare',   label: 'Comparateur',     route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },
       { id: 'alerts',    label: 'Alertes',         route: '/tools/alerts',   icon: 'alert',     shortcut: 'A' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },

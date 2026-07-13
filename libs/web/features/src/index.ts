@@ -20,3 +20,4 @@ export * from './lib/cashflow/cashflow.component';
 export * from './lib/projection/projection.component';
 export * from './lib/report/report.component';
 export * from './lib/indicators/indicators.component';
+export * from './lib/analyses/analyses.component';
