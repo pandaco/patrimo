@@ -16,6 +16,9 @@ import { fmtEur, fmtNum, fmtPctRaw } from '../format';
 
 export interface TransactionDialogData {
   transaction?: Transaction;
+  /** Pré-remplit tous les champs depuis une opération existante, mais crée
+   *  un nouveau mouvement daté d'aujourd'hui (bouton « Dupliquer »). */
+  duplicateFrom?: Transaction;
   presetEnvelopeId?: string;
   presetEtfIsin?: string;
   presetType?: TransactionType;
@@ -23,6 +26,12 @@ export interface TransactionDialogData {
 
 type DialogTransactionType = TransactionType | 'TRANSFER';
 type TransactionTypeEntry = { id: DialogTransactionType; label: string; sym: string };
+
+// Barème courtage Fortuneo : 0,99 € jusqu'à 500 €, 0,35 % au-delà.
+export function brokerageFee(amount: number): number {
+  if (amount <= 0) return 0;
+  return amount <= 500 ? 0.99 : Math.round(amount * 0.35) / 100;
+}
 
 const TRANSACTION_TYPES: TransactionTypeEntry[] = [
   { id: 'BUY',        label: 'Achat',     sym: '+' },
@@ -52,25 +61,34 @@ export class TransactionDialogComponent {
   protected readonly editing   = !!this.data?.transaction;
   private readonly editingId   = this.data?.transaction?.id ?? null;
 
+  // Une duplication reprend tous les champs de la source mais crée un
+  // mouvement neuf : date du jour, prix et frais recalculés au cours actuel.
+  private readonly source = this.data?.transaction ?? this.data?.duplicateFrom;
+
   // Transfers are created as an atomic pair — editing a single leg would
   // unbalance the counterpart envelope, so the type is hidden in edit mode.
   protected readonly types     = this.data?.transaction ? TRANSACTION_TYPES.filter(t => t.id !== 'TRANSFER') : TRANSACTION_TYPES;
   protected readonly envelopes = this.envService.all;
   protected readonly etfs      = this.etfService.all;
 
-  protected type       = signal<DialogTransactionType>(this.data?.transaction?.type ?? this.data?.presetType ?? 'BUY');
+  protected type       = signal<DialogTransactionType>(this.source?.type ?? this.data?.presetType ?? 'BUY');
   protected targetEnvelopeId = signal('');
-  protected envelopeId = signal(this.data?.transaction?.envelope ?? this.data?.presetEnvelopeId ?? '');
-  protected etfIsin    = signal(this.data?.transaction?.etf ?? this.data?.presetEtfIsin ?? '');
-  protected qty        = signal(this.data?.transaction?.qty ?? 1);
-  protected price      = signal(this.data?.transaction?.price ?? 0);
+  protected envelopeId = signal(this.source?.envelope ?? this.data?.presetEnvelopeId ?? '');
+  protected etfIsin    = signal(this.source?.etf ?? this.data?.presetEtfIsin ?? '');
+  protected qty        = signal(this.source?.qty ?? 1);
+  protected price      = signal(this.source?.price ?? 0);
   protected date       = signal(this.data?.transaction?.date ?? new Date().toISOString().slice(0, 10));
-  protected fees       = signal(this.data?.transaction?.fees ?? 0);
-  protected taxes      = signal(this.data?.transaction?.taxes ?? 0);
-  protected amount     = signal(this.data?.transaction?.amount ?? 0);
+  protected fees       = signal(this.source?.fees ?? 0);
+  protected taxes      = signal(this.source?.taxes ?? 0);
+  protected amount     = signal(this.source?.amount ?? 0);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
+
+  // Les frais suivent le barème tant que l'utilisateur n'a pas saisi de valeur.
+  protected readonly feesManual = signal(this.editing);
+
+  private lastPrefilledIsin: string | null = null;
 
   constructor() {
     // Only auto-seed selects when creating; an edit always pre-fills the
@@ -85,6 +103,21 @@ export class TransactionDialogComponent {
         if (!this.etfIsin() && this.etfs().length > 0) {
           this.etfIsin.set(this.etfs()[0].isin);
         }
+      });
+      // Pré-remplit le prix avec le dernier cours connu à chaque changement
+      // d'instrument — l'utilisateur garde la main pour le corriger.
+      effect(() => {
+        const etf = this.selectedEtf();
+        if (!etf || etf.isin === this.lastPrefilledIsin) return;
+        this.lastPrefilledIsin = etf.isin;
+        if (etf.price > 0) this.price.set(etf.price);
+      });
+      // Frais courtage au barème (Fortuneo) recalculés sur le montant,
+      // jusqu'à la première saisie manuelle. Remis à zéro quand le type
+      // de mouvement n'a pas de frais de courtage.
+      effect(() => {
+        if (this.feesManual()) return;
+        this.fees.set(this.showQtyPrice() ? brokerageFee(this.txAmount()) : 0);
       });
     }
   }
@@ -131,6 +164,19 @@ export class TransactionDialogComponent {
     if (!env) return 0;
     return env.cash + (this.type() === 'BUY' ? -this.total() : this.total());
   });
+  protected readonly cashInsufficient = computed(
+    () => this.type() === 'BUY' && this.cashAfter() < 0
+  );
+
+  protected onFeesInput(value: number): void {
+    this.feesManual.set(true);
+    this.fees.set(value);
+  }
+
+  protected resetFeesToAuto(): void {
+    this.feesManual.set(false);
+    this.fees.set(this.showQtyPrice() ? brokerageFee(this.txAmount()) : 0);
+  }
 
   protected readonly fmtEur    = fmtEur;
   protected readonly fmtNum    = fmtNum;
@@ -155,10 +201,11 @@ export class TransactionDialogComponent {
     const saved = await this.submit();
     if (!saved) return;
     this.qty.set(1);
-    this.price.set(0);
+    this.price.set(this.selectedEtf()?.price ?? 0);
     this.amount.set(0);
-    this.fees.set(0);
     this.taxes.set(0);
+    this.feesManual.set(false);
+    this.fees.set(this.showQtyPrice() ? brokerageFee(this.txAmount()) : 0);
   }
 
   private async submit(): Promise<boolean> {
