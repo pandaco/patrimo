@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, FxService, TransactionService } from '@patrimo/data-access';
 import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
-import { computeRealized, startOfYearISO } from './realized-pnl';
+import { computeRealized, startOfYearISO } from './realized-plusValue';
 import { computeEtfOverlaps } from './overlap';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
@@ -32,7 +32,7 @@ export class PortfolioComponent {
   );
   protected readonly sparks   = this.etfService.sparks;
   protected readonly loading  = this.etfService.loading;
-  protected readonly geo     = this.exposureService.geo;
+  protected readonly geography     = this.exposureService.geography;
   protected readonly sector  = this.exposureService.sector;
   protected readonly curr    = this.exposureService.curr;
 
@@ -47,7 +47,7 @@ export class PortfolioComponent {
   protected readonly totalDay  = computed(() => this.allEtfs().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0));
 
   // Cost-basis-aware FIFO replay of every BUY/SELL, scoped to the current
-  // calendar year. The pure function and its spec live in `realized-pnl.ts`.
+  // calendar year. The pure function and its spec live in `realized-plusValue.ts`.
   private readonly realizedReport = computed(() =>
     computeRealized(this.transactionService.all(), startOfYearISO()),
   );
@@ -74,7 +74,7 @@ export class PortfolioComponent {
   });
 
   // Two different tickers can still be the same bet — flags held ETF pairs
-  // sharing heavy geo/sector exposure. Pure fn + spec in `overlap.ts`.
+  // sharing heavy geography/sector exposure. Pure fn + spec in `overlap.ts`.
   protected readonly overlaps = computed(() => computeEtfOverlaps(this.allEtfs()));
 
   protected readonly dividends12M = computed(() => {

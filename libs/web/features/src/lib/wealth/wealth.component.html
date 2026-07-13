@@ -7,13 +7,13 @@
         <h1 class="page-title">Déclare ta <em>première enveloppe</em>.</h1>
         <p class="page-sub">
           PEA, livret, assurance-vie, compte-titres, crypto… Commence par dire où
-          ton argent est placé — les montants se rempliront ensuite via tes mouvements.
+          ton argent estimation placé — les montants se rempliront ensuite via tes mouvements.
         </p>
       } @else {
         <h1 class="page-title">{{ allEnv().length }} enveloppe{{ allEnv().length === 1 ? '' : 's' }}, <em>une seule vue</em>.</h1>
         <p class="page-sub">
           Toutes tes poches d'épargne et d'investissement, des PEA aux livrets jusqu'à
-          l'or physique et la SCPI. La vraie source de vérité, c'est l'historique des
+          l'or physique et la SCPI. La vraie source de vérité, c'estimation l'historique des
           mouvements — chaque ligne en dérive.
         </p>
       }
@@ -113,9 +113,9 @@
           <div class="v">{{ fmtEur(row.value, 0) }}</div>
         </div>
         <div class="stat-block">
-          <div class="k" data-tip="Plus-value latente : valeur actuelle − montant investi. Rien n'est vendu, donc rien n'est encore imposable.">Plus-value</div>
-          <div class="v" [class.pos]="row.pnl >= 0" [class.neg]="row.pnl < 0">
-            {{ row.pnl >= 0 ? '+' : '' }}{{ fmtEur(row.pnl, 0) }}
+          <div class="k" data-tip="Plus-value latente : valeur actuelle − montant investi. Rien n'estimation vendu, donc rien n'estimation encore imposable.">Plus-value</div>
+          <div class="v" [class.pos]="row.plusValue >= 0" [class.neg]="row.plusValue < 0">
+            {{ row.plusValue >= 0 ? '+' : '' }}{{ fmtEur(row.plusValue, 0) }}
           </div>
         </div>
         <div class="stat-block">
@@ -155,8 +155,8 @@
             {{ fmtEur(env.value, 0) }}
           </div>
           <div class="row" style="gap:6px;font-size:12px;color:var(--ink-3)">
-            <span class="num" [class.pos]="pnl(env) >= 0" [class.neg]="pnl(env) < 0">
-              {{ pnl(env) >= 0 ? '+' : '' }}{{ fmtEur(pnl(env), 0) }}
+            <span class="num" [class.pos]="plusValue(env) >= 0" [class.neg]="plusValue(env) < 0">
+              {{ plusValue(env) >= 0 ? '+' : '' }}{{ fmtEur(plusValue(env), 0) }}
             </span>
             <span class="num muted">({{ fmtPctRaw(pnlPct(env), 1) }})</span>
             <span data-tip="Plus-value latente de l'enveloppe : valeur actuelle − montant investi, depuis l'ouverture.">depuis l'achat</span>

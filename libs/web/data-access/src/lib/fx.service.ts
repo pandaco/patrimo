@@ -20,9 +20,9 @@ export class FxService {
   readonly displayCurrency = computed(() => this.preferences.current().displayCurrency);
 
   readonly rate = computed(() => {
-    const cur = this.displayCurrency();
-    if (cur === 'EUR') return 1;
-    return this.rates()[cur] ?? 1;
+    const currency = this.displayCurrency();
+    if (currency === 'EUR') return 1;
+    return this.rates()[currency] ?? 1;
   });
 
   convert(eur: number): number { return eur * this.rate(); }

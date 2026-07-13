@@ -4,7 +4,7 @@ import { EnvelopeService, EtfService, FxService, PerformanceService, Preferences
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
-import { computeTri } from '../portfolio/tri';
+import { computeTri } from '../portfolio/tauxRentabiliteInterne';
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
   { id: '1W',  label: '1S'  },
@@ -95,24 +95,24 @@ export class PerformanceComponent {
   protected readonly metrics       = this.performanceService.metrics;
   protected readonly loadingMetrics = this.performanceService.loadingMetrics;
 
-  // ─── TWR vs TRI (PP9) — le marché vs ton timing ───────────────────────────
+  // ─── TWR vs TAUXRENTABILITEINTERNE (PP9) — le marché vs ton timing ───────────────────────────
 
   /** Money-weighted return (XIRR) since inception — annualised by construction. */
-  protected readonly tri = computed(() =>
+  protected readonly tauxRentabiliteInterne = computed(() =>
     computeTri(this.transactionService.all(), this.envelopeService.total()),
   );
 
   /**
-   * Timing effect: TRI − CAGR, in points per year. Only meaningful when both
-   * figures cover the same span, i.e. the MAX period — TRI always spans the
+   * Timing effect: TAUXRENTABILITEINTERNE − CAGR, in points per year. Only meaningful when both
+   * figures cover the same span, i.e. the MAX period — TAUXRENTABILITEINTERNE always spans the
    * full history while the CAGR follows the active window.
    */
   protected readonly timingVerdict = computed(() => {
     if (this.activePeriod() !== 'MAX') return null;
-    const tri  = this.tri();
+    const tauxRentabiliteInterne  = this.tauxRentabiliteInterne();
     const cagr = this.annualized();
-    if (tri === null || cagr === null) return null;
-    return { deltaPts: tri - cagr, helped: tri >= cagr };
+    if (tauxRentabiliteInterne === null || cagr === null) return null;
+    return { deltaPts: tauxRentabiliteInterne - cagr, helped: tauxRentabiliteInterne >= cagr };
   });
   // Server-computed return per period (same replay as the chart), so every
   // row shows its value — not just the active one.
@@ -157,13 +157,13 @@ export class PerformanceComponent {
     const variance = returns.reduce((a, r) => a + (r - mean) ** 2, 0) / (returns.length - 1);
     const volatility = Math.sqrt(variance * annFactor) * 100;
 
-    const annVal = this.annualized();
-    const annRet = annVal ?? this.portfolioPct();
+    const rendementAnnuel = this.annualized();
+    const annRet = rendementAnnuel ?? this.portfolioPct();
     const sharpe = volatility > 0 ? (annRet - 2.5) / volatility : null;
 
     const maxDD  = this.performanceService.raw().drawdowns[0]?.pct ?? null;
-    const calmar = annVal !== null && maxDD !== null && maxDD < 0
-      ? annVal / Math.abs(maxDD)
+    const calmar = rendementAnnuel !== null && maxDD !== null && maxDD < 0
+      ? rendementAnnuel / Math.abs(maxDD)
       : null;
 
     const winRate = (returns.filter(r => r > 0).length / returns.length) * 100;

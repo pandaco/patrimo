@@ -179,7 +179,7 @@ export class CompareComponent {
 
   /**
    * Approximate 5-year total cost of ownership on a 500 €/month DCA, with the
-   * usual 7 %/year market return assumption. The drag is the average AUM each
+   * usual 7 %/year market return assumption. The drag is the average CAPITALTOTAL each
    * year times the ETF TER:
    *
    *     avgAUM_y = invested(0..y-1) + invested(0..y) / 2
@@ -191,13 +191,13 @@ export class CompareComponent {
    * directional cost-of-management comparator rather than a precise TCO.
    */
   protected tco5y(ter: number, monthly = 500, annualReturn = 0.07): number {
-    let aum = 0;
+    let capitalTotal = 0;
     let drag = 0;
     for (let y = 1; y <= 5; y++) {
-      const aumStart = aum;
+      const aumStart = capitalTotal;
       const yearContrib = monthly * 12;
-      aum = (aum + yearContrib) * (1 + annualReturn);
-      const aumEnd = aum;
+      capitalTotal = (capitalTotal + yearContrib) * (1 + annualReturn);
+      const aumEnd = capitalTotal;
       // `ter` is in percent points (0.15 = 0.15 %/yr) — convert to a fraction.
       drag += ((aumStart + aumEnd) / 2) * (ter / 100);
     }

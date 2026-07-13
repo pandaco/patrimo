@@ -148,8 +148,8 @@ export class TransactionDialogComponent {
   );
   protected readonly currentWeight = computed(() => {
     const etf = this.selectedEtf();
-    const tv  = this.totalPortfolioValue();
-    return etf && tv ? (etfValue(etf) / tv) * 100 : 0;
+    const totalValue  = this.totalPortfolioValue();
+    return etf && totalValue ? (etfValue(etf) / totalValue) * 100 : 0;
   });
   protected readonly newWeight = computed(() => {
     const etf = this.selectedEtf();

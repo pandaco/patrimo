@@ -1,5 +1,5 @@
 import type { Transaction } from '@patrimo/data-access';
-import { computeRealized } from '../portfolio/realized-pnl';
+import { computeRealized } from '../portfolio/realized-plusValue';
 
 /**
  * French taxation of realized capital gains, as an *estimate*.

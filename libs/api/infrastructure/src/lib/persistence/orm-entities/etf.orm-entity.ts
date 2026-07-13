@@ -50,7 +50,7 @@ export class EtfOrmEntity {
 
   @Column({ type: 'jsonb', nullable: true })
   exposure?: {
-    geo: Record<string, number>;
+    geography: Record<string, number>;
     sector: Record<string, number>;
     currency: Record<string, number>;
   };

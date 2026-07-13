@@ -59,9 +59,9 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
   for (let i = 0; i < 100; i++) {
     const f = npv(r);
     if (Math.abs(f) < 1e-7) return r * 100;
-    const fp = dnpv(r);
-    if (Math.abs(fp) < 1e-12) break;
-    let next = r - f / fp;
+    const derivativeValue = dnpv(r);
+    if (Math.abs(derivativeValue) < 1e-12) break;
+    let next = r - f / derivativeValue;
     if (!Number.isFinite(next)) break;
     if (next <= -0.999) next = -0.999;        // keep r > -1 so (1+r)^t is real
     if (Math.abs(next - r) < 1e-9) return Number.isFinite(next) ? next * 100 : null;
@@ -70,22 +70,22 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
 
   // Bisection fallback in [-0.99, 10] if Newton-Raphson diverged.
   let lo = -0.99, hi = 10;
-  const fLo = npv(lo), fHi = npv(hi);
-  if (Number.isNaN(fLo) || Number.isNaN(fHi) || (fLo > 0 && fHi > 0) || (fLo < 0 && fHi < 0)) {
+  const lowerBoundValue = npv(lo), fHi = npv(hi);
+  if (Number.isNaN(lowerBoundValue) || Number.isNaN(fHi) || (lowerBoundValue > 0 && fHi > 0) || (lowerBoundValue < 0 && fHi < 0)) {
     return null;
   }
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
     const f   = npv(mid);
     if (Math.abs(f) < 1e-7 || (hi - lo) < 1e-9) return mid * 100;
-    if ((f > 0) === (fLo > 0)) lo = mid; else hi = mid;
+    if ((f > 0) === (lowerBoundValue > 0)) lo = mid; else hi = mid;
   }
   return null;
 }
 
 /**
  * Builds the XIRR cash-flow series from a transaction history and a
- * current portfolio value. Returns `null` if a meaningful TRI cannot be
+ * current portfolio value. Returns `null` if a meaningful TAUXRENTABILITEINTERNE cannot be
  * computed (no deposits, no current value).
  */
 export function computeTri(txs: Transaction[], currentValue: number, today: Date = new Date()): number | null {

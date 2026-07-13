@@ -15,7 +15,7 @@ export class ExposureService {
     () => (this.auth.isAuthenticated() ? `${this.baseUrl}/portfolio/exposure` : undefined),
   );
 
-  readonly geo    = computed(() => this.resource.value()?.geo ?? []);
+  readonly geography    = computed(() => this.resource.value()?.geography ?? []);
   readonly sector = computed(() => this.resource.value()?.sector ?? []);
   readonly curr   = computed(() => this.resource.value()?.currency ?? []);
 

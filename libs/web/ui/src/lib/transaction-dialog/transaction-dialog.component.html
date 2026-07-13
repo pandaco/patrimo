@@ -78,7 +78,7 @@
         </select>
         @if (selectedEtf() && selectedEnv()?.code === 'PEA' && !selectedEtf()!.pea) {
           <div class="field-help" style="color:var(--loss)">
-            ⚠ {{ selectedEtf()!.ticker }} n'est pas éligible PEA. Choisis CTO ou un ETF de substitution.
+            ⚠ {{ selectedEtf()!.ticker }} n'estimation pas éligible PEA. Choisis CTO ou un ETF de substitution.
           </div>
         }
         @if (selectedEtf()) {

@@ -33,11 +33,11 @@ describe('computeTaxEstimate — French regimes', () => {
       tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
       tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 1200 }),
     ];
-    const est = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
-    expect(est.taxableRealizedYtd).toBeCloseTo(200);
-    expect(est.incomeTax).toBeCloseTo(25.6);   // 200 × 12.8%
-    expect(est.socialTax).toBeCloseTo(34.4);   // 200 × 17.2%
-    expect(est.pfuTotal).toBeCloseTo(60);      // 200 × 30%
+    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    expect(estimation.taxableRealizedYtd).toBeCloseTo(200);
+    expect(estimation.incomeTax).toBeCloseTo(25.6);   // 200 × 12.8%
+    expect(estimation.socialTax).toBeCloseTo(34.4);   // 200 × 17.2%
+    expect(estimation.pfuTotal).toBeCloseTo(60);      // 200 × 30%
   });
 
   it('does not tax a PEA realized gain (deferred)', () => {
@@ -45,16 +45,16 @@ describe('computeTaxEstimate — French regimes', () => {
       tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'pea', qty: 10, amount: 1000 }),
       tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'pea', qty: 10, amount: 1500 }),
     ];
-    const est = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
-    expect(est.taxableRealizedYtd).toBe(0);
-    expect(est.deferredRealizedYtd).toBeCloseTo(500);
-    expect(est.pfuTotal).toBe(0);
+    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    expect(estimation.taxableRealizedYtd).toBe(0);
+    expect(estimation.deferredRealizedYtd).toBeCloseTo(500);
+    expect(estimation.pfuTotal).toBe(0);
   });
 
   it('reports PEA five-year eligibility', () => {
-    const est = computeTaxEstimate([], ENVELOPES, Y, NOW);
-    const old = est.peaStatuses.find(p => p.openedAt === '2020-06-01');
-    const young = est.peaStatuses.find(p => p.openedAt === '2024-03-04');
+    const estimation = computeTaxEstimate([], ENVELOPES, Y, NOW);
+    const old = estimation.peaStatuses.find(p => p.openedAt === '2020-06-01');
+    const young = estimation.peaStatuses.find(p => p.openedAt === '2024-03-04');
     expect(old?.eligible).toBe(true);
     expect(young?.eligible).toBe(false);
     expect(young?.monthsLeft).toBeGreaterThan(0);
@@ -65,8 +65,8 @@ describe('computeTaxEstimate — French regimes', () => {
       tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
       tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 800 }),
     ];
-    const est = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
-    expect(est.taxableRealizedYtd).toBe(0);
-    expect(est.pfuTotal).toBe(0);
+    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    expect(estimation.taxableRealizedYtd).toBe(0);
+    expect(estimation.pfuTotal).toBe(0);
   });
 });

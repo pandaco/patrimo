@@ -110,7 +110,7 @@ test.describe('Patrimo E2E Tests', () => {
     for (const [route, summary] of [
       ['/allocation',  'Première fois ici'],
       ['/performance', 'Comment lire cette page'],
-      ['/tools/dca',   'C\'est quoi le DCA'],
+      ['/tools/dca',   'C\'estimation quoi le DCA'],
     ] as const) {
       await page.goto(route);
       await page.waitForURL(new RegExp(`${route.replace(/\//g, '\\/')}(\\?|#|$)`));

@@ -135,7 +135,7 @@ export class CalendarComponent {
     const upcoming = this.dividendService.upcoming().map((d: DividendDto) => ({
       date: d.date,
       type: 'DIV' as const,
-      label: `Dividende ${d.ticker} · ${this.fmtEur(d.amount, 2)} (est.)`,
+      label: `Dividende ${d.ticker} · ${this.fmtEur(d.amount, 2)} (estimation.)`,
       envCode: '?',
       amount: d.amount,
       past: false,

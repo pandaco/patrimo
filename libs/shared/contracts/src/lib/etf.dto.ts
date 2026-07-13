@@ -1,7 +1,7 @@
 export type EtfAllocationDto = 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
 
 export interface EtfExposureBreakdownDto {
-  geo: Record<string, number>;
+  geography: Record<string, number>;
   sector: Record<string, number>;
   currency: Record<string, number>;
 }
@@ -21,7 +21,7 @@ export interface EtfDto {
   alloc: EtfAllocationDto;
   /** Followed without a position — excluded from portfolio analytics. */
   watchOnly: boolean;
-  /** Geo/sector/currency breakdown, cached from Yahoo. Absent until first computed. */
+  /** Geography/sector/currency breakdown, cached from Yahoo. Absent until first computed. */
   exposure?: EtfExposureBreakdownDto;
 }
 

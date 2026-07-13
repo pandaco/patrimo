@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Transaction, TransactionType } from '@patrimo/data-access';
-import { computeTri, xirr } from './tri';
+import { computeTri, xirr } from './tauxRentabiliteInterne';
 
 function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
   return {

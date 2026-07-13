@@ -4,7 +4,7 @@ export interface ExposureDto {
 }
 
 export interface PortfolioExposureDto {
-  geo: ExposureDto[];
+  geography: ExposureDto[];
   sector: ExposureDto[];
   currency: ExposureDto[];
 }

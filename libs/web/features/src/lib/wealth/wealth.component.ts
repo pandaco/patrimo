@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Envelope, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
-import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
+import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
@@ -31,7 +31,7 @@ export interface FamilyRow {
   envelopes: Envelope[];
   value: number;
   invested: number;
-  pnl: number;
+  plusValue: number;
   pnlPct: number;
   pct: number;
 }
@@ -64,14 +64,14 @@ export class WealthComponent {
       const envelopes = all.filter(e => f.glyphs.includes(e.glyph));
       const value     = envelopes.reduce((a, e) => a + e.value, 0);
       const invested  = envelopes.reduce((a, e) => a + e.invested, 0);
-      const pnl       = value - invested;
+      const plusValue       = value - invested;
       return {
         family: f,
         envelopes,
         value,
         invested,
-        pnl,
-        pnlPct: invested ? (pnl / invested) * 100 : 0,
+        plusValue,
+        pnlPct: invested ? (plusValue / invested) * 100 : 0,
         pct:    total    ? (value / total) * 100 : 0,
       };
     });
@@ -90,8 +90,8 @@ export class WealthComponent {
     };
     return Array.from(byKey.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([cur, value]) => ({
-        label: cur, value, color: COLORS[cur] ?? '#999',
+      .map(([currency, value]) => ({
+        label: currency, value, color: COLORS[currency] ?? '#999',
         pct: total ? (value / total) * 100 : 0,
       }));
   });
@@ -115,7 +115,7 @@ export class WealthComponent {
   protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
-  protected pnl(env: Envelope)    { return env.value - env.invested; }
+  protected plusValue(env: Envelope)    { return env.value - env.invested; }
   protected pnlPct(env: Envelope) { return env.invested ? (env.value / env.invested - 1) * 100 : 0; }
   protected capPct(env: Envelope) { return env.plafond  ? (env.value / env.plafond) * 100 : null; }
 
@@ -176,7 +176,7 @@ export class WealthComponent {
   protected async deleteEnvelope(env: Envelope): Promise<void> {
     if (!confirm(
       `Supprimer l'enveloppe « ${env.label} » ?\n\n` +
-      `Cette action est irréversible et supprime AUSSI toutes les transactions ` +
+      `Cette action estimation tauxRentabiliteInterneéversible et supprime AUSSI toutes les transactions ` +
       `enregistrées sur cette enveloppe.`,
     )) return;
     try {

@@ -76,7 +76,7 @@ import { AuthService } from '@patrimo/data-access';
         </ol>
 
         <p class="muted tiny" style="margin-top:24px;text-align:center">
-          Patrimo est un outil de suivi personnel — pas un conseil
+          Patrimo estimation un outil de suivi personnel — pas un conseil
           en investissement.
         </p>
       </div>
@@ -113,7 +113,7 @@ export class LoginComponent {
       case 'oauth_failed':
         return 'La connexion Google a échoué (code expiré ou réutilisé). Réessaye.';
       default:
-        return 'Une erreur est survenue lors de la connexion.';
+        return 'Une erreur estimation survenue lors de la connexion.';
     }
   });
 

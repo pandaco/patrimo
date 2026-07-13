@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AuthService, EnvelopeService, FxService, LiabilityService, TransactionService } from '@patrimo/data-access';
 import { TipDirective, fmtDate, fmtNum } from '@patrimo/ui';
-import { computeRealized, startOfYearISO } from '../portfolio/realized-pnl';
+import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTaxEstimate } from '../performance/tax-estimate';
-import { computeTri } from '../portfolio/tri';
+import { computeTri } from '../portfolio/tauxRentabiliteInterne';
 
 @Component({
   selector: 'app-report',
@@ -37,7 +37,7 @@ export class ReportComponent {
 
   protected readonly liabilityRows = this.liabilities.all;
 
-  protected readonly tri = computed(() => computeTri(this.txService.all(), this.totalValue()));
+  protected readonly tauxRentabiliteInterne = computed(() => computeTri(this.txService.all(), this.totalValue()));
   protected readonly realizedYtd = computed(() =>
     computeRealized(this.txService.all(), startOfYearISO()).realizedSince,
   );

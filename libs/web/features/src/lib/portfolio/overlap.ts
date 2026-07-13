@@ -1,6 +1,6 @@
 import type { Etf } from '@patrimo/data-access';
 
-export type OverlapDimension = 'geo' | 'sector';
+export type OverlapDimension = 'geography' | 'sector';
 
 export interface EtfOverlap {
   isinA: string;
@@ -12,7 +12,7 @@ export interface EtfOverlap {
   overlapPct: number;
 }
 
-const DIMENSIONS: OverlapDimension[] = ['geo', 'sector'];
+const DIMENSIONS: OverlapDimension[] = ['geography', 'sector'];
 
 /**
  * Flags pairs of *held* ETFs that share heavy exposure on the same

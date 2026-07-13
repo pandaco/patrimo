@@ -113,7 +113,7 @@ export class PortfolioService {
 
     const totalValue = positions.reduce((sum, p) => sum + p.qty * (p.currentPrice ?? 0), 0);
     if (totalValue === 0) {
-      return { geo: [], sector: [], currency: [] };
+      return { geography: [], sector: [], currency: [] };
     }
 
     const geoMap = new Map<string, number>();
@@ -128,7 +128,7 @@ export class PortfolioService {
       const weight = posValue / totalValue;
 
       let exposure = etf.exposure;
-      if (!exposure || Object.keys(exposure.geo).length === 0) {
+      if (!exposure || Object.keys(exposure.geography).length === 0) {
         const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
         if (meta) {
           exposure = this.parseYahooExposure(meta);
@@ -137,14 +137,14 @@ export class PortfolioService {
       }
 
       if (exposure) {
-        this.accumulate(geoMap, exposure.geo, weight);
+        this.accumulate(geoMap, exposure.geography, weight);
         this.accumulate(sectorMap, exposure.sector, weight);
         this.accumulate(currMap, exposure.currency, weight);
       }
     }
 
     return {
-      geo: this.finalize(geoMap),
+      geography: this.finalize(geoMap),
       sector: this.finalize(sectorMap),
       currency: this.finalize(currMap),
     };
@@ -164,14 +164,14 @@ export class PortfolioService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private parseYahooExposure(meta: any) {
-    const geo: Record<string, number> = {};
+    const geography: Record<string, number> = {};
     const sector: Record<string, number> = {};
     const currency: Record<string, number> = {};
 
     const fund = meta?.fundProfile;
     if (fund?.regionHoldings) {
       for (const r of fund.regionHoldings) {
-        if (r.region && r.relativeWeight) geo[r.region] = r.relativeWeight;
+        if (r.region && r.relativeWeight) geography[r.region] = r.relativeWeight;
       }
     }
     if (fund?.sectorWeightings) {
@@ -183,9 +183,9 @@ export class PortfolioService {
 
     const asset = meta?.assetProfile;
     if (asset?.sector) sector[asset.sector] = 1;
-    if (asset?.country) geo[asset.country] = 1;
+    if (asset?.country) geography[asset.country] = 1;
 
-    return { geo, sector, currency };
+    return { geography, sector, currency };
   }
 
   async getRebalancePlan(userId: string): Promise<RebalancePlanDto> {
@@ -269,10 +269,10 @@ export class PortfolioService {
       const price  = p.currentPrice ?? p.avgPrice;
       const value  = p.qty * price;
       const cost   = p.qty * p.avgPrice;
-      const pnl    = value - cost;
+      const plusValue    = value - cost;
       const pnlPct = cost > 0 ? ((value / cost - 1) * 100).toFixed(2) : '0.00';
       return [p.ticker, `"${p.name}"`, p.qty, p.avgPrice.toFixed(4), price.toFixed(4),
-              value.toFixed(2), pnl.toFixed(2), pnlPct].join(',');
+              value.toFixed(2), plusValue.toFixed(2), pnlPct].join(',');
     });
     return header + rows.join('\n');
   }

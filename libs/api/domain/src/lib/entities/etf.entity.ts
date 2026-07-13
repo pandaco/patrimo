@@ -15,7 +15,7 @@ export interface Etf {
   /** Followed without a position — excluded from portfolio analytics. */
   watchOnly: boolean;
   exposure?: {
-    geo: Record<string, number>;
+    geography: Record<string, number>;
     sector: Record<string, number>;
     currency: Record<string, number>;
   };

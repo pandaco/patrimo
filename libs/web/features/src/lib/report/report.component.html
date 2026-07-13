@@ -72,10 +72,10 @@
 
   <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px">
     <div class="card kpi-tile">
-      <div class="label">TRI (XIRR)</div>
-      @if (tri() !== null) {
-        <div class="value" [class.pos]="tri()! >= 0" [class.neg]="tri()! < 0">
-          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} % <small>/an</small>
+      <div class="label">TAUXRENTABILITEINTERNE (XIRR)</div>
+      @if (tauxRentabiliteInterne() !== null) {
+        <div class="value" [class.pos]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
+          {{ tauxRentabiliteInterne()! >= 0 ? '+' : '' }}{{ fmtNum(tauxRentabiliteInterne()!, 1) }} % <small>/an</small>
         </div>
       } @else {
         <div class="value">—</div>
@@ -108,7 +108,7 @@
         <div class="sub">IR {{ fmtEur(taxEstimate().incomeTax, 0) }} + PS {{ fmtEur(taxEstimate().socialTax, 0) }}</div>
       </div>
       <div class="stat-block">
-        <div class="k"><span data-tip="Plus-values réalisées dans tes enveloppes fiscalement avantagées (PEA, AV, PER, PEE). Non imposées dans l'année — l'impôt est différé, et souvent réduit, au moment du retrait.">PV différée</span></div>
+        <div class="k"><span data-tip="Plus-values réalisées dans tes enveloppes fiscalement avantagées (PEA, AV, PER, PEE). Non imposées dans l'année — l'impôt estimation différé, et souvent réduit, au moment du retrait.">PV différée</span></div>
         <div class="v">{{ fmtEur(taxEstimate().deferredRealizedYtd, 2) }}</div>
         <div class="sub">PEA · AV · PER · PEE</div>
       </div>

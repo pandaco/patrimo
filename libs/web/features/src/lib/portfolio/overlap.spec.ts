@@ -29,19 +29,19 @@ function etf(partial: Partial<Etf> & { isin: string; ticker: string }): Etf {
 describe('computeEtfOverlaps', () => {
   it('flags two held ETFs both heavily exposed to the US', () => {
     const overlaps = computeEtfOverlaps([
-      etf({ isin: 'A', ticker: 'CW8', exposure: { geo: { 'États-Unis': 65, France: 5 }, sector: {}, currency: {} } }),
-      etf({ isin: 'B', ticker: 'IWDA', exposure: { geo: { 'États-Unis': 60, France: 8 }, sector: {}, currency: {} } }),
+      etf({ isin: 'A', ticker: 'CW8', exposure: { geography: { 'États-Unis': 65, France: 5 }, sector: {}, currency: {} } }),
+      etf({ isin: 'B', ticker: 'IWDA', exposure: { geography: { 'États-Unis': 60, France: 8 }, sector: {}, currency: {} } }),
     ]);
 
     expect(overlaps).toHaveLength(1);
-    expect(overlaps[0].dimension).toBe('geo');
+    expect(overlaps[0].dimension).toBe('geography');
     expect(overlaps[0].overlapPct).toBeCloseTo(65, 1);
   });
 
   it('ignores ETFs with no position (qty = 0)', () => {
     const overlaps = computeEtfOverlaps([
-      etf({ isin: 'A', ticker: 'CW8', qty: 0, exposure: { geo: { 'États-Unis': 65 }, sector: {}, currency: {} } }),
-      etf({ isin: 'B', ticker: 'IWDA', qty: 1, exposure: { geo: { 'États-Unis': 60 }, sector: {}, currency: {} } }),
+      etf({ isin: 'A', ticker: 'CW8', qty: 0, exposure: { geography: { 'États-Unis': 65 }, sector: {}, currency: {} } }),
+      etf({ isin: 'B', ticker: 'IWDA', qty: 1, exposure: { geography: { 'États-Unis': 60 }, sector: {}, currency: {} } }),
     ]);
 
     expect(overlaps).toHaveLength(0);
@@ -50,7 +50,7 @@ describe('computeEtfOverlaps', () => {
   it('ignores ETFs with no exposure data yet', () => {
     const overlaps = computeEtfOverlaps([
       etf({ isin: 'A', ticker: 'CW8' }),
-      etf({ isin: 'B', ticker: 'IWDA', exposure: { geo: { 'États-Unis': 60 }, sector: {}, currency: {} } }),
+      etf({ isin: 'B', ticker: 'IWDA', exposure: { geography: { 'États-Unis': 60 }, sector: {}, currency: {} } }),
     ]);
 
     expect(overlaps).toHaveLength(0);
@@ -58,8 +58,8 @@ describe('computeEtfOverlaps', () => {
 
   it('stays under the threshold when exposures barely overlap', () => {
     const overlaps = computeEtfOverlaps([
-      etf({ isin: 'A', ticker: 'ESE', exposure: { geo: { France: 90 }, sector: {}, currency: {} } }),
-      etf({ isin: 'B', ticker: 'AGGH', exposure: { geo: { 'États-Unis': 90 }, sector: {}, currency: {} } }),
+      etf({ isin: 'A', ticker: 'ESE', exposure: { geography: { France: 90 }, sector: {}, currency: {} } }),
+      etf({ isin: 'B', ticker: 'AGGH', exposure: { geography: { 'États-Unis': 90 }, sector: {}, currency: {} } }),
     ]);
 
     expect(overlaps).toHaveLength(0);
@@ -67,9 +67,9 @@ describe('computeEtfOverlaps', () => {
 
   it('sorts by descending overlap and reports both tickers', () => {
     const overlaps = computeEtfOverlaps([
-      etf({ isin: 'A', ticker: 'CW8', exposure: { geo: { 'États-Unis': 90 }, sector: { Techno: 20 }, currency: {} } }),
-      etf({ isin: 'B', ticker: 'IWDA', exposure: { geo: { 'États-Unis': 85 }, sector: { Techno: 15 }, currency: {} } }),
-      etf({ isin: 'C', ticker: 'PANX', exposure: { geo: { 'États-Unis': 55 }, sector: {}, currency: {} } }),
+      etf({ isin: 'A', ticker: 'CW8', exposure: { geography: { 'États-Unis': 90 }, sector: { Techno: 20 }, currency: {} } }),
+      etf({ isin: 'B', ticker: 'IWDA', exposure: { geography: { 'États-Unis': 85 }, sector: { Techno: 15 }, currency: {} } }),
+      etf({ isin: 'C', ticker: 'PANX', exposure: { geography: { 'États-Unis': 55 }, sector: {}, currency: {} } }),
     ]);
 
     expect(overlaps[0].overlapPct).toBeGreaterThanOrEqual(overlaps[overlaps.length - 1].overlapPct);

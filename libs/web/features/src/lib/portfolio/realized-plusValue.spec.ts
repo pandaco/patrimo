@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Transaction, TransactionType } from '@patrimo/data-access';
-import { computeRealized, startOfYearISO } from './realized-pnl';
+import { computeRealized, startOfYearISO } from './realized-plusValue';
 
 function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string }): Transaction {
   return {
