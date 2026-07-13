@@ -108,10 +108,10 @@
              empty-state only ever shows once loading has settled. -->
         @if (chartMode() === 'wealth') {
           @if (wealthChartData().length > 1) {
-            <div class="chart-wrap" [class.refreshing]="wealthLoading()">
+            <div class="chart-wrap" [class.refreshing]="wealthPending()">
               <app-wealth-chart [data]="wealthChartData()" [labels]="wealthLabels()" />
             </div>
-          } @else if (wealthLoading()) {
+          } @else if (wealthPending()) {
             <div class="chart-skeleton skeleton" role="status" aria-label="Chargement du graphique"></div>
           } @else {
             <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
@@ -121,10 +121,10 @@
           }
         } @else {
           @if (perfPortfolio().length > 1 && totalValue() > 0) {
-            <div class="chart-wrap" [class.refreshing]="perfLoading()">
+            <div class="chart-wrap" [class.refreshing]="perfPending()">
               <app-perf-chart [portfolio]="perfPortfolio()" [benchmark]="perfBenchmark()" />
             </div>
-          } @else if (perfLoading()) {
+          } @else if (perfPending()) {
             <div class="chart-skeleton skeleton" role="status" aria-label="Chargement du graphique"></div>
           } @else {
             <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">

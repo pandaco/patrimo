@@ -124,8 +124,13 @@ export class DashboardComponent {
   // True when the user has not yet declared any envelope nor a single
   // transaction. The dashboard then swaps the noisy hero for an onboarding
   // card pointing at the three first steps.
+  // The check strictly ensures the data has had a chance to load to avoid
+  // flashing the onboarding state before rendering the dashboard graphs.
   protected readonly isEmpty = computed(() =>
-    this.totalValue() <= 0 && this.envelopes.all().length === 0
+    !this.envelopes.loading() &&
+    this.auth.loaded() &&
+    this.totalValue() <= 0 &&
+    this.envelopes.all().length === 0
   );
 
   // "Configuration X/5" checklist — derived live, disappears at 5/5.
@@ -187,6 +192,7 @@ export class DashboardComponent {
   protected readonly perfPortfolio  = computed(() => this.heldPerf().portfolio);
   protected readonly perfBenchmark  = computed(() => this.heldPerf().benchmark ?? []);
   protected readonly perfLoading    = this.performanceService.loading;
+  protected readonly perfPending    = computed(() => !this.auth.loaded() || this.perfLoading());
 
   // ─── Evolution chart (single card: € patrimoine ↔ % vs indice) ────────────
 
@@ -203,6 +209,7 @@ export class DashboardComponent {
   );
   protected readonly wealthFilter       = signal<WealthFilter>('all');
   protected readonly wealthLoading      = this.performanceService.wealthLoading;
+  protected readonly wealthPending      = computed(() => !this.auth.loaded() || this.wealthLoading());
 
   protected readonly wealthChartData = computed(() => {
     const w      = this.heldWealth();
