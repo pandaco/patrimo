@@ -4,6 +4,7 @@ import { CreateEtfDto, EtfDto, EtfLookupResultDto, PositionDto } from '@patrimo/
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
+import { safeValue } from './safe';
 import { Etf } from './models';
 
 export const etfValue  = (e: Etf) => e.qty * e.price;
@@ -72,8 +73,9 @@ export class EtfService {
   );
 
   readonly all = computed<Etf[]>(() => {
-    const catalog = this.catalogResource.value();
-    const byIsin  = new Map(this.portfolioResource.value().map(p => [p.etfIsin, p]));
+    const catalog = safeValue(this.catalogResource, []);
+    const portfolio = safeValue(this.portfolioResource, []);
+    const byIsin  = new Map(portfolio.map(p => [p.etfIsin, p]));
     return catalog.map(c => mergePosition(fromCatalog(c), byIsin.get(c.isin)));
   });
 
@@ -85,7 +87,7 @@ export class EtfService {
     { defaultValue: {} },
   );
 
-  readonly sparks = this.sparksResource.value;
+  readonly sparks = computed(() => safeValue(this.sparksResource, {}));
 
   reload(): void {
     this.catalogResource.reload();

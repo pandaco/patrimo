@@ -3,6 +3,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { CreateEnvelopeDto, UpdateEnvelopeDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { safeValue } from './safe';
 import { AuthService } from './auth.service';
 import { EtfService } from './etf.service';
 import { Envelope } from './models';
@@ -29,7 +30,7 @@ export class EnvelopeService {
     { defaultValue: [] },
   );
 
-  readonly all     = this.resource.value;
+  readonly all     = computed(() => safeValue(this.resource, [] as Envelope[]));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 

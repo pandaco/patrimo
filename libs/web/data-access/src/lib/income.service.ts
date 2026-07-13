@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { IncomeForecastDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
+import { safeValue } from './safe';
+import { computed } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class IncomeService {
@@ -19,7 +21,10 @@ export class IncomeService {
     },
   );
 
-  readonly forecast = this.resource.value;
+  readonly forecast = computed(() => safeValue(this.resource, {
+    positions: [], totalTrailing12m: 0, totalForwardAnnual: 0,
+    portfolioYieldOnCostPct: 0, portfolioForwardYieldPct: 0,
+  }));
   readonly loading  = this.resource.isLoading;
 
   reload(): void { this.resource.reload(); }

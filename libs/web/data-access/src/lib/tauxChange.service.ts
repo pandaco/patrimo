@@ -1,5 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject } from '@angular/core';
+import { safeValue } from './safe';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 import { PreferencesService } from './preferences.service';
@@ -15,14 +16,14 @@ export class TauxChangeService {
     { defaultValue: { EUR: 1 } },
   );
 
-  readonly rates = this.ratesResource.value;
+  readonly rates = computed(() => safeValue(this.ratesResource, {}));
 
-  readonly displayCurrency = computed(() => this.preferences.current().displayCurrency);
+  readonly displayCurrency = computed(() => this.preferences.current()?.displayCurrency || 'EUR');
 
   readonly rate = computed(() => {
     const currency = this.displayCurrency();
     if (currency === 'EUR') return 1;
-    return this.rates()[currency] ?? 1;
+    return this.rates()?.[currency] ?? 1;
   });
 
   convert(eur: number): number { return eur * this.rate(); }

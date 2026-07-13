@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 import { Alert } from './models';
+import { safeValue } from './safe';
 
 @Injectable({ providedIn: 'root' })
 export class AlertService {
@@ -22,14 +23,14 @@ export class AlertService {
     { defaultValue: [] },
   );
 
-  readonly all        = this.resource.value as unknown as () => Alert[];
+  readonly all        = computed(() => safeValue(this.resource, [] as unknown as Alert[]));
   readonly loading    = this.resource.isLoading;
   readonly error      = this.resource.error;
 
-  readonly rules      = this.rulesResource.value as unknown as () => AlertRuleDto[];
+  readonly rules      = computed(() => safeValue(this.rulesResource, []));
 
   readonly unreadCount = computed(() =>
-    (this.resource.value() ?? []).filter(a => !a.read && !a.dismissed).length,
+    safeValue(this.resource, []).filter(a => !a.read && !a.dismissed).length,
   );
 
   reload(): void { this.resource.reload(); }

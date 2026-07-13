@@ -1,8 +1,9 @@
 import { HttpClient, httpResource } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { CreateStrategyVersionDto, StrategyVersionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { safeValue } from './safe';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +17,7 @@ export class StrategyVersionService {
     { defaultValue: [] },
   );
 
-  readonly all     = this.resource.value as unknown as () => StrategyVersionDto[];
+  readonly all     = computed(() => safeValue(this.resource, []));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 

@@ -4,6 +4,7 @@ import { httpResource } from '@angular/common/http';
 import { PortfolioExposureDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
+import { safeValue } from './safe';
 
 @Injectable({ providedIn: 'root' })
 export class ExposureService {
@@ -15,9 +16,9 @@ export class ExposureService {
     () => (this.auth.isAuthenticated() ? `${this.baseUrl}/portfolio/exposure` : undefined),
   );
 
-  readonly geography    = computed(() => this.resource.value()?.geography ?? []);
-  readonly sector = computed(() => this.resource.value()?.sector ?? []);
-  readonly curr   = computed(() => this.resource.value()?.currency ?? []);
+  readonly geography    = computed(() => safeValue(this.resource, { geography: [], sector: [], currency: [] }).geography ?? []);
+  readonly sector = computed(() => safeValue(this.resource, { geography: [], sector: [], currency: [] }).sector ?? []);
+  readonly curr   = computed(() => safeValue(this.resource, { geography: [], sector: [], currency: [] }).currency ?? []);
 
   refresh() {
     this.resource.reload();

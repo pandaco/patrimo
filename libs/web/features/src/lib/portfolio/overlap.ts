@@ -31,8 +31,8 @@ export function computeEtfOverlaps(etfs: Etf[], threshold = 50): EtfOverlap[] {
       const exposureA = a.exposure as NonNullable<Etf['exposure']>;
       const exposureB = b.exposure as NonNullable<Etf['exposure']>;
       for (const dimension of DIMENSIONS) {
-        const expA = exposureA[dimension];
-        const expB = exposureB[dimension];
+        const expA = exposureA[dimension] || {};
+        const expB = exposureB[dimension] || {};
         const keys = new Set([...Object.keys(expA), ...Object.keys(expB)]);
         let overlapPct = 0;
         for (const key of keys) {

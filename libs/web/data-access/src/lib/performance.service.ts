@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
+import { safeValue, safeValueOrUndefined } from './safe';
 
 @Injectable({ providedIn: 'root' })
 export class PerformanceService {
@@ -31,7 +32,7 @@ export class PerformanceService {
     },
   );
 
-  readonly metrics        = this.metricsResource.value;
+  readonly metrics        = computed(() => safeValue(this.metricsResource, { period: '6M', twr: null, volatility: null, sharpe: null, sortino: null, maxDrawdownPct: null }));
   readonly loadingMetrics = this.metricsResource.isLoading;
 
   /**
@@ -40,14 +41,15 @@ export class PerformanceService {
    * does not need to change — the data feeding it is now real.
    */
   readonly series = computed(() => {
-    const dto = this.resource.value();
+    const dto = safeValueOrUndefined(this.resource);
+    if (!dto) return { portfolio: [], benchmark: [] };
     return {
       portfolio: dto.portfolio,
       benchmark: dto.benchmark ?? [],
     };
   });
 
-  readonly raw     = this.resource.value;
+  readonly raw     = computed(() => safeValue(this.resource, { period: '6M', count: 0, labels: [], portfolio: [], benchmark: null, invested: [], drawdowns: [], annualized: null }));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 
@@ -62,7 +64,7 @@ export class PerformanceService {
     },
   );
 
-  readonly wealth        = this.wealthResource.value;
+  readonly wealth        = computed(() => safeValue(this.wealthResource, { period: '1M', labels: [], total: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} }));
   readonly wealthLoading = this.wealthResource.isLoading;
 
   setWealthPeriod(period: PerformancePeriod): void { this.wealthPeriod.set(period); }
@@ -83,11 +85,11 @@ export class PerformanceService {
     { defaultValue: [] },
   );
 
-  readonly etfStats     = this.etfStatsResource.value;
-  readonly fees         = this.feesResource.value;
+  readonly etfStats     = computed(() => safeValue(this.etfStatsResource, [] as EtfStatsDto[]));
+  readonly fees         = computed(() => safeValue(this.feesResource, { brokerageYtd: 0, terDragYtd: 0, totalYtd: 0, byEtf: [] }));
   readonly loadingStats = this.etfStatsResource.isLoading;
   readonly loadingFees  = this.feesResource.isLoading;
-  readonly periodReturns        = this.periodReturnsResource.value;
+  readonly periodReturns        = computed(() => safeValue(this.periodReturnsResource, [] as PeriodReturnDto[]));
   readonly loadingPeriodReturns = this.periodReturnsResource.isLoading;
 
   setPeriod(period: PerformancePeriod): void { this.period.set(period); }

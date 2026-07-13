@@ -1,7 +1,8 @@
 import { httpResource } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { AuditLogEntryDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
+import { safeValue } from './safe';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +15,7 @@ export class AuditLogService {
     { defaultValue: [] },
   );
 
-  readonly all     = this.resource.value as unknown as () => AuditLogEntryDto[];
+  readonly all     = computed(() => safeValue(this.resource, []));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 

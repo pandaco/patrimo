@@ -28,7 +28,7 @@ export class PreferencesService {
     { defaultValue: DEFAULTS },
   );
 
-  readonly current = this.resource.value;
+  readonly current = computed(() => this.resource.value() ?? DEFAULTS);
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 

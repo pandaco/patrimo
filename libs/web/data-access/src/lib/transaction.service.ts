@@ -3,6 +3,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { CreateTransactionDto, CreateTransferDto, TransactionDto, UpdateTransactionDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { safeValue } from './safe';
 import { AuthService } from './auth.service';
 import { EtfService } from './etf.service';
 import { TRANSACTION_LABELS } from './mock-data';
@@ -36,7 +37,7 @@ export class TransactionService {
     { defaultValue: [] },
   );
 
-  readonly all     = computed(() => this.resource.value().map(fromDto));
+  readonly all     = computed(() => safeValue(this.resource, []).map(fromDto));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
   readonly labels: Record<TransactionType, TransactionLabel> = TRANSACTION_LABELS;
@@ -75,7 +76,7 @@ export class TransactionService {
   async remove(id: string): Promise<void> {
     // The backend removes both legs when the row belongs to a transfer, so
     // mirror that locally instead of waiting for a reload.
-    const target = this.resource.value().find(x => x.id === id);
+    const target = safeValue(this.resource, []).find(x => x.id === id);
     await firstValueFrom(this.http.delete<void>(`${this.baseUrl}/transactions/${id}`));
     this.resource.update(list => list.filter(x =>
       x.id !== id && (target?.transferId == null || x.transferId !== target.transferId),

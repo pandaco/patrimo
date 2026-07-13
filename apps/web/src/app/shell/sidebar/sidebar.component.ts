@@ -80,7 +80,7 @@ export class SidebarComponent {
   private readonly alertService = inject(AlertService);
   private readonly preferences  = inject(PreferencesService);
 
-  protected readonly uiMode = computed(() => this.preferences.current().uiMode);
+  protected readonly uiMode = computed(() => this.preferences.current()?.uiMode || 'simple');
   protected readonly valeurLiquidative    = computed(() => this.uiMode() === 'simple' ? NAV_SIMPLE : VALEURLIQUIDATIVE);
   protected readonly user = inject(UserService).currentUser;
   protected readonly menuOpen = signal(false);

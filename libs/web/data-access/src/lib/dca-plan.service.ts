@@ -1,8 +1,9 @@
 import { HttpClient, httpResource } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
 import { CreateDcaPlanDto, DcaPlanDto, UpdateDcaPlanDto } from '@patrimo/contracts';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from './api-base-url';
+import { safeValue } from './safe';
 import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -16,7 +17,7 @@ export class DcaPlanService {
     { defaultValue: [] },
   );
 
-  readonly all     = this.resource.value as unknown as () => DcaPlanDto[];
+  readonly all     = computed(() => safeValue(this.resource, []));
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 
