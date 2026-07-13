@@ -27,6 +27,7 @@ export interface EnvelopeDto {
   value: number;
   invested: number;
   cash: number;
+  contributed: number;
   /** ISO date (YYYY-MM-DD). */
   openedAt: string;
   plafond: number | null;

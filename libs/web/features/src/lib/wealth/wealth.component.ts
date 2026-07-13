@@ -117,7 +117,7 @@ export class WealthComponent {
 
   protected plusValue(env: Envelope)    { return env.value - env.invested; }
   protected pnlPct(env: Envelope) { return env.invested ? (env.value / env.invested - 1) * 100 : 0; }
-  protected capPct(env: Envelope) { return env.plafond  ? (env.value / env.plafond) * 100 : null; }
+  protected capPct(env: Envelope) { return env.plafond  ? (env.contributed / env.plafond) * 100 : null; }
 
   // Realized P&L YTD per envelope, computed via FIFO walk on the envelope's own transactions.
   protected readonly ytdRealizedByEnvelope = computed(() => {

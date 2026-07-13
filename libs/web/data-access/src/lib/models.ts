@@ -17,6 +17,7 @@ export interface Envelope {
   value: number;
   invested: number;
   cash: number;
+  contributed: number;
   openedAt: string;
   plafond: number | null;
 }

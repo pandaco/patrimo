@@ -13,7 +13,7 @@ import { PriceService } from '../market/price.service';
 
 interface Holding { qty: number; buyQty: number; buyCost: number }
 
-function toDto(envelope: Envelope): EnvelopeDto {
+function toDto(envelope: Envelope, contributed = 0): EnvelopeDto {
   return {
     id: envelope.id,
     code: envelope.code,
@@ -23,6 +23,7 @@ function toDto(envelope: Envelope): EnvelopeDto {
     value: envelope.value,
     invested: envelope.invested,
     cash: envelope.cash,
+    contributed,
     openedAt: envelope.openedAt.toISOString().slice(0, 10),
     plafond: envelope.plafond,
   };
@@ -80,13 +81,19 @@ export class EnvelopeService {
     );
 
     return rows.map(envelope => {
-      const valuation = this.valuate(txByEnvelope.get(envelope.id) ?? [], priceByIsin);
+      const txs = txByEnvelope.get(envelope.id) ?? [];
+      const contributed = txs.reduce((sum, t) => {
+        if (t.type === 'DEPOSIT') return sum + t.amount;
+        if (t.type === 'WITHDRAWAL') return sum - t.amount;
+        return sum;
+      }, 0);
+      const valuation = this.valuate(txs, priceByIsin);
       // An envelope with no ETF position keeps its stored value: it may hold
       // manual / opaque assets (SCPI, gold, crypto, AV units) not modelled as
       // ETF transactions, which deriving would wrongly zero out.
       return valuation
-        ? toDto({ ...envelope, value: valuation.value, invested: valuation.invested, cash: valuation.cash })
-        : toDto(envelope);
+        ? toDto({ ...envelope, value: valuation.value, invested: valuation.invested, cash: valuation.cash }, contributed)
+        : toDto(envelope, contributed);
     });
   }
 
@@ -172,7 +179,14 @@ export class EnvelopeService {
 
   async update(id: string, userId: string, input: UpdateEnvelopeDto): Promise<EnvelopeDto | null> {
     const updated = await this.envelopes.updateForUser(id, userId, toPatch(input));
-    return updated ? toDto(updated) : null;
+    if (!updated) return null;
+    const txs = await this.transactions.findByUserId(userId);
+    const contributed = txs.filter(t => t.envelopeId === id).reduce((sum, t) => {
+        if (t.type === 'DEPOSIT') return sum + t.amount;
+        if (t.type === 'WITHDRAWAL') return sum - t.amount;
+        return sum;
+    }, 0);
+    return toDto(updated, contributed);
   }
 
   async delete(id: string, userId: string): Promise<boolean> {

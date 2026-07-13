@@ -179,7 +179,7 @@
               <span [style.width.%]="capPct(env)!"></span>
             </div>
             <div class="row small muted" style="margin-top:6px">
-              <span data-tip="Plafond légal de versements de cette enveloppe (ex. 22 950 € pour le Livret A, 150 000 € pour le PEA). La barre montre ton remplissage — seuls les versements comptent, pas les gains.">Plafond {{ fmtEur(env.plafond!, 0) }}</span>
+              <span data-tip="Plafond légal de versements de cette enveloppe (ex. 22 950 € pour le Livret A, 150 000 € pour le PEA). La barre montre ton remplissage — seuls les versements comptent, pas les gains.">Versements : {{ fmtEur(env.contributed, 0) }} / {{ fmtEur(env.plafond!, 0) }}</span>
               <span class="num" style="margin-left:auto">{{ fmtPctRaw(capPct(env)!, 0) }}</span>
             </div>
           }
