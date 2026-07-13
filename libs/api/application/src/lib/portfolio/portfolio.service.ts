@@ -128,7 +128,10 @@ export class PortfolioService {
       const weight = posValue / totalValue;
 
       let exposure = etf.exposure;
-      if (!exposure || !exposure.geography || Object.keys(exposure.geography).length === 0) {
+      const geoEmpty = !exposure?.geography || Object.keys(exposure.geography).length === 0;
+      const secEmpty = !exposure?.sector || Object.keys(exposure.sector).length === 0;
+      
+      if (!exposure || (geoEmpty && secEmpty)) {
         const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
         if (meta) {
           exposure = this.parseYahooExposure(meta);
@@ -169,13 +172,19 @@ export class PortfolioService {
     const currency: Record<string, number> = {};
 
     const fund = meta?.fundProfile;
+    const topHoldings = meta?.topHoldings;
+    
+    // Some funds return regionHoldings under fundProfile. We can try that.
     if (fund?.regionHoldings) {
       for (const r of fund.regionHoldings) {
         if (r.region && r.relativeWeight) geography[r.region] = r.relativeWeight;
       }
     }
-    if (fund?.sectorWeightings) {
-      for (const s of fund.sectorWeightings) {
+
+    // sectorWeightings is often found in topHoldings.
+    const sectors = topHoldings?.sectorWeightings || fund?.sectorWeightings;
+    if (sectors) {
+      for (const s of sectors) {
         const key = Object.keys(s)[0];
         if (key && s[key]) sector[key] = s[key];
       }

@@ -44,7 +44,7 @@ export class PriceService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getMetadata(isin: string, ticker: string): Promise<any> {
     const symbol = toYahooSymbol(isin, ticker);
-    const key = `meta:${symbol}`;
+    const key = `meta:v2:${symbol}`;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hit = await this.cache.get<any>(key);
     if (hit) return hit;
