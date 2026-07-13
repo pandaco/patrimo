@@ -1,7 +1,7 @@
-// Sidebar layout is handled globally in styles.scss (.sidebar, .nav-item, etc.)
+// Sidebar layout is handled globally in styles.scss (.sidebar, .valeurLiquidative-item, etc.)
 // Component-specific overrides only.
 
-.nav-item {
+.valeurLiquidative-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -29,7 +29,7 @@
 
   .ico { width: 15px; height: 15px; display: inline-flex; flex-shrink: 0; opacity: 0.85; }
 
-  .nav-kbd {
+  .valeurLiquidative-kbd {
     margin-left: auto;
     font-family: var(--font-mono);
     font-size: 9.5px;
@@ -39,13 +39,13 @@
     transition: opacity 0.12s;
   }
 
-  &:hover .nav-kbd,
-  &:focus-visible .nav-kbd { opacity: 0.9; }
-  &.active .nav-kbd { color: #fff; opacity: 0.55; }
+  &:hover .valeurLiquidative-kbd,
+  &:focus-visible .valeurLiquidative-kbd { opacity: 0.9; }
+  &.active .valeurLiquidative-kbd { color: #fff; opacity: 0.55; }
 
   // When a badge is present it owns the right edge; the kbd hint sits after it.
   .badge { margin-left: auto; }
-  .badge + .nav-kbd { margin-left: 8px; }
+  .badge + .valeurLiquidative-kbd { margin-left: 8px; }
 
   .badge {
     font-family: var(--font-mono);

@@ -249,10 +249,10 @@
             @for (s of etfStats(); track s.ticker) {
               <tr>
                 <td><span class="pill solid">{{ s.ticker }}</span></td>
-                <td class="r num small" [class.pos]="(s.return1y ?? 0) >= 0" [class.neg]="(s.return1y ?? 0) < 0">
+                <td class="r num small" [class.position]="(s.return1y ?? 0) >= 0" [class.neg]="(s.return1y ?? 0) < 0">
                   {{ s.return1y !== null ? fmtPct(s.return1y, 1) : '—' }}
                 </td>
-                <td class="r num small" [class.pos]="(s.td ?? 0) >= 0" [class.neg]="(s.td ?? 0) < 0">
+                <td class="r num small" [class.position]="(s.td ?? 0) >= 0" [class.neg]="(s.td ?? 0) < 0">
                   {{ s.td !== null ? fmtPctRaw(s.td, 2) : '—' }}
                 </td>
                 <td class="r num small muted">

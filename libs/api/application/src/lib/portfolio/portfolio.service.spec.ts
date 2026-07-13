@@ -78,13 +78,13 @@ describe('PortfolioService', () => {
       transaction({ type: 'BUY', quantity: 12, price: 39.3, fees: 1 }),
     ]);
 
-    const [pos] = await service.listForUser('user-1');
+    const [position] = await service.listForUser('user-1');
 
-    expect(pos.qty).toBe(22);
+    expect(position.qty).toBe(22);
     // PRU = (10*38.5 + 1 + 12*39.3 + 1) / 22 = 857.6 / 22 = 38.98...
-    expect(pos.avgPrice).toBeCloseTo((10 * 38.5 + 1 + 12 * 39.3 + 1) / 22, 4);
+    expect(position.avgPrice).toBeCloseTo((10 * 38.5 + 1 + 12 * 39.3 + 1) / 22, 4);
     // Net invested = same as total BUY cost since there are no sells.
-    expect(pos.invested).toBeCloseTo(10 * 38.5 + 1 + 12 * 39.3 + 1, 4);
+    expect(position.invested).toBeCloseTo(10 * 38.5 + 1 + 12 * 39.3 + 1, 4);
   });
 
   it('reduces qty on SELL but leaves the PRU computed from BUYs only', async () => {
@@ -94,12 +94,12 @@ describe('PortfolioService', () => {
       transaction({ type: 'SELL', quantity: 5,  price: 50, fees: 0 }),
     ]);
 
-    const [pos] = await service.listForUser('user-1');
+    const [position] = await service.listForUser('user-1');
 
-    expect(pos.qty).toBe(15);
-    expect(pos.avgPrice).toBeCloseTo(40);            // PRU only from BUYs
+    expect(position.qty).toBe(15);
+    expect(position.avgPrice).toBeCloseTo(40);            // PRU only from BUYs
     // invested = BUY 20*40 - SELL 5*50 = 800 - 250 = 550
-    expect(pos.invested).toBeCloseTo(550);
+    expect(position.invested).toBeCloseTo(550);
   });
 
   it('ignores DEPOSIT / DIVIDEND / INTEREST rows', async () => {
@@ -111,11 +111,11 @@ describe('PortfolioService', () => {
       transaction({ type: 'INTEREST', quantity: 1,  price: null, amount: 12,  etfIsin: null }),
     ]);
 
-    const [pos] = await service.listForUser('user-1');
+    const [position] = await service.listForUser('user-1');
 
-    expect(pos.qty).toBe(10);
-    expect(pos.avgPrice).toBe(50);
-    expect(pos.invested).toBe(500);
+    expect(position.qty).toBe(10);
+    expect(position.avgPrice).toBe(50);
+    expect(position.invested).toBe(500);
   });
 
   it('skips positions that are fully closed (qty <= 0)', async () => {
@@ -146,9 +146,9 @@ describe('PortfolioService', () => {
     ]);
     prices.getQuote.mockResolvedValue({ price: 42.5, prevClose: 41.8 });
 
-    const [pos] = await service.listForUser('user-1');
-    expect(pos.currentPrice).toBe(42.5);
-    expect(pos.prevClose).toBe(41.8);
+    const [position] = await service.listForUser('user-1');
+    expect(position.currentPrice).toBe(42.5);
+    expect(position.prevClose).toBe(41.8);
     expect(prices.getQuote).toHaveBeenCalledWith('ISIN-ESE', 'ESE');
   });
 

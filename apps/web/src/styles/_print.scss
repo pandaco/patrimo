@@ -1,7 +1,7 @@
 // Print stylesheet: only the printable-report page content should reach
-// paper — sidebar, topbar, bottom nav and toasts are screen-only chrome.
+// paper — sidebar, topbar, bottom valeurLiquidative and toasts are screen-only chrome.
 @media print {
-  app-sidebar, app-topbar, .bottom-nav, ui-toast, .no-print {
+  app-sidebar, app-topbar, .bottom-valeurLiquidative, ui-toast, .no-print {
     display: none !important;
   }
 

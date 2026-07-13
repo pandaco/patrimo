@@ -4,7 +4,7 @@ export interface UserPreferences {
   horizonYears:    number;
   monthlyTarget:   number;
   displayCurrency: string;
-  /** Sidebar density: 'simple' shows the beginner nav, 'expert' the full one. */
+  /** Sidebar density: 'simple' shows the beginner valeurLiquidative, 'expert' the full one. */
   uiMode:          'simple' | 'expert';
   /** True once the user completed (or skipped) the welcome flow. */
   onboardingDone:  boolean;

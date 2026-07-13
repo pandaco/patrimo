@@ -114,7 +114,7 @@
         </div>
         <div class="stat-block">
           <div class="k" data-tip="Plus-value latente : valeur actuelle − montant investi. Rien n'estimation vendu, donc rien n'estimation encore imposable.">Plus-value</div>
-          <div class="v" [class.pos]="row.plusValue >= 0" [class.neg]="row.plusValue < 0">
+          <div class="v" [class.position]="row.plusValue >= 0" [class.neg]="row.plusValue < 0">
             {{ row.plusValue >= 0 ? '+' : '' }}{{ fmtEur(row.plusValue, 0) }}
           </div>
         </div>
@@ -155,7 +155,7 @@
             {{ fmtEur(env.value, 0) }}
           </div>
           <div class="row" style="gap:6px;font-size:12px;color:var(--ink-3)">
-            <span class="num" [class.pos]="plusValue(env) >= 0" [class.neg]="plusValue(env) < 0">
+            <span class="num" [class.position]="plusValue(env) >= 0" [class.neg]="plusValue(env) < 0">
               {{ plusValue(env) >= 0 ? '+' : '' }}{{ fmtEur(plusValue(env), 0) }}
             </span>
             <span class="num muted">({{ fmtPctRaw(pnlPct(env), 1) }})</span>
@@ -167,7 +167,7 @@
           </div>
           @if (ytdRealized(env.id) !== 0) {
             <div class="row" style="gap:6px;font-size:12px;margin-top:4px">
-              <span class="num" [class.pos]="ytdRealized(env.id) >= 0" [class.neg]="ytdRealized(env.id) < 0"
+              <span class="num" [class.position]="ytdRealized(env.id) >= 0" [class.neg]="ytdRealized(env.id) < 0"
                     data-tip="Plus-value réalisée depuis le 1er janv. (FIFO, frais inclus). YTD = year-to-date.">
                 {{ ytdRealized(env.id) >= 0 ? '+' : '' }}{{ fmtEur(ytdRealized(env.id), 0) }}
               </span>

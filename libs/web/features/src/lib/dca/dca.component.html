@@ -148,7 +148,7 @@
               <td class="r num">{{ fmtNum(r.target, 0) }} %</td>
               <td class="r num small">{{ fmtNum(r.realPct, 1) }} %</td>
               <td class="r">
-                <span class="num small" [class.pos]="r.drift > 0" [class.neg]="r.drift < 0">
+                <span class="num small" [class.position]="r.drift > 0" [class.neg]="r.drift < 0">
                   {{ r.drift >= 0 ? '+' : '' }}{{ fmtNum(r.drift, 1) }}
                 </span>
               </td>

@@ -90,7 +90,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           <div class="label">PV latente</div>
           <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
           <div class="sub">
-            @if (totalCost() > 0) { <span [class.pos]="totalPnl() >= 0" [class.neg]="totalPnl() < 0">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span> }
+            @if (totalCost() > 0) { <span [class.position]="totalPnl() >= 0" [class.neg]="totalPnl() < 0">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span> }
             @else { <span class="muted">—</span> }
           </div>
         </div>
@@ -98,7 +98,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           <div class="label">
             <span data-tip="Plus-Value réalisée depuis le 1er janvier (« YTD » en anglais). Calculée en FIFO : chaque vente estimation appariée aux achats les plus anciens du même ETF. Frais d'achat et de vente inclus dans le coût.">PV réalisée cette année</span>
           </div>
-          <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+          <div class="value" [class.position]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
             {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 2) }}
           </div>
           @if (orphanSellCount() > 0) {
@@ -211,7 +211,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <td class="r"><ui-delta [value]="rowDayPct(etf)" /></td>
             <td class="r num">{{ fmtNum(rowValue(etf), 0) }} €</td>
             <td class="r">
-              <div class="num" [class.pos]="rowPnl(etf) >= 0" [class.neg]="rowPnl(etf) < 0">
+              <div class="num" [class.position]="rowPnl(etf) >= 0" [class.neg]="rowPnl(etf) < 0">
                 {{ rowPnl(etf) >= 0 ? '+' : '' }}{{ fmtNum(rowPnl(etf), 0) }} €
               </div>
               <div class="num tiny" [style.color]="rowPnlPct(etf) >= 0 ? 'var(--gain)' : 'var(--loss)'">
@@ -315,7 +315,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
               </td>
               <td class="r num muted">{{ fmtEur(p.buyCost, 2) }}</td>
               <td class="r num">{{ fmtEur(p.sellProceeds, 2) }}</td>
-              <td class="r num" [class.pos]="p.realizedPnl >= 0" [class.neg]="p.realizedPnl < 0">
+              <td class="r num" [class.position]="p.realizedPnl >= 0" [class.neg]="p.realizedPnl < 0">
                 {{ p.realizedPnl >= 0 ? '+' : '' }}{{ fmtEur(p.realizedPnl, 2) }}
               </td>
               <td class="r muted small">{{ p.lastSell }}</td>
@@ -326,7 +326,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           @let closedTotal = closedPositions().reduce((a, p) => a + p.realizedPnl, 0);
           <tr style="background:var(--paper-2)">
             <td colspan="3" class="r"><b>Total réalisé</b></td>
-            <td class="r num" [class.pos]="closedTotal >= 0" [class.neg]="closedTotal < 0">
+            <td class="r num" [class.position]="closedTotal >= 0" [class.neg]="closedTotal < 0">
               <b>{{ closedTotal >= 0 ? '+' : '' }}{{ fmtEur(closedTotal, 2) }}</b>
             </td>
             <td></td>

@@ -33,7 +33,7 @@
     @if (step() === 1) {
       <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
         Stratégique
-        <span class="num small" [class.pos]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
+        <span class="num small" [class.position]="strategicSum() === 100" [class.neg]="strategicSum() !== 100"
               style="margin-left:8px">Σ = {{ strategicSum() }} %</span>
       </h3>
       <p class="muted small" style="margin:0 0 14px">
@@ -68,7 +68,7 @@
     @if (step() === 2) {
       <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
         Tactique
-        <span class="num small" [class.pos]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
+        <span class="num small" [class.position]="tacticSum() === 100" [class.neg]="tacticSum() !== 100"
               style="margin-left:8px">Σ = {{ tacticSum() }} %</span>
       </h3>
       <p class="muted small" style="margin:0 0 14px">
@@ -110,7 +110,7 @@
     @if (step() === 3) {
       <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
         Par ETF
-        <span class="num small" [class.pos]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
+        <span class="num small" [class.position]="etfSum() === 100" [class.neg]="etfSum() > 0 && etfSum() !== 100"
               style="margin-left:8px">Σ = {{ etfSum() }} %</span>
         <span class="muted tiny" style="margin-left:8px">(laisse tout à 0 pour ignorer)</span>
       </h3>
@@ -172,7 +172,7 @@
     @if (step() === 4) {
       <h3 style="font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px">
         Par enveloppe
-        <span class="num small" [class.pos]="envSum() === 100" [class.neg]="envSum() > 0 && envSum() !== 100"
+        <span class="num small" [class.position]="envSum() === 100" [class.neg]="envSum() > 0 && envSum() !== 100"
               style="margin-left:8px">Σ = {{ envSum() }} %</span>
         <span class="muted tiny" style="margin-left:8px">(laisse tout à 0 pour ignorer)</span>
       </h3>

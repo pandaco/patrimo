@@ -68,14 +68,14 @@
           <span class="row" style="gap:6px">
             <span style="width:14px;height:2px;background:var(--brand);display:inline-block"></span>
             <span class="muted tiny">Portefeuille</span>
-            <span class="num small" [class.pos]="portfolioPct() >= 0" [class.neg]="portfolioPct() < 0">
+            <span class="num small" [class.position]="portfolioPct() >= 0" [class.neg]="portfolioPct() < 0">
               {{ fmtPct(portfolioPct(), 2) }}
             </span>
           </span>
           @if (annualized() !== null) {
             <span class="row" style="gap:6px">
               <span class="muted tiny" data-tip="Taux de croissance annuel composé — rendement annuel moyen équivalent. Ex : +12 % CAGR sur 3 ans = comme si le portefeuille avait gagné 12 % chaque année.">CAGR</span>
-              <span class="num small" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
+              <span class="num small" [class.position]="annualized()! >= 0" [class.neg]="annualized()! < 0">
                 {{ fmtPct(annualized()!, 2) }}/an
               </span>
             </span>
@@ -83,7 +83,7 @@
           @if (metrics().twr !== null) {
             <span class="row" style="gap:6px">
               <span class="muted tiny" data-tip="Rendement temps-pondéré (True Time-Weighted Return) : la vraie performance de tes choix, neutralisée du moment et du montant de tes versements. C'estimation la mesure pour te comparer honnêtement à un indice.">TWR</span>
-              <span class="num small" [class.pos]="metrics().twr! >= 0" [class.neg]="metrics().twr! < 0">
+              <span class="num small" [class.position]="metrics().twr! >= 0" [class.neg]="metrics().twr! < 0">
                 {{ fmtPct(metrics().twr!, 2) }}
               </span>
             </span>
@@ -98,7 +98,7 @@
             <span class="row" style="gap:6px">
               <span style="width:14px;height:2px;background:var(--ink-3);display:inline-block;border-top:1px dashed var(--ink-3)"></span>
               <span class="muted tiny">{{ benchmarkLabel() }}</span>
-              <span class="num small" [class.pos]="benchmarkPct() >= 0" [class.neg]="benchmarkPct() < 0">
+              <span class="num small" [class.position]="benchmarkPct() >= 0" [class.neg]="benchmarkPct() < 0">
                 {{ fmtPct(benchmarkPct(), 2) }}
               </span>
             </span>
@@ -161,7 +161,7 @@
             </td>
             <td class="r">
               @if (row.totalPct !== null) {
-                <span class="num" [class.pos]="row.totalPct >= 0" [class.neg]="row.totalPct < 0">{{ fmtPct(row.totalPct, 2) }}</span>
+                <span class="num" [class.position]="row.totalPct >= 0" [class.neg]="row.totalPct < 0">{{ fmtPct(row.totalPct, 2) }}</span>
               } @else if (loadingPeriodReturns()) {
                 <span class="skeleton" style="display:inline-block;height:12px;width:56px;border-radius:4px"></span>
               } @else {
@@ -170,7 +170,7 @@
             </td>
             <td class="r">
               @if (row.annualizedPct !== null) {
-                <span class="num small" [class.pos]="row.annualizedPct >= 0" [class.neg]="row.annualizedPct < 0">{{ fmtPct(row.annualizedPct, 2) }}</span>
+                <span class="num small" [class.position]="row.annualizedPct >= 0" [class.neg]="row.annualizedPct < 0">{{ fmtPct(row.annualizedPct, 2) }}</span>
               } @else if (loadingPeriodReturns()) {
                 <span class="skeleton" style="display:inline-block;height:12px;width:48px;border-radius:4px"></span>
               } @else {
@@ -193,14 +193,14 @@
       <div class="row" style="flex-wrap:wrap;gap:20px 36px">
         <div class="stat-block">
           <div class="k"><span data-tip="Rendement temps-pondéré sur la période active : la performance de tes choix, comme si tout avait été investi au premier jour. Insensible au calendrier de tes versements — comparable à un indice.">TWR · {{ activePeriod() }}</span></div>
-          <div class="v" [class.pos]="(metrics().twr ?? 0) >= 0" [class.neg]="(metrics().twr ?? 0) < 0">
+          <div class="v" [class.position]="(metrics().twr ?? 0) >= 0" [class.neg]="(metrics().twr ?? 0) < 0">
             {{ metrics().twr !== null ? fmtPct(metrics().twr!, 2) : '—' }}
           </div>
           <div class="sub">la note de tes choix</div>
         </div>
         <div class="stat-block">
           <div class="k"><span data-tip="Taux de rendement interne (XIRR) depuis le début : pèse chaque euro par sa durée d'exposition. Le rendement annuel que TON argent a réellement connu, timing des versements inclus.">TAUXRENTABILITEINTERNE · depuis le début</span></div>
-          <div class="v" [class.pos]="(tauxRentabiliteInterne() ?? 0) >= 0" [class.neg]="(tauxRentabiliteInterne() ?? 0) < 0">
+          <div class="v" [class.position]="(tauxRentabiliteInterne() ?? 0) >= 0" [class.neg]="(tauxRentabiliteInterne() ?? 0) < 0">
             {{ tauxRentabiliteInterne() !== null ? fmtPct(tauxRentabiliteInterne()!, 2) + '/an' : '—' }}
           </div>
           <div class="sub">la note de ton timing</div>
@@ -208,7 +208,7 @@
         @if (annualized() !== null) {
           <div class="stat-block">
             <div class="k"><span data-tip="Le rendement de la période active ramené à un taux annuel moyen composé — le terme de comparaison annualisé du TAUXRENTABILITEINTERNE.">CAGR · {{ activePeriod() }}</span></div>
-            <div class="v" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">
+            <div class="v" [class.position]="annualized()! >= 0" [class.neg]="annualized()! < 0">
               {{ fmtPct(annualized()!, 2) }}/an
             </div>
           </div>
@@ -216,7 +216,7 @@
         @if (timingVerdict(); as verdict) {
           <div class="stat-block">
             <div class="k"><span data-tip="TAUXRENTABILITEINTERNE − CAGR sur l'historique complet : ce que ton calendrier de versements a ajouté ou retiré par rapport à un rendement régulier.">Effet timing</span></div>
-            <div class="v" [class.pos]="verdict.helped" [class.neg]="!verdict.helped">
+            <div class="v" [class.position]="verdict.helped" [class.neg]="!verdict.helped">
               {{ verdict.deltaPts >= 0 ? '+' : '−' }}{{ fmtNum(abs(verdict.deltaPts), 1) }} pts/an
             </div>
             <div class="sub">{{ verdict.helped ? 'ton calendrier t\'a aidé' : 'ton calendrier t\'a coûté' }}</div>
@@ -252,19 +252,19 @@
         </div>
         <div class="stat-block">
           <div class="k"><span data-tip="Rapport rendement/risque (Sharpe), net de versements. Combien de rendement par unité de risque pris. Au-dessus de 1 = bon, au-dessus de 2 = excellent.">Sharpe ratio</span></div>
-          <div class="v" [class.pos]="(metrics().sharpe ?? 0) > 0" [class.neg]="(metrics().sharpe ?? 0) < 0">
+          <div class="v" [class.position]="(metrics().sharpe ?? 0) > 0" [class.neg]="(metrics().sharpe ?? 0) < 0">
             {{ metrics().sharpe !== null ? fmtNum(metrics().sharpe!, 2) : '—' }}
           </div>
         </div>
         <div class="stat-block">
           <div class="k"><span data-tip="Comme le Sharpe mais ne pénalise que la volatilité à la baisse (les pertes). Plus pertinent quand tu te soucies surtout du risque de perte. Plus élevé = mieux.">Sortino ratio</span></div>
-          <div class="v" [class.pos]="(metrics().sortino ?? 0) > 0" [class.neg]="(metrics().sortino ?? 0) < 0">
+          <div class="v" [class.position]="(metrics().sortino ?? 0) > 0" [class.neg]="(metrics().sortino ?? 0) < 0">
             {{ metrics().sortino !== null ? fmtNum(metrics().sortino!, 2) : '—' }}
           </div>
         </div>
         <div class="stat-block">
           <div class="k"><span data-tip="Rendement annualisé divisé par le pire drawdown. Mesure l'efficacité du portefeuille par rapport à sa pire perte observée. Plus élevé = mieux.">Calmar ratio</span></div>
-          <div class="v" [class.pos]="(stats.calmar ?? 0) > 0" [class.neg]="(stats.calmar ?? 0) < 0">
+          <div class="v" [class.position]="(stats.calmar ?? 0) > 0" [class.neg]="(stats.calmar ?? 0) < 0">
             {{ stats.calmar !== null ? fmtNum(stats.calmar, 2) : '—' }}
           </div>
         </div>
@@ -276,7 +276,7 @@
         @if (stats.bestMonth) {
           <div class="stat-block">
             <div class="k">Meilleur mois</div>
-            <div class="v pos">{{ fmtPct(stats.bestMonth.pct, 1) }}</div>
+            <div class="v position">{{ fmtPct(stats.bestMonth.pct, 1) }}</div>
             <div class="sub">{{ stats.bestMonth.label }}</div>
           </div>
         }
@@ -310,11 +310,11 @@
                         [attr.title]="pct === null ? 'Pas de donnée pour ' + MONTHS_SHORT[$index] + ' ' + row.year : null"
                         [attr.aria-label]="pct === null ? 'Pas de donnée' : null">
                       @if (pct !== null) {
-                        <span [class.pos]="pct >= 0" [class.neg]="pct < 0">{{ fmtPct(pct, 1) }}</span>
+                        <span [class.position]="pct >= 0" [class.neg]="pct < 0">{{ fmtPct(pct, 1) }}</span>
                       }
                     </td>
                   }
-                  <td class="r num small" [class.pos]="(row.yearTotal ?? 0) >= 0" [class.neg]="(row.yearTotal ?? 0) < 0">
+                  <td class="r num small" [class.position]="(row.yearTotal ?? 0) >= 0" [class.neg]="(row.yearTotal ?? 0) < 0">
                     {{ row.yearTotal !== null ? fmtPct(row.yearTotal, 1) : '—' }}
                   </td>
                 </tr>

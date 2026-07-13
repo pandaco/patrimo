@@ -81,7 +81,7 @@
                 </td>
                 <td class="r num">{{ transaction.qty }}</td>
                 <td class="r num muted">{{ fmtEur(transaction.price, 2) }}</td>
-                <td class="r num" [class.pos]="transaction.action === 'BUY'" [class.neg]="transaction.action === 'SELL'">
+                <td class="r num" [class.position]="transaction.action === 'BUY'" [class.neg]="transaction.action === 'SELL'">
                   {{ fmtEur(transaction.amount, 0) }}
                 </td>
                 <td class="r muted small">{{ fmtPct(transaction.targetWeight, 1) }}</td>
@@ -253,7 +253,7 @@
             <td class="r num">{{ fmtNum(tgt, 0) }} %</td>
             <td class="r num">{{ fmtNum(real, 1) }} %</td>
             <td class="r">
-              <span class="num" [class.pos]="d > 0" [class.neg]="d < 0">
+              <span class="num" [class.position]="d > 0" [class.neg]="d < 0">
                 {{ d >= 0 ? '+' : '' }}{{ fmtNum(d, 1) }} pts
               </span>
             </td>
@@ -307,7 +307,7 @@
               <td class="r num">{{ fmtNum(row.target, 0) }} %</td>
               <td class="r num">{{ fmtNum(row.real, 1) }} %</td>
               <td class="r">
-                <span class="num" [class.pos]="row.drift > 0" [class.neg]="row.drift < 0">
+                <span class="num" [class.position]="row.drift > 0" [class.neg]="row.drift < 0">
                   {{ row.drift >= 0 ? '+' : '' }}{{ fmtNum(row.drift, 1) }} pts
                 </span>
               </td>

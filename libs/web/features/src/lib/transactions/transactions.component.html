@@ -101,12 +101,12 @@
               @let env = getEnv(row.envId);
               <tr>
                 <td>{{ env?.code ?? row.envId }}</td>
-                <td class="r num small pos">+{{ fmtEur(row.deposits, 0) }}</td>
+                <td class="r num small position">+{{ fmtEur(row.deposits, 0) }}</td>
                 <td class="r num small neg">−{{ fmtEur(row.withdrawals, 0) }}</td>
                 <td class="r num small neg">−{{ fmtEur(row.buys, 0) }}</td>
-                <td class="r num small pos">+{{ fmtEur(row.sells, 0) }}</td>
-                <td class="r num small pos">+{{ fmtEur(row.dividends, 0) }}</td>
-                <td class="r num" [class.pos]="row.cashBalance >= 0" [class.neg]="row.cashBalance < 0">
+                <td class="r num small position">+{{ fmtEur(row.sells, 0) }}</td>
+                <td class="r num small position">+{{ fmtEur(row.dividends, 0) }}</td>
+                <td class="r num" [class.position]="row.cashBalance >= 0" [class.neg]="row.cashBalance < 0">
                   {{ fmtEur(row.cashBalance, 2) }}
                 </td>
               </tr>
@@ -150,7 +150,7 @@
       <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
         <span class="serif-italic" style="font-size:18px;text-transform:capitalize">{{ group.label }}</span>
         <span class="muted small">{{ group.transactions.length }} mouvement{{ group.transactions.length > 1 ? 's' : '' }}</span>
-        <span style="margin-left:auto" class="num" [class.pos]="group.total >= 0" [class.neg]="group.total < 0">
+        <span style="margin-left:auto" class="num" [class.position]="group.total >= 0" [class.neg]="group.total < 0">
           {{ group.total >= 0 ? '+' : '−' }} {{ fmtEur(abs(group.total), 2) }}
         </span>
       </div>
@@ -209,7 +209,7 @@
                 @if (transaction.fees > 0) { <span class="num small muted">{{ fmtNum(transaction.fees, 2) }} €</span> }
               </td>
               <td class="r" style="width:130px">
-                <span class="num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
+                <span class="num" [class.position]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
                   {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(transaction.amount, 2) }}
                 </span>
               </td>

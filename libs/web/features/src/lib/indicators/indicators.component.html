@@ -24,7 +24,7 @@
     <div class="card kpi-tile">
       <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'estimation la même méthode qu'Excel XIRR.">TAUXRENTABILITEINTERNE</span></div>
       @if (tauxRentabiliteInterne() !== null) {
-        <div class="value" [class.pos]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
+        <div class="value" [class.position]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
           {{ tauxRentabiliteInterne()! >= 0 ? '+' : '' }}{{ fmtNum(tauxRentabiliteInterne()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
         </div>
         <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
@@ -38,7 +38,7 @@
     <div class="card kpi-tile">
       <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'estimation psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
       @if (currentDrawdown() !== null) {
-        <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.pos]="currentDrawdown()! >= -0.5">
+        <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.position]="currentDrawdown()! >= -0.5">
           {{ fmtPct(currentDrawdown()!, 1) }}
         </div>
         <div class="sub">repère : −34 % au krach 2020</div>
@@ -59,7 +59,7 @@
     <div class="card kpi-tile">
       <div class="label"><span data-tip="Plus gros écart absolu entre ta cible Actions/Obligations et la réalité. Au-delà de 5 pts, rééquilibrage conseillé.">Drift allocation</span></div>
       @if (driftMax() !== null) {
-        <div class="value" [class.neg]="driftMax()! > 10" [class.warn]="driftMax()! > 5 && driftMax()! <= 10" [class.pos]="driftMax()! <= 5">
+        <div class="value" [class.neg]="driftMax()! > 10" [class.warn]="driftMax()! > 5 && driftMax()! <= 10" [class.position]="driftMax()! <= 5">
           {{ fmtNum(driftMax()!, 1) }}<small style="font-size:0.55em;font-weight:500"> pts</small>
         </div>
         <div class="sub">
@@ -100,7 +100,7 @@
           @case ('realized') {
             <!-- PV réalisée YTD -->
             <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
-            <div class="value" [class.pos]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
+            <div class="value" [class.position]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
               {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
             </div>
             <div class="sub">depuis le 1ᵉʳ janv.</div>

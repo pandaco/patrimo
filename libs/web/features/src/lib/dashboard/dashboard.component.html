@@ -139,11 +139,11 @@
           @if (wealthReturn(); as r) {
             <span class="perf-line-title">Performance</span>
             @if (r.twrPct !== null) {
-              <span class="perf-line-pct" [class.pos]="r.twrPct >= 0" [class.neg]="r.twrPct < 0">
+              <span class="perf-line-pct" [class.position]="r.twrPct >= 0" [class.neg]="r.twrPct < 0">
                 {{ r.twrPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.twrPct), 2) }} %
               </span>
             }
-            <span class="perf-line-eur" [class.pos]="r.eur >= 0" [class.neg]="r.eur < 0">
+            <span class="perf-line-eur" [class.position]="r.eur >= 0" [class.neg]="r.eur < 0">
               {{ r.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(r.eur), 0) }}
             </span>
             <span class="perf-line-cap">
@@ -224,7 +224,7 @@
 
           <div class="hero-metric">
             <div class="hero-metric-label"><ui-term term="PV latente">PV latente</ui-term></div>
-            <div class="hero-metric-value" [class.pos]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
+            <div class="hero-metric-value" [class.position]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
               {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
             </div>
             <div class="hero-metric-cap">depuis le début · {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %</div>

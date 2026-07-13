@@ -9,12 +9,12 @@
     </div>
   </div>
 
-  @for (group of nav(); track group.label) {
-    <nav class="nav-group" [attr.aria-label]="group.label">
-      <div class="nav-label">{{ group.label }}</div>
+  @for (group of valeurLiquidative(); track group.label) {
+    <nav class="valeurLiquidative-group" [attr.aria-label]="group.label">
+      <div class="valeurLiquidative-label">{{ group.label }}</div>
       @for (item of group.items; track item.id) {
         <a
-          class="nav-item"
+          class="valeurLiquidative-item"
           [routerLink]="item.route"
           routerLinkActive="active"
           [attr.aria-keyshortcuts]="item.shortcut ? 'g ' + item.shortcut.toLowerCase() : null"
@@ -29,7 +29,7 @@
             <span class="badge" [attr.aria-label]="b + ' en attente'">{{ b }}</span>
           }
           @if (item.shortcut) {
-            <span class="nav-kbd" aria-hidden="true">G·{{ item.shortcut }}</span>
+            <span class="valeurLiquidative-kbd" aria-hidden="true">G·{{ item.shortcut }}</span>
           }
         </a>
       }

@@ -16,7 +16,7 @@ function emptyPosition(): PositionAccumulator {
   return { qty: 0, invested: 0, buyQty: 0, buyCost: 0 };
 }
 
-function applyTransaction(pos: PositionAccumulator, transaction: Transaction): void {
+function applyTransaction(position: PositionAccumulator, transaction: Transaction): void {
   if (transaction.type !== 'BUY' && transaction.type !== 'SELL') return;
   const sign      = transaction.type === 'BUY' ? 1 : -1;
   const price     = transaction.price ?? 0;
@@ -24,11 +24,11 @@ function applyTransaction(pos: PositionAccumulator, transaction: Transaction): v
   // and shrink the proceeds of a SELL.
   const costs     = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
   const grossCost = transaction.quantity * price + (transaction.type === 'BUY' ? costs : -costs);
-  pos.qty      += sign * transaction.quantity;
-  pos.invested += sign * grossCost;
+  position.qty      += sign * transaction.quantity;
+  position.invested += sign * grossCost;
   if (sign > 0) {
-    pos.buyQty  += transaction.quantity;
-    pos.buyCost += grossCost;
+    position.buyQty  += transaction.quantity;
+    position.buyCost += grossCost;
   }
 }
 
@@ -51,15 +51,15 @@ export class PortfolioService {
     const byIsin = new Map<string, PositionAccumulator>();
     for (const transaction of transactions) {
       if (!transaction.etfIsin) continue;
-      const pos = byIsin.get(transaction.etfIsin) ?? emptyPosition();
-      applyTransaction(pos, transaction);
-      byIsin.set(transaction.etfIsin, pos);
+      const position = byIsin.get(transaction.etfIsin) ?? emptyPosition();
+      applyTransaction(position, transaction);
+      byIsin.set(transaction.etfIsin, position);
     }
 
     const positions = await Promise.all(
       Array.from(byIsin.entries())
-        .filter(([isin, pos]) => pos.qty > 0 && etfByIsin.has(isin))
-        .map(async ([isin, pos]) => {
+        .filter(([isin, position]) => position.qty > 0 && etfByIsin.has(isin))
+        .map(async ([isin, position]) => {
           const etf = etfByIsin.get(isin);
           if (!etf) return null;
           const quote = await this.priceService.getQuote(isin, etf.ticker);
@@ -67,9 +67,9 @@ export class PortfolioService {
             etfIsin: isin,
             ticker:  etf.ticker,
             name:    etf.name,
-            qty:     pos.qty,
-            avgPrice: pos.buyQty > 0 ? pos.buyCost / pos.buyQty : 0,
-            invested: pos.invested,
+            qty:     position.qty,
+            avgPrice: position.buyQty > 0 ? position.buyCost / position.buyQty : 0,
+            invested: position.invested,
             currentPrice: quote.price,
             prevClose:    quote.prevClose,
           } satisfies PositionDto;
@@ -205,22 +205,22 @@ export class PortfolioService {
     const transactions: RebalanceTransactionDto[] = [];
 
     for (const [isin, targetWeightPct] of Object.entries(targets)) {
-      const pos = positions.find(p => p.etfIsin === isin);
-      const currentPrice = pos?.currentPrice ?? 0;
+      const position = positions.find(p => p.etfIsin === isin);
+      const currentPrice = position?.currentPrice ?? 0;
       if (currentPrice === 0) continue;
 
-      const currentWeight = (pos ? pos.qty * currentPrice : 0) / totalValue;
+      const currentWeight = (position ? position.qty * currentPrice : 0) / totalValue;
       const targetWeight = targetWeightPct / 100;
       const targetValue = totalValue * targetWeight;
-      const diffValue = targetValue - (pos ? pos.qty * currentPrice : 0);
+      const diffValue = targetValue - (position ? position.qty * currentPrice : 0);
 
       const qtyDiff = Math.round(diffValue / currentPrice);
       if (qtyDiff === 0) continue;
 
       transactions.push({
         etfIsin: isin,
-        ticker: pos?.ticker ?? '',
-        name: pos?.name ?? '',
+        ticker: position?.ticker ?? '',
+        name: position?.name ?? '',
         action: qtyDiff > 0 ? 'BUY' : 'SELL',
         qty: Math.abs(qtyDiff),
         price: currentPrice,
