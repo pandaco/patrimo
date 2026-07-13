@@ -178,12 +178,28 @@
         <div class="recap-line"><span>Drift moy. avant → après</span>
           <b>{{ fmtNum(avgDriftBefore(), 1) }} → {{ fmtNum(avgDriftAfter(), 1) }} pts</b></div>
         <div class="recap-line"><span>Frais courtage estimés</span><b>{{ fmtEur(normalized().length * 0.99, 2) }}</b></div>
-        <div class="recap-line total"><span><b>Vérification cohérence</b></span><span class="pill gain"><span class="dot"></span>OK</span></div>
+        <div class="recap-line total"><span><b>Vérification cohérence</b></span>
+          @if (cashAfter() < 0) {
+            <span class="pill loss"><span class="dot"></span>Cash insuffisant · découvert de {{ fmtEur(-cashAfter(), 2) }}</span>
+          } @else {
+            <span class="pill gain"><span class="dot"></span>OK</span>
+          }
+        </div>
       </div>
 
       <div class="row" style="margin-top:16px;gap:8px;justify-content:flex-end">
-        <button class="btn" (click)="savePlan()">Programmer mensuel</button>
-        <button class="btn primary" (click)="openNewTx()">Exécuter maintenant →</button>
+        @if (confirmingExecute()) {
+          <button class="btn ghost" (click)="cancelExecute()" [disabled]="executing()">Annuler</button>
+          <button class="btn primary" (click)="executePlan()" [disabled]="executing()">
+            {{ executing() ? 'Création en cours…' : 'Confirmer ' + executableRows().length + ' achat' + (executableRows().length > 1 ? 's' : '') + ' (' + fmtEur(totalSpent(), 2) + ')' }}
+          </button>
+        } @else {
+          <button class="btn" (click)="savePlan()">Programmer mensuel</button>
+          <button class="btn primary" (click)="executePlan()"
+                  data-tip="Crée directement les achats de la répartition suggérée dans ton journal — une transaction par ligne, datée d'aujourd'hui.">
+            Exécuter maintenant →
+          </button>
+        }
       </div>
     </div>
 

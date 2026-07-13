@@ -2,9 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
-import { MatDialog } from '@angular/material/dialog';
-import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, FxService, ToastService } from '@patrimo/data-access';
-import { BarComponent, fmtNum, fmtPctRaw, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
+import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
+import { BarComponent, brokerageFee, fmtNum, fmtPctRaw, TipDirective } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -22,7 +21,7 @@ export class DcaComponent {
   private readonly allocationService = inject(AllocationService);
   private readonly envelopeService   = inject(EnvelopeService);
   private readonly dcaPlanService = inject(DcaPlanService);
-  private readonly dialog   = inject(MatDialog);
+  private readonly transactionService = inject(TransactionService);
 
   protected readonly amount     = signal(800);
   protected readonly correction = signal(true);
@@ -129,13 +128,63 @@ export class DcaComponent {
   protected qty(eur: number, price: number)  { return price > 0 ? Math.floor(eur / price) : 0; }
   protected cost(eur: number, price: number) { return this.qty(eur, price) * price; }
 
-  protected async openNewTx(): Promise<void> {
-    this.dialog.open(TransactionDialogComponent, {
-      panelClass: 'tx-dialog-panel',
-      maxWidth: '580px',
-      width: '100%',
-    });
+  // « Exécuter maintenant » : confirmation en deux temps, puis création d'un
+  // achat par ligne de la répartition suggérée (quantités entières uniquement).
+  protected readonly confirmingExecute = signal(false);
+  protected readonly executing         = signal(false);
+
+  /** Lignes réellement exécutables : au moins une part entière à acheter. */
+  protected readonly executableRows = computed(() =>
+    this.normalized()
+      .map(r => ({ isin: r.e.isin, ticker: r.e.ticker, qty: this.qty(r.eur, r.e.price), price: r.e.price }))
+      .filter(r => r.qty > 0),
+  );
+
+  protected async executePlan(): Promise<void> {
+    if (this.executing()) return;
+    const env  = this.selectedEnvelope();
+    const rows = this.executableRows();
+    if (!env || rows.length === 0) {
+      this.toasts.error('Aucune part entière à acheter avec ce montant.');
+      return;
+    }
+    if (!this.confirmingExecute()) {
+      this.confirmingExecute.set(true);
+      return;
+    }
+
+    this.executing.set(true);
+    const today = new Date().toISOString().slice(0, 10);
+    let created = 0;
+    try {
+      for (const r of rows) {
+        const amount = r.qty * r.price;
+        await this.transactionService.create({
+          envelopeId: env.id,
+          etfIsin:    r.isin,
+          type:       'BUY',
+          date:       today,
+          quantity:   r.qty,
+          price:      r.price,
+          fees:       brokerageFee(amount),
+          taxes:      0,
+          amount,
+        });
+        created++;
+      }
+      this.toasts.success(`${created} achat${created > 1 ? 's' : ''} créé${created > 1 ? 's' : ''} — ${this.fmtEur(this.totalSpent(), 2)} investis sur ${env.code}.`);
+    } catch (err) {
+      console.error(err);
+      this.toasts.error(created > 0
+        ? `Erreur après ${created} achat${created > 1 ? 's' : ''} créé${created > 1 ? 's' : ''} — vérifie le journal avant de relancer.`
+        : 'Erreur lors de la création des achats.');
+    } finally {
+      this.executing.set(false);
+      this.confirmingExecute.set(false);
+    }
   }
+
+  protected cancelExecute(): void { this.confirmingExecute.set(false); }
 
   protected async savePlan(): Promise<void> {
     const env = this.selectedEnvelope();
