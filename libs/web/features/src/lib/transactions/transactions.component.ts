@@ -41,6 +41,9 @@ export class TransactionsComponent {
 
   protected readonly filters   = FILTER_OPTIONS;
   protected readonly activeFilter = signal<FilterType>('ALL');
+  protected readonly envelopeFilter = signal('');
+  protected readonly etfFilter      = signal('');
+  protected readonly searchQuery    = signal('');
 
   protected readonly loading   = this.transactionService.loading;
   protected readonly envelopes = this.envelopeService.all;
@@ -48,17 +51,51 @@ export class TransactionsComponent {
   protected readonly labels    = this.transactionService.labels;
 
   protected readonly totalCount = computed(() => this.transactionService.all().length);
-  protected readonly txCount    = computed(() => {
-    const f = this.activeFilter();
-    const all = this.transactionService.all();
-    return f === 'ALL' ? all.length : all.filter(t => t.type === f).length;
+
+  // Seuls les ETFs réellement présents dans le journal sont proposés en filtre.
+  protected readonly tradedEtfs = computed(() => {
+    const isins = new Set(this.transactionService.all().map(t => t.etf).filter(Boolean));
+    return this.etfs().filter(e => isins.has(e.isin));
   });
 
+  protected readonly filtered = computed<Transaction[]>(() => {
+    const type  = this.activeFilter();
+    const envId = this.envelopeFilter();
+    const isin  = this.etfFilter();
+    const query = this.searchQuery().trim().toLowerCase();
+    return this.transactionService.all().filter(tx => {
+      if (type !== 'ALL' && tx.type !== type) return false;
+      if (envId && tx.envelope !== envId) return false;
+      if (isin && tx.etf !== isin) return false;
+      if (query) {
+        const etf = this.getEtf(tx.etf);
+        const env = this.getEnv(tx.envelope);
+        const haystack = [
+          etf?.ticker, etf?.name, etf?.isin,
+          env?.label, env?.code, env?.broker,
+          this.labels[tx.type].label, tx.date,
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+      return true;
+    });
+  });
+
+  protected readonly filteredCount = computed(() => this.filtered().length);
+  protected readonly hasActiveFilters = computed(() =>
+    this.activeFilter() !== 'ALL' || !!this.envelopeFilter() || !!this.etfFilter() || !!this.searchQuery().trim(),
+  );
+
+  protected resetFilters(): void {
+    this.activeFilter.set('ALL');
+    this.envelopeFilter.set('');
+    this.etfFilter.set('');
+    this.searchQuery.set('');
+  }
+
   protected readonly groups = computed<TxGroup[]>(() => {
-    const f    = this.activeFilter();
-    const all  = this.transactionService.all();
     const lbls = this.labels;
-    const filtered = f === 'ALL' ? all : all.filter(t => t.type === f);
+    const filtered = this.filtered();
 
     const map = new Map<string, Transaction[]>();
     for (const tx of filtered) {
@@ -153,6 +190,15 @@ export class TransactionsComponent {
 
   protected async openNewTx(): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
+      panelClass: 'tx-dialog-panel',
+      maxWidth: '580px',
+      width: '100%',
+    });
+  }
+
+  protected async openDuplicateTx(tx: Transaction): Promise<void> {
+    this.dialog.open(TransactionDialogComponent, {
+      data: { duplicateFrom: tx },
       panelClass: 'tx-dialog-panel',
       maxWidth: '580px',
       width: '100%',

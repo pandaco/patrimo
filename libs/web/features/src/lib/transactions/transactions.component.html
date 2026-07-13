@@ -22,7 +22,7 @@
   </div>
 
   <!-- FILTER PILLS -->
-  <div class="row" style="margin-bottom:16px;gap:6px;flex-wrap:wrap">
+  <div class="row" style="margin-bottom:10px;gap:6px;flex-wrap:wrap">
     @for (f of filters; track f.id) {
       <button
         class="pill"
@@ -39,6 +39,38 @@
       </button>
       <button class="btn sm" (click)="exportCsv()">Exporter</button>
     </div>
+  </div>
+
+  <!-- FILTER SELECTS + SEARCH -->
+  <div class="row" style="margin-bottom:16px;gap:8px;flex-wrap:wrap">
+    <input
+      type="search"
+      placeholder="Filtrer : ticker, enveloppe, courtier…"
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)"
+      aria-label="Recherche dans le journal"
+      style="flex:1;min-width:180px;max-width:320px;padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)"
+    />
+    <select [value]="envelopeFilter()" (change)="envelopeFilter.set($any($event.target).value)"
+            aria-label="Filtrer par enveloppe"
+            style="padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)">
+      <option value="">Toutes les enveloppes</option>
+      @for (env of envelopes(); track env.id) {
+        <option [value]="env.id">{{ env.label }} — {{ env.broker }}</option>
+      }
+    </select>
+    <select [value]="etfFilter()" (change)="etfFilter.set($any($event.target).value)"
+            aria-label="Filtrer par instrument"
+            style="padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)">
+      <option value="">Tous les instruments</option>
+      @for (etf of tradedEtfs(); track etf.isin) {
+        <option [value]="etf.isin">{{ etf.ticker }} — {{ etf.name }}</option>
+      }
+    </select>
+    @if (hasActiveFilters()) {
+      <span class="muted small">{{ filteredCount() }} / {{ totalCount() }} mouvements</span>
+      <button class="btn sm ghost" (click)="resetFilters()">Réinitialiser</button>
+    }
   </div>
 
   <!-- CONSISTENCY BANNER -->
@@ -133,7 +165,7 @@
             <th class="r" style="width:90px">Prix</th>
             <th class="r" style="width:70px">Frais</th>
             <th class="r" style="width:130px">Montant</th>
-            <th style="width:80px"></th>
+            <th style="width:104px"></th>
           </tr>
         </thead>
         <tbody>
@@ -181,12 +213,14 @@
                   {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
                 </span>
               </td>
-              <td style="width:80px" class="r">
+              <td style="width:104px" class="r">
                 <div style="display:inline-flex;gap:4px;align-items:center">
                   @if (tx.transferId) {
                     <span class="muted" style="font-size:13px;cursor:help"
                           data-tip="Jambe d'un transfert entre enveloppes — non éditable. La suppression retire les deux jambes.">⇄</span>
                   } @else {
+                    <button class="btn sm ghost" style="padding:3px 8px" (click)="openDuplicateTx(tx)"
+                            aria-label="Dupliquer la transaction" title="Dupliquer (mêmes champs, date du jour)">⧉</button>
                     <button class="btn sm ghost" style="padding:3px 8px" (click)="openEditTx(tx)"
                             aria-label="Modifier la transaction" title="Modifier">✎</button>
                   }
