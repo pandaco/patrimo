@@ -177,6 +177,38 @@ describe('PerformanceService', () => {
     });
   });
 
+  describe('getPeriodReturns', () => {
+    it('returns one row per table period, null without any position', async () => {
+      const rows = await service.getPeriodReturns('user-1');
+      expect(rows.map(r => r.period)).toEqual(['1W', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y', 'MAX']);
+      expect(rows.every(r => r.totalPct === null && r.annualizedPct === null)).toBe(true);
+    });
+
+    it('computes the same total return as the chart replay for each window', async () => {
+      const labels = await captureLabels();
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        tx({ type: 'BUY', quantity: 1, price: 100, date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      // 100 at the buy, 110 on the last label — carried forward in between.
+      mockHistory({ 'ISIN-ESE': [
+        { date: labels[0], close: 100 },
+        { date: labels[labels.length - 1], close: 110 },
+      ] });
+
+      const rows = await service.getPeriodReturns('user-1');
+      const oneMonth = rows.find(r => r.period === '1M');
+      // Same figure the frontend derives from the 1M series: 100 → 110.
+      expect(oneMonth?.totalPct).toBe(10);
+      // A 30-day window never gets annualized.
+      expect(oneMonth?.annualizedPct).toBeNull();
+      // Longer windows include the cold (zero) lead-in and still anchor the
+      // return on the first non-zero sample.
+      const oneYear = rows.find(r => r.period === '1Y');
+      expect(oneYear?.totalPct).toBe(10);
+    });
+  });
+
   describe('getSeries — drawdown walker', () => {
     it('detects a closed drawdown and an open one, sorted most negative first', async () => {
       const labels = await captureLabels();

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository, WealthSnapshotRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
 import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY, WEALTH_SNAPSHOT_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -148,6 +148,24 @@ function closeWalker(history: Map<string, number>): (label: string) => number | 
   };
 }
 
+// Periods offered by the multi-period table on the Performance page — every
+// selectable tab except 1D (a 2-sample window has no meaningful total return).
+const TABLE_PERIODS: PerformancePeriod[] = ['1W', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y', 'MAX'];
+
+/**
+ * Total return over the window, same maths as the chart legend on the
+ * frontend (first non-zero sample → last). `null` when the portfolio never
+ * held a position over the window or when the base is too small to divide.
+ */
+function totalReturnPct(series: number[]): number | null {
+  if (series.length < 2) return null;
+  const start = series.find(v => v > 0);
+  const end   = series[series.length - 1];
+  if (start === undefined || start < 1) return null;
+  const ratio = (end / start - 1) * 100;
+  return Number.isFinite(ratio) ? Number(ratio.toFixed(2)) : null;
+}
+
 function computeAnnualized(series: number[], days: number): number | null {
   if (days < 365) return null;
   const start = series.find(v => v > 0);
@@ -208,6 +226,25 @@ export class PerformanceService {
       drawdowns,
       annualized,
     };
+  }
+
+  /**
+   * One return figure per selectable period, all computed with the same
+   * valuation replay as `getSeries` — the multi-period table therefore always
+   * agrees with the chart for the active tab. Price histories are shared via
+   * the Redis historical cache, so the parallel walks stay cheap.
+   */
+  async getPeriodReturns(userId: string): Promise<PeriodReturnDto[]> {
+    return Promise.all(
+      TABLE_PERIODS.map(async period => {
+        const { portfolio, days } = await this.buildValuation(userId, period);
+        return {
+          period,
+          totalPct: totalReturnPct(portfolio),
+          annualizedPct: computeAnnualized(portfolio, days),
+        };
+      }),
+    );
   }
 
   /**

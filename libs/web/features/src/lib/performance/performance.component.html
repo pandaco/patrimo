@@ -134,7 +134,7 @@
   <!-- MULTI-PERIOD TABLE -->
   <div class="section-head">
     <h2 class="section-title">Multi-périodes</h2>
-    <span class="section-sub">total return du portefeuille (clique pour basculer la courbe)</span>
+    <span class="section-sub">total return du portefeuille · clique une ligne pour basculer la courbe</span>
   </div>
 
   <div class="card" style="padding:4px 12px">
@@ -144,41 +144,38 @@
           <th>Période</th>
           <th class="r">Portefeuille</th>
           <th class="r"><span data-tip="Taux de croissance annuel composé — rendement annuel moyen équivalent. Affiché uniquement si la période dépasse 1 an.">CAGR</span></th>
-          <th class="r">Statut</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
         @for (row of periodRows(); track row.id) {
-          <tr [style.background]="row.active ? 'var(--paper-2)' : null">
+          <tr [style.background]="row.active ? 'var(--paper-2)' : null"
+              style="cursor:pointer"
+              tabindex="0"
+              [attr.aria-current]="row.active ? 'true' : null"
+              [attr.aria-label]="'Afficher la période ' + row.label + ' sur le graphe'"
+              title="Afficher cette période sur le graphe"
+              (click)="setPeriod(row.id)"
+              (keydown.enter)="setPeriod(row.id)">
             <td>
               <span class="serif-italic" style="font-size:16px">{{ row.label }}</span>
             </td>
             <td class="r">
-              @if (row.active) {
-                <span class="num" [class.pos]="row.pct >= 0" [class.neg]="row.pct < 0">{{ fmtPct(row.pct, 2) }}</span>
+              @if (row.totalPct !== null) {
+                <span class="num" [class.pos]="row.totalPct >= 0" [class.neg]="row.totalPct < 0">{{ fmtPct(row.totalPct, 2) }}</span>
+              } @else if (loadingPeriodReturns()) {
+                <span class="skeleton" style="display:inline-block;height:12px;width:56px;border-radius:4px"></span>
+              } @else {
+                <span class="muted" data-tip="Pas de position détenue sur cette fenêtre.">—</span>
+              }
+            </td>
+            <td class="r">
+              @if (row.annualizedPct !== null) {
+                <span class="num small" [class.pos]="row.annualizedPct >= 0" [class.neg]="row.annualizedPct < 0">{{ fmtPct(row.annualizedPct, 2) }}</span>
+              } @else if (loadingPeriodReturns()) {
+                <span class="skeleton" style="display:inline-block;height:12px;width:48px;border-radius:4px"></span>
               } @else {
                 <span class="muted">—</span>
               }
-            </td>
-            <td class="r">
-              @if (row.active && annualized() !== null) {
-                <span class="num small" [class.pos]="annualized()! >= 0" [class.neg]="annualized()! < 0">{{ fmtPct(annualized()!, 2) }}</span>
-              } @else {
-                <span class="muted">—</span>
-              }
-            </td>
-            <td class="r">
-              @if (row.active) {
-                <span class="pill gain"><span class="dot"></span>affichée</span>
-              } @else {
-                <span class="muted tiny">non chargée</span>
-              }
-            </td>
-            <td class="r">
-              <button class="btn sm" [class.ghost]="row.active" (click)="setPeriod(row.id)" [disabled]="loading()">
-                {{ row.active ? 'Active' : 'Charger' }}
-              </button>
             </td>
           </tr>
         }

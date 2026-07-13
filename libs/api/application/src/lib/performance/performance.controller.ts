@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -53,6 +53,11 @@ export class PerformanceController {
     const parsed = Number(days);
     const safe = Number.isInteger(parsed) && parsed >= 1 && parsed <= 3650 ? parsed : 365;
     return this.performance.getWealthSnapshots(user.id, safe);
+  }
+
+  @Get('period-returns')
+  periodReturns(@SessionUser() user: AuthUser): Promise<PeriodReturnDto[]> {
+    return this.performance.getPeriodReturns(user.id);
   }
 
   @Get('etf-stats')

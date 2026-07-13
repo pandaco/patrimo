@@ -1,6 +1,6 @@
 import { httpResource } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, WealthSeriesDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 
@@ -77,10 +77,18 @@ export class PerformanceService {
     { defaultValue: { brokerageYtd: 0, terDragYtd: 0, totalYtd: 0, byEtf: [] } },
   );
 
+  /** One total-return figure per selectable period — feeds the multi-period table. */
+  private readonly periodReturnsResource = httpResource<PeriodReturnDto[]>(
+    () => (this.auth.isAuthenticated() ? `${this.baseUrl}/performance/period-returns` : undefined),
+    { defaultValue: [] },
+  );
+
   readonly etfStats     = this.etfStatsResource.value;
   readonly fees         = this.feesResource.value;
   readonly loadingStats = this.etfStatsResource.isLoading;
   readonly loadingFees  = this.feesResource.isLoading;
+  readonly periodReturns        = this.periodReturnsResource.value;
+  readonly loadingPeriodReturns = this.periodReturnsResource.isLoading;
 
   setPeriod(period: PerformancePeriod): void { this.period.set(period); }
   reload(): void { this.resource.reload(); }

@@ -34,6 +34,20 @@ export interface PerformanceSeriesDto {
   annualized: number | null;
 }
 
+/**
+ * Total + annualized portfolio return for one selectable period — one row of
+ * the multi-period table. Computed with the exact same replay as
+ * `PerformanceSeriesDto`, so a row always matches what the chart shows when
+ * that period is active.
+ */
+export interface PeriodReturnDto {
+  period: PerformancePeriod;
+  /** Total return over the window in % (first non-zero sample → last). `null` when no position over the window. */
+  totalPct: number | null;
+  /** CAGR in %. `null` for windows shorter than a year. */
+  annualizedPct: number | null;
+}
+
 export interface PerformanceMetricsDto {
   period: PerformancePeriod;
   /** True time-weighted return over the window, in % — flow-neutral performance. `null` if too few samples. */

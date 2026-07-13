@@ -18,7 +18,13 @@ const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
   { id: 'MAX', label: 'MAX' },
 ];
 
-interface PeriodRow { id: PerformancePeriod; label: string; pct: number; active: boolean }
+interface PeriodRow {
+  id: PerformancePeriod;
+  label: string;
+  totalPct: number | null;
+  annualizedPct: number | null;
+  active: boolean;
+}
 
 interface MonthlyRow { year: number; months: (number | null)[]; yearTotal: number | null }
 interface PeriodStats {
@@ -108,14 +114,19 @@ export class PerformanceComponent {
     if (tri === null || cagr === null) return null;
     return { deltaPts: tri - cagr, helped: tri >= cagr };
   });
-  protected readonly periodRows = computed<PeriodRow[]>(() =>
-    PERIOD_OPTIONS.map(opt => ({
+  // Server-computed return per period (same replay as the chart), so every
+  // row shows its value — not just the active one.
+  protected readonly loadingPeriodReturns = this.performanceService.loadingPeriodReturns;
+  protected readonly periodRows = computed<PeriodRow[]>(() => {
+    const byPeriod = new Map(this.performanceService.periodReturns().map(r => [r.period, r]));
+    return PERIOD_OPTIONS.map(opt => ({
       id: opt.id,
       label: opt.label,
-      pct: opt.id === this.activePeriod() ? this.portfolioPct() : 0,
+      totalPct: byPeriod.get(opt.id)?.totalPct ?? null,
+      annualizedPct: byPeriod.get(opt.id)?.annualizedPct ?? null,
       active: opt.id === this.activePeriod(),
-    })),
-  );
+    }));
+  });
 
   protected readonly drawdowns = computed(() =>
     this.performanceService.raw().drawdowns.map(d => ({
