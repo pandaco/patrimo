@@ -162,5 +162,16 @@
   &.ghost { background: transparent; border-color: transparent; }
   &.ghost:hover { background: var(--surface-2); }
   &.sm { padding: 4px 10px; font-size: 12px; }
+  // Bouton d'action glyphe (✎ × ⧉ ★) : cible carrée confortable, glyphe lisible,
+  // survol marqué (paper-2, plus contrasté que le hover ghost sur une petite cible).
+  &.icon {
+    width: 28px; height: 28px; padding: 0;
+    justify-content: center;
+    font-size: 16px; line-height: 1;
+    color: var(--ink-3);
+    &:hover { background: var(--paper-2); color: var(--ink); }
+    &.danger { color: var(--loss); }
+    &.danger:hover { background: var(--loss-soft); }
+  }
 }
 

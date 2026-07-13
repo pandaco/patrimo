@@ -158,7 +158,7 @@
                          [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
                 </td>
                 <td class="r">
-                  <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
+                  <button type="button" class="btn icon ghost danger"
                           (click)="removeEtf(row.ticker)" aria-label="Retirer" title="Retirer">×</button>
                 </td>
               </tr>
@@ -210,7 +210,7 @@
                          [ngModel]="row.pct" (ngModelChange)="setEnvPct(row.glyph, +$event)" />
                 </td>
                 <td class="r">
-                  <button type="button" class="btn ghost sm" style="padding:2px 8px;color:var(--loss)"
+                  <button type="button" class="btn icon ghost danger"
                           (click)="removeEnv(row.glyph)" aria-label="Retirer" title="Retirer">×</button>
                 </td>
               </tr>

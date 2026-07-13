@@ -219,12 +219,12 @@
                     <span class="muted" style="font-size:13px;cursor:help"
                           data-tip="Jambe d'un transfert entre enveloppes — non éditable. La suppression retire les deux jambes.">⇄</span>
                   } @else {
-                    <button class="btn sm ghost" style="padding:3px 8px" (click)="openDuplicateTx(tx)"
+                    <button class="btn icon ghost" (click)="openDuplicateTx(tx)"
                             aria-label="Dupliquer la transaction" title="Dupliquer (mêmes champs, date du jour)">⧉</button>
-                    <button class="btn sm ghost" style="padding:3px 8px" (click)="openEditTx(tx)"
+                    <button class="btn icon ghost" (click)="openEditTx(tx)"
                             aria-label="Modifier la transaction" title="Modifier">✎</button>
                   }
-                  <button class="btn sm ghost" style="padding:3px 8px;color:var(--loss)" (click)="deleteTx(tx)"
+                  <button class="btn icon ghost danger" (click)="deleteTx(tx)"
                           aria-label="Supprimer la transaction" title="Supprimer">×</button>
                 </div>
               </td>

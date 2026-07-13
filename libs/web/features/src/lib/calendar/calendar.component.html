@@ -96,7 +96,7 @@
       @if (selectedEvent()!.amount !== null) {
         <span class="num" style="font-size:18px;font-weight:700">{{ fmtEur(selectedEvent()!.amount!, 2) }}</span>
       }
-      <button class="btn ghost sm" (click)="closePopover()" aria-label="Fermer">✕</button>
+      <button class="btn icon ghost" (click)="closePopover()" aria-label="Fermer">✕</button>
     </div>
   }
 

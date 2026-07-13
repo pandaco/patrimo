@@ -94,7 +94,7 @@
                              #threshInput />
                       <span class="muted tiny">{{ m.meta.unit }}</span>
                       <button class="btn sm" (click)="commitEdit(m)">✓</button>
-                      <button class="btn ghost sm" (click)="cancelEdit()">✕</button>
+                      <button class="btn icon ghost" (click)="cancelEdit()" aria-label="Annuler la modification" title="Annuler">✕</button>
                     </span>
                   } @else {
                     <div class="num small muted"

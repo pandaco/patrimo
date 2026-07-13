@@ -103,18 +103,15 @@
             {{ etf.ticker }}
             <span class="muted tiny" style="margin-left:6px">{{ etf.name }}</span>
           </button>
-          <button type="button" class="btn ghost sm"
-                  style="padding:2px 5px;font-size:11px"
+          <button type="button" class="btn icon ghost"
                   [attr.aria-label]="(etf.watchOnly ? 'Ne plus suivre ' : 'Mettre en suivi ') + etf.ticker"
                   [title]="etf.watchOnly ? 'Ne plus suivre' : 'Mettre en suivi (hors portefeuille)'"
                   (click)="toggleWatch(etf.isin, etf.watchOnly)">{{ etf.watchOnly ? '★' : '☆' }}</button>
-          <button type="button" class="btn ghost sm"
-                  style="padding:2px 5px;font-size:11px"
+          <button type="button" class="btn icon ghost"
                   [attr.aria-label]="'Modifier ' + etf.ticker"
                   title="Modifier"
                   (click)="editEtf(etf)">✎</button>
-          <button type="button" class="btn ghost sm"
-                  style="padding:2px 5px;font-size:11px;color:#ef4444"
+          <button type="button" class="btn icon ghost danger"
                   [attr.aria-label]="'Supprimer ' + etf.ticker"
                   title="Supprimer du catalogue"
                   (click)="deleteEtf(etf)">✕</button>
@@ -134,7 +131,7 @@
           <div class="row" style="margin-bottom:14px">
             <span class="pill solid">{{ etf.ticker }}</span>
             <span class="muted small">{{ etf.issuer }}</span>
-            <button type="button" class="btn ghost sm" style="margin-left:auto;padding:2px 8px"
+            <button type="button" class="btn icon ghost" style="margin-left:auto"
                     (click)="toggle(etf)" aria-label="Retirer de la comparaison" title="Retirer">×</button>
           </div>
           <div class="serif-italic" style="font-size:16px;line-height:1.2;margin-bottom:6px">{{ etf.name }}</div>
