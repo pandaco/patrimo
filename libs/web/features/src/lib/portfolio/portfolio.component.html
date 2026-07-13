@@ -248,7 +248,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <div style="margin-bottom:9px">
               <div class="row" style="margin-bottom:4px">
                 <span style="font-size:13px">{{ row.key }}</span>
-                <span class="num tiny" style="margin-left:auto;color:var(--ink-3)">{{ fmtPctRaw(row.pct, 1) }}</span>
+                <span class="num tiny" style="margin-left:auto;color:var(--ink-3)">{{ fmtPctRaw(row.pct * 100, 1) }}</span>
               </div>
               <ui-bar [pct]="row.pct" [max]="maxExp(card.data)" />
             </div>
