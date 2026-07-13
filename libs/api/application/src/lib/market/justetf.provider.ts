@@ -29,6 +29,34 @@ export class JustEtfProvider {
         }
       });
 
+      // Fallback for synthetic ETFs tracking major indices that hide their exposure
+      if (Object.keys(geography).length === 0) {
+        if (isin === 'LU1681043599' || isin === 'FR0010315770' || isin === 'FR0011550185') {
+          // MSCI World (CW8) or S&P 500 (ESE, PE500)
+          geography['United States'] = 0.70;
+          if (isin !== 'FR0010315770' && isin !== 'FR0011550185') {
+            geography['Japan'] = 0.06;
+            geography['United Kingdom'] = 0.04;
+            geography['France'] = 0.03;
+          } else {
+            geography['United States'] = 1.0;
+          }
+        } else if (isin === 'LU1681045370') {
+          // MSCI Emerging Markets (PAEEM)
+          geography['China'] = 0.25;
+          geography['India'] = 0.16;
+          geography['Taiwan'] = 0.16;
+          geography['South Korea'] = 0.12;
+          geography['Brazil'] = 0.05;
+        } else if (isin === 'LU1861134382') {
+          // STOXX Europe 600 (ETZ)
+          geography['United Kingdom'] = 0.22;
+          geography['France'] = 0.17;
+          geography['Switzerland'] = 0.15;
+          geography['Germany'] = 0.13;
+        }
+      }
+
       return { geography, sector };
     } catch (err) {
       this.logger.error(`Failed to fetch JustETF exposure for ${isin}`, err);
