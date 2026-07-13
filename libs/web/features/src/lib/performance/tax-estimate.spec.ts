@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Transaction, TransactionType } from '@patrimo/data-access';
 import { computeTaxEstimate } from './tax-estimate';
 
-function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; envelope: string }): Transaction {
+function transaction(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; envelope: string }): Transaction {
   return {
     id:       partial.id,
     date:     partial.date,
@@ -29,11 +29,11 @@ const ENVELOPES = [
 
 describe('computeTaxEstimate — French regimes', () => {
   it('taxes a CTO realized gain at the 30% PFU', () => {
-    const txs = [
-      tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
-      tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 1200 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
+      transaction({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 1200 }),
     ];
-    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    const estimation = computeTaxEstimate(transactions, ENVELOPES, Y, NOW);
     expect(estimation.taxableRealizedYtd).toBeCloseTo(200);
     expect(estimation.incomeTax).toBeCloseTo(25.6);   // 200 × 12.8%
     expect(estimation.socialTax).toBeCloseTo(34.4);   // 200 × 17.2%
@@ -41,11 +41,11 @@ describe('computeTaxEstimate — French regimes', () => {
   });
 
   it('does not tax a PEA realized gain (deferred)', () => {
-    const txs = [
-      tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'pea', qty: 10, amount: 1000 }),
-      tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'pea', qty: 10, amount: 1500 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'pea', qty: 10, amount: 1000 }),
+      transaction({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'pea', qty: 10, amount: 1500 }),
     ];
-    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    const estimation = computeTaxEstimate(transactions, ENVELOPES, Y, NOW);
     expect(estimation.taxableRealizedYtd).toBe(0);
     expect(estimation.deferredRealizedYtd).toBeCloseTo(500);
     expect(estimation.pfuTotal).toBe(0);
@@ -61,11 +61,11 @@ describe('computeTaxEstimate — French regimes', () => {
   });
 
   it('ignores realized losses in the taxable base', () => {
-    const txs = [
-      tx({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
-      tx({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 800 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'BUY',  date: '2025-06-01', envelope: 'cto', qty: 10, amount: 1000 }),
+      transaction({ id: 'b', type: 'SELL', date: '2026-02-01', envelope: 'cto', qty: 10, amount: 800 }),
     ];
-    const estimation = computeTaxEstimate(txs, ENVELOPES, Y, NOW);
+    const estimation = computeTaxEstimate(transactions, ENVELOPES, Y, NOW);
     expect(estimation.taxableRealizedYtd).toBe(0);
     expect(estimation.pfuTotal).toBe(0);
   });

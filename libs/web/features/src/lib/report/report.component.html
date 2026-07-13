@@ -153,15 +153,15 @@
           </tr>
         </thead>
         <tbody>
-          @for (tx of monthlyTx(); track tx.id) {
-            @let env = getEnv(tx.envelope);
-            @let typeLabel = txLabels[tx.type];
+          @for (transaction of monthlyTx(); track transaction.id) {
+            @let env = getEnv(transaction.envelope);
+            @let typeLabel = txLabels[transaction.type];
             <tr>
-              <td class="muted small">{{ fmtDate(tx.date) }}</td>
+              <td class="muted small">{{ fmtDate(transaction.date) }}</td>
               <td>{{ typeLabel.label }}</td>
               <td>{{ env?.label || '—' }}</td>
               <td class="r num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
-                {{ typeLabel.dir }}{{ fmtEur(tx.amount, 2) }}
+                {{ typeLabel.dir }}{{ fmtEur(transaction.amount, 2) }}
               </td>
             </tr>
           }

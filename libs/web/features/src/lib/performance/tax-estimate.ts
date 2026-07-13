@@ -43,7 +43,7 @@ export interface TaxEstimate {
 interface EnvelopeLike { id: string; code: string; openedAt: string }
 
 export function computeTaxEstimate(
-  txs: Transaction[],
+  transactions: Transaction[],
   envelopes: EnvelopeLike[],
   sinceDate: string,
   now = new Date(),
@@ -51,10 +51,10 @@ export function computeTaxEstimate(
   // FIFO must run per envelope: the same ISIN held in two envelopes has two
   // independent lot queues.
   const byEnvelope = new Map<string, Transaction[]>();
-  for (const tx of txs) {
-    const list = byEnvelope.get(tx.envelope) ?? [];
-    list.push(tx);
-    byEnvelope.set(tx.envelope, list);
+  for (const transaction of transactions) {
+    const list = byEnvelope.get(transaction.envelope) ?? [];
+    list.push(transaction);
+    byEnvelope.set(transaction.envelope, list);
   }
 
   let taxable = 0;

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, FxService, TransactionService } from '@patrimo/data-access';
+import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService } from '@patrimo/data-access';
 import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, fmtNum, fmtPctRaw } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
@@ -56,7 +56,7 @@ export class PortfolioComponent {
   protected readonly orphanSellUnits  = computed(() => this.realizedReport().orphanSellUnits);
 
   // Sourced from the same FIFO walk as `realizedYtd` so both cards on the page
-  // share one cost-basis model (drift-free) and a single tx-list traversal.
+  // share one cost-basis model (drift-free) and a single transaction-list traversal.
   protected readonly closedPositions = computed(() => {
     const etfByIsin = new Map(this.etfService.all().map(e => [e.isin, e]));
     return this.realizedReport().closedPositions.map(p => {
@@ -86,9 +86,9 @@ export class PortfolioComponent {
     return { total: divs.reduce((a, t) => a + t.amount, 0), count: divs.length };
   });
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 

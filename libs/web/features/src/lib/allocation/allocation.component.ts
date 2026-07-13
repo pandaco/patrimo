@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import {
-  AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, FxService,
+  AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, TauxChangeService,
   PreferencesService, StrategyVersionService, ToastService,
 } from '@patrimo/data-access';
 import { AllocationTargetsDto, RebalancePlanDto, StrategyVersionDto } from '@patrimo/contracts';
@@ -208,9 +208,9 @@ export class AllocationComponent {
     { value: this.targets().tactic.bonds,     color: 'var(--ink-3)', label: 'Obligations', unit: '%' },
   ]);
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
   protected readonly fmtPct = fmtPct;
   protected readonly abs    = Math.abs;

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
-import { API_BASE_URL, EnvelopeService, EtfService, FxService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
+import { API_BASE_URL, EnvelopeService, EtfService, TauxChangeService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
 import { EnvGlyphComponent, fmtDate, fmtNum, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
@@ -21,7 +21,7 @@ export interface TxGroup {
   month: string;
   label: string;
   total: number;
-  txs: Transaction[];
+  transactions: Transaction[];
 }
 
 @Component({
@@ -63,17 +63,17 @@ export class TransactionsComponent {
     const envId = this.envelopeFilter();
     const isin  = this.etfFilter();
     const query = this.searchQuery().trim().toLowerCase();
-    return this.transactionService.all().filter(tx => {
-      if (type !== 'ALL' && tx.type !== type) return false;
-      if (envId && tx.envelope !== envId) return false;
-      if (isin && tx.etf !== isin) return false;
+    return this.transactionService.all().filter(transaction => {
+      if (type !== 'ALL' && transaction.type !== type) return false;
+      if (envId && transaction.envelope !== envId) return false;
+      if (isin && transaction.etf !== isin) return false;
       if (query) {
-        const etf = this.getEtf(tx.etf);
-        const env = this.getEnv(tx.envelope);
+        const etf = this.getEtf(transaction.etf);
+        const env = this.getEnv(transaction.envelope);
         const haystack = [
           etf?.ticker, etf?.name, etf?.isin,
           env?.label, env?.code, env?.broker,
-          this.labels[tx.type].label, tx.date,
+          this.labels[transaction.type].label, transaction.date,
         ].filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(query)) return false;
       }
@@ -98,21 +98,21 @@ export class TransactionsComponent {
     const filtered = this.filtered();
 
     const map = new Map<string, Transaction[]>();
-    for (const tx of filtered) {
-      const key = tx.date.slice(0, 7);
+    for (const transaction of filtered) {
+      const key = transaction.date.slice(0, 7);
       let bucket = map.get(key);
       if (!bucket) { bucket = []; map.set(key, bucket); }
-      bucket.push(tx);
+      bucket.push(transaction);
     }
 
     return Array.from(map.entries())
       .sort(([a], [b]) => b.localeCompare(a))
-      .map(([month, txs]) => {
+      .map(([month, transactions]) => {
         const d = new Date(month + '-01');
         const label = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-        const sorted = [...txs].sort((a, b) => b.date.localeCompare(a.date));
+        const sorted = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
         const total = sorted.reduce((a, t) => a + (lbls[t.type].dir === '+' ? 1 : -1) * t.amount, 0);
-        return { month, label, total, txs: sorted };
+        return { month, label, total, transactions: sorted };
       });
   });
 
@@ -126,11 +126,11 @@ export class TransactionsComponent {
     const result: TxGroup[] = [];
     for (const g of this.groups()) {
       if (remaining <= 0) break;
-      if (g.txs.length <= remaining) {
+      if (g.transactions.length <= remaining) {
         result.push(g);
-        remaining -= g.txs.length;
+        remaining -= g.transactions.length;
       } else {
-        result.push({ ...g, txs: g.txs.slice(0, remaining) });
+        result.push({ ...g, transactions: g.transactions.slice(0, remaining) });
         remaining = 0;
       }
     }
@@ -138,7 +138,7 @@ export class TransactionsComponent {
   });
 
   protected readonly hasMore = computed(() =>
-    this.groups().reduce((a, g) => a + g.txs.length, 0) > this.displayCount(),
+    this.groups().reduce((a, g) => a + g.transactions.length, 0) > this.displayCount(),
   );
 
   protected loadMore(): void { this.displayCount.update(c => c + 30); }
@@ -148,14 +148,14 @@ export class TransactionsComponent {
 
   protected readonly cashDetails = computed(() => {
     const envMap = new Map<string, { dep: number; wit: number; buy: number; sel: number; div: number }>();
-    for (const tx of this.transactionService.all()) {
-      const e = envMap.get(tx.envelope) ?? { dep: 0, wit: 0, buy: 0, sel: 0, div: 0 };
-      if (tx.type === 'DEPOSIT')    e.dep += tx.amount;
-      if (tx.type === 'WITHDRAWAL') e.wit += tx.amount;
-      if (tx.type === 'BUY')        e.buy += tx.amount;
-      if (tx.type === 'SELL')       e.sel += tx.amount;
-      if (tx.type === 'DIVIDEND' || tx.type === 'INTEREST') e.div += tx.amount;
-      envMap.set(tx.envelope, e);
+    for (const transaction of this.transactionService.all()) {
+      const e = envMap.get(transaction.envelope) ?? { dep: 0, wit: 0, buy: 0, sel: 0, div: 0 };
+      if (transaction.type === 'DEPOSIT')    e.dep += transaction.amount;
+      if (transaction.type === 'WITHDRAWAL') e.wit += transaction.amount;
+      if (transaction.type === 'BUY')        e.buy += transaction.amount;
+      if (transaction.type === 'SELL')       e.sel += transaction.amount;
+      if (transaction.type === 'DIVIDEND' || transaction.type === 'INTEREST') e.div += transaction.amount;
+      envMap.set(transaction.envelope, e);
     }
     return Array.from(envMap.entries()).map(([envId, f]) => ({
       envId,
@@ -168,9 +168,9 @@ export class TransactionsComponent {
     })).sort((a, b) => Math.abs(b.cashBalance) - Math.abs(a.cashBalance));
   });
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum  = fmtNum;
   protected readonly fmtDate = fmtDate;
   protected readonly abs     = Math.abs;
@@ -190,38 +190,38 @@ export class TransactionsComponent {
 
   protected async openNewTx(): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
   }
 
-  protected async openDuplicateTx(tx: Transaction): Promise<void> {
+  protected async openDuplicateTx(transaction: Transaction): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
-      data: { duplicateFrom: tx },
-      panelClass: 'tx-dialog-panel',
+      data: { duplicateFrom: transaction },
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
   }
 
-  protected async openEditTx(tx: Transaction): Promise<void> {
+  protected async openEditTx(transaction: Transaction): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
-      data: { transaction: tx },
-      panelClass: 'tx-dialog-panel',
+      data: { transaction: transaction },
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
   }
 
-  protected async deleteTx(tx: Transaction): Promise<void> {
-    const env  = this.getEnv(tx.envelope);
-    const typeLabel  = this.labels[tx.type].label;
-    const date = fmtDate(tx.date);
+  protected async deleteTx(transaction: Transaction): Promise<void> {
+    const env  = this.getEnv(transaction.envelope);
+    const typeLabel  = this.labels[transaction.type].label;
+    const date = fmtDate(transaction.date);
     const target = env ? `${typeLabel} sur ${env.code} du ${date}` : `${typeLabel} du ${date}`;
     if (!confirm(`Supprimer la transaction « ${target} » ?`)) return;
     try {
-      await this.transactionService.remove(tx.id);
+      await this.transactionService.remove(transaction.id);
     } catch (err) {
       this.toasts.error(err instanceof Error ? err.message : 'Suppression impossible');
     }

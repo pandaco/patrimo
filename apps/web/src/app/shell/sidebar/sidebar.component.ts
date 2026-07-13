@@ -22,7 +22,7 @@ const NAV_SIMPLE: NavGroup[] = [
     label: 'Essentiel',
     items: [
       { id: 'dashboard', label: 'Mon patrimoine',  route: '/dashboard',      icon: 'dashboard', shortcut: 'D' },
-      { id: 'tx',        label: 'Mes opérations',  route: '/transactions',   icon: 'tx',        shortcut: 'T' },
+      { id: 'transaction',        label: 'Mes opérations',  route: '/transactions',   icon: 'transaction',        shortcut: 'T' },
       { id: 'alloc',     label: 'Mon plan',        route: '/allocation',     icon: 'alloc',     shortcut: 'L' },
       { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
@@ -43,7 +43,7 @@ const NAV: NavGroup[] = [
     label: 'Investir',
     items: [
       { id: 'portfolio', label: 'Portefeuille',    route: '/portfolio',    icon: 'portfolio', shortcut: 'P' },
-      { id: 'tx',        label: 'Transactions',    route: '/transactions', icon: 'tx',        shortcut: 'T' },
+      { id: 'transaction',        label: 'Transactions',    route: '/transactions', icon: 'transaction',        shortcut: 'T' },
       { id: 'alloc',     label: 'Allocation',      route: '/allocation',   icon: 'alloc',     shortcut: 'L' },
       { id: 'perf',      label: 'Performance',     route: '/performance',  icon: 'perf',      shortcut: 'F' },
     ],
@@ -89,7 +89,7 @@ export class SidebarComponent {
   private readonly alertCount = this.alertService.unreadCount;
 
   protected badge(id: string): string | null {
-    const value = id === 'tx'      ? this.txCount()
+    const value = id === 'transaction'      ? this.txCount()
                 : id === 'alerts'  ? this.alertCount()
                 : null;
     return value && value > 0 ? String(value) : null;

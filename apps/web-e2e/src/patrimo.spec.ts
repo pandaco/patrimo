@@ -137,22 +137,22 @@ test.describe('Patrimo E2E Tests', () => {
     const initialCount = await readTotalTxCount(page);
 
     // Open transaction dialog via stable test-id (not relying on French button label).
-    await page.click('[data-testid="open-tx-dialog"]');
+    await page.click('[data-testid="open-transaction-dialog"]');
 
     // Wait for dialog overlay to open
-    await expect(page.locator('.tx-dialog-panel')).toBeVisible();
+    await expect(page.locator('.transaction-dialog-panel')).toBeVisible();
 
     // Select type "DEPOSIT"
     await page.click('.type-picker button:has-text("Dépôt")');
 
     // Fill in amount
-    await page.fill('#tx-amount', '1250');
+    await page.fill('#transaction-amount', '1250');
 
     // Click save via stable test-id (not relying on French label which carries a `→` suffix).
-    await page.click('[data-testid="tx-save"]');
+    await page.click('[data-testid="transaction-save"]');
 
     // Dialog should close
-    await expect(page.locator('.tx-dialog-panel')).toBeHidden();
+    await expect(page.locator('.transaction-dialog-panel')).toBeHidden();
 
     // Eyebrow count must increment by exactly one
     await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} mouvement`);

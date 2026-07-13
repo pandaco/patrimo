@@ -16,18 +16,18 @@ function emptyPosition(): PositionAccumulator {
   return { qty: 0, invested: 0, buyQty: 0, buyCost: 0 };
 }
 
-function applyTransaction(pos: PositionAccumulator, tx: Transaction): void {
-  if (tx.type !== 'BUY' && tx.type !== 'SELL') return;
-  const sign      = tx.type === 'BUY' ? 1 : -1;
-  const price     = tx.price ?? 0;
+function applyTransaction(pos: PositionAccumulator, transaction: Transaction): void {
+  if (transaction.type !== 'BUY' && transaction.type !== 'SELL') return;
+  const sign      = transaction.type === 'BUY' ? 1 : -1;
+  const price     = transaction.price ?? 0;
   // Taxes follow the same direction as fees: they raise the cost of a BUY
   // and shrink the proceeds of a SELL.
-  const costs     = (tx.fees ?? 0) + (tx.taxes ?? 0);
-  const grossCost = tx.quantity * price + (tx.type === 'BUY' ? costs : -costs);
-  pos.qty      += sign * tx.quantity;
+  const costs     = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
+  const grossCost = transaction.quantity * price + (transaction.type === 'BUY' ? costs : -costs);
+  pos.qty      += sign * transaction.quantity;
   pos.invested += sign * grossCost;
   if (sign > 0) {
-    pos.buyQty  += tx.quantity;
+    pos.buyQty  += transaction.quantity;
     pos.buyCost += grossCost;
   }
 }
@@ -42,18 +42,18 @@ export class PortfolioService {
   ) {}
 
   async listForUser(userId: string): Promise<PositionDto[]> {
-    const [txs, etfs] = await Promise.all([
+    const [transactions, etfs] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
 
     const byIsin = new Map<string, PositionAccumulator>();
-    for (const tx of txs) {
-      if (!tx.etfIsin) continue;
-      const pos = byIsin.get(tx.etfIsin) ?? emptyPosition();
-      applyTransaction(pos, tx);
-      byIsin.set(tx.etfIsin, pos);
+    for (const transaction of transactions) {
+      if (!transaction.etfIsin) continue;
+      const pos = byIsin.get(transaction.etfIsin) ?? emptyPosition();
+      applyTransaction(pos, transaction);
+      byIsin.set(transaction.etfIsin, pos);
     }
 
     const positions = await Promise.all(
@@ -88,13 +88,13 @@ export class PortfolioService {
    * cached) also benefits from the refreshed values.
    */
   async refreshForUser(userId: string): Promise<PositionDto[]> {
-    const [txs, etfs] = await Promise.all([
+    const [transactions, etfs] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
     const heldIsins = new Set(
-      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
+      transactions.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
          .map(t => t.etfIsin as string),
     );
     await Promise.allSettled(
@@ -237,13 +237,13 @@ export class PortfolioService {
   }
 
   async getSparks(userId: string): Promise<Record<string, number[]>> {
-    const [txs, etfs] = await Promise.all([
+    const [transactions, etfs] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
     const heldIsins = new Set(
-      txs
+      transactions
         .filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
         .map(t => t.etfIsin as string),
     );
@@ -284,7 +284,7 @@ export class PortfolioService {
    * zero on both — they reinvest internally — and are filtered out.
    */
   async getIncomeForecast(userId: string): Promise<IncomeForecastDto> {
-    const [positions, txs] = await Promise.all([
+    const [positions, transactions] = await Promise.all([
       this.listForUser(userId),
       this.transactionRepository.findByUserId(userId),
     ]);
@@ -293,7 +293,7 @@ export class PortfolioService {
     cutoff.setFullYear(cutoff.getFullYear() - 1);
 
     const trailingByIsin = new Map<string, number>();
-    for (const t of txs) {
+    for (const t of transactions) {
       if (t.type !== 'DIVIDEND' || !t.etfIsin || t.date < cutoff) continue;
       trailingByIsin.set(t.etfIsin, (trailingByIsin.get(t.etfIsin) ?? 0) + t.amount);
     }

@@ -49,7 +49,7 @@ export class EnvelopeService {
   ) {}
 
   async listForUser(userId: string): Promise<EnvelopeDto[]> {
-    const [rows, txs, etfList] = await Promise.all([
+    const [rows, transactions, etfList] = await Promise.all([
       this.envelopes.findByUserId(userId),
       this.transactions.findByUserId(userId),
       this.etfs.findAll(),
@@ -57,15 +57,15 @@ export class EnvelopeService {
     const etfByIsin = new Map(etfList.map(e => [e.isin, e]));
 
     const txByEnvelope = new Map<string, Transaction[]>();
-    for (const tx of txs) {
-      const list = txByEnvelope.get(tx.envelopeId) ?? [];
-      list.push(tx);
-      txByEnvelope.set(tx.envelopeId, list);
+    for (const transaction of transactions) {
+      const list = txByEnvelope.get(transaction.envelopeId) ?? [];
+      list.push(transaction);
+      txByEnvelope.set(transaction.envelopeId, list);
     }
 
     // Resolve every held ISIN's price once (Redis-cached), shared across envelopes.
     const heldIsins = new Set(
-      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL')).map(t => t.etfIsin as string),
+      transactions.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL')).map(t => t.etfIsin as string),
     );
     const priceByIsin = new Map<string, number>();
     await Promise.all(
@@ -99,39 +99,39 @@ export class EnvelopeService {
    * negative balance — the common case for users who only log their buys.
    */
   private valuate(
-    txs: Transaction[],
+    transactions: Transaction[],
     priceByIsin: Map<string, number>,
   ): { value: number; invested: number; cash: number } | null {
     const holdings = new Map<string, Holding>();
     let rawCash = 0;
     let hasBuy = false;
 
-    for (const tx of txs) {
-      const price = tx.price ?? 0;
-      const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
-      switch (tx.type) {
+    for (const transaction of transactions) {
+      const price = transaction.price ?? 0;
+      const costs = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
+      switch (transaction.type) {
         case 'BUY': {
           hasBuy = true;
-          const gross = tx.quantity * price + costs;
+          const gross = transaction.quantity * price + costs;
           rawCash -= gross;
-          if (!tx.etfIsin) break;
-          const h = holdings.get(tx.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
-          h.qty += tx.quantity; h.buyQty += tx.quantity; h.buyCost += gross;
-          holdings.set(tx.etfIsin, h);
+          if (!transaction.etfIsin) break;
+          const h = holdings.get(transaction.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
+          h.qty += transaction.quantity; h.buyQty += transaction.quantity; h.buyCost += gross;
+          holdings.set(transaction.etfIsin, h);
           break;
         }
         case 'SELL': {
-          rawCash += tx.quantity * price - costs;
-          if (!tx.etfIsin) break;
-          const h = holdings.get(tx.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
-          h.qty -= tx.quantity;
-          holdings.set(tx.etfIsin, h);
+          rawCash += transaction.quantity * price - costs;
+          if (!transaction.etfIsin) break;
+          const h = holdings.get(transaction.etfIsin) ?? { qty: 0, buyQty: 0, buyCost: 0 };
+          h.qty -= transaction.quantity;
+          holdings.set(transaction.etfIsin, h);
           break;
         }
-        case 'DEPOSIT':    rawCash += tx.amount; break;
-        case 'WITHDRAWAL': rawCash -= tx.amount; break;
+        case 'DEPOSIT':    rawCash += transaction.amount; break;
+        case 'WITHDRAWAL': rawCash -= transaction.amount; break;
         case 'DIVIDEND':
-        case 'INTEREST':   rawCash += tx.amount; break;
+        case 'INTEREST':   rawCash += transaction.amount; break;
       }
     }
 

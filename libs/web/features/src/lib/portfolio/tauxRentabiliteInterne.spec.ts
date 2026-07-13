@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Transaction, TransactionType } from '@patrimo/data-access';
 import { computeTri, xirr } from './tauxRentabiliteInterne';
 
-function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
+function transaction(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
   return {
     id:       partial.id,
     date:     partial.date,
@@ -87,33 +87,33 @@ describe('xirr — degenerate inputs', () => {
 
 describe('computeTri — from transaction history', () => {
   it('returns 0 for a flat deposit/value pair one year apart', () => {
-    const txs = [
-      tx({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
     ];
     // current portfolio still worth €1000 a year later → r = 0
-    const r = computeTri(txs, 1000, new Date('2026-06-07'));
+    const r = computeTri(transactions, 1000, new Date('2026-06-07'));
     expect(r).not.toBeNull();
     expect(r ?? Number.NaN).toBeCloseTo(0, 1);
   });
 
   it('ignores BUY / SELL transactions (internal transfers)', () => {
-    const txs = [
-      tx({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
-      tx({ id: 'b', type: 'BUY',     date: '2025-06-08', amount: 900 }),
-      tx({ id: 'c', type: 'SELL',    date: '2025-12-01', amount: 950 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
+      transaction({ id: 'b', type: 'BUY',     date: '2025-06-08', amount: 900 }),
+      transaction({ id: 'c', type: 'SELL',    date: '2025-12-01', amount: 950 }),
     ];
     // Whether BUY/SELL exist or not, the only thing that matters is the
     // €1000 deposit and the current value.
-    const r = computeTri(txs, 1100, new Date('2026-06-07'));
+    const r = computeTri(transactions, 1100, new Date('2026-06-07'));
     expect(r).not.toBeNull();
     expect(r ?? Number.NaN).toBeCloseTo(10, 1);
   });
 
   it('returns null when there is no current value', () => {
-    const txs = [
-      tx({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
+    const transactions = [
+      transaction({ id: 'a', type: 'DEPOSIT', date: '2025-06-07', amount: 1000 }),
     ];
-    expect(computeTri(txs, 0, new Date('2026-06-07'))).toBeNull();
+    expect(computeTri(transactions, 0, new Date('2026-06-07'))).toBeNull();
   });
 
   it('returns null when there is no deposit history', () => {

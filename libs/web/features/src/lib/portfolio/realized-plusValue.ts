@@ -47,14 +47,14 @@ interface PerEtf {
  * Transactions with `qty <= 0` or non-finite per-unit prices are skipped so
  * a single malformed CSV row cannot poison the whole figure.
  */
-export function computeRealized(txs: Transaction[], sinceDate: string): RealizedReport {
+export function computeRealized(transactions: Transaction[], sinceDate: string): RealizedReport {
   const lots = new Map<string, Lot[]>();
   const stats = new Map<string, PerEtf>();
   let realizedSince = 0;
   let orphanUnits   = 0;
   let orphanCount   = 0;
 
-  const ranked = txs
+  const ranked = transactions
     .filter(t => t.etf && (t.type === 'BUY' || t.type === 'SELL') && t.qty > 0)
     .slice()
     .sort((a, b) => {

@@ -116,14 +116,14 @@ export class KeyboardShortcutService {
   async openTx(): Promise<void> {
     await this.openOnce(async () => {
       const { TransactionDialogComponent } = await import('../transaction-dialog/transaction-dialog.component');
-      this.dialog.open(TransactionDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '580px', width: '100%' });
+      this.dialog.open(TransactionDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: '580px', width: '100%' });
     });
   }
 
   async openShortcuts(): Promise<void> {
     await this.openOnce(async () => {
       const { ShortcutsDialogComponent } = await import('./shortcuts-dialog.component');
-      this.dialog.open(ShortcutsDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '480px', width: '100%' });
+      this.dialog.open(ShortcutsDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: '480px', width: '100%' });
     });
   }
 

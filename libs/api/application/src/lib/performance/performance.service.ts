@@ -263,12 +263,12 @@ export class PerformanceService {
     const isLong = LONG_PERIODS.includes(period);
     const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
 
-    const [txs, etfs] = await Promise.all([
+    const [transactions, etfs] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
 
-    const buyTxs = txs.filter(t => t.type === 'BUY' && t.etfIsin);
+    const buyTxs = transactions.filter(t => t.type === 'BUY' && t.etfIsin);
     const earliestTxDate = buyTxs.length > 0
       ? new Date(Math.min(...buyTxs.map(t => t.date.getTime())))
       : undefined;
@@ -279,7 +279,7 @@ export class PerformanceService {
       ? Math.ceil((now.getTime() - (earliestTxDate?.getTime() ?? now.getTime())) / 86400000) + 1
       : Math.max(30, PERIOD_DAYS[period]);
 
-    const sortedTxs = txs
+    const sortedTxs = transactions
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null)
       .filter(t => t.type === 'BUY' || t.type === 'SELL')
       .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -310,16 +310,16 @@ export class PerformanceService {
     for (const label of labels) {
       let dayFlow = 0;
       while (txCursor < sortedTxs.length && isoDate(sortedTxs[txCursor].date) <= label) {
-        const tx    = sortedTxs[txCursor];
-        const sign  = tx.type === 'BUY' ? 1 : -1;
-        const price = tx.price ?? 0;
-        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
+        const transaction    = sortedTxs[txCursor];
+        const sign  = transaction.type === 'BUY' ? 1 : -1;
+        const price = transaction.price ?? 0;
+        const costs = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
         // BUY raises cost by fees/taxes; SELL lowers proceeds by them.
-        const gross = tx.quantity * price + (tx.type === 'BUY' ? costs : -costs);
-        qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
+        const gross = transaction.quantity * price + (transaction.type === 'BUY' ? costs : -costs);
+        qtyByIsin.set(transaction.etfIsin, (qtyByIsin.get(transaction.etfIsin) ?? 0) + sign * transaction.quantity);
         if (sign > 0) {
-          buyQtyByIsin.set(tx.etfIsin, (buyQtyByIsin.get(tx.etfIsin) ?? 0) + tx.quantity);
-          buyCostByIsin.set(tx.etfIsin, (buyCostByIsin.get(tx.etfIsin) ?? 0) + gross);
+          buyQtyByIsin.set(transaction.etfIsin, (buyQtyByIsin.get(transaction.etfIsin) ?? 0) + transaction.quantity);
+          buyCostByIsin.set(transaction.etfIsin, (buyCostByIsin.get(transaction.etfIsin) ?? 0) + gross);
         }
         dayFlow += sign * gross; // BUY deploys capital, SELL returns it
         txCursor++;
@@ -489,14 +489,14 @@ export class PerformanceService {
    */
   async getEtfStats(userId: string): Promise<EtfStatsDto[]> {
     const bench = await this.resolveBenchmark(userId);
-    const [txs, etfs, benchHistory] = await Promise.all([
+    const [transactions, etfs, benchHistory] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
       this.priceService.getHistorical(bench.isin, bench.ticker, 365),
     ]);
 
     const heldIsins = new Set(
-      txs.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
+      transactions.filter(t => t.etfIsin && (t.type === 'BUY' || t.type === 'SELL'))
          .map(t => t.etfIsin as string),
     );
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
@@ -547,13 +547,13 @@ export class PerformanceService {
     const isLong = LONG_PERIODS.includes(period);
     const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
 
-    const [envelopes, txs, etfs] = await Promise.all([
+    const [envelopes, transactions, etfs] = await Promise.all([
       this.envelopeRepository.findByUserId(userId),
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
 
-    const allDates      = txs.map(t => t.date.getTime());
+    const allDates      = transactions.map(t => t.date.getTime());
     const earliestDate  = allDates.length > 0 ? new Date(Math.min(...allDates)) : undefined;
     const start         = computeStart(period, now, earliestDate);
     const labels        = enumerateDates(start, now, isLong);
@@ -563,7 +563,7 @@ export class PerformanceService {
 
     // Fetch price history once for all held ISINs (shared across bourse envelopes).
     const heldIsins = new Set(
-      txs.filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
+      transactions.filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
          .map(t => t.etfIsin),
     );
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
@@ -578,10 +578,10 @@ export class PerformanceService {
     );
 
     const txsByEnvelope = new Map<string, Transaction[]>();
-    for (const tx of txs) {
-      const list = txsByEnvelope.get(tx.envelopeId) ?? [];
-      list.push(tx);
-      txsByEnvelope.set(tx.envelopeId, list);
+    for (const transaction of transactions) {
+      const list = txsByEnvelope.get(transaction.envelopeId) ?? [];
+      list.push(transaction);
+      txsByEnvelope.set(transaction.envelopeId, list);
     }
 
     const byCategoryArrays      = new Map<WealthCategory, number[]>();
@@ -716,7 +716,7 @@ export class PerformanceService {
 
   private buildEnvelopeBoursSeries(
     labels: string[],
-    txs: Transaction[],
+    transactions: Transaction[],
     closesByIsin: Map<string, Map<string, number>>,
   ): number[] {
     // Process ALL transaction types so the cash balance is tracked alongside
@@ -725,7 +725,7 @@ export class PerformanceService {
     // phantom "performance". Including cash means BUY is neutral: ETF +X,
     // cash −X, net 0. Only market price movements and income (DIVIDEND/INTEREST)
     // create real gains.
-    const sortedTxs = txs.slice().sort((a, b) => a.date.getTime() - b.date.getTime());
+    const sortedTxs = transactions.slice().sort((a, b) => a.date.getTime() - b.date.getTime());
     const qtyByIsin   = new Map<string, number>();
     const avgBuyPrice = new Map<string, number>(); // valuation fallback when no close exists
     const buyQty      = new Map<string, number>();
@@ -738,30 +738,30 @@ export class PerformanceService {
 
     for (const label of labels) {
       while (cursor < sortedTxs.length && isoDate(sortedTxs[cursor].date) <= label) {
-        const tx = sortedTxs[cursor];
-        const price = tx.price ?? 0;
-        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
-        switch (tx.type) {
+        const transaction = sortedTxs[cursor];
+        const price = transaction.price ?? 0;
+        const costs = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
+        switch (transaction.type) {
           case 'BUY':
-            if (tx.etfIsin) {
-              qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + tx.quantity);
-              cash -= tx.quantity * price + costs;
-              buyQty.set(tx.etfIsin, (buyQty.get(tx.etfIsin) ?? 0) + tx.quantity);
-              buyCost.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) + tx.quantity * price);
-              const bq = buyQty.get(tx.etfIsin) ?? 0;
-              if (bq > 0) avgBuyPrice.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) / bq);
+            if (transaction.etfIsin) {
+              qtyByIsin.set(transaction.etfIsin, (qtyByIsin.get(transaction.etfIsin) ?? 0) + transaction.quantity);
+              cash -= transaction.quantity * price + costs;
+              buyQty.set(transaction.etfIsin, (buyQty.get(transaction.etfIsin) ?? 0) + transaction.quantity);
+              buyCost.set(transaction.etfIsin, (buyCost.get(transaction.etfIsin) ?? 0) + transaction.quantity * price);
+              const bq = buyQty.get(transaction.etfIsin) ?? 0;
+              if (bq > 0) avgBuyPrice.set(transaction.etfIsin, (buyCost.get(transaction.etfIsin) ?? 0) / bq);
             }
             break;
           case 'SELL':
-            if (tx.etfIsin) {
-              qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) - tx.quantity);
-              cash += tx.quantity * price - costs;
+            if (transaction.etfIsin) {
+              qtyByIsin.set(transaction.etfIsin, (qtyByIsin.get(transaction.etfIsin) ?? 0) - transaction.quantity);
+              cash += transaction.quantity * price - costs;
             }
             break;
-          case 'DEPOSIT':    cash += tx.amount; break;
-          case 'WITHDRAWAL': cash -= tx.amount; break;
+          case 'DEPOSIT':    cash += transaction.amount; break;
+          case 'WITHDRAWAL': cash -= transaction.amount; break;
           case 'DIVIDEND':
-          case 'INTEREST':   cash += tx.amount; break;
+          case 'INTEREST':   cash += transaction.amount; break;
         }
         cursor++;
       }
@@ -781,8 +781,8 @@ export class PerformanceService {
     return series;
   }
 
-  private buildEnvelopeFlowSeries(labels: string[], txs: Transaction[]): number[] {
-    const flowTxs = txs.filter(
+  private buildEnvelopeFlowSeries(labels: string[], transactions: Transaction[]): number[] {
+    const flowTxs = transactions.filter(
       t => t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL' || t.type === 'INTEREST' || t.type === 'DIVIDEND',
     );
     let value  = 0;
@@ -791,8 +791,8 @@ export class PerformanceService {
 
     for (const label of labels) {
       while (cursor < flowTxs.length && isoDate(flowTxs[cursor].date) <= label) {
-        const tx = flowTxs[cursor];
-        value += tx.type === 'WITHDRAWAL' ? -tx.amount : tx.amount;
+        const transaction = flowTxs[cursor];
+        value += transaction.type === 'WITHDRAWAL' ? -transaction.amount : transaction.amount;
         cursor++;
       }
       series.push(Number(value.toFixed(2)));
@@ -807,8 +807,8 @@ export class PerformanceService {
    * Transactions before the first label fall into bucket 0 (opening capital).
    * Used to neutralise contributions when measuring a period's return.
    */
-  private buildEnvelopeFlowDeltas(labels: string[], txs: Transaction[]): number[] {
-    const flowTxs = txs
+  private buildEnvelopeFlowDeltas(labels: string[], transactions: Transaction[]): number[] {
+    const flowTxs = transactions
       .filter(t => t.type === 'DEPOSIT' || t.type === 'WITHDRAWAL')
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     const deltas = new Array<number>(labels.length).fill(0);
@@ -817,8 +817,8 @@ export class PerformanceService {
     for (let i = 0; i < labels.length; i++) {
       let bucket = 0;
       while (cursor < flowTxs.length && isoDate(flowTxs[cursor].date) <= labels[i]) {
-        const tx = flowTxs[cursor];
-        bucket += tx.type === 'WITHDRAWAL' ? -tx.amount : tx.amount;
+        const transaction = flowTxs[cursor];
+        bucket += transaction.type === 'WITHDRAWAL' ? -transaction.amount : transaction.amount;
         cursor++;
       }
       deltas[i] = Number(bucket.toFixed(2));
@@ -834,10 +834,10 @@ export class PerformanceService {
    */
   private buildEnvelopeEtfValueSeries(
     labels: string[],
-    txs: Transaction[],
+    transactions: Transaction[],
     closesByIsin: Map<string, Map<string, number>>,
   ): number[] {
-    const sortedTxs = txs
+    const sortedTxs = transactions
       .filter((t): t is Transaction & { etfIsin: string } => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     const qtyByIsin   = new Map<string, number>();
@@ -851,14 +851,14 @@ export class PerformanceService {
 
     for (const label of labels) {
       while (cursor < sortedTxs.length && isoDate(sortedTxs[cursor].date) <= label) {
-        const tx   = sortedTxs[cursor];
-        const sign = tx.type === 'BUY' ? 1 : -1;
-        qtyByIsin.set(tx.etfIsin, (qtyByIsin.get(tx.etfIsin) ?? 0) + sign * tx.quantity);
-        if (tx.type === 'BUY') {
-          buyQty.set(tx.etfIsin, (buyQty.get(tx.etfIsin) ?? 0) + tx.quantity);
-          buyCost.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) + tx.quantity * (tx.price ?? 0));
-          const bq = buyQty.get(tx.etfIsin) ?? 0;
-          if (bq > 0) avgBuyPrice.set(tx.etfIsin, (buyCost.get(tx.etfIsin) ?? 0) / bq);
+        const transaction   = sortedTxs[cursor];
+        const sign = transaction.type === 'BUY' ? 1 : -1;
+        qtyByIsin.set(transaction.etfIsin, (qtyByIsin.get(transaction.etfIsin) ?? 0) + sign * transaction.quantity);
+        if (transaction.type === 'BUY') {
+          buyQty.set(transaction.etfIsin, (buyQty.get(transaction.etfIsin) ?? 0) + transaction.quantity);
+          buyCost.set(transaction.etfIsin, (buyCost.get(transaction.etfIsin) ?? 0) + transaction.quantity * (transaction.price ?? 0));
+          const bq = buyQty.get(transaction.etfIsin) ?? 0;
+          if (bq > 0) avgBuyPrice.set(transaction.etfIsin, (buyCost.get(transaction.etfIsin) ?? 0) / bq);
         }
         cursor++;
       }
@@ -882,8 +882,8 @@ export class PerformanceService {
    * SELL returns (proceeds net of fees). This is the flow that neutralises a
    * purchase against the ETF-value base, leaving only the market move.
    */
-  private buildEnvelopeInvestFlowDeltas(labels: string[], txs: Transaction[]): number[] {
-    const tradeTxs = txs
+  private buildEnvelopeInvestFlowDeltas(labels: string[], transactions: Transaction[]): number[] {
+    const tradeTxs = transactions
       .filter(t => t.etfIsin !== null && (t.type === 'BUY' || t.type === 'SELL'))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     const deltas = new Array<number>(labels.length).fill(0);
@@ -892,11 +892,11 @@ export class PerformanceService {
     for (let i = 0; i < labels.length; i++) {
       let bucket = 0;
       while (cursor < tradeTxs.length && isoDate(tradeTxs[cursor].date) <= labels[i]) {
-        const tx    = tradeTxs[cursor];
-        const sign  = tx.type === 'BUY' ? 1 : -1;
-        const price = tx.price ?? 0;
-        const costs = (tx.fees ?? 0) + (tx.taxes ?? 0);
-        bucket += sign * (tx.quantity * price) + (tx.type === 'BUY' ? costs : -costs);
+        const transaction    = tradeTxs[cursor];
+        const sign  = transaction.type === 'BUY' ? 1 : -1;
+        const price = transaction.price ?? 0;
+        const costs = (transaction.fees ?? 0) + (transaction.taxes ?? 0);
+        bucket += sign * (transaction.quantity * price) + (transaction.type === 'BUY' ? costs : -costs);
         cursor++;
       }
       deltas[i] = Number(bucket.toFixed(2));
@@ -909,18 +909,18 @@ export class PerformanceService {
     const jan1    = new Date(now.getFullYear(), 0, 1);
     const elapsed = (now.getTime() - jan1.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
 
-    const [txs, etfs] = await Promise.all([
+    const [transactions, etfs] = await Promise.all([
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
     ]);
 
-    const brokerageYtd = txs
+    const brokerageYtd = transactions
       .filter(t => t.date >= jan1 && (t.type === 'BUY' || t.type === 'SELL'))
       .reduce((a, t) => a + (t.fees ?? 0), 0);
 
     const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
     const qtyMap    = new Map<string, number>();
-    for (const t of txs) {
+    for (const t of transactions) {
       if (!t.etfIsin || (t.type !== 'BUY' && t.type !== 'SELL')) continue;
       qtyMap.set(t.etfIsin, (qtyMap.get(t.etfIsin) ?? 0) + (t.type === 'BUY' ? t.quantity : -t.quantity));
     }

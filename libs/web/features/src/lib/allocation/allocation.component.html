@@ -71,21 +71,21 @@
             </tr>
           </thead>
           <tbody>
-            @for (tx of plan.transactions; track tx.etfIsin) {
+            @for (transaction of plan.transactions; track transaction.etfIsin) {
               <tr>
-                <td><span class="pill solid">{{ tx.ticker }}</span> <span class="muted small">{{ tx.name }}</span></td>
+                <td><span class="pill solid">{{ transaction.ticker }}</span> <span class="muted small">{{ transaction.name }}</span></td>
                 <td class="r">
-                  <span class="pill" [class.gain]="tx.action === 'BUY'" [class.loss]="tx.action === 'SELL'">
-                    {{ tx.action === 'BUY' ? 'Acheter' : 'Vendre' }}
+                  <span class="pill" [class.gain]="transaction.action === 'BUY'" [class.loss]="transaction.action === 'SELL'">
+                    {{ transaction.action === 'BUY' ? 'Acheter' : 'Vendre' }}
                   </span>
                 </td>
-                <td class="r num">{{ tx.qty }}</td>
-                <td class="r num muted">{{ fmtEur(tx.price, 2) }}</td>
-                <td class="r num" [class.pos]="tx.action === 'BUY'" [class.neg]="tx.action === 'SELL'">
-                  {{ fmtEur(tx.amount, 0) }}
+                <td class="r num">{{ transaction.qty }}</td>
+                <td class="r num muted">{{ fmtEur(transaction.price, 2) }}</td>
+                <td class="r num" [class.pos]="transaction.action === 'BUY'" [class.neg]="transaction.action === 'SELL'">
+                  {{ fmtEur(transaction.amount, 0) }}
                 </td>
-                <td class="r muted small">{{ fmtPct(tx.targetWeight, 1) }}</td>
-                <td class="r muted small">{{ fmtPct(tx.currentWeight, 1) }}</td>
+                <td class="r muted small">{{ fmtPct(transaction.targetWeight, 1) }}</td>
+                <td class="r muted small">{{ fmtPct(transaction.currentWeight, 1) }}</td>
               </tr>
             }
           </tbody>

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { FxService, Liability, LiabilityKind, LiabilityService, ToastService } from '@patrimo/data-access';
+import { TauxChangeService, Liability, LiabilityKind, LiabilityService, ToastService } from '@patrimo/data-access';
 import { fmtNum } from '@patrimo/ui';
 
 interface LiabilityKindOption { id: LiabilityKind; label: string }
@@ -45,7 +45,7 @@ function emptyForm(): LiabilityForm {
 export class LiabilitiesComponent {
   private readonly liabilityService = inject(LiabilityService);
   private readonly toasts     = inject(ToastService);
-  private readonly fxService  = inject(FxService);
+  private readonly tauxChangeService  = inject(TauxChangeService);
 
   protected readonly kindOptions = KIND_OPTIONS;
   protected readonly all      = this.liabilityService.all;
@@ -59,7 +59,7 @@ export class LiabilitiesComponent {
 
   protected readonly isEmpty = computed(() => !this.loading() && this.all().length === 0);
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.fxService.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
 
   protected kindLabel(kind: LiabilityKind): string {

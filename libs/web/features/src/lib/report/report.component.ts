@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { AuthService, EnvelopeService, FxService, LiabilityService, TransactionService } from '@patrimo/data-access';
+import { AuthService, EnvelopeService, TauxChangeService, LiabilityService, TransactionService } from '@patrimo/data-access';
 import { TipDirective, fmtDate, fmtNum } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTaxEstimate } from '../performance/tax-estimate';
@@ -17,7 +17,7 @@ export class ReportComponent {
   private readonly liabilities = inject(LiabilityService);
   private readonly txService  = inject(TransactionService);
   private readonly auth       = inject(AuthService);
-  private readonly fxService  = inject(FxService);
+  private readonly tauxChangeService  = inject(TauxChangeService);
 
   protected readonly firstName = computed(() => this.auth.user()?.firstName ?? '');
   protected readonly todayLabel = new Date().toLocaleDateString('fr-FR', {
@@ -66,7 +66,7 @@ export class ReportComponent {
     return this.envelopes.all().find(e => e.id === id);
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.fxService.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum  = fmtNum;
   protected readonly fmtDate = fmtDate;
   protected readonly abs     = Math.abs;

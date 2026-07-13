@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto } from '@patrimo/contracts';
-import { Etf, EtfService, FxService, PerformanceService, PreferencesService, ToastService } from '@patrimo/data-access';
+import { Etf, EtfService, TauxChangeService, PerformanceService, PreferencesService, ToastService } from '@patrimo/data-access';
 import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
@@ -20,7 +20,7 @@ export class CompareComponent {
   private readonly toast      = inject(ToastService);
   private readonly performanceService = inject(PerformanceService);
   private readonly preferencesService = inject(PreferencesService);
-  private readonly fxService  = inject(FxService);
+  private readonly tauxChangeService  = inject(TauxChangeService);
 
   // Qualité de réplication + coût réel des fonds détenus — thématiquement à
   // leur place ici, à côté du comparatif TER du catalogue.
@@ -36,8 +36,8 @@ export class CompareComponent {
     return etf ? `${etf.ticker} — ${etf.name}` : 'CW8 — MSCI World';
   });
 
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtPct = fmtPct;
 
   protected async toggleWatch(isin: string, current: boolean): Promise<void> {
@@ -132,13 +132,13 @@ export class CompareComponent {
   protected buy(etf: Etf): void {
     this.dialog.open(TransactionDialogComponent, {
       data: { presetEtfIsin: etf.isin, presetType: 'BUY' },
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
     });
   }
 
   /** Open the add-ETF dialog; a created ETF joins the comparator selection right away. */
   protected addEtf(): void {
-    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'tx-dialog-panel' });
+    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel' });
     ref.afterClosed().subscribe((created?: EtfDto) => {
       if (!created) return;
       const current = this.selectedIsins();
@@ -162,7 +162,7 @@ export class CompareComponent {
   protected editEtf(etf: EtfDto): void {
     this.dialog.open(EtfDialogComponent, {
       data: { etf },
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });

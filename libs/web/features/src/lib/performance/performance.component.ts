@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EnvelopeService, EtfService, FxService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, TauxChangeService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
@@ -213,9 +213,9 @@ export class PerformanceComponent {
       : `rgba(239,68,68,${opacity})`;
   }
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly abs       = Math.abs;
   protected readonly fmtPct    = fmtPct;
   protected readonly fmtPctRaw = fmtPctRaw;

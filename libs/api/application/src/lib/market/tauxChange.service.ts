@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PriceCacheService } from './price-cache.service';
 
-const FX_CACHE_KEY = 'fx:eur:rates';
+const FX_CACHE_KEY = 'tauxChange:eur:rates';
 const FX_TTL_SECONDS = 6 * 3600;
 
 @Injectable()
-export class FxService {
+export class TauxChangeService {
   constructor(private readonly cache: PriceCacheService) {}
 
   async getRates(): Promise<Record<string, number>> {

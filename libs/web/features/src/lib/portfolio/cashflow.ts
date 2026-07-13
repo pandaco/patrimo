@@ -25,7 +25,7 @@ function monthKey(d: Date): string {
 }
 
 export function computeMonthlyCashflow(
-  txs: Transaction[],
+  transactions: Transaction[],
   months = 12,
   now = new Date(),
 ): MonthlyCashflow[] {
@@ -37,13 +37,13 @@ export function computeMonthlyCashflow(
     cursor.setMonth(cursor.getMonth() - 1);
   }
 
-  for (const tx of txs) {
-    const key = tx.date.slice(0, 7);
+  for (const transaction of transactions) {
+    const key = transaction.date.slice(0, 7);
     const bucket = buckets.get(key);
     if (!bucket) continue;
-    if (tx.type === 'DEPOSIT') bucket.in += tx.amount;
-    else if (tx.type === 'WITHDRAWAL') bucket.out += tx.amount;
-    else if (tx.type === 'DIVIDEND' || tx.type === 'INTEREST') bucket.revenus += tx.amount;
+    if (transaction.type === 'DEPOSIT') bucket.in += transaction.amount;
+    else if (transaction.type === 'WITHDRAWAL') bucket.out += transaction.amount;
+    else if (transaction.type === 'DIVIDEND' || transaction.type === 'INTEREST') bucket.revenus += transaction.amount;
   }
 
   for (const bucket of buckets.values()) bucket.net = bucket.in - bucket.out;

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EnvelopeService, FxService, PreferencesService, TransactionService } from '@patrimo/data-access';
+import { EnvelopeService, TauxChangeService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { fmtNum } from '@patrimo/ui';
 import { computeProjection } from '../portfolio/projection';
 import { computeTri } from '../portfolio/tauxRentabiliteInterne';
@@ -17,7 +17,7 @@ export class ProjectionComponent {
   private readonly envelopes   = inject(EnvelopeService);
   private readonly txService   = inject(TransactionService);
   private readonly preferences = inject(PreferencesService);
-  private readonly fxService   = inject(FxService);
+  private readonly tauxChangeService   = inject(TauxChangeService);
 
   protected readonly totalValue = this.envelopes.total;
 
@@ -60,6 +60,6 @@ export class ProjectionComponent {
     this.years.set(value);
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.fxService.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
 }

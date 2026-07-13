@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Envelope, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
+import { Envelope, EnvelopeService, EtfService, etfValue, TauxChangeService, ToastService, TransactionService } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
@@ -110,9 +110,9 @@ export class WealthComponent {
     });
   });
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
   protected plusValue(env: Envelope)    { return env.value - env.invested; }
@@ -135,7 +135,7 @@ export class WealthComponent {
   protected async openAddTx(env: Envelope): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
       data: { presetEnvelopeId: env.id },
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
@@ -144,7 +144,7 @@ export class WealthComponent {
   protected async openNewEnvelope(presetGlyph?: string): Promise<void> {
     this.dialog.open(EnvelopeDialogComponent, {
       data: presetGlyph ? { presetGlyph } : undefined,
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });
@@ -167,7 +167,7 @@ export class WealthComponent {
   protected async openEditEnvelope(env: Envelope): Promise<void> {
     this.dialog.open(EnvelopeDialogComponent, {
       data: { envelope: env },
-      panelClass: 'tx-dialog-panel',
+      panelClass: 'transaction-dialog-panel',
       maxWidth: '580px',
       width: '100%',
     });

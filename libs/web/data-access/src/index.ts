@@ -22,6 +22,6 @@ export * from './lib/audit-log.service';
 export * from './lib/income.service';
 export * from './lib/broker.service';
 export * from './lib/glossary.service';
-export * from './lib/fx.service';
+export * from './lib/tauxChange.service';
 export * from './lib/toast.service';
 export * from './lib/liability.service';

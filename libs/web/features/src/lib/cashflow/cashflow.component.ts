@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { FxService, TransactionService } from '@patrimo/data-access';
+import { TauxChangeService, TransactionService } from '@patrimo/data-access';
 import { fmtNum } from '@patrimo/ui';
 import { computeMonthlyCashflow } from '../portfolio/cashflow';
 
@@ -12,7 +12,7 @@ import { computeMonthlyCashflow } from '../portfolio/cashflow';
 })
 export class CashflowComponent {
   private readonly txService = inject(TransactionService);
-  private readonly fxService = inject(FxService);
+  private readonly tauxChangeService = inject(TauxChangeService);
 
   protected readonly rows = computed(() => computeMonthlyCashflow(this.txService.all()));
 
@@ -42,7 +42,7 @@ export class CashflowComponent {
     return d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.fxService.fmt(n, d);
+  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
   protected readonly abs    = Math.abs;
 }

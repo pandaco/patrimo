@@ -16,7 +16,7 @@ import { AppIconComponent, AppIconName } from '../icons/app-icon.component';
 import { KbdComponent } from '../kbd/kbd.component';
 
 interface SearchResult {
-  kind: 'etf' | 'env' | 'tx';
+  kind: 'etf' | 'env' | 'transaction';
   key: string;
   primary: string;
   secondary: string;
@@ -87,7 +87,7 @@ export class SearchDialogComponent implements OnInit {
       )
       .slice(0, 3)
       .map(t => ({
-        kind: 'tx',
+        kind: 'transaction',
         key: t.id,
         primary: t.etf ? `${t.etf} · ${t.type}` : t.type,
         secondary: `${t.date} · ${t.amount.toFixed(2)} €`,
@@ -127,7 +127,7 @@ export class SearchDialogComponent implements OnInit {
   }
 
   protected kindIcon(kind: SearchResult['kind']): AppIconName {
-    return kind === 'etf' ? 'portfolio' : kind === 'env' ? 'dashboard' : 'tx';
+    return kind === 'etf' ? 'portfolio' : kind === 'env' ? 'dashboard' : 'transaction';
   }
 
   protected close(): void {

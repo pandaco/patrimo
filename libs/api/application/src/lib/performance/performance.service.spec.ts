@@ -51,9 +51,9 @@ function env(overrides: Partial<Envelope>): Envelope {
   };
 }
 
-function tx(overrides: Partial<Transaction>): Transaction {
+function transaction(overrides: Partial<Transaction>): Transaction {
   return {
-    id: overrides.id ?? 'tx-' + Math.random(),
+    id: overrides.id ?? 'transaction-' + Math.random(),
     userId: 'user-1',
     envelopeId: overrides.envelopeId ?? 'env-1',
     etfIsin: overrides.etfIsin ?? 'ISIN-ESE',
@@ -146,8 +146,8 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 2, date: new Date(labels[0] + 'T00:00:00Z') }),
-        tx({ type: 'SELL', quantity: 1, date: new Date(sellLabel + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 2, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'SELL', quantity: 1, date: new Date(sellLabel + 'T00:00:00Z') }),
       ]);
       mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 100 })) });
 
@@ -163,7 +163,7 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       mockHistory({ 'ISIN-ESE': [{ date: labels[0], close: 42 }] });
 
@@ -188,7 +188,7 @@ describe('PerformanceService', () => {
       const labels = await captureLabels();
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 1, price: 100, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 1, price: 100, date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       // 100 at the buy, 110 on the last label — carried forward in between.
       mockHistory({ 'ISIN-ESE': [
@@ -224,7 +224,7 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: closes[i] })) });
 
@@ -262,7 +262,7 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 1, date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: closes[i] })) });
 
@@ -278,7 +278,7 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 2, date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 2, date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       mockHistory({
         'ISIN-ESE': labels.map(date => ({ date, close: 100 })),
@@ -327,9 +327,9 @@ describe('PerformanceService', () => {
       // `ter` is in percent points: 0.2 = 0.20 %/yr (canonical convention).
       etfRepository.findAll.mockResolvedValue([etf({ ter: 0.2 })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, fees: 2.5, date: todayThisYear }),
-        tx({ type: 'BUY', quantity: 5, fees: 1.5, date: todayThisYear }),
-        tx({ type: 'BUY', quantity: 1, fees: 99, date: lastYear }), // outside YTD
+        transaction({ type: 'BUY', quantity: 10, fees: 2.5, date: todayThisYear }),
+        transaction({ type: 'BUY', quantity: 5, fees: 1.5, date: todayThisYear }),
+        transaction({ type: 'BUY', quantity: 1, fees: 99, date: lastYear }), // outside YTD
       ]);
       priceService.getQuote.mockResolvedValue({ price: 100 });
 
@@ -355,8 +355,8 @@ describe('PerformanceService', () => {
 
       etfRepository.findAll.mockResolvedValue([etf({})]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, fees: 1, date: todayThisYear }),
-        tx({ type: 'SELL', quantity: 10, fees: 1, date: todayThisYear }),
+        transaction({ type: 'BUY', quantity: 10, fees: 1, date: todayThisYear }),
+        transaction({ type: 'SELL', quantity: 10, fees: 1, date: todayThisYear }),
       ]);
 
       const fees = await service.getFeesYtd('user-1');
@@ -377,7 +377,7 @@ describe('PerformanceService', () => {
       const labels = await captureWealthLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
       mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 40 })) });
@@ -394,7 +394,7 @@ describe('PerformanceService', () => {
       const mid = Math.floor(labels.length / 2);
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
       mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < mid ? 40 : 44 })) });
@@ -412,8 +412,8 @@ describe('PerformanceService', () => {
         env({ id: 'env-2', glyph: 'livret' }),
       ]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'DEPOSIT', amount: 1000, etfIsin: null, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
-        tx({ type: 'DEPOSIT', amount: 500,  etfIsin: null, envelopeId: 'env-2', date: new Date(day5 + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 1000, etfIsin: null, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 500,  etfIsin: null, envelopeId: 'env-2', date: new Date(day5 + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([]);
 
@@ -434,7 +434,7 @@ describe('PerformanceService', () => {
         env({ id: 'env-2', glyph: 'livret' }),
       ]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([]);
 
@@ -448,7 +448,7 @@ describe('PerformanceService', () => {
       const labels = await captureWealthLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-2', glyph: 'livret' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([]);
 
@@ -490,7 +490,7 @@ describe('PerformanceService', () => {
       const mid = Math.floor(labels.length / 2);
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
       // Flat at 40 then +10 % to 44 — pure market move, no contribution mid-period.
@@ -509,7 +509,7 @@ describe('PerformanceService', () => {
       const labels = await captureWealthLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
       mockHistory({}); // Yahoo returns no closes at all (down / uncached weekly range)
@@ -529,7 +529,7 @@ describe('PerformanceService', () => {
       const buyDate = new Date();
       buyDate.setDate(buyDate.getDate() - 30);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
       // Yesterday 40 → today 44: a +10 % pure market day.
@@ -548,7 +548,7 @@ describe('PerformanceService', () => {
       buyDate.setDate(buyDate.getDate() - 60);
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: buyDate }),
       ]);
       etfRepository.findAll.mockResolvedValue([etf({})]);
 

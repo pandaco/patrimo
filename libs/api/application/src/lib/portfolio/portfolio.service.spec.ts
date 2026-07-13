@@ -5,9 +5,9 @@ import { PriceService } from '../market/price.service';
 import { PortfolioService } from './portfolio.service';
 import { PreferencesService } from '../preferences/preferences.service';
 
-function tx(overrides: Partial<Transaction>): Transaction {
+function transaction(overrides: Partial<Transaction>): Transaction {
   return {
-    id: overrides.id ?? 'tx-' + Math.random(),
+    id: overrides.id ?? 'transaction-' + Math.random(),
     userId: 'user-1',
     envelopeId: 'env-1',
     etfIsin: 'ISIN-ESE',
@@ -74,8 +74,8 @@ describe('PortfolioService', () => {
   it('aggregates BUY transactions into qty + weighted-average PRU', async () => {
     etfRepository.findAll.mockResolvedValue([etf({})]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ type: 'BUY', quantity: 10, price: 38.5, fees: 1 }),
-      tx({ type: 'BUY', quantity: 12, price: 39.3, fees: 1 }),
+      transaction({ type: 'BUY', quantity: 10, price: 38.5, fees: 1 }),
+      transaction({ type: 'BUY', quantity: 12, price: 39.3, fees: 1 }),
     ]);
 
     const [pos] = await service.listForUser('user-1');
@@ -90,8 +90,8 @@ describe('PortfolioService', () => {
   it('reduces qty on SELL but leaves the PRU computed from BUYs only', async () => {
     etfRepository.findAll.mockResolvedValue([etf({})]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ type: 'BUY',  quantity: 20, price: 40, fees: 0 }),
-      tx({ type: 'SELL', quantity: 5,  price: 50, fees: 0 }),
+      transaction({ type: 'BUY',  quantity: 20, price: 40, fees: 0 }),
+      transaction({ type: 'SELL', quantity: 5,  price: 50, fees: 0 }),
     ]);
 
     const [pos] = await service.listForUser('user-1');
@@ -105,10 +105,10 @@ describe('PortfolioService', () => {
   it('ignores DEPOSIT / DIVIDEND / INTEREST rows', async () => {
     etfRepository.findAll.mockResolvedValue([etf({})]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ type: 'BUY',      quantity: 10, price: 50 }),
-      tx({ type: 'DIVIDEND', quantity: 1,  price: null, amount: 25 }),
-      tx({ type: 'DEPOSIT',  quantity: 1,  price: null, amount: 500, etfIsin: null }),
-      tx({ type: 'INTEREST', quantity: 1,  price: null, amount: 12,  etfIsin: null }),
+      transaction({ type: 'BUY',      quantity: 10, price: 50 }),
+      transaction({ type: 'DIVIDEND', quantity: 1,  price: null, amount: 25 }),
+      transaction({ type: 'DEPOSIT',  quantity: 1,  price: null, amount: 500, etfIsin: null }),
+      transaction({ type: 'INTEREST', quantity: 1,  price: null, amount: 12,  etfIsin: null }),
     ]);
 
     const [pos] = await service.listForUser('user-1');
@@ -121,8 +121,8 @@ describe('PortfolioService', () => {
   it('skips positions that are fully closed (qty <= 0)', async () => {
     etfRepository.findAll.mockResolvedValue([etf({})]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ type: 'BUY',  quantity: 10, price: 30 }),
-      tx({ type: 'SELL', quantity: 10, price: 35 }),
+      transaction({ type: 'BUY',  quantity: 10, price: 30 }),
+      transaction({ type: 'SELL', quantity: 10, price: 35 }),
     ]);
 
     const result = await service.listForUser('user-1');
@@ -132,7 +132,7 @@ describe('PortfolioService', () => {
   it('skips transactions referencing an ETF that does not exist in the catalog', async () => {
     etfRepository.findAll.mockResolvedValue([etf({ isin: 'ISIN-CW8', ticker: 'CW8', name: 'CW8' })]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ etfIsin: 'ISIN-UNKNOWN', type: 'BUY', quantity: 5, price: 100 }),
+      transaction({ etfIsin: 'ISIN-UNKNOWN', type: 'BUY', quantity: 5, price: 100 }),
     ]);
 
     const result = await service.listForUser('user-1');
@@ -142,7 +142,7 @@ describe('PortfolioService', () => {
   it('enriches each position with the live quote returned by the price service', async () => {
     etfRepository.findAll.mockResolvedValue([etf({})]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ type: 'BUY', quantity: 10, price: 30 }),
+      transaction({ type: 'BUY', quantity: 10, price: 30 }),
     ]);
     prices.getQuote.mockResolvedValue({ price: 42.5, prevClose: 41.8 });
 
@@ -158,8 +158,8 @@ describe('PortfolioService', () => {
       etf({ isin: 'ISIN-B', ticker: 'B' }),
     ]);
     transactionRepository.findByUserId.mockResolvedValue([
-      tx({ etfIsin: 'ISIN-A', type: 'BUY', quantity: 1, price: 100 }),
-      tx({ etfIsin: 'ISIN-B', type: 'BUY', quantity: 1, price: 500 }),
+      transaction({ etfIsin: 'ISIN-A', type: 'BUY', quantity: 1, price: 100 }),
+      transaction({ etfIsin: 'ISIN-B', type: 'BUY', quantity: 1, price: 500 }),
     ]);
 
     const result = await service.listForUser('user-1');

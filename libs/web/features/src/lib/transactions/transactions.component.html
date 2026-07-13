@@ -17,7 +17,7 @@
           tout estimation recalculé à la volée depuis cette table.
         </p>
       </div>
-      <button class="btn primary" data-testid="open-tx-dialog" (click)="openNewTx()">+ Nouvelle transaction</button>
+      <button class="btn primary" data-testid="open-transaction-dialog" (click)="openNewTx()">+ Nouvelle transaction</button>
     </div>
   </div>
 
@@ -117,7 +117,7 @@
     }
   </div>
 
-  <!-- TX GROUPS -->
+  <!-- TRANSACTION GROUPS -->
   @if (loading() && pagedGroups().length === 0) {
     <div style="margin-bottom:22px">
       <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
@@ -149,7 +149,7 @@
     <div style="margin-bottom:22px">
       <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
         <span class="serif-italic" style="font-size:18px;text-transform:capitalize">{{ group.label }}</span>
-        <span class="muted small">{{ group.txs.length }} mouvement{{ group.txs.length > 1 ? 's' : '' }}</span>
+        <span class="muted small">{{ group.transactions.length }} mouvement{{ group.transactions.length > 1 ? 's' : '' }}</span>
         <span style="margin-left:auto" class="num" [class.pos]="group.total >= 0" [class.neg]="group.total < 0">
           {{ group.total >= 0 ? '+' : '−' }} {{ fmtEur(abs(group.total), 2) }}
         </span>
@@ -169,17 +169,17 @@
           </tr>
         </thead>
         <tbody>
-          @for (tx of group.txs; track tx.id) {
-            @let env = getEnv(tx.envelope);
-            @let etf = getEtf(tx.etf);
-            @let typeLabel = labels[tx.type];
+          @for (transaction of group.transactions; track transaction.id) {
+            @let env = getEnv(transaction.envelope);
+            @let etf = getEtf(transaction.etf);
+            @let typeLabel = labels[transaction.type];
             <tr>
               <td style="width:80px">
-                <div class="num small">{{ fmtDate(tx.date) }}</div>
+                <div class="num small">{{ fmtDate(transaction.date) }}</div>
               </td>
               <td style="width:36px">
                 <span class="env-glyph" style="width:24px;height:24px;font-size:11px"
-                  [style.background]="typeSymBg(tx.type)">{{ typeLabel.sym }}</span>
+                  [style.background]="typeSymBg(transaction.type)">{{ typeLabel.sym }}</span>
               </td>
               <td>
                 <div style="font-size:14px">
@@ -200,31 +200,31 @@
                 }
               </td>
               <td class="r" style="width:70px">
-                @if (tx.etf) { <span class="num small">{{ fmtNum(tx.qty, 0) }}</span> }
+                @if (transaction.etf) { <span class="num small">{{ fmtNum(transaction.qty, 0) }}</span> }
               </td>
               <td class="r" style="width:90px">
-                @if (tx.price) { <span class="num small">{{ fmtNum(tx.price, 2) }} €</span> }
+                @if (transaction.price) { <span class="num small">{{ fmtNum(transaction.price, 2) }} €</span> }
               </td>
               <td class="r" style="width:70px">
-                @if (tx.fees > 0) { <span class="num small muted">{{ fmtNum(tx.fees, 2) }} €</span> }
+                @if (transaction.fees > 0) { <span class="num small muted">{{ fmtNum(transaction.fees, 2) }} €</span> }
               </td>
               <td class="r" style="width:130px">
                 <span class="num" [class.pos]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
-                  {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(tx.amount, 2) }}
+                  {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(transaction.amount, 2) }}
                 </span>
               </td>
               <td style="width:104px" class="r">
                 <div style="display:inline-flex;gap:4px;align-items:center">
-                  @if (tx.transferId) {
+                  @if (transaction.transferId) {
                     <span class="muted" style="font-size:13px;cursor:help"
                           data-tip="Jambe d'un transfert entre enveloppes — non éditable. La suppression retire les deux jambes.">⇄</span>
                   } @else {
-                    <button class="btn icon ghost" (click)="openDuplicateTx(tx)"
+                    <button class="btn icon ghost" (click)="openDuplicateTx(transaction)"
                             aria-label="Dupliquer la transaction" title="Dupliquer (mêmes champs, date du jour)">⧉</button>
-                    <button class="btn icon ghost" (click)="openEditTx(tx)"
+                    <button class="btn icon ghost" (click)="openEditTx(transaction)"
                             aria-label="Modifier la transaction" title="Modifier">✎</button>
                   }
-                  <button class="btn icon ghost danger" (click)="deleteTx(tx)"
+                  <button class="btn icon ghost danger" (click)="deleteTx(transaction)"
                           aria-label="Supprimer la transaction" title="Supprimer">×</button>
                 </div>
               </td>

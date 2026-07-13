@@ -4,19 +4,19 @@ import type { EtfRepository, EnvelopeRepository, Transaction, TransactionReposit
 import { CreateTransactionDto, CreateTransferDto, TransactionDto, TransactionTypeDto, UpdateTransactionDto } from '@patrimo/contracts';
 import { ETF_REPOSITORY, ENVELOPE_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 
-function toDto(tx: Transaction): TransactionDto {
+function toDto(transaction: Transaction): TransactionDto {
   return {
-    id: tx.id,
-    envelopeId: tx.envelopeId,
-    etfIsin: tx.etfIsin,
-    type: tx.type as TransactionTypeDto,
-    date: tx.date.toISOString().slice(0, 10),
-    quantity: tx.quantity,
-    price: tx.price,
-    fees: tx.fees,
-    taxes: tx.taxes,
-    amount: tx.amount,
-    transferId: tx.transferId,
+    id: transaction.id,
+    envelopeId: transaction.envelopeId,
+    etfIsin: transaction.etfIsin,
+    type: transaction.type as TransactionTypeDto,
+    date: transaction.date.toISOString().slice(0, 10),
+    quantity: transaction.quantity,
+    price: transaction.price,
+    fees: transaction.fees,
+    taxes: transaction.taxes,
+    amount: transaction.amount,
+    transferId: transaction.transferId,
   };
 }
 
@@ -91,9 +91,9 @@ export class TransactionService {
   async delete(id: string, userId: string): Promise<boolean> {
     // Deleting one leg of a transfer would silently unbalance the cash of
     // the counterpart envelope — always remove the pair.
-    const tx = await this.transactions.findById(id);
-    if (tx && tx.userId === userId && tx.transferId) {
-      return (await this.transactions.deleteByTransferId(tx.transferId, userId)) > 0;
+    const transaction = await this.transactions.findById(id);
+    if (transaction && transaction.userId === userId && transaction.transferId) {
+      return (await this.transactions.deleteByTransferId(transaction.transferId, userId)) > 0;
     }
     return this.transactions.deleteForUser(id, userId);
   }
@@ -139,16 +139,16 @@ export class TransactionService {
   async exportCsv(userId: string): Promise<string> {
     const rows = await this.transactions.findByUserId(userId);
     const header = 'Date,Type,Enveloppe ID,ISIN,Quantité,Prix (€),Frais (€),Taxes (€),Montant (€)\n';
-    const lines = rows.map(tx => [
-      tx.date.toISOString().slice(0, 10),
-      tx.type,
-      tx.envelopeId,
-      tx.etfIsin ?? '',
-      tx.quantity,
-      tx.price ?? '',
-      tx.fees,
-      tx.taxes,
-      tx.amount,
+    const lines = rows.map(transaction => [
+      transaction.date.toISOString().slice(0, 10),
+      transaction.type,
+      transaction.envelopeId,
+      transaction.etfIsin ?? '',
+      transaction.quantity,
+      transaction.price ?? '',
+      transaction.fees,
+      transaction.taxes,
+      transaction.amount,
     ].join(','));
     return header + lines.join('\n');
   }

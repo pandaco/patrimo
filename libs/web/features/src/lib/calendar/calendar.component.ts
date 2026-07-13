@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DcaPlanService, DividendService, EnvelopeService, EtfService, FxService, IncomeService, TransactionService } from '@patrimo/data-access';
+import { DcaPlanService, DividendService, EnvelopeService, EtfService, TauxChangeService, IncomeService, TransactionService } from '@patrimo/data-access';
 import { DcaPlanDto, DividendDto } from '@patrimo/contracts';
 import { TipDirective } from '@patrimo/ui';
 
@@ -118,16 +118,16 @@ export class CalendarComponent {
     const envs    = this.envById();
 
     const past = this.transactionService.all()
-      .filter(tx => tx.type === 'DIVIDEND' && tx.etf)
-      .map(tx => {
-        const ticker = (tx.etf && tickers.get(tx.etf)) || (tx.etf ?? '');
-        const env    = envs.get(tx.envelope);
+      .filter(transaction => transaction.type === 'DIVIDEND' && transaction.etf)
+      .map(transaction => {
+        const ticker = (transaction.etf && tickers.get(transaction.etf)) || (transaction.etf ?? '');
+        const env    = envs.get(transaction.envelope);
         return {
-          date: tx.date,
+          date: transaction.date,
           type: 'DIV' as const,
-          label: `Dividende ${ticker} · ${this.fmtEur(tx.amount, 2)}`,
+          label: `Dividende ${ticker} · ${this.fmtEur(transaction.amount, 2)}`,
           envCode: env?.code ?? '',
-          amount: tx.amount,
+          amount: transaction.amount,
           past: true,
         };
       });
@@ -290,8 +290,8 @@ export class CalendarComponent {
 
   protected readonly currentYear = new Date().getFullYear();
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly eventColor = eventColor;
 }

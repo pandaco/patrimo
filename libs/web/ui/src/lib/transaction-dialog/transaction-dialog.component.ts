@@ -183,7 +183,7 @@ export class TransactionDialogComponent {
   protected readonly fmtPctRaw = fmtPctRaw;
 
   protected openAddInstrument(): void {
-    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'tx-dialog-panel', maxWidth: '580px', width: '100%' });
+    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: '580px', width: '100%' });
     ref.afterClosed().subscribe((created: EtfDto | undefined) => {
       if (created) this.etfIsin.set(created.isin);
     });

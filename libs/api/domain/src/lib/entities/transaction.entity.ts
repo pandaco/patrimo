@@ -1,4 +1,4 @@
-import { TransactionType } from '../value-objects/tx-type';
+import { TransactionType } from '../value-objects/transaction-type';
 
 export interface Transaction {
   id: string;

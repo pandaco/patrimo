@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AlertService, AuthService, EnvelopeService, EtfService, FxService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
 import { TermComponent, TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
@@ -63,11 +63,11 @@ export class DashboardComponent {
   private readonly auth       = inject(AuthService);
   private readonly preferences      = inject(PreferencesService);
   private readonly router     = inject(Router);
-  protected readonly fxService       = inject(FxService);
+  protected readonly tauxChangeService       = inject(TauxChangeService);
 
   protected readonly firstName      = computed(() => this.auth.user()?.firstName ?? '');
-  protected readonly fxRate         = this.fxService.rate;
-  protected readonly displayCurrency = this.fxService.displayCurrency;
+  protected readonly fxRate         = this.tauxChangeService.rate;
+  protected readonly displayCurrency = this.tauxChangeService.displayCurrency;
 
   // Ticks every minute so the date and market state refresh without a reload.
   private readonly nowTick = signal(Date.now());
@@ -264,8 +264,8 @@ export class DashboardComponent {
   }
 
   protected readonly abs       = Math.abs;
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPct    = fmtPct;
 

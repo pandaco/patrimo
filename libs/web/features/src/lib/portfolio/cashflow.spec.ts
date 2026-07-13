@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Transaction, TransactionType } from '@patrimo/data-access';
 import { computeMonthlyCashflow } from './cashflow';
 
-function tx(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
+function transaction(partial: Partial<Transaction> & { id: string; type: TransactionType; date: string; amount: number }): Transaction {
   return {
     id: partial.id,
     date: partial.date,
@@ -29,9 +29,9 @@ describe('computeMonthlyCashflow', () => {
 
   it('sums DEPOSIT as in and WITHDRAWAL as out for the right month', () => {
     const rows = computeMonthlyCashflow([
-      tx({ id: '1', type: 'DEPOSIT',    date: '2026-02-05', amount: 1000 }),
-      tx({ id: '2', type: 'DEPOSIT',    date: '2026-02-20', amount: 500 }),
-      tx({ id: '3', type: 'WITHDRAWAL', date: '2026-02-10', amount: 200 }),
+      transaction({ id: '1', type: 'DEPOSIT',    date: '2026-02-05', amount: 1000 }),
+      transaction({ id: '2', type: 'DEPOSIT',    date: '2026-02-20', amount: 500 }),
+      transaction({ id: '3', type: 'WITHDRAWAL', date: '2026-02-10', amount: 200 }),
     ], 3, now);
 
     const feb = rows.find(r => r.month === '2026-02');
@@ -42,9 +42,9 @@ describe('computeMonthlyCashflow', () => {
 
   it('keeps dividends/interest as a separate `revenus` series, not in/out', () => {
     const rows = computeMonthlyCashflow([
-      tx({ id: '1', type: 'DIVIDEND', date: '2026-03-01', amount: 40 }),
-      tx({ id: '2', type: 'INTEREST', date: '2026-03-02', amount: 10 }),
-      tx({ id: '3', type: 'BUY',      date: '2026-03-03', amount: 300 }),
+      transaction({ id: '1', type: 'DIVIDEND', date: '2026-03-01', amount: 40 }),
+      transaction({ id: '2', type: 'INTEREST', date: '2026-03-02', amount: 10 }),
+      transaction({ id: '3', type: 'BUY',      date: '2026-03-03', amount: 300 }),
     ], 1, now);
 
     expect(rows).toHaveLength(1);
@@ -55,7 +55,7 @@ describe('computeMonthlyCashflow', () => {
 
   it('ignores transactions outside the requested window', () => {
     const rows = computeMonthlyCashflow([
-      tx({ id: '1', type: 'DEPOSIT', date: '2025-01-01', amount: 999 }),
+      transaction({ id: '1', type: 'DEPOSIT', date: '2025-01-01', amount: 999 }),
     ], 2, now);
 
     expect(rows.reduce((a, r) => a + r.in, 0)).toBe(0);

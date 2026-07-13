@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
-import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, FxService, ToastService, TransactionService } from '@patrimo/data-access';
+import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, TauxChangeService, ToastService, TransactionService } from '@patrimo/data-access';
 import { BarComponent, brokerageFee, fmtNum, fmtPctRaw, TipDirective } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
@@ -119,9 +119,9 @@ export class DcaComponent {
     }, 0) / rows.length;
   });
 
-  private readonly fxService = inject(FxService);
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  private readonly tauxChangeService = inject(TauxChangeService);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum    = fmtNum;
   protected readonly fmtPctRaw = fmtPctRaw;
 

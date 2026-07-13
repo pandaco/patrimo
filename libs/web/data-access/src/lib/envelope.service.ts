@@ -16,7 +16,7 @@ export class EnvelopeService {
   private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly auth    = inject(AuthService);
-  private readonly txs     = inject(TransactionService);
+  private readonly transactions     = inject(TransactionService);
   private readonly etfs    = inject(EtfService);
 
   // httpResource auto-fetches whenever its URL factory returns a string. We
@@ -63,7 +63,7 @@ export class EnvelopeService {
     // The backend cascades the delete to the linked transactions; refresh
     // both sibling resources so the dashboard, the sidebar badge and the
     // portfolio positions follow without anyone reloading the page.
-    this.txs.reload();
+    this.transactions.reload();
     this.etfs.reload();
   }
 }

@@ -198,7 +198,7 @@
             @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
           </div>
           <div class="hero-networth-value">
-            {{ fmtNum(fxRate() * netWorth(), 0) }}<small> {{ fxService.symbol() }}</small>
+            {{ fmtNum(fxRate() * netWorth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
           </div>
           @if (totalLiabilities() > 0) {
             <div class="hero-metric-cap">

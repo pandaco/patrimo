@@ -58,9 +58,9 @@ function etf(overrides: Partial<Etf>): Etf {
   };
 }
 
-function tx(overrides: Partial<Transaction>): Transaction {
+function transaction(overrides: Partial<Transaction>): Transaction {
   return {
-    id: overrides.id ?? 'tx-' + Math.random(),
+    id: overrides.id ?? 'transaction-' + Math.random(),
     userId: 'user-1',
     envelopeId: overrides.envelopeId ?? 'env-1',
     etfIsin: overrides.etfIsin ?? 'ISIN-ESE',
@@ -143,7 +143,7 @@ describe('AlertService', () => {
         envelope({ id: 'env-1', code: 'PEA', cash: 150 }),
       ]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({
+        transaction({
           envelopeId: 'env-1',
           type: 'DEPOSIT',
           date: new Date(Date.now() - 40 * 24 * 3600 * 1000),
@@ -165,7 +165,7 @@ describe('AlertService', () => {
         envelope({ id: 'env-1', cash: 50 }),
       ]);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({
+        transaction({
           envelopeId: 'env-1',
           type: 'DEPOSIT',
           date: new Date(Date.now() - 40 * 24 * 3600 * 1000),
@@ -212,7 +212,7 @@ describe('AlertService', () => {
   describe('DIVIDEND_RECENT rule', () => {
     it('generates DIVIDEND_RECENT alert for dividends received recently', async () => {
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({
+        transaction({
           type: 'DIVIDEND',
           etfIsin: 'ISIN-ESE',
           amount: 50,
@@ -279,7 +279,7 @@ describe('AlertService', () => {
   describe('DCA_PENDING rule', () => {
     it('generates DCA_PENDING warning when monthly target is set and no BUY exists this month', async () => {
       preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
-      transactionRepository.findByUserId.mockResolvedValue([]); // no txs this month
+      transactionRepository.findByUserId.mockResolvedValue([]); // no transactions this month
 
       const list = await service.listForUser('user-1');
       const alert = list.find((a) => a.type === 'DCA_PENDING');
@@ -291,7 +291,7 @@ describe('AlertService', () => {
     it('does not generate DCA_PENDING warning if a BUY exists this month', async () => {
       preferencesRepository.findByUserId.mockResolvedValue({ monthlyTarget: 500 } as UserPreferences);
       transactionRepository.findByUserId.mockResolvedValue([
-        tx({ type: 'BUY', date: new Date() }), // buy today
+        transaction({ type: 'BUY', date: new Date() }), // buy today
       ]);
 
       const list = await service.listForUser('user-1');

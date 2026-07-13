@@ -5,13 +5,13 @@ import { AuthService } from './auth.service';
 import { PreferencesService } from './preferences.service';
 
 @Injectable({ providedIn: 'root' })
-export class FxService {
+export class TauxChangeService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly auth    = inject(AuthService);
   private readonly preferences   = inject(PreferencesService);
 
   private readonly ratesResource = httpResource<Record<string, number>>(
-    () => this.auth.isAuthenticated() ? `${this.baseUrl}/market/fx-rates` : undefined,
+    () => this.auth.isAuthenticated() ? `${this.baseUrl}/market/tauxChange-rates` : undefined,
     { defaultValue: { EUR: 1 } },
   );
 

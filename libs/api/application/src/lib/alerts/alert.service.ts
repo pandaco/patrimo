@@ -47,7 +47,7 @@ export class AlertService {
   ) {}
 
   async listForUser(userId: string): Promise<AlertDto[]> {
-    const [envelopes, txs, etfs, positions, readRows, rules, userPreferences] = await Promise.all([
+    const [envelopes, transactions, etfs, positions, readRows, rules, userPreferences] = await Promise.all([
       this.envelopeRepository.findByUserId(userId),
       this.transactionRepository.findByUserId(userId),
       this.etfRepository.findAll(),
@@ -66,10 +66,10 @@ export class AlertService {
     // 1. CASH_IDLE
     const cashIdleMin = ruleMap.get('CASH_IDLE') ?? 100;
     const lastDepositByEnv = new Map<string, Date>();
-    for (const tx of txs) {
-      if (tx.type !== 'DEPOSIT') continue;
-      const existing = lastDepositByEnv.get(tx.envelopeId);
-      if (!existing || tx.date > existing) lastDepositByEnv.set(tx.envelopeId, tx.date);
+    for (const transaction of transactions) {
+      if (transaction.type !== 'DEPOSIT') continue;
+      const existing = lastDepositByEnv.get(transaction.envelopeId);
+      if (!existing || transaction.date > existing) lastDepositByEnv.set(transaction.envelopeId, transaction.date);
     }
 
     for (const env of envelopes) {
@@ -110,7 +110,7 @@ export class AlertService {
 
     // 3. DIVIDEND_RECENT
     const recentDivDays = ruleMap.get('DIVIDEND_RECENT') ?? 7;
-    const recentDivs = txs.filter(t => t.type === 'DIVIDEND' && daysSince(t.date, now) <= recentDivDays);
+    const recentDivs = transactions.filter(t => t.type === 'DIVIDEND' && daysSince(t.date, now) <= recentDivDays);
     for (const div of recentDivs) {
       const env = envelopes.find(e => e.id === div.envelopeId);
       const etf = div.etfIsin ? etfs.find(e => e.isin === div.etfIsin) : undefined;
@@ -180,7 +180,7 @@ export class AlertService {
     const monthlyTarget = userPreferences?.monthlyTarget ?? 0;
     if (monthlyTarget > 0) {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const hasBuyThisMonth = txs.some(t => t.type === 'BUY' && t.date >= monthStart);
+      const hasBuyThisMonth = transactions.some(t => t.type === 'BUY' && t.date >= monthStart);
       if (!hasBuyThisMonth) {
         const monthLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
         alerts.push(buildAlert(

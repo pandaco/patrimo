@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { AllocationService, EnvelopeService, EtfService, FxService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
+import { AllocationService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
 import { TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTri } from '../portfolio/tauxRentabiliteInterne';
@@ -42,7 +42,7 @@ export class IndicatorsComponent {
   private readonly txService  = inject(TransactionService);
   private readonly performanceService = inject(PerformanceService);
   private readonly allocationService  = inject(AllocationService);
-  private readonly fxService  = inject(FxService);
+  private readonly tauxChangeService  = inject(TauxChangeService);
 
   constructor() {
     // All-time framing: "Repli vs sommet" reads against the all-time peak and
@@ -214,8 +214,8 @@ export class IndicatorsComponent {
     return Math.abs(driftStocks);
   });
 
-  // FX-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.fxService.fmt(n, d);
+  // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
+  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtNum = fmtNum;
   protected readonly fmtPct = fmtPct;
 }

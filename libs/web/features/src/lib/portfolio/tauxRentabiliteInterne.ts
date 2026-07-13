@@ -16,7 +16,7 @@ export interface CashFlow {
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
 
 /**
- * Solves for the annualised internal rate of return that zeros the NPV of
+ * Solves for the annualised internal rate of return that zeros the VALEURACTUELLENETTE of
  * the cash-flow series. Newton-Raphson with a bisection fallback when the
  * derivative collapses or the iterate diverges. Returns the rate as a
  * percentage (e.g. 7.4 → 7.4 %/yr), or `null` if it cannot converge.
@@ -42,7 +42,7 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
   const hasNegative = amounts.some(a => a < 0);
   if (!hasPositive || !hasNegative) return null;
 
-  const npv = (r: number): number => {
+  const valeurActuelleNette = (r: number): number => {
     let acc = 0;
     for (let i = 0; i < amounts.length; i++) acc += amounts[i] / Math.pow(1 + r, years[i]);
     return acc;
@@ -57,7 +57,7 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
 
   let r = guess;
   for (let i = 0; i < 100; i++) {
-    const f = npv(r);
+    const f = valeurActuelleNette(r);
     if (Math.abs(f) < 1e-7) return r * 100;
     const derivativeValue = dnpv(r);
     if (Math.abs(derivativeValue) < 1e-12) break;
@@ -70,13 +70,13 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
 
   // Bisection fallback in [-0.99, 10] if Newton-Raphson diverged.
   let lo = -0.99, hi = 10;
-  const lowerBoundValue = npv(lo), fHi = npv(hi);
+  const lowerBoundValue = valeurActuelleNette(lo), fHi = valeurActuelleNette(hi);
   if (Number.isNaN(lowerBoundValue) || Number.isNaN(fHi) || (lowerBoundValue > 0 && fHi > 0) || (lowerBoundValue < 0 && fHi < 0)) {
     return null;
   }
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
-    const f   = npv(mid);
+    const f   = valeurActuelleNette(mid);
     if (Math.abs(f) < 1e-7 || (hi - lo) < 1e-9) return mid * 100;
     if ((f > 0) === (lowerBoundValue > 0)) lo = mid; else hi = mid;
   }
@@ -88,11 +88,11 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
  * current portfolio value. Returns `null` if a meaningful TAUXRENTABILITEINTERNE cannot be
  * computed (no deposits, no current value).
  */
-export function computeTri(txs: Transaction[], currentValue: number, today: Date = new Date()): number | null {
+export function computeTri(transactions: Transaction[], currentValue: number, today: Date = new Date()): number | null {
   if (currentValue <= 0) return null;
 
   const flows: CashFlow[] = [];
-  for (const t of txs) {
+  for (const t of transactions) {
     if (t.type === 'DEPOSIT')    flows.push({ date: t.date, amount: -t.amount });
     if (t.type === 'WITHDRAWAL') flows.push({ date: t.date, amount: +t.amount });
   }
