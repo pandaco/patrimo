@@ -43,7 +43,7 @@
           <h3>Importe tes opérations</h3>
           <p>CSV depuis ton broker ou saisie manuelle. PRU, cash, positions
             sont recalculés automatiquement.</p>
-          <a class="btn sm" routerLink="/transactions">Ouvrir Transactions →</a>
+          <a class="btn sm" routerLink="/transactions">Ouvrir Opérations →</a>
         </li>
         <li class="onboarding-step">
           <span class="onboarding-num">3</span>
@@ -115,8 +115,8 @@
             <div class="chart-skeleton skeleton" role="status" aria-label="Chargement du graphique"></div>
           } @else {
             <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-              <p class="muted small" style="margin:0">Aucune donnée pour la période sélectionnée. Ajoute des transactions pour voir l'évolution.</p>
-              <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+              <p class="muted small" style="margin:0">Aucune donnée pour la période sélectionnée. Ajoute des opérations pour voir l'évolution.</p>
+              <a class="btn sm primary" routerLink="/transactions">+ Première opération</a>
             </div>
           }
         } @else {
@@ -128,8 +128,8 @@
             <div class="chart-skeleton skeleton" role="status" aria-label="Chargement du graphique"></div>
           } @else {
             <div style="height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
-              <p class="muted small" style="margin:0">Aucune position pour reconstituer la courbe. Crée une transaction d'achat pour démarrer.</p>
-              <a class="btn sm primary" routerLink="/transactions">+ Première transaction</a>
+              <p class="muted small" style="margin:0">Aucune position pour reconstituer la courbe. Crée une opération d'achat pour démarrer.</p>
+              <a class="btn sm primary" routerLink="/transactions">+ Première opération</a>
             </div>
           }
         }
@@ -194,7 +194,7 @@
       <div class="wealth-hero-sidebar">
         <div class="hero-metric hero-networth">
           <div class="hero-metric-label">
-            <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash) moins le capital restant dû sur tes crédits en cours. Mis à jour en temps réel à partir de tes transactions et des cours Yahoo Finance.">Patrimoine net</span>
+            <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash) moins le capital restant dû sur tes crédits en cours. Mis à jour en temps réel à partir de tes opérations et des cours Yahoo Finance.">Patrimoine net</span>
             @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
           </div>
           <div class="hero-networth-value">

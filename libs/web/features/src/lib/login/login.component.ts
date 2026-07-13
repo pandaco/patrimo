@@ -59,7 +59,7 @@ import { AuthService } from '@patrimo/data-access';
               <div style="font-size:13.5px;font-weight:500;color:var(--ink)">Importe ou saisis tes opérations</div>
               <div class="muted tiny" style="margin-top:2px">
                 CSV depuis ton broker ou saisie manuelle. Achats, ventes, dividendes,
-                versements — chaque mouvement nourrit le calcul automatique.
+                versements — chaque opération nourrit le calcul automatique.
               </div>
             </div>
           </li>

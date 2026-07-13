@@ -176,7 +176,7 @@ export class WealthComponent {
   protected async deleteEnvelope(env: Envelope): Promise<void> {
     if (!confirm(
       `Supprimer l'enveloppe « ${env.label} » ?\n\n` +
-      `Cette action estimation tauxRentabiliteInterneéversible et supprime AUSSI toutes les transactions ` +
+      `Cette action estimation tauxRentabiliteInterneéversible et supprime AUSSI toutes les opérations ` +
       `enregistrées sur cette enveloppe.`,
     )) return;
     try {

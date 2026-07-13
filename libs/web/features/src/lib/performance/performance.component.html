@@ -5,7 +5,7 @@
     <h1 class="page-title">Évolution <em>de ton patrimoine</em></h1>
     <p class="page-sub">
       Valeur du portefeuille reconstituée jour par jour depuis ton historique
-      de transactions et les cours Yahoo Finance. Performance affichée nette de
+      d'opérations et les cours Yahoo Finance. Performance affichée nette de
       frais courtage et brut de fiscalité.
     </p>
   </div>
@@ -123,10 +123,10 @@
     } @else {
       <div style="text-align:center;padding:48px 0">
         <p class="muted" style="margin:0 0 16px">
-          Aucune position sur la période sélectionnée. Crée une transaction
+          Aucune position sur la période sélectionnée. Crée une opération
           pour démarrer la courbe.
         </p>
-        <a class="btn primary" routerLink="/transactions">+ Nouvelle transaction</a>
+        <a class="btn primary" routerLink="/transactions">+ Nouvelle opération</a>
       </div>
     }
   </div>
@@ -368,11 +368,11 @@
       </summary>
       <ul style="margin:14px 0 0 18px;padding:0;font-size:13px;line-height:1.55;color:var(--ink-2)">
         <li><b>Source des cours</b> : Yahoo Finance, mis en cache 24 h côté backend.</li>
-        <li><b>Quantité à chaque date</b> : reconstituée en marchant les transactions BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
+        <li><b>Quantité à chaque date</b> : reconstituée en marchant les opérations BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
         <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
         <li><b>Benchmark</b> : {{ benchmarkLabel() }} (modifiable dans les préférences), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position estimation détenue. L'écart entre les deux courbes = ton alpha.</li>
         <li><b>TD</b> : return 1A ETF − return 1A CW8 (proxy). <b>TE</b> : écart-type annualisé des différences de rendements quotidiens vs CW8 (≈ std dev × √252).</li>
-        <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur transactions BUY/SELL de l'année.</li>
+        <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur opérations BUY/SELL de l'année.</li>
       </ul>
     </details>
 

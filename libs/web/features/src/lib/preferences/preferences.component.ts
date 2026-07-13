@@ -17,7 +17,7 @@ const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'] as const;
 // Code resource (controller-derived) → French label for the activity feed.
 const RESOURCE_LABELS: Record<string, string> = {
   Envelope:    'Enveloppe',
-  Transaction: 'Mouvement',
+  Transaction: 'Opération',
   Etf:         'ETF',
   Dca:         'Plan DCA',
   Alert:       "Règle d'alerte",

@@ -43,7 +43,7 @@ const VALEURLIQUIDATIVE: NavGroup[] = [
     label: 'Investir',
     items: [
       { id: 'portfolio', label: 'Portefeuille',    route: '/portfolio',    icon: 'portfolio', shortcut: 'P' },
-      { id: 'transaction',        label: 'Transactions',    route: '/transactions', icon: 'transaction',        shortcut: 'T' },
+      { id: 'transaction',        label: 'Opérations',    route: '/transactions', icon: 'transaction',        shortcut: 'T' },
       { id: 'alloc',     label: 'Allocation',      route: '/allocation',   icon: 'alloc',     shortcut: 'L' },
       { id: 'perf',      label: 'Performance',     route: '/performance',  icon: 'perf',      shortcut: 'F' },
     ],

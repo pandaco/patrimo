@@ -219,7 +219,7 @@ export class TransactionsComponent {
     const typeLabel  = this.labels[transaction.type].label;
     const date = fmtDate(transaction.date);
     const target = env ? `${typeLabel} sur ${env.code} du ${date}` : `${typeLabel} du ${date}`;
-    if (!confirm(`Supprimer la transaction « ${target} » ?`)) return;
+    if (!confirm(`Supprimer l'opération « ${target} » ?`)) return;
     try {
       await this.transactionService.remove(transaction.id);
     } catch (err) {

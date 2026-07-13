@@ -11,7 +11,7 @@ const CRUMB_MAP: Record<string, string[]> = {
   '/dashboard':      ['Aperçu',   'Tableau de bord'],
   '/wealth':         ['Aperçu',   'Patrimoine'],
   '/portfolio':      ['Investir', 'Portefeuille'],
-  '/transactions':   ['Investir', 'Transactions'],
+  '/transactions':   ['Investir', 'Opérations'],
   '/allocation':     ['Investir', 'Allocation'],
   '/performance':    ['Investir', 'Performance'],
   '/tools/analyses/indicators': ['Outils', 'Analyses', 'Indicateurs'],
