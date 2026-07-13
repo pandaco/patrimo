@@ -7,11 +7,12 @@ import { PriceCacheService } from './price-cache.service';
 import { PriceService } from './price.service';
 import { PriceWarmerCron } from './price-warmer.cron';
 import { YahooPriceProvider } from './yahoo-price.provider';
+import { JustEtfProvider } from './justetf.provider';
 
 @Module({
   imports: [PersistenceModule, AuthModule],
   controllers: [TauxChangeController],
-  providers: [PriceCacheService, YahooPriceProvider, PriceService, PriceWarmerCron, TauxChangeService],
+  providers: [PriceCacheService, YahooPriceProvider, JustEtfProvider, PriceService, PriceWarmerCron, TauxChangeService],
   exports: [PriceService, TauxChangeService],
 })
 export class MarketModule {}

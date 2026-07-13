@@ -128,6 +128,7 @@ export class PortfolioService {
       const weight = posValue / totalValue;
 
       let exposure = etf.exposure;
+      let fetchedNew = false;
       const geoEmpty = !exposure?.geography || Object.keys(exposure.geography).length === 0;
       const secEmpty = !exposure?.sector || Object.keys(exposure.sector).length === 0;
       
@@ -135,11 +136,31 @@ export class PortfolioService {
         const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
         if (meta) {
           exposure = this.parseYahooExposure(meta);
-          this.etfRepository.updateExposure(etf.isin, exposure).catch(console.error);
+          fetchedNew = true;
+        }
+      }
+
+      // Merge JustETF data if geography or sector is still empty
+      if (!exposure?.geography || Object.keys(exposure.geography).length === 0 || !exposure?.sector || Object.keys(exposure.sector).length === 0) {
+        const justEtfExp = await this.priceService.getEtfExposure(etf.isin);
+        if (!exposure) {
+          exposure = { geography: {}, sector: {}, currency: {} };
+          fetchedNew = true;
+        }
+        if (Object.keys(justEtfExp.geography).length > 0) {
+          exposure.geography = justEtfExp.geography;
+          fetchedNew = true;
+        }
+        if (Object.keys(justEtfExp.sector).length > 0) {
+          exposure.sector = justEtfExp.sector;
+          fetchedNew = true;
         }
       }
 
       if (exposure) {
+        if (fetchedNew) {
+          this.etfRepository.updateExposure(etf.isin, exposure).catch(console.error);
+        }
         this.accumulate(geoMap, exposure.geography || {}, weight);
         this.accumulate(sectorMap, exposure.sector || {}, weight);
         this.accumulate(currMap, exposure.currency || {}, weight);

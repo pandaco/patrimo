@@ -3,6 +3,8 @@ import { PriceCacheService, Quote } from './price-cache.service';
 import { HistoricalPoint, SymbolCandidate, YahooPriceProvider } from './yahoo-price.provider';
 import { toYahooSymbol } from './yahoo-symbol';
 
+import { JustEtfProvider } from './justetf.provider';
+
 export interface SymbolSearchResult extends SymbolCandidate {
   currency: string | null;
   price:    number | null;
@@ -15,6 +17,7 @@ export class PriceService {
   constructor(
     private readonly cache:    PriceCacheService,
     private readonly provider: YahooPriceProvider,
+    private readonly justEtf:  JustEtfProvider,
   ) {}
 
   async getQuote(isin: string, ticker: string): Promise<Quote> {
@@ -51,6 +54,17 @@ export class PriceService {
 
     const fresh = await this.provider.fetchMetadata(symbol);
     if (fresh) await this.cache.set(key, fresh, 86400 * 7); // 1 week
+    return fresh;
+  }
+
+  async getEtfExposure(isin: string): Promise<{ geography: Record<string, number>; sector: Record<string, number> }> {
+    const key = `justetf:${isin}`;
+    const hit = await this.cache.get<any>(key);
+    if (hit) return hit;
+
+    const fresh = await this.justEtf.fetchExposure(isin);
+    // Cache for 1 week
+    await this.cache.set(key, fresh, 86400 * 7);
     return fresh;
   }
 

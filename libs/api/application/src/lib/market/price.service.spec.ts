@@ -2,21 +2,25 @@ import { Test } from '@nestjs/testing';
 import { PriceCacheService, Quote } from './price-cache.service';
 import { PriceService } from './price.service';
 import { YahooPriceProvider } from './yahoo-price.provider';
+import { JustEtfProvider } from './justetf.provider';
 
 describe('PriceService', () => {
-  let service:  PriceService;
-  let cache:    { get: jest.Mock; set: jest.Mock; getQuote: jest.Mock; setQuote: jest.Mock; invalidate: jest.Mock; getHistory: jest.Mock; setHistory: jest.Mock };
-  let provider: { fetch: jest.Mock; fetchMetadata: jest.Mock; fetchHistorical: jest.Mock };
+  let service: PriceService;
+  let cache: any;
+  let provider: any;
+  let justEtf: any;
 
   beforeEach(async () => {
-    cache    = { get: jest.fn(), set: jest.fn(), getQuote: jest.fn(), setQuote: jest.fn(), invalidate: jest.fn(), getHistory: jest.fn(), setHistory: jest.fn() };
+    cache = { get: jest.fn(), set: jest.fn(), getQuote: jest.fn(), setQuote: jest.fn(), invalidate: jest.fn(), getHistory: jest.fn(), setHistory: jest.fn() };
     provider = { fetch: jest.fn(), fetchMetadata: jest.fn(), fetchHistorical: jest.fn() };
+    justEtf = { fetchExposure: jest.fn() };
 
     const mod = await Test.createTestingModule({
       providers: [
         PriceService,
         { provide: PriceCacheService,  useValue: cache    },
         { provide: YahooPriceProvider, useValue: provider },
+        { provide: JustEtfProvider,    useValue: justEtf  },
       ],
     }).compile();
 
