@@ -1,7 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { Envelope, EnvelopeService, EtfService, etfValue, TauxChangeService, ToastService, TransactionService } from '@patrimo/data-access';
+import {
+  Envelope,
+  EnvelopeService,
+  EtfService,
+  etfValue,
+  TauxChangeService,
+  ToastService,
+  TransactionService,
+  unrealizedPlusValue,
+  unrealizedPnlPct,
+  unrealizedPlusValueMulti,
+  unrealizedPnlPctMulti,
+  capPct,
+} from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
@@ -64,15 +77,14 @@ export class WealthComponent {
       const envelopes = all.filter(e => f.glyphs.includes(e.glyph));
       const value     = envelopes.reduce((a, e) => a + e.value, 0);
       const invested  = envelopes.reduce((a, e) => a + e.invested, 0);
-      const cash      = envelopes.reduce((a, e) => a + e.cash, 0);
-      const plusValue = (value - cash) - invested;
+      const plusValue = unrealizedPlusValueMulti(envelopes);
       return {
         family: f,
         envelopes,
         value,
         invested,
         plusValue,
-        pnlPct: invested ? (plusValue / invested) * 100 : 0,
+        pnlPct: unrealizedPnlPctMulti(envelopes),
         pct:    total    ? (value / total) * 100 : 0,
       };
     });
@@ -116,9 +128,9 @@ export class WealthComponent {
   protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
-  protected plusValue(env: Envelope)    { return (env.value - env.cash) - env.invested; }
-  protected pnlPct(env: Envelope) { return env.invested ? ((env.value - env.cash) / env.invested - 1) * 100 : 0; }
-  protected capPct(env: Envelope) { return env.plafond  ? (env.contributed / env.plafond) * 100 : null; }
+  protected plusValue = unrealizedPlusValue;
+  protected pnlPct = unrealizedPnlPct;
+  protected capPct = capPct;
 
   // Realized P&L YTD per envelope, computed via FIFO walk on the envelope's own transactions.
   protected readonly ytdRealizedByEnvelope = computed(() => {

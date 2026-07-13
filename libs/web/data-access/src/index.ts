@@ -1,5 +1,6 @@
 export * from './lib/api-base-url';
 export * from './lib/models';
+export * from './lib/envelope.metrics';
 export * from './lib/mock-data';
 export * from './lib/auth.models';
 export * from './lib/auth.service';
