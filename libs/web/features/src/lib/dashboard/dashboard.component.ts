@@ -230,7 +230,18 @@ export class DashboardComponent {
    * figure (dimmed chart) instead of flashing an empty state.
    */
   protected readonly wealthReturn = computed(() => {
+    const period = this.dashboardPeriod();
     const filter = this.wealthFilter();
+
+    if (period === '1D' && (filter === 'all' || filter === 'bourse')) {
+      return {
+        eur: this.dayValue(),
+        twrPct: this.dayPct(),
+        investedReturnPct: null,
+        annualizedPct: null,
+      };
+    }
+
     if (this.wealthChartData().length < 2) return null;
     const w = this.heldWealth();
     if (filter !== 'all' && filter.startsWith('env:')) return w.returnsByEnvelope[filter.slice(4)] ?? null;

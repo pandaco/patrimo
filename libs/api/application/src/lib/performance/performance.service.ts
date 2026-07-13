@@ -775,8 +775,8 @@ export class PerformanceService {
         if (close !== undefined) etfValue += qty * close;
       }
       // Total = market value of ETF positions + cash balance.
-      // Cash can be negative (unfunded BUY) which correctly offsets the ETF gain.
-      series.push(Number((etfValue + cash).toFixed(2)));
+      // Cash can be negative (unfunded BUY) but we floor it at 0 so the chart matches the net worth.
+      series.push(Number((etfValue + Math.max(0, cash)).toFixed(2)));
     }
     return series;
   }
@@ -795,7 +795,7 @@ export class PerformanceService {
         value += transaction.type === 'WITHDRAWAL' ? -transaction.amount : transaction.amount;
         cursor++;
       }
-      series.push(Number(value.toFixed(2)));
+      series.push(Number(Math.max(0, value).toFixed(2)));
     }
     return series;
   }

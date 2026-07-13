@@ -10,8 +10,8 @@
     @if (!isEmpty()) {
       <p class="page-sub">
         Aujourd'hui, ton patrimoine {{ dayValue() >= 0 ? 'gagne' : 'perd' }}
-        <span class="hl-soft">{{ fmtEur(abs(dayValue()), 0) }}</span>
-        (<span class="hl-soft">{{ fmtPct(dayPct(), 2) }}</span>).
+        <span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ fmtEur(abs(dayValue()), 0) }}</span>
+        (<span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ fmtPct(dayPct(), 2) }}</span>).
         @if (topAlerts().length > 0) {
           <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
         }

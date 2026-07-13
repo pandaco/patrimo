@@ -373,7 +373,7 @@ describe('PerformanceService', () => {
       return probe.labels;
     }
 
-    it('keeps a bourse envelope flat when a BUY has no matching deposit (cash offsets the position)', async () => {
+    it('shows the ETF value for a bourse envelope even when a BUY has no matching deposit (cash is floored to 0)', async () => {
       const labels = await captureWealthLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
       transactionRepository.findByUserId.mockResolvedValue([
@@ -383,8 +383,8 @@ describe('PerformanceService', () => {
       mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 40 })) });
 
       const w = await service.getWealthSeries('user-1', '1M');
-      // ETF worth 400, cash −400 → zero net contribution to the patrimoine.
-      expect(w.total.every(v => v === 0)).toBe(true);
+      // ETF worth 400, cash is floored to 0 → total is 400.
+      expect(w.total.every(v => v === 400)).toBe(true);
       // No DEPOSIT recorded → the flow series stays empty (the BUY is internal).
       expect(w.flows.every(v => v === 0)).toBe(true);
     });
@@ -400,8 +400,8 @@ describe('PerformanceService', () => {
       mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < mid ? 40 : 44 })) });
 
       const w = await service.getWealthSeries('user-1', '1M');
-      expect(w.total[0]).toBe(0);                          // buy day: neutral
-      expect(w.total[labels.length - 1]).toBe(40);         // +10 % on 10 units → +40 €, pure market gain
+      expect(w.total[0]).toBe(400);                        // ETF value is 400, cash is 0
+      expect(w.total[labels.length - 1]).toBe(440);        // +10 % on 10 units → 440 €, cash is 0
     });
 
     it('splits external flows per category so a livret deposit never pollutes the boursier return', async () => {
@@ -518,7 +518,7 @@ describe('PerformanceService', () => {
       // Valued at the 40 € buy price, not 0 → P&L is 0, never −400 (the −cost
       // "catastrophic loss" the MAX period showed before this guard).
       expect(w.returns.bourse?.eur).toBeCloseTo(0, 1);
-      expect(w.total.every(v => Math.abs(v) < 0.01)).toBe(true); // ETF 400 − cash 400 = 0
+      expect(w.total.every(v => Math.abs(v - 400) < 0.01)).toBe(true); // ETF 400, cash floored to 0
     });
 
     it('serves the 1D period as a two-sample window (yesterday close → today)', async () => {
