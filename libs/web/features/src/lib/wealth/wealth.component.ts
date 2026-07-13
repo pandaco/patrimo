@@ -64,7 +64,8 @@ export class WealthComponent {
       const envelopes = all.filter(e => f.glyphs.includes(e.glyph));
       const value     = envelopes.reduce((a, e) => a + e.value, 0);
       const invested  = envelopes.reduce((a, e) => a + e.invested, 0);
-      const plusValue       = value - invested;
+      const cash      = envelopes.reduce((a, e) => a + e.cash, 0);
+      const plusValue = (value - cash) - invested;
       return {
         family: f,
         envelopes,
@@ -115,8 +116,8 @@ export class WealthComponent {
   protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtPctRaw = fmtPctRaw;
 
-  protected plusValue(env: Envelope)    { return env.value - env.invested; }
-  protected pnlPct(env: Envelope) { return env.invested ? (env.value / env.invested - 1) * 100 : 0; }
+  protected plusValue(env: Envelope)    { return (env.value - env.cash) - env.invested; }
+  protected pnlPct(env: Envelope) { return env.invested ? ((env.value - env.cash) / env.invested - 1) * 100 : 0; }
   protected capPct(env: Envelope) { return env.plafond  ? (env.contributed / env.plafond) * 100 : null; }
 
   // Realized P&L YTD per envelope, computed via FIFO walk on the envelope's own transactions.
