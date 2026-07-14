@@ -147,10 +147,10 @@ export class DashboardComponent {
   );
 
   protected readonly portfolioValue = computed(() =>
-    this.etfs.all().reduce((a, e) => a + etfValue(e), 0)
+    this.etfs.positions().reduce((a, e) => a + etfValue(e), 0)
   );
   protected readonly portfolioCost = computed(() =>
-    this.etfs.all().reduce((a, e) => a + etfCost(e), 0)
+    this.etfs.positions().reduce((a, e) => a + etfCost(e), 0)
   );
   protected readonly pnlValue = computed(() => this.portfolioValue() - this.portfolioCost());
   protected readonly pnlPct = computed(() => {
@@ -160,7 +160,7 @@ export class DashboardComponent {
     return Number.isFinite(ratio) ? ratio : 0;
   });
   protected readonly dayValue = computed(() =>
-    this.etfs.all().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0)
+    this.etfs.positions().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0)
   );
   protected readonly dayPct = computed(() => {
     const value = this.portfolioValue();

@@ -84,7 +84,7 @@ export class IndicatorsComponent {
   );
 
   protected readonly portfolioValue = computed(() =>
-    this.etfs.all().reduce((a, e) => a + etfValue(e), 0)
+    this.etfs.positions().reduce((a, e) => a + etfValue(e), 0)
   );
 
   protected readonly perfPortfolio = computed(() => this.performanceService.series().portfolio);
@@ -121,7 +121,7 @@ export class IndicatorsComponent {
 
   /** 5. Concentration: share of the boursier portfolio held in the top 3 ETFs. */
   protected readonly concentrationTop3 = computed(() => {
-    const etfs = this.etfs.all();
+    const etfs = this.etfs.positions();
     const total = etfs.reduce((a, e) => a + etfValue(e), 0);
     if (total <= 0) return null;
     const top = etfs.map(etfValue).sort((a, b) => b - a).slice(0, 3);
@@ -206,7 +206,7 @@ export class IndicatorsComponent {
     // No per-ETF stocks/bonds split exists yet, so we approximate using the
     // existing `alloc` tag: ETFs tagged "Obligations" count as bonds, every
     // other alloc (Core/Satellite/Matières premières) counts as stocks.
-    const bondsValue    = this.etfs.all()
+    const bondsValue    = this.etfs.positions()
       .filter(e => e.alloc === 'Obligations')
       .reduce((a, e) => a + etfValue(e), 0);
     const realStocksPct = ((portfolio - bondsValue) / portfolio) * 100;

@@ -12,8 +12,6 @@ export interface Etf {
   distrib: string;
   pea: boolean;
   alloc: EtfAllocation;
-  /** Followed without a position — excluded from portfolio analytics. */
-  watchOnly: boolean;
   exposure?: {
     geography: Record<string, number>;
     sector: Record<string, number>;

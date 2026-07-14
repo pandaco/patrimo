@@ -15,7 +15,6 @@ const SEED = {
   distrib: 'Capitalisant',
   pea: false,
   alloc: 'Core' as const,
-  watchOnly: true,
 };
 
 describe('TypeOrmEtfRepository (integration)', () => {
@@ -39,7 +38,6 @@ describe('TypeOrmEtfRepository (integration)', () => {
     const created = await repository.upsert(SEED);
 
     expect(created.ter).toBe(0.07);
-    expect(created.watchOnly).toBe(true);
 
     const found = await repository.findByIsin(SEED.isin);
     expect(found?.ticker).toBe('SXR8.DE');
@@ -65,11 +63,8 @@ describe('TypeOrmEtfRepository (integration)', () => {
     expect(tickers).toEqual(['ESE', 'IWDA.AS', 'SXR8.DE']);
   });
 
-  it('toggles watchOnly and deletes by ISIN', async () => {
+  it('deletes by ISIN', async () => {
     await repository.upsert(SEED);
-
-    await repository.setWatchOnly(SEED.isin, false);
-    expect((await repository.findByIsin(SEED.isin))?.watchOnly).toBe(false);
 
     await repository.deleteByIsin(SEED.isin);
     await expect(repository.findByIsin(SEED.isin)).resolves.toBeNull();

@@ -18,7 +18,6 @@ function toDto(etf: Etf): EtfDto {
     distrib: etf.distrib,
     pea: etf.pea,
     alloc: etf.alloc,
-    watchOnly: etf.watchOnly,
     exposure: etf.exposure,
   };
 }
@@ -45,20 +44,12 @@ export class EtfService {
     return this.prices.searchSymbols(trimmed);
   }
 
-  async setWatchOnly(isin: string, watchOnly: boolean): Promise<EtfDto | null> {
-    const etf = await this.etfs.findByIsin(isin);
-    if (!etf) return null;
-    await this.etfs.setWatchOnly(isin, watchOnly);
-    return toDto({ ...etf, watchOnly });
-  }
-
   /**
    * Add a user-supplied ETF to the catalog. The Yahoo symbol is validated
    * up front — a quote without a price means the `<ticker>.PA` fallback would
    * fail silently later (the known limitation this endpoint closes), so the
-   * creation is rejected instead. New entries start as watch-only: the user
-   * adds an ETF to follow and compare it, a position only exists once a BUY
-   * transaction references it.
+   * creation is rejected instead. A catalog entry is not a holding: a
+   * position only exists once a BUY transaction references it.
    */
   async create(input: CreateEtfDto): Promise<EtfDto> {
     const existing = await this.etfs.findByIsin(input.isin);
@@ -85,7 +76,6 @@ export class EtfService {
       distrib: input.distrib,
       pea: input.pea,
       alloc: input.alloc,
-      watchOnly: true,
     });
     return toDto(created);
   }
@@ -105,7 +95,6 @@ export class EtfService {
       distrib:   input.distrib  ?? existing.distrib,
       pea:       input.pea      ?? existing.pea,
       alloc:     input.alloc    ?? existing.alloc,
-      watchOnly: existing.watchOnly,
     });
     return toDto(updated);
   }

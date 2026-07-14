@@ -16,7 +16,7 @@
       <p>
         <b>1. Sélectionne</b> jusqu'à 4 instruments parmi la liste pour les afficher côte
         à côte avec leurs caractéristiques structurelles. Utilise les filtres
-        pour réduire la liste si elle estimation trop longue.
+        pour réduire la liste si elle est trop longue.
       </p>
       <p>
         <b>2. Compare</b> TER (frais annuels), frais cumulés sur 5 ans,
@@ -33,8 +33,8 @@
         <b>Catalogue.</b> Il te manque un instrument ? Clique
         <em>+ Ajouter un instrument</em> : saisis son ISIN et son ticker, Patrimo
         vérifie que Yahoo Finance connaît le cours avant de l'accepter. Le
-        nouvel instrument arrive en suivi (watchlist) — compare-le, puis achète-le
-        quand tu es prêt.
+        nouvel instrument rejoint le catalogue pour la comparaison — il
+        n'apparaîtra dans ton portefeuille qu'après ta première opération d'achat.
       </p>
     </div>
   </details>
@@ -92,7 +92,7 @@
     }
     <div class="row" style="gap:8px;flex-wrap:wrap">
       @for (etf of catalog(); track etf.isin) {
-        <span style="display:inline-flex;align-items:center;gap:2px">
+        <span data-testid="catalog-chip" style="display:inline-flex;align-items:center;gap:2px">
           <button
             type="button"
             class="pill"
@@ -103,10 +103,9 @@
             {{ etf.ticker }}
             <span class="muted tiny" style="margin-left:6px">{{ etf.name }}</span>
           </button>
-          <button type="button" class="btn icon ghost"
-                  [attr.aria-label]="(etf.watchOnly ? 'Ne plus suivre ' : 'Mettre en suivi ') + etf.ticker"
-                  [title]="etf.watchOnly ? 'Ne plus suivre' : 'Mettre en suivi (hors portefeuille)'"
-                  (click)="toggleWatch(etf.isin, etf.watchOnly)">{{ etf.watchOnly ? '★' : '☆' }}</button>
+          @if (etf.qty > 0) {
+            <span class="pill olive" title="En portefeuille — position issue de tes opérations">Détenu</span>
+          }
           <button type="button" class="btn icon ghost"
                   [attr.aria-label]="'Modifier ' + etf.ticker"
                   title="Modifier"
@@ -145,6 +144,16 @@
           <div class="kv"><dt>Catégorie</dt><dd>{{ etf.alloc }}</dd></div>
           <div class="divider-soft"></div>
           <div class="kv"><dt><span data-tip="Ce que les frais de gestion (TER) te coûteraient en € cumulés sur 5 ans, avec l'hypothèse 500 €/mois investis et 7 %/an de rendement. Calcul Patrimo, identique quel que soit ton courtier — les frais d'ordre du courtier ne sont pas inclus. Sert uniquement à comparer deux ETFs entre eux.">Frais sur 5 ans</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
+          <div class="divider-soft"></div>
+          @if (etf.qty > 0) {
+            <div class="muted small" style="margin-top:10px">
+              <span class="pill olive">Détenu</span> {{ fmtNum(etf.qty, 0) }} part{{ etf.qty > 1 ? 's' : '' }} en portefeuille
+            </div>
+          } @else {
+            <div class="muted small" style="margin-top:10px">
+              Non détenu — au catalogue pour comparaison
+            </div>
+          }
           <button type="button" class="btn primary sm" style="width:100%;margin-top:14px;justify-content:center"
                   (click)="buy(etf)">
             + Acheter cet instrument
@@ -205,10 +214,10 @@
 
     <p class="muted small" style="margin-top:12px">
       « Frais sur 5 ans » = impact cumulé du TER si tu investis 500 €/mois avec
-      7 %/an de rendement marché. C'estimation un calcul Patrimo, identique quel que
+      7 %/an de rendement marché. C'est un calcul Patrimo, identique quel que
       soit ton courtier — ses frais d'ordre et le spread (écart achat/vente)
       n'y sont pas. Le
-      chiffre absolu compte peu : c'estimation l'écart entre deux ETFs qui t'aide à
+      chiffre absolu compte peu : c'est l'écart entre deux ETFs qui t'aide à
       choisir.
     </p>
   } @else {

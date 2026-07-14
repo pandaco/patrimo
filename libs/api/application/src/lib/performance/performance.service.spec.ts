@@ -24,7 +24,6 @@ function etf(overrides: Partial<Etf>): Etf {
     repli: 'Synthétique',
     distrib: 'Capitalisant',
     pea: true,
-    watchOnly: false,
     alloc: 'Core',
     createdAt: new Date(),
     updatedAt: new Date(),

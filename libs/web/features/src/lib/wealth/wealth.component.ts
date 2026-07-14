@@ -93,8 +93,7 @@ export class WealthComponent {
   protected readonly currencyRows = computed(() => {
     const total = this.total();
     const byKey = new Map<string, number>();
-    for (const e of this.etfService.all()) {
-      if (e.qty <= 0) continue;
+    for (const e of this.etfService.positions()) {
       const v = etfValue(e);
       byKey.set(e.currency, (byKey.get(e.currency) ?? 0) + v);
     }

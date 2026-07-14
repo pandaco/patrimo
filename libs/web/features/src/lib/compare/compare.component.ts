@@ -40,13 +40,6 @@ export class CompareComponent {
   protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
   protected readonly fmtPct = fmtPct;
 
-  protected async toggleWatch(isin: string, current: boolean): Promise<void> {
-    try {
-      await this.etfService.setWatchOnly(isin, !current);
-    } catch {
-      // Toggle failed — the catalog simply stays as it was.
-    }
-  }
   private readonly dialog = inject(MatDialog);
 
   /** ISINs the user has put on the comparator. Capped at `MAX_SELECTION`. */

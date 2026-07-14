@@ -29,7 +29,6 @@ function fromCatalog(d: EtfDto): Etf {
     distrib: d.distrib,
     pea: d.pea,
     alloc: d.alloc,
-    watchOnly: d.watchOnly,
     exposure: d.exposure,
     qty: 0,
     pru: 0,
@@ -72,12 +71,23 @@ export class EtfService {
     { defaultValue: [] },
   );
 
+  /**
+   * The instrument *catalog* — one entry per `GET /etfs` row, with position
+   * data overlaid where a holding exists (`qty = 0` when not held). Feeds the
+   * comparateur and instrument pickers; the portfolio uses `positions` below.
+   */
   readonly all = computed<Etf[]>(() => {
     const catalog = safeValue(this.catalogResource, []);
     const portfolio = safeValue(this.portfolioResource, []);
     const byIsin  = new Map(portfolio.map(p => [p.etfIsin, p]));
     return catalog.map(c => mergePosition(fromCatalog(c), byIsin.get(c.isin)));
   });
+
+  /**
+   * Held positions only — catalog rows backed by a net BUY quantity (> 0),
+   * as computed by `GET /portfolio` from the transaction history.
+   */
+  readonly positions = computed<Etf[]>(() => this.all().filter(e => e.qty > 0));
 
   readonly loading = computed(() => this.catalogResource.isLoading() || this.portfolioResource.isLoading());
   readonly error   = computed(() => this.catalogResource.error() ?? this.portfolioResource.error());
@@ -92,14 +102,6 @@ export class EtfService {
   reload(): void {
     this.catalogResource.reload();
     this.portfolioResource.reload();
-  }
-
-  /** Toggle the watchlist flag and patch the local catalog in place. */
-  async setWatchOnly(isin: string, watchOnly: boolean): Promise<void> {
-    const updated = await firstValueFrom(
-      this.http.patch<EtfDto>(`${this.baseUrl}/etfs/${isin}/watch`, { watchOnly }),
-    );
-    this.catalogResource.update(list => list.map(e => e.isin === updated.isin ? updated : e));
   }
 
   /** Yahoo free-text search (ISIN, ticker or name) for the add-ETF dialog. */

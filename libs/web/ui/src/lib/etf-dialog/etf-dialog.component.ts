@@ -127,7 +127,7 @@ export class EtfDialogComponent {
           ...(this.index().trim()  ? { index:  this.index().trim() }   : {}),
         };
         const created = await this.etfService.create(input);
-        this.toast.success(`${created.ticker} ajouté au catalogue — cours Yahoo vérifié.`);
+        this.toast.success(`${created.ticker} ajouté au catalogue — il apparaîtra dans ton portefeuille après ton premier achat.`);
         this.dialogRef.close(created);
       }
     } catch (error: unknown) {

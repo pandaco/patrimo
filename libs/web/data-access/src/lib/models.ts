@@ -54,8 +54,6 @@ export interface Etf {
   distrib: string;
   pea: boolean;
   alloc: 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
-  /** Followed without a position — excluded from portfolio analytics. */
-  watchOnly: boolean;
   /** Geography/sector/currency breakdown, cached from Yahoo. Absent until first computed. */
   exposure?: EtfExposureBreakdown;
   qty: number;

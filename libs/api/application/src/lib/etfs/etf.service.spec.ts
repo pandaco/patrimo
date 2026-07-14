@@ -19,7 +19,6 @@ function etf(overrides: Partial<Etf>): Etf {
     distrib: 'Capitalisant',
     pea: false,
     alloc: 'Core',
-    watchOnly: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -43,7 +42,6 @@ describe('EtfService', () => {
     findAll: jest.Mock;
     findByIsin: jest.Mock;
     upsert: jest.Mock;
-    setWatchOnly: jest.Mock;
     deleteByIsin: jest.Mock;
   };
   let transactionRepository: { findByUserId: jest.Mock };
@@ -54,7 +52,6 @@ describe('EtfService', () => {
       findAll: jest.fn().mockResolvedValue([]),
       findByIsin: jest.fn().mockResolvedValue(null),
       upsert: jest.fn().mockImplementation(seed => Promise.resolve(etf(seed))),
-      setWatchOnly: jest.fn().mockResolvedValue(undefined),
       deleteByIsin: jest.fn().mockResolvedValue(undefined),
     };
     transactionRepository = { findByUserId: jest.fn().mockResolvedValue([]) };
@@ -76,12 +73,12 @@ describe('EtfService', () => {
   });
 
   describe('create', () => {
-    it('validates the symbol against Yahoo then persists as watch-only', async () => {
+    it('validates the symbol against Yahoo then persists the catalog entry', async () => {
       const created = await service.create(VALID_INPUT);
 
       expect(priceService.getQuote).toHaveBeenCalledWith('IE00B5BMR087', 'SXR8');
       expect(etfRepository.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ isin: 'IE00B5BMR087', ticker: 'SXR8', watchOnly: true }),
+        expect.objectContaining({ isin: 'IE00B5BMR087', ticker: 'SXR8' }),
       );
       expect(created.ticker).toBe('SXR8');
     });

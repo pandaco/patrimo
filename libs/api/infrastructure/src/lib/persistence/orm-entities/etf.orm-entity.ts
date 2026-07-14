@@ -44,10 +44,6 @@ export class EtfOrmEntity {
   @Column({ type: 'varchar', length: 32 })
   alloc!: 'Core' | 'Satellite' | 'Obligations' | 'Matières premières';
 
-  // Followed without a position — excluded from portfolio analytics.
-  @Column({ name: 'watch_only', type: 'boolean', default: false })
-  watchOnly!: boolean;
-
   @Column({ type: 'jsonb', nullable: true })
   exposure?: {
     geography: Record<string, number>;

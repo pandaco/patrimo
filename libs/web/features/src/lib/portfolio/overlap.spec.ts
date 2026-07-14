@@ -15,7 +15,6 @@ function etf(partial: Partial<Etf> & { isin: string; ticker: string }): Etf {
     distrib: partial.distrib ?? 'Capitalisant',
     pea: partial.pea ?? true,
     alloc: partial.alloc ?? 'Core',
-    watchOnly: partial.watchOnly ?? false,
     exposure: partial.exposure,
     qty: partial.qty ?? 1,
     pru: partial.pru ?? 0,
