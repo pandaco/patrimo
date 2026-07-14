@@ -118,6 +118,53 @@ test.describe('Patrimo E2E Tests', () => {
     }
   });
 
+  test('should list only held instruments as positions, while the comparateur shows the whole catalog', async ({ page }) => {
+    // Regression guard: catalog instruments added just for comparison must not
+    // surface as 0 € positions in the Portefeuille. The API endpoints are
+    // stubbed at the browser level so the scenario is deterministic (no Yahoo,
+    // no DB writes): a 2-instrument catalog of which only one is held.
+    const catalog = [
+      {
+        isin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
+        issuer: 'iShares', index: 'MSCI World', ter: 0.2, currency: 'USD',
+        repli: 'Physique', distrib: 'Capitalisant', pea: false, alloc: 'Core',
+      },
+      {
+        isin: 'IE00B5BMR087', ticker: 'SXR8', name: 'iShares Core S&P 500',
+        issuer: 'iShares', index: 'S&P 500', ter: 0.07, currency: 'USD',
+        repli: 'Physique', distrib: 'Capitalisant', pea: false, alloc: 'Core',
+      },
+    ];
+    const positions = [
+      {
+        etfIsin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
+        qty: 10, avgPrice: 80, invested: 800, currentPrice: 85, prevClose: 84,
+      },
+    ];
+    await page.route('**/api/etfs', route => route.fulfill({ json: catalog }));
+    await page.route('**/api/portfolio', route => route.fulfill({ json: positions }));
+    // The Google Fonts stylesheet is render-blocking: abort it so the three
+    // navigations below stay fast even without direct internet access.
+    await page.route('https://fonts.googleapis.com/**', route => route.abort());
+
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    // Portefeuille: exactly one position row — the held IWDA, never SXR8.
+    await page.goto('/portfolio');
+    const rows = page.locator('[data-testid="positions-table"] tbody tr');
+    await expect(rows.filter({ hasText: 'IWDA' })).toHaveCount(1);
+    await expect(rows.filter({ hasText: 'SXR8' })).toHaveCount(0);
+
+    // Comparateur: the full catalog is browsable, with a "Détenu" badge on the
+    // held instrument only.
+    await page.goto('/tools/compare');
+    const chips = page.locator('[data-testid="catalog-chip"]');
+    await expect(chips).toHaveCount(2);
+    await expect(chips.filter({ hasText: 'IWDA' }).locator('.pill.olive')).toHaveCount(1);
+    await expect(chips.filter({ hasText: 'SXR8' }).locator('.pill.olive')).toHaveCount(0);
+  });
+
   test('should allow creating a transaction and reflect it in transactions list', async ({ page }) => {
     // Authenticate
     await page.goto(DEV_LOGIN_URL);
