@@ -14,7 +14,7 @@
     <summary>Comment lire cette page — métriques + ordres de grandeur</summary>
     <div class="explainer-body">
       <p>
-        Le <b>benchmark</b> estimation ton indice de référence ({{ benchmarkLabel() }},
+        Le <b>benchmark</b> est ton indice de référence ({{ benchmarkLabel() }},
         modifiable dans les préférences) — par défaut le MSCI World, la référence
         actions monde diversifiée. Si ta courbe reste collée à la sienne,
         tu fais aussi bien que <em>l'indice global</em>. Au-dessus = tu
@@ -25,14 +25,14 @@
         <li><b>CAGR</b> — ton rendement annuel moyen composé. Référence
           historique long terme : ~6-8 %/an pour un portefeuille actions
           diversifié, ~3-5 %/an mixte 60/40.</li>
-        <li><b>Volatilité</b> — l'amplitude des variations. Plus c'estimation haut,
+        <li><b>Volatilité</b> — l'amplitude des variations. Plus c'est haut,
           plus tu vois des hauts et des bas violents.
           Actions monde tournent autour de 15 %/an.</li>
         <li><b>Sharpe</b> — rendement par unité de risque. &gt; 1 = bon,
           &gt; 2 = excellent, &lt; 0 = tu perds en prenant du risque.</li>
         <li><b>Max drawdown</b> — la plus grosse chute pic-à-creux jamais subie.
           MSCI World : −34 % en mars 2020 (COVID), −44 % en 2008.
-          Si ton drawdown te fait paniquer, ton allocation estimation trop agressive.</li>
+          Si ton drawdown te fait paniquer, ton allocation est trop agressive.</li>
         <li><b>Heatmap mensuelle</b> — vert = mois gagnant, rouge = perdant,
           hachures = pas de donnée. Sur 10 ans environ 65 % des mois sont
           positifs — l'asymétrie favorise le long terme.</li>
@@ -82,7 +82,7 @@
           }
           @if (metrics().twr !== null) {
             <span class="row" style="gap:6px">
-              <span class="muted tiny" data-tip="Rendement temps-pondéré (True Time-Weighted Return) : la vraie performance de tes choix, neutralisée du moment et du montant de tes versements. C'estimation la mesure pour te comparer honnêtement à un indice.">TWR</span>
+              <span class="muted tiny" data-tip="Rendement temps-pondéré (True Time-Weighted Return) : la vraie performance de tes choix, neutralisée du moment et du montant de tes versements. C'est la mesure pour te comparer honnêtement à un indice.">TWR</span>
               <span class="num small" [class.position]="metrics().twr! >= 0" [class.neg]="metrics().twr! < 0">
                 {{ fmtPct(metrics().twr!, 2) }}
               </span>
@@ -370,7 +370,7 @@
         <li><b>Source des cours</b> : Yahoo Finance, mis en cache 24 h côté backend.</li>
         <li><b>Quantité à chaque date</b> : reconstituée en marchant les opérations BUY/SELL dans l'ordre chronologique jusqu'à la date affichée.</li>
         <li><b>Valeur portefeuille</b> = Σ (qty × close du jour). Les jours sans cotation (week-ends, jours fériés) reprennent le dernier close connu.</li>
-        <li><b>Benchmark</b> : {{ benchmarkLabel() }} (modifiable dans les préférences), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position estimation détenue. L'écart entre les deux courbes = ton alpha.</li>
+        <li><b>Benchmark</b> : {{ benchmarkLabel() }} (modifiable dans les préférences), rebasé pour démarrer à la même valeur que le portefeuille sur la première date où une position est détenue. L'écart entre les deux courbes = ton alpha.</li>
         <li><b>TD</b> : return 1A ETF − return 1A CW8 (proxy). <b>TE</b> : écart-type annualisé des différences de rendements quotidiens vs CW8 (≈ std dev × √252).</li>
         <li><b>Frais TER drag</b> : TER × valeur de position × (jours écoulés depuis le 1er janv / 365.25). Frais courtage = Σ frais sur opérations BUY/SELL de l'année.</li>
       </ul>

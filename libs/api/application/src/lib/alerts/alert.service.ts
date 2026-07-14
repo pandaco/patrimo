@@ -235,7 +235,7 @@ export class AlertService {
               'ALLOCATION_DRIFT',
               drift >= 10 ? 'warn' : 'info',
               'Allocation éloignée de ta cible',
-              `Ta poche Actions estimation à ${Math.round(realStocksPct)} % pour une cible de ${Math.round(strategic.stocks)} %, soit ${Math.round(drift)} pts d'écart. Rééquilibre en orientant tes prochains versements plutôt qu'en vendant (zéro frais, zéro fiscalité).`,
+              `Ta poche Actions est à ${Math.round(realStocksPct)} % pour une cible de ${Math.round(strategic.stocks)} %, soit ${Math.round(drift)} pts d'écart. Rééquilibre en orientant tes prochains versements plutôt qu'en vendant (zéro frais, zéro fiscalité).`,
               'Voir le plan de rééquilibrage',
               'info',
               readMap,

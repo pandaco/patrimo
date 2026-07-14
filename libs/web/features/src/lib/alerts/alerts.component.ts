@@ -22,7 +22,7 @@ interface RuleWithMeta {
 
 const METAS: RuleMeta[] = [
   { type: 'CASH_IDLE',         label: 'Cash dormant',       desc: 'Alerte si le cash dépasse ce montant', unit: '€', defaultThreshold: 100 },
-  { type: 'PLAFOND_NEAR',      label: 'Plafond proche',     desc: 'Alerte si le plafond estimation atteint à X %', unit: '%', defaultThreshold: 80 },
+  { type: 'PLAFOND_NEAR',      label: 'Plafond proche',     desc: 'Alerte si le plafond est atteint à X %', unit: '%', defaultThreshold: 80 },
   { type: 'DIVIDEND_RECENT',   label: 'Dividende reçu',     desc: 'Alerte si reçu il y a moins de X jours', unit: 'j', defaultThreshold: 7 },
   { type: 'PEA_AGE_NEAR',      label: 'Anniversaire PEA',   desc: 'Alerte 5 ans approche', unit: '', defaultThreshold: 1 },
   { type: 'USD_CONCENTRATION', label: 'Concentration USD',  desc: 'Alerte si exposition USD > X %', unit: '%', defaultThreshold: 70 },

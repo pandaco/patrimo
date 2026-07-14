@@ -1,4 +1,4 @@
-<!-- Rendu dans la coquille Analyses — le wrapper .page estimation fourni par le parent. -->
+<!-- Rendu dans la coquille Analyses — le wrapper .page est fourni par le parent. -->
 <div>
 
   <div class="page-head">
@@ -22,7 +22,7 @@
 
     <!-- TAUXRENTABILITEINTERNE / XIRR -->
     <div class="card kpi-tile">
-      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'estimation la même méthode qu'Excel XIRR.">TAUXRENTABILITEINTERNE</span></div>
+      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TAUXRENTABILITEINTERNE</span></div>
       @if (tauxRentabiliteInterne() !== null) {
         <div class="value" [class.position]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
           {{ tauxRentabiliteInterne()! >= 0 ? '+' : '' }}{{ fmtNum(tauxRentabiliteInterne()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
@@ -36,7 +36,7 @@
 
     <!-- Drawdown actuel -->
     <div class="card kpi-tile">
-      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'estimation psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
+      <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
       @if (currentDrawdown() !== null) {
         <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.position]="currentDrawdown()! >= -0.5">
           {{ fmtPct(currentDrawdown()!, 1) }}
@@ -208,7 +208,7 @@
       <p class="muted tiny" style="margin:14px 0 0;line-height:1.5;color:var(--ink-3)">
         Simulation simpliste : on applique uniformément le drawdown à toute la poche
         actions. Un portefeuille majoritairement obligataire ou défensif aurait
-        un drawdown moindre. Ce chiffre n'estimation pas une prédiction — c'estimation un
+        un drawdown moindre. Ce chiffre n'est pas une prédiction — c'est un
         exercice de préparation psychologique pour le prochain krach.
       </p>
     } @else {
