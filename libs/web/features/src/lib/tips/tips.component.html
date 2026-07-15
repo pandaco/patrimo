@@ -41,7 +41,7 @@
   </div>
 
   <!-- TIPS GRID -->
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px">
+  <div class="grid auto" style="--card-min:340px;gap:18px">
     @for (t of tips(); track t.id) {
       <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px">
         <div class="row" style="gap:8px;align-items:center">

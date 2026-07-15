@@ -1,0 +1,28 @@
+// Breakpoint literals below mirror lg/md/sm in
+// apps/web/src/styles/_breakpoints.scss (feature libs don't import app partials).
+
+// The 7-month window: one mini-card per month, side by side on desktop,
+// reflowing to 4/3/2 columns as the viewport narrows.
+.months-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1200px) {
+  .months-strip { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .months-strip { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .months-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+// Inside a month card: weekday header + day cells. Always 7 columns —
+// a calendar must never scroll horizontally, cells just get smaller.
+.month-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-size: 12px;
+}

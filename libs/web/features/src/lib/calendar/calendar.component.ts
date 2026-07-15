@@ -40,6 +40,7 @@ function buildGrid(y: number, m: number, events: CalEvent[]): CalCell[] {
   standalone: true,
   imports: [TipDirective],
   templateUrl: './calendar.component.html',
+  styleUrl: './calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CalendarComponent {

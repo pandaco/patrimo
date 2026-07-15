@@ -65,7 +65,7 @@
   @if (formOpen()) {
     <div class="card" style="padding:20px;margin-top:20px;max-width:520px">
       <h2 style="font-size:16px;margin:0 0 14px">{{ editingId() ? 'Éditer le crédit' : 'Nouveau crédit' }}</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="grid cols-2" style="gap:12px">
         <label style="grid-column:1/-1">
           Libellé
           <input type="text" [ngModel]="form().label" (ngModelChange)="form.set({ ...form(), label: $event })" placeholder="Prêt appartement Paris" />

@@ -9,7 +9,7 @@
   </div>
 
   <div class="card" style="padding:20px;margin-bottom:20px">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+    <div class="grid cols-3">
       <label>
         Versement mensuel (€)
         <input type="number" step="50" [ngModel]="effectiveContribution()" (ngModelChange)="setContribution($event)" />
@@ -35,7 +35,7 @@
   </div>
 
   @if (finalPoint(); as f) {
-    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:14px">
+    <div class="grid cols-3" style="gap:14px">
       <div class="card kpi-tile">
         <div class="label">Dans {{ years() }} ans</div>
         <div class="value">{{ fmtEur(f.value, 0) }}</div>

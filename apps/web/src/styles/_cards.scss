@@ -7,6 +7,30 @@
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+// Asymmetric two-column splits: major column left / right.
+.grid.split-l { grid-template-columns: 1.4fr 1fr; }
+.grid.split-r { grid-template-columns: 1fr 1.4fr; }
+// Intrinsically responsive card grid — no breakpoint math. Tune the minimum
+// card width per usage via the --card-min custom property.
+.grid.auto { grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 300px), 1fr)); }
+
+// Responsive collapses for the column utilities. Grids MUST use these classes
+// rather than inline grid-template-columns styles: inline styles outrank any
+// stylesheet rule and silently defeat the media queries below.
+@include respond-below(lg) {
+  .grid.cols-5 { grid-template-columns: repeat(3, 1fr); }
+}
+@include respond-below(md) {
+  .grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+  .grid.split-l, .grid.split-r { grid-template-columns: 1fr; }
+}
+@include respond-below(sm) {
+  .grid.cols-5 { grid-template-columns: 1fr; }
+  // minmax()'s min is a hard floor: a 340px card would overflow a 360px
+  // viewport minus page padding — force the single column instead.
+  .grid.auto { grid-template-columns: 1fr; }
+}
 
 .card {
   background: var(--surface);
@@ -129,14 +153,17 @@
     a:hover { color: var(--ink); }
   }
 }
+// KPI tiles collapse one step earlier than plain .cols-4 grids (they hold
+// dense numbers). Same specificity as .grid.cols-N, later in the cascade —
+// no !important needed now that no inline style competes.
 @include respond-below(lg) {
-  .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .grid.kpi-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @include respond-below(md) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid.kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @include respond-below(sm) {
-  .kpi-grid { grid-template-columns: 1fr !important; }
+  .grid.kpi-grid { grid-template-columns: 1fr; }
 }
 
 // Drift bar — used on Allocation to show real vs target as a horizontal
@@ -262,9 +289,6 @@
 }
 @include respond-below(md) {
   .onboarding-step { padding: 14px; }
-  .card ol[style*="grid-template-columns:repeat(3,1fr)"] {
-    grid-template-columns: 1fr !important;
-  }
 }
 .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
 .card-title {

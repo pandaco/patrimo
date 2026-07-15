@@ -18,7 +18,7 @@
     </div>
   } @else {
 
-  <div class="grid kpi-grid" style="grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:14px">
+  <div class="grid cols-4 kpi-grid" style="gap:14px;margin-bottom:14px">
 
     <!-- TAUXRENTABILITEINTERNE / XIRR -->
     <div class="card kpi-tile">
@@ -82,9 +82,9 @@
     <span class="section-sub">Glisse-dépose pour réordonner</span>
   </div>
 
-  <div class="grid kpi-grid" cdkDropList cdkDropListOrientation="mixed"
+  <div class="grid cols-4 kpi-grid" cdkDropList cdkDropListOrientation="mixed"
        (cdkDropListDropped)="onKpiDrop($event)"
-       style="grid-template-columns:repeat(4, 1fr);gap:14px;margin:14px 0 24px">
+       style="gap:14px;margin:14px 0 24px">
 
     @for (id of kpiOrder(); track id) {
       <div class="card kpi-tile" cdkDrag cdkDragBoundary=".kpi-grid" style="cursor:grab">
@@ -185,7 +185,7 @@
           </button>
         }
       </div>
-      <div class="grid" style="grid-template-columns:repeat(3, 1fr);gap:18px;align-items:end">
+      <div class="grid cols-3" style="gap:18px;align-items:end">
         <div>
           <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur boursière avant</div>
           <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressBaseValue(), 0) }}</div>

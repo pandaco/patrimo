@@ -31,7 +31,7 @@
         <h2 style="font-size:18px;margin:0">Premiers pas</h2>
         <span class="muted small">5 minutes</span>
       </div>
-      <ol style="list-style:none;padding:0;margin:0 0 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <ol class="grid cols-3" style="list-style:none;padding:0;margin:0 0 18px">
         <li class="onboarding-step">
           <span class="onboarding-num">1</span>
           <h3>Crée tes enveloppes</h3>
@@ -250,7 +250,7 @@
       <a class="btn sm" routerLink="/tools/alerts">Voir toutes les alertes →</a>
     </div>
   </div>
-  <div class="grid" style="grid-template-columns:1fr">
+  <div class="grid">
     @for (alert of topAlerts(); track alert.id) {
       <div class="nba" [class]="severityClass(alert.severity)">
         <div class="sev">{{ severityIcon(alert.severity) }}</div>

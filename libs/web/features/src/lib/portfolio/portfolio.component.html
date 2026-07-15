@@ -64,7 +64,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
   <!-- STATS BAR -->
   <div class="card" style="padding:0;margin-bottom:24px">
     @if (loading()) {
-      <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
+      <div class="grid cols-5" style="gap:0">
         @for (i of [1,2,3,4,5]; track i) {
           <div class="stat">
             <div class="skeleton" style="height:12px;width:80px;margin-bottom:10px;border-radius:4px"></div>
@@ -74,7 +74,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
         }
       </div>
     } @else {
-      <div style="display:grid;grid-template-columns:repeat(5, 1fr)">
+      <div class="grid cols-5" style="gap:0">
         <div class="stat">
           <div class="label">Valeur portefeuille</div>
           <div class="value">{{ fmtEur(total(), 2) }}</div>
