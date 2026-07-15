@@ -2,7 +2,7 @@
 
 Application web de suivi de patrimoine personnel : enveloppes (PEA, AV, CTO, livrets, cash), ETFs, transactions, positions live, allocation cible, alertes, performance vs benchmark.
 
-> Stack : **Angular 21.2** (standalone, zoneless, signals, `httpResource`, OnPush) · **NestJS 11** (hexagonal, TypeORM 0.3, Passport Google OAuth2 BFF) · **PostgreSQL 18.4** · **Redis 8.6** · **Yahoo Finance v3**. Monorepo **Nx 22.7**.
+> Stack : **Angular 21.2** (standalone, zoneless, signals, `httpResource`, OnPush) · **NestJS 11** (hexagonal, TypeORM 0.3, Passport Google OAuth2 BFF) · **PostgreSQL 18.4** · **Redis 8.6** · **Yahoo Finance v3** (+ fallback JustETF pour l'exposition géo/secteur). Monorepo **Nx 22.7**.
 
 ---
 
@@ -10,7 +10,7 @@ Application web de suivi de patrimoine personnel : enveloppes (PEA, AV, CTO, liv
 
 ```bash
 npm install
-cp .env.example .env        # remplir GOOGLE_CLIENT_ID / SECRET (voir docs/dev-setup.md §6)
+cp .env.example .env        # remplir GOOGLE_CLIENT_ID / SECRET (voir docs/dev-setup.md §7)
 npm run docker:up           # postgres + redis
 npm run db:migrate          # schéma TypeORM
 npm start                   # web :4200 + api :3333 en watch
@@ -38,22 +38,26 @@ Référence exhaustive des commandes `npm run …` : [`docs/commands.md`](docs/c
 
 ```
 patrimo/
-├── apps/
-│   ├── api/                  # NestJS 11 — port 3333
-│   └── web/                  # Angular 21 — port 4200
+├── apps/                     # Points d'entrée minces — le vrai code vit dans libs/
+│   ├── api/                  # NestJS 11 — port 3333 (composition root ports → adapters)
+│   ├── web/                  # Angular 21 — port 4200 (bootstrap + styles globaux)
+│   └── web-e2e/              # E2E Playwright
 ├── libs/
 │   ├── api/
-│   │   ├── domain/           # Entités + ports (hexagonal)
-│   │   ├── application/      # Use-cases
-│   │   ├── infrastructure/   # Adapters TypeORM, OAuth, Redis, Yahoo
+│   │   ├── domain/           # Entités + ports (hexagonal, TS pur)
+│   │   ├── application/      # Use-cases + controllers + auth
+│   │   ├── infrastructure/   # Adapters TypeORM, OAuth, Redis, Yahoo/JustETF + migrations
 │   │   └── shared/
 │   ├── web/
-│   │   ├── ui/               # Composants atomiques (bar, donut, sparkline, …)
-│   │   ├── data-access/      # Services + modèles
-│   │   └── features/         # Composants métier (à venir)
+│   │   ├── ui/               # Composants atomiques (bar, donut, sparkline, toast, …)
+│   │   ├── data-access/      # Services httpResource + signals
+│   │   └── features/         # Pages routées (dashboard, patrimoine, portefeuille,
+│   │                         #   passifs, transactions, allocation, performance,
+│   │                         #   analyses, bilan, DCA, calendrier, comparateur,
+│   │                         #   alertes, glossaire, préférences, …)
 │   └── shared/contracts/     # DTOs partagés web ↔ api
 ├── design/                   # Prototype de référence visuelle
-├── docs/                     # Documentation publique
+├── docs/                     # Documentation publique (+ docs/adr/ — décisions)
 ├── docker-compose.yml        # postgres:18.4-alpine + redis:8.6-alpine
 └── .env.example
 ```
