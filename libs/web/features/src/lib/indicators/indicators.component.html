@@ -87,7 +87,8 @@
        style="gap:14px;margin:14px 0 24px">
 
     @for (id of kpiOrder(); track id) {
-      <div class="card kpi-tile" cdkDrag cdkDragBoundary=".kpi-grid" style="cursor:grab">
+      <div class="card kpi-tile" cdkDrag cdkDragBoundary=".kpi-grid"
+           [cdkDragStartDelay]="{ touch: 250, mouse: 0 }" style="cursor:grab">
         @switch (id) {
 
           @case ('rente') {

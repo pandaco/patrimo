@@ -30,7 +30,7 @@
   </div>
 
   <!-- MONTH GRID -->
-  <div class="row" style="margin-bottom:12px;gap:8px;align-items:center">
+  <div class="row" style="margin-bottom:12px;gap:8px;align-items:center;flex-wrap:wrap">
     <button class="btn sm ghost" (click)="shiftWindow(-1)" aria-label="Mois précédents">←</button>
     <span class="serif-italic" style="font-size:14px;min-width:230px;text-align:center">{{ windowRangeLabel() }}</span>
     <button class="btn sm ghost" (click)="shiftWindow(1)" aria-label="Mois suivants">→</button>

@@ -1,6 +1,7 @@
 // ============================================
 // WEALTH HERO (Finary-style: chart + sidebar)
 // ============================================
+@use './breakpoints' as *;
 
 .wealth-hero {
   display: grid;
@@ -10,6 +11,12 @@
   background: var(--surface);
   margin-bottom: 24px;
   overflow: hidden;
+
+  // The fixed 220px aside starves the chart on narrow screens — stack it below.
+  @include respond-below(md) {
+    grid-template-columns: 1fr;
+    .wealth-hero-main { border-right: none; border-bottom: 1px solid var(--rule); }
+  }
 }
 
 .wealth-hero-main {

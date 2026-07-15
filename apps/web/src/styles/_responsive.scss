@@ -104,6 +104,14 @@
   .page-title { font-size: 26px; }
   .display-num { font-size: 36px !important; }
   .family-head .stats { display: none; }
+
+  // Stacked stat strips: side borders become row separators.
+  .stat {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 16px;
+    &:last-child { border-bottom: none; }
+  }
 }
 
 // Family header for Wealth
@@ -111,7 +119,7 @@
   // `center` + a stretched accent bar: with `baseline`, the text-less accent
   // span aligned its *bottom* edge on the title baseline and floated way
   // above the title's cap height.
-  display: flex; align-items: center; gap: 16px; margin: 36px 0 18px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 36px 0 18px;
   padding: 20px 22px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-lg);
   .family-accent { align-self: stretch; width: 10px; border-radius: 5px; flex-shrink: 0; }
   h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.028em; line-height: 1; margin: 0; }

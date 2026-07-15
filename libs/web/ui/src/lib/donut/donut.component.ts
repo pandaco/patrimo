@@ -31,7 +31,9 @@ interface HoverState {
   standalone: true,
   template: `
     <div class="chart-host" (mouseleave)="hover.set(null)">
-      <svg [attr.width]="size()" [attr.height]="size()" [attr.viewBox]="vb()">
+      <!-- max-width lets the donut shrink with its container (viewBox keeps the ratio) -->
+      <svg [attr.width]="size()" [attr.height]="size()" [attr.viewBox]="vb()"
+           style="max-width:100%;height:auto">
         <circle
           [attr.cx]="cx()" [attr.cy]="cx()" [attr.r]="r()"
           fill="none" stroke="var(--paper-2)" [attr.stroke-width]="thickness()"
