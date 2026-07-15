@@ -231,7 +231,7 @@ export class AllocationSettingsComponent {
   /** Open the Yahoo-backed add-ETF dialog; the new line joins the catalog and,
    *  via the catalog effect, appears in the ETF target list automatically. */
   protected openAddEtf(): void {
-    this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel' });
+    this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: 'min(580px, calc(100vw - 24px))', width: '100%' });
   }
 
   /** Split 100 % evenly across the listed ETFs (remainder on the first row). */

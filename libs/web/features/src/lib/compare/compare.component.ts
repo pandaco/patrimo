@@ -126,12 +126,14 @@ export class CompareComponent {
     this.dialog.open(TransactionDialogComponent, {
       data: { presetEtfIsin: etf.isin, presetType: 'BUY' },
       panelClass: 'transaction-dialog-panel',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
+      width: '100%',
     });
   }
 
   /** Open the add-ETF dialog; a created ETF joins the comparator selection right away. */
   protected addEtf(): void {
-    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel' });
+    const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: 'min(580px, calc(100vw - 24px))', width: '100%' });
     ref.afterClosed().subscribe((created?: EtfDto) => {
       if (!created) return;
       const current = this.selectedIsins();
@@ -156,7 +158,7 @@ export class CompareComponent {
     this.dialog.open(EtfDialogComponent, {
       data: { etf },
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }

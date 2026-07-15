@@ -148,7 +148,7 @@ export class WealthComponent {
     this.dialog.open(TransactionDialogComponent, {
       data: { presetEnvelopeId: env.id },
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }
@@ -157,7 +157,7 @@ export class WealthComponent {
     this.dialog.open(EnvelopeDialogComponent, {
       data: presetGlyph ? { presetGlyph } : undefined,
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }
@@ -180,7 +180,7 @@ export class WealthComponent {
     this.dialog.open(EnvelopeDialogComponent, {
       data: { envelope: env },
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }

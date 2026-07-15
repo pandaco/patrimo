@@ -1,4 +1,5 @@
 // Topbar styles handled globally in styles.scss (.topbar, .search, etc.)
+@use '../../../styles/breakpoints' as *;
 
 @keyframes rotate {
   from { transform: rotate(0deg); }
@@ -43,6 +44,18 @@
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   z-index: 200;
   overflow: hidden;
+
+  // Phones: the anchored 340px panel would overflow narrow viewports —
+  // read as a full-width sheet pinned under the topbar instead.
+  @include respond-below(sm) {
+    position: fixed;
+    top: 62px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
 }
 
 .notif-panel-head {

@@ -191,7 +191,7 @@ export class TransactionsComponent {
   protected async openNewTx(): Promise<void> {
     this.dialog.open(TransactionDialogComponent, {
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }
@@ -200,7 +200,7 @@ export class TransactionsComponent {
     this.dialog.open(TransactionDialogComponent, {
       data: { duplicateFrom: transaction },
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }
@@ -209,7 +209,7 @@ export class TransactionsComponent {
     this.dialog.open(TransactionDialogComponent, {
       data: { transaction: transaction },
       panelClass: 'transaction-dialog-panel',
-      maxWidth: '580px',
+      maxWidth: 'min(580px, calc(100vw - 24px))',
       width: '100%',
     });
   }

@@ -56,6 +56,9 @@
   }
   .rail-expand { display: inline-flex; }
 
+  // Primary action shrinks to its icon; the label lives on in aria-label/title.
+  .topbar .btn.primary .btn-label { display: none; }
+
   .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
   .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
   .hero-main { grid-template-columns: 1fr 1fr; }
@@ -77,8 +80,20 @@
   .burger { display: inline-flex; }
   .rail-expand { display: none; }
 
-  .topbar { padding: 10px 14px; }
-  .search { display: none; }
+  .topbar { padding: 10px 14px; gap: 8px; }
+  .crumb {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  // Search shrinks to a round icon button — still tappable, ⌘K is moot on touch.
+  .search {
+    width: auto;
+    padding: 7px;
+    border-radius: 999px;
+    .search-placeholder, .kbd { display: none; }
+  }
 
   .page { padding: 20px 16px 84px; }
 
