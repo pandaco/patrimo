@@ -90,7 +90,7 @@
                   @if (editingType() === m.meta.type) {
                     <span style="display:inline-flex;align-items:center;gap:4px">
                       <input type="number" class="num-input" style="width:70px;text-align:right"
-                             [ngModel]="editingValue()" (ngModelChange)="editingValue.set(+$event)"
+                             [ngModel]="editingValue()" (ngModelChange)="editingValue.set($event)"
                              (keydown.enter)="commitEdit(m)" (keydown.escape)="cancelEdit()"
                              #threshInput />
                       <span class="muted tiny">{{ m.meta.unit }}</span>

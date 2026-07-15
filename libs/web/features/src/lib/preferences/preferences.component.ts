@@ -68,12 +68,12 @@ export class PreferencesComponent {
   );
 
   protected riskProfile     = signal('');
-  protected horizonYears    = signal(25);
-  protected monthlyTarget   = signal(0);
+  protected horizonYears    = signal<number | null>(25);
+  protected monthlyTarget   = signal<number | null>(0);
   protected displayCurrency = signal('EUR');
   protected uiMode          = signal<'simple' | 'expert' | ''>('');
   protected benchmarkIsin   = signal('');
-  protected livretRatePct   = signal(2.4);
+  protected livretRatePct   = signal<number | null>(2.4);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -99,12 +99,12 @@ export class PreferencesComponent {
 
     const payload: UpdateUserPreferencesDto = {
       riskProfile:       this.riskProfile().trim() || 'Équilibré dynamique',
-      horizonYears:      Math.max(0, Math.min(100, Math.round(this.horizonYears()))),
-      monthlyTarget:     Math.max(0, this.monthlyTarget()),
+      horizonYears:      Math.max(0, Math.min(100, Math.round(this.horizonYears() ?? 0))),
+      monthlyTarget:     Math.max(0, this.monthlyTarget() ?? 0),
       displayCurrency:   this.displayCurrency(),
       uiMode:            this.uiMode() || 'simple',
       benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
-      livretRatePct:     Math.max(0, Math.min(20, this.livretRatePct())),
+      livretRatePct:     Math.max(0, Math.min(20, this.livretRatePct() ?? 0)),
       allocationTargets: this.preferences.current().allocationTargets,
     };
 

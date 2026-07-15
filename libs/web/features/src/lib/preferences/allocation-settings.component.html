@@ -54,12 +54,12 @@
         <div class="field">
           <label for="as-stocks">Actions (%)</label>
           <input id="as-stocks" type="number" min="0" max="100" step="1" class="num-input"
-                 [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set(+$event)" />
+                 [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set($event)" />
         </div>
         <div class="field">
-          <label for="as-bonds-strat">Obligations (%)</label>
-          <input id="as-bonds-strat" type="number" min="0" max="100" step="1" class="num-input"
-                 [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set(+$event)" />
+          <label>Obligations (%)</label>
+          <input type="number" class="num-input sm" style="width:80px"
+                 [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set($event)" />
         </div>
       </div>
     }
@@ -91,17 +91,17 @@
         <div class="field">
           <label for="as-core">Core (%)</label>
           <input id="as-core" type="number" min="0" max="100" step="1" class="num-input"
-                 [ngModel]="corePct()" (ngModelChange)="corePct.set(+$event)" />
+                 [ngModel]="corePct()" (ngModelChange)="corePct.set($event)" />
         </div>
         <div class="field">
-          <label for="as-sat">Satellite (%)</label>
-          <input id="as-sat" type="number" min="0" max="100" step="1" class="num-input"
-                 [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set(+$event)" />
+          <label>Satellite (%)</label>
+          <input type="number" class="num-input sm" style="width:80px"
+                 [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set($event)" />
         </div>
         <div class="field">
-          <label for="as-bonds-tac">Obligations (%)</label>
-          <input id="as-bonds-tac" type="number" min="0" max="100" step="1" class="num-input"
-                 [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set(+$event)" />
+          <label>Obligations (%)</label>
+          <input type="number" class="num-input sm" style="width:80px"
+                 [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set($event)" />
         </div>
       </div>
     }
@@ -156,7 +156,7 @@
                 <td><span class="pill solid">{{ row.ticker }}</span></td>
                 <td class="r">
                   <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
-                         [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, +$event)" />
+                         [ngModel]="row.pct" (ngModelChange)="setEtfPct(row.ticker, $event)" />
                 </td>
                 <td class="r">
                   <button type="button" class="btn icon ghost danger"
@@ -210,7 +210,7 @@
                 <td><span class="pill solid">{{ row.glyph | uppercase }}</span></td>
                 <td class="r">
                   <input type="number" min="0" max="100" step="1" class="num-input" style="width:100px;text-align:right"
-                         [ngModel]="row.pct" (ngModelChange)="setEnvPct(row.glyph, +$event)" />
+                         [ngModel]="row.pct" (ngModelChange)="setEnvPct(row.glyph, $event)" />
                 </td>
                 <td class="r">
                   <button type="button" class="btn icon ghost danger"

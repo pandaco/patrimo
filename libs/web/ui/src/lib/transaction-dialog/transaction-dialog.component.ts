@@ -75,12 +75,12 @@ export class TransactionDialogComponent {
   protected targetEnvelopeId = signal('');
   protected envelopeId = signal(this.source?.envelope ?? this.data?.presetEnvelopeId ?? '');
   protected etfIsin    = signal(this.source?.etf ?? this.data?.presetEtfIsin ?? '');
-  protected qty        = signal(this.source?.qty ?? 1);
-  protected price      = signal(this.source?.price ?? 0);
+  protected qty        = signal<number | null>(this.source?.qty ?? 1);
+  protected price      = signal<number | null>(this.source?.price ?? null);
   protected date       = signal(this.data?.transaction?.date ?? new Date().toISOString().slice(0, 10));
-  protected fees       = signal(this.source?.fees ?? 0);
-  protected taxes      = signal(this.source?.taxes ?? 0);
-  protected amount     = signal(this.source?.amount ?? 0);
+  protected fees       = signal<number | null>(this.source?.fees ?? 0);
+  protected taxes      = signal<number | null>(this.source?.taxes ?? 0);
+  protected amount     = signal<number | null>(this.source?.amount ?? null);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -135,11 +135,11 @@ export class TransactionDialogComponent {
   );
 
   protected readonly txAmount = computed(() =>
-    this.showQtyPrice() ? this.qty() * this.price() : this.amount()
+    this.showQtyPrice() ? (this.qty() ?? 0) * (this.price() ?? 0) : (this.amount() ?? 0)
   );
   protected readonly total = computed(() => {
     const t = this.type();
-    const costs = this.fees() + this.taxes();
+    const costs = (this.fees() ?? 0) + (this.taxes() ?? 0);
     return t === 'BUY' ? this.txAmount() + costs : this.txAmount() - costs;
   });
 
@@ -168,7 +168,7 @@ export class TransactionDialogComponent {
     () => this.type() === 'BUY' && this.cashAfter() < 0
   );
 
-  protected onFeesInput(value: number): void {
+  protected onFeesInput(value: number | null): void {
     this.feesManual.set(true);
     this.fees.set(value);
   }
@@ -201,8 +201,8 @@ export class TransactionDialogComponent {
     const saved = await this.submit();
     if (!saved) return;
     this.qty.set(1);
-    this.price.set(this.selectedEtf()?.price ?? 0);
-    this.amount.set(0);
+    this.price.set(this.selectedEtf()?.price ?? null);
+    this.amount.set(null);
     this.taxes.set(0);
     this.feesManual.set(false);
     this.fees.set(this.showQtyPrice() ? brokerageFee(this.txAmount()) : 0);
@@ -221,14 +221,14 @@ export class TransactionDialogComponent {
         this.error.set('Choisis une enveloppe de destination différente');
         return false;
       }
-      if (this.amount() <= 0) { this.error.set('Montant invalide'); return false; }
+      if ((this.amount() ?? 0) <= 0) { this.error.set('Montant invalide'); return false; }
       this.submitting.set(true);
       try {
         await this.txService.transfer({
           fromEnvelopeId: env.id,
           toEnvelopeId:   target,
           date:           this.date(),
-          amount:         this.amount(),
+          amount:         this.amount() ?? 0,
         });
         return true;
       } catch (err) {
@@ -250,10 +250,10 @@ export class TransactionDialogComponent {
       etfIsin: etf?.isin ?? null,
       type: this.type() as TransactionTypeDto, // TRANSFER handled above — only real transaction types reach here
       date: this.date(),
-      quantity: showQtyPrice ? this.qty() : 1,
-      price: showQtyPrice ? this.price() : null,
-      fees: this.fees(),
-      taxes: this.taxes(),
+      quantity: showQtyPrice ? (this.qty() ?? 1) : 1,
+      price: showQtyPrice ? (this.price() ?? 0) : null,
+      fees: this.fees() ?? 0,
+      taxes: this.taxes() ?? 0,
       amount: this.txAmount(),
     };
 

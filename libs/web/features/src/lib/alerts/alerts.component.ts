@@ -43,7 +43,7 @@ export class AlertsComponent {
 
   protected readonly activeTab      = signal<Tab>('unread');
   protected readonly editingType    = signal<AlertType | null>(null);
-  protected readonly editingValue   = signal<number>(0);
+  protected readonly editingValue   = signal<number | null>(0);
 
   protected readonly filteredAlerts = computed(() => {
     const tab = this.activeTab();
@@ -105,7 +105,7 @@ export class AlertsComponent {
   }
 
   protected async commitEdit(m: RuleWithMeta): Promise<void> {
-    const num = this.editingValue();
+    const num = this.editingValue() ?? 0;
     if (isNaN(num) || num < 0) return;
     this.editingType.set(null);
     if (m.id) {

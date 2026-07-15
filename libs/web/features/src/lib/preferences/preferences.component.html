@@ -59,13 +59,13 @@
       <div class="field">
         <label for="pref-horizon">Horizon (années)</label>
         <input id="pref-horizon" type="number" min="0" max="100" step="1" class="num-input"
-               [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set(+$event)" />
+               [ngModel]="horizonYears()" (ngModelChange)="horizonYears.set($event)" />
         <div class="field-help">Dans combien d'années tu auras besoin de cet argent. Plus c'est loin, plus tu peux encaisser les baisses — le wizard ajuste la part actions en conséquence.</div>
       </div>
       <div class="field">
         <label for="pref-monthly">Objectif mensuel (€)</label>
         <input id="pref-monthly" type="number" min="0" step="50" class="num-input"
-               [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set(+$event)" />
+               [ngModel]="monthlyTarget()" (ngModelChange)="monthlyTarget.set($event)" />
         <div class="field-help">Ce que tu vises à investir chaque mois. Alimente le DCA helper et l'alerte « aucun achat ce mois-ci ».</div>
       </div>
     </div>
@@ -74,7 +74,7 @@
       <div class="field">
         <label for="pref-livret">Taux Livret A de référence (%/an)</label>
         <input id="pref-livret" type="number" min="0" max="20" step="0.1" class="num-input"
-               [ngModel]="livretRatePct()" (ngModelChange)="livretRatePct.set(+$event)" />
+               [ngModel]="livretRatePct()" (ngModelChange)="livretRatePct.set($event)" />
         <div class="field-help">Repère « sans risque » comparé à ton rendement sur le tableau de bord. Révisé par la Banque de France au 1ᵉʳ février et 1ᵉʳ août — défaut 2,4 % (fév. 2025).</div>
       </div>
     </div>

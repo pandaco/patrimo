@@ -85,11 +85,11 @@ export class AllocationSettingsComponent {
     return { core, satellite: stocks - core, bonds: this.bondsStratPct() };
   });
 
-  protected stocksPct      = signal(DEFAULT_STRATEGIC.stocks);
-  protected bondsStratPct  = signal(DEFAULT_STRATEGIC.bonds);
-  protected corePct        = signal(DEFAULT_TACTIC.core);
-  protected satellitePct   = signal(DEFAULT_TACTIC.satellite);
-  protected bondsTacticPct = signal(DEFAULT_TACTIC.bonds);
+  protected stocksPct      = signal<number | null>(DEFAULT_STRATEGIC.stocks);
+  protected bondsStratPct  = signal<number | null>(DEFAULT_STRATEGIC.bonds);
+  protected corePct        = signal<number | null>(DEFAULT_TACTIC.core);
+  protected satellitePct   = signal<number | null>(DEFAULT_TACTIC.satellite);
+  protected bondsTacticPct = signal<number | null>(DEFAULT_TACTIC.bonds);
 
   protected etfTargets = signal<EtfTargetRow[]>([]);
   protected envTargets = signal<EnvTargetRow[]>([]);
@@ -100,8 +100,8 @@ export class AllocationSettingsComponent {
   protected readonly error      = signal<string | null>(null);
   protected readonly success    = signal(false);
 
-  protected readonly strategicSum = computed(() => this.stocksPct() + this.bondsStratPct());
-  protected readonly tacticSum    = computed(() => this.corePct() + this.satellitePct() + this.bondsTacticPct());
+  protected readonly strategicSum = computed(() => (this.stocksPct() ?? 0) + (this.bondsStratPct() ?? 0));
+  protected readonly tacticSum    = computed(() => (this.corePct() ?? 0) + (this.satellitePct() ?? 0) + (this.bondsTacticPct() ?? 0));
   protected readonly etfSum       = computed(() => this.etfTargets().reduce((a, r) => a + (r.pct || 0), 0));
   protected readonly envSum       = computed(() => this.envTargets().reduce((a, r) => a + (r.pct || 0), 0));
 
@@ -153,11 +153,11 @@ export class AllocationSettingsComponent {
     effect(() => {
       const snapshot = JSON.stringify({
         step: this.step(),
-        stocksPct: this.stocksPct(),
-        bondsStratPct: this.bondsStratPct(),
-        corePct: this.corePct(),
-        satellitePct: this.satellitePct(),
-        bondsTacticPct: this.bondsTacticPct(),
+        stocksPct: this.stocksPct() ?? 0,
+        bondsStratPct: this.bondsStratPct() ?? 0,
+        corePct: this.corePct() ?? 0,
+        satellitePct: this.satellitePct() ?? 0,
+        bondsTacticPct: this.bondsTacticPct() ?? 0,
         etfTargets: this.etfTargets(),
         envTargets: this.envTargets(),
       } satisfies WizardDraft);
@@ -262,8 +262,8 @@ export class AllocationSettingsComponent {
     }
 
     const allocationTargets: AllocationTargetsDto = {
-      strategic: { stocks: this.stocksPct(), bonds: this.bondsStratPct() },
-      tactic:    { core: this.corePct(), satellite: this.satellitePct(), bonds: this.bondsTacticPct() },
+      strategic: { stocks: this.stocksPct() ?? 0, bonds: this.bondsStratPct() ?? 0 },
+      tactic:    { core: this.corePct() ?? 0, satellite: this.satellitePct() ?? 0, bonds: this.bondsTacticPct() ?? 0 },
       etf:       Object.fromEntries(this.etfTargets().filter(r => r.pct > 0).map(r => [r.ticker, r.pct])),
       envelope:  Object.fromEntries(this.envTargets().filter(r => r.pct > 0).map(r => [r.glyph, r.pct])),
     };

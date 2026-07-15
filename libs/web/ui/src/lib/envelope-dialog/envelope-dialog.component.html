@@ -52,7 +52,7 @@
     <div class="field">
       <label for="env-plafond">Plafond (€) <span class="muted tiny">— optionnel</span></label>
       <input id="env-plafond" type="number" step="100" class="num-input" placeholder="ex. 150000"
-             [ngModel]="plafond()" (ngModelChange)="plafond.set($event === null || $event === '' ? null : +$event)" />
+             [ngModel]="plafond()" (ngModelChange)="plafond.set($event)" />
     </div>
 
     @if (error()) {
