@@ -44,8 +44,9 @@ cp .env.example .env
 
 Le fichier `.env.example` contient déjà :
 - les credentials qui matchent `docker-compose.yml` → **rien à changer pour PostgreSQL/Redis en local**
-- les variables Google OAuth à remplir (voir [section 6](#6-configurer-google-oauth-pas-à-pas))
-- un `JWT_SECRET` à remplacer en prod
+- les variables Google OAuth à remplir (voir [section 7](#7-configurer-google-oauth-pas-à-pas))
+- des secrets `JWT_SECRET` / `SESSION_SECRET` à générer (`openssl rand -base64 48`)
+- `ALLOW_DEV_LOGIN=true` — active `/api/auth/dev-login` (login sans OAuth, utilisé par les E2E ; jamais en prod)
 
 Sécurité : `.env` est gitignored. Seul `.env.example` (sans secrets) est versionné.
 
@@ -78,7 +79,19 @@ Les données persistent dans les volumes Docker (`pgdata`, `redisdata`) entre le
 
 ---
 
-## 5. Lancer les apps
+## 5. Créer le schéma de base
+
+Les migrations TypeORM ne s'exécutent jamais automatiquement :
+
+```bash
+npm run db:migrate
+```
+
+À relancer après chaque `git pull` qui ajoute une migration (`npm run db:show` liste l'état). La base démarre **vide** — pas de seed : le user dev est provisionné à la volée par `/api/auth/dev-login`, et toutes les données (ETFs, enveloppes, transactions) se créent via l'UI.
+
+---
+
+## 6. Lancer les apps
 
 **Option A — tout en un terminal**
 ```bash
@@ -103,7 +116,7 @@ open http://localhost:4200          # ouvre le frontend
 
 ---
 
-## 6. Configurer Google OAuth (pas à pas)
+## 7. Configurer Google OAuth (pas à pas)
 
 Patrimo utilise Google OAuth pour l'authentification. Il faut un **Client ID** + **Client Secret**.
 
@@ -161,24 +174,28 @@ Redémarre l'API : `Ctrl+C` dans le terminal API puis `npm run start:api`.
 
 ---
 
-## 7. Structure du projet
+## 8. Structure du projet
+
+Apps = points d'entrée minces ; tout le vrai code vit dans `libs/`.
 
 ```
 patrimo/
 ├── apps/
-│   ├── web/              # Frontend Angular 21 (port 4200)
-│   └── api/              # Backend NestJS 11 (port 3333)
+│   ├── web/              # Entrée Angular 21 (port 4200) + styles globaux
+│   ├── api/              # Entrée NestJS 11 (port 3333) — composition root (ports → adapters)
+│   └── web-e2e/          # E2E Playwright (via /api/auth/dev-login)
 ├── libs/
 │   ├── web/
-│   │   ├── ui/           # Composants atomiques (kbd, bar, etc.)
-│   │   ├── data-access/  # Services Angular + modèles
-│   │   └── features/     # Composants métier (à venir)
+│   │   ├── ui/           # Composants atomiques (bar, donut, sparkline, toast, …)
+│   │   ├── data-access/  # Services Angular (httpResource + signals)
+│   │   └── features/     # Pages routées (dashboard, wealth, portfolio, …)
 │   ├── api/
-│   │   ├── domain/       # Entités + ports (hexagonal)
-│   │   ├── application/  # Use-cases
-│   │   ├── infrastructure/ # Adapters TypeORM, OAuth, Redis
+│   │   ├── domain/       # Entités + ports (hexagonal, TS pur)
+│   │   ├── application/  # Use-cases + controllers + auth
+│   │   ├── infrastructure/ # Adapters TypeORM, OAuth, Redis, Yahoo/JustETF + migrations
 │   │   └── shared/
 │   └── shared/contracts/ # DTOs partagés web ↔ api
+├── design/               # Prototype HTML/JSX — source de vérité visuelle
 ├── docker-compose.yml    # postgres + redis
 ├── .env                  # Local, gitignored
 ├── .env.example          # Template versionné
@@ -187,7 +204,7 @@ patrimo/
 
 ---
 
-## 8. Commandes
+## 9. Commandes
 
 Référence complète : [`commands.md`](commands.md).
 
@@ -202,10 +219,11 @@ Catégories disponibles :
 
 | Catégorie | Cheatsheet |
 |---|---|
-| Démarrer | `npm start` · `start:web` · `start:api` |
-| Build prod / dev / watch | `npm run build` · `build:dev` · `build:watch:web` |
-| Tests unique / watch / cov | `npm test` · `test:watch` · `test:cov` (+ `:web` / `:api`) |
-| Lint check / fix | `npm run lint` · `lint:fix` (+ `:web` / `:api`) |
+| Démarrer | `npm start` · `start:web` · `start:api` · `ports:free` |
+| Build | `npm run build` (prod web + api) |
+| Tests | `npm test` · `test:affected` · `test:integration` · `npx nx e2e web-e2e` |
+| Qualité | `npm run lint` · `lint:fix` · `lint:affected` · `typecheck` |
+| Base de données | `npm run db:migrate` · `db:revert` · `db:show` · `db:reset` |
 | Docker | `npm run docker:up` · `docker:down` · `docker:reset` |
 | Release | `npm run release:dry` · `release` |
 
@@ -213,13 +231,12 @@ Voir [`commands.md`](commands.md) pour la liste exhaustive + combinaisons fréqu
 
 ---
 
-## 9. Problèmes courants
+## 10. Problèmes courants
 
 **Port 4200 / 3333 / 5432 / 6379 déjà occupé**
 ```bash
-lsof -ti :4200 | xargs kill -9
-lsof -ti :3333 | xargs kill -9
-# ou pour postgres / redis : arrête une autre instance, ou change le port dans docker-compose.yml
+npm run ports:free                      # libère 3333 + 4200
+# pour postgres / redis : arrête une autre instance, ou change le port dans docker-compose.yml
 ```
 
 **`docker compose` dit que postgres n'est pas healthy**
@@ -242,5 +259,8 @@ npm install
 
 **Le cache Nx me renvoie un vieux build**
 ```bash
-npm run nx:reset
+npx nx reset
 ```
+
+**L'API boote mais toutes les routes renvoient 401**
+→ Session absente ou expirée. Se reconnecter via Google, ou en dev `http://localhost:3333/api/auth/dev-login` (nécessite `ALLOW_DEV_LOGIN=true`).

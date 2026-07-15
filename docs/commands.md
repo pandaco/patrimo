@@ -10,6 +10,7 @@ Référence canonique de toutes les commandes `npm run …`. Pas besoin de conna
 
 ```bash
 npm run docker:up         # postgres + redis (1× au démarrage de la journée)
+npm run db:migrate        # applique les migrations en attente (si besoin)
 npm start                 # web + api en parallèle (watch)
 ```
 
@@ -24,13 +25,9 @@ Toutes ces commandes recompilent au moindre changement de fichier.
 | Commande | Effet |
 |---|---|
 | `npm start` | web + api en parallèle |
-| `npm run serve` | alias de `npm start` |
 | `npm run start:web` | frontend seul → <http://localhost:4200> |
 | `npm run start:api` | backend seul → <http://localhost:3333/api> |
-| `npm run serve:web` | alias de `start:web` |
-| `npm run serve:api` | alias de `start:api` |
-
-> Pas de variante "sans watch" : un dev server **est** un watcher par définition. Pour compiler sans serveur, voir [§2 Build](#2-build).
+| `npm run ports:free` | libère les ports 3333 + 4200 (kill des process) |
 
 ---
 
@@ -38,93 +35,37 @@ Toutes ces commandes recompilent au moindre changement de fichier.
 
 Build = compile sans démarrer de serveur. Production par défaut (optimisé, minifié).
 
-### Build prod
-
 | Commande | Effet |
 |---|---|
 | `npm run build` | build prod web + api → `dist/` |
-| `npm run build:web` | build prod frontend |
-| `npm run build:api` | build prod backend |
-
-### Build dev (sourcemaps, pas d'optim — utile pour debug du bundle)
-
-| Commande | Effet |
-|---|---|
-| `npm run build:dev` | build dev web + api |
-| `npm run build:dev:web` | build dev frontend |
-| `npm run build:dev:api` | build dev backend |
-
-### Build avec watch (recompile sans démarrer de serveur)
-
-| Commande | Effet |
-|---|---|
-| `npm run build:watch:web` | watch + rebuild du frontend |
-| `npm run build:watch:api` | watch + rebuild du backend |
+| `npx nx build web` / `npx nx build api` | build d'un seul projet |
 
 ---
 
-## 3. Tests unitaires
+## 3. Tests
 
-Tests une seule fois par défaut (mode CI).
-
-### Test single-run
+Tests une seule fois par défaut (mode CI). Les runners sont séparés par couche :
+`libs/web/*` en **Vitest**, libs api / apps / `libs/shared/contracts` en **Jest**.
 
 | Commande | Effet |
 |---|---|
 | `npm test` | tous les tests (web + api + libs) |
-| `npm run test:web` | tests du frontend |
-| `npm run test:api` | tests du backend |
+| `npm run test:affected` | teste seulement les projets impactés par ta diff vs main (idéal CI) |
 | `npm run test:integration` | repos TypeORM contre un vrai Postgres (nécessite `docker:up` ; base dédiée `patrimo_integration`, la base dev n'est jamais touchée) |
-
-### Test watch (relance au changement)
-
-| Commande | Effet |
-|---|---|
-| `npm run test:watch` | watch tous les projets |
-| `npm run test:watch:web` | watch frontend |
-| `npm run test:watch:api` | watch backend |
-
-### Test coverage
-
-| Commande | Effet |
-|---|---|
-| `npm run test:cov` | coverage tous projets → `coverage/` |
-| `npm run test:cov:web` | coverage frontend |
-| `npm run test:cov:api` | coverage backend |
-
-### Test affected (uniquement projets impactés par tes changements git)
-
-| Commande | Effet |
-|---|---|
-| `npm run test:affected` | calcule la diff vs main, teste seulement les projets touchés (idéal en CI) |
+| `npx nx test web` | un seul projet |
+| `npx nx test web --testFile=path/to/file.spec.ts` | un seul fichier |
+| `npx nx e2e web-e2e` | E2E Playwright (chromium ; nécessite `ALLOW_DEV_LOGIN=true` dans `.env`, démarre web + api tout seul) |
 
 ---
 
-## 4. Lint
-
-ESLint sur tous les projets. Sans `--fix` = check seulement. Avec `--fix` = autofix.
-
-### Lint check
+## 4. Qualité
 
 | Commande | Effet |
 |---|---|
-| `npm run lint` | check tous les projets |
-| `npm run lint:web` | check frontend |
-| `npm run lint:api` | check backend |
-
-### Lint autofix
-
-| Commande | Effet |
-|---|---|
-| `npm run lint:fix` | autofix tous les projets |
-| `npm run lint:fix:web` | autofix frontend |
-| `npm run lint:fix:api` | autofix backend |
-
-### Lint affected
-
-| Commande | Effet |
-|---|---|
-| `npm run lint:affected` | lint uniquement les projets impactés par tes changements |
+| `npm run lint` | ESLint check tous les projets |
+| `npm run lint:fix` | ESLint autofix tous les projets |
+| `npm run lint:affected` | lint uniquement les projets impactés |
+| `npm run typecheck` | `tsc --noEmit` sur les 19 tsconfig feuilles (`tools/typecheck.mjs`) |
 
 > Pas de mode watch pour le lint : il tourne via les hooks Husky avant chaque commit, et via `lint:fix` à la demande.
 
@@ -151,7 +92,22 @@ docker compose ps                                             # statut + healthc
 
 ---
 
-## 6. Release (`nx release`)
+## 6. Base de données (migrations TypeORM)
+
+Les migrations sont écrites à la main (pas de `migration:generate`) dans
+`libs/api/infrastructure/src/lib/persistence/migrations/` et ne s'exécutent
+jamais automatiquement.
+
+| Commande | Effet |
+|---|---|
+| `npm run db:migrate` | applique les migrations en attente |
+| `npm run db:revert` | annule la dernière migration appliquée |
+| `npm run db:show` | liste les migrations (appliquées / en attente) |
+| `npm run db:reset` | ⚠️ wipe volumes + recreate + migrate — la base repart **vide** (pas de seed : le user dev est provisionné par `/api/auth/dev-login`, tout le reste est créé via l'UI) |
+
+---
+
+## 7. Release (`nx release`)
 
 Versioning + changelog auto depuis Conventional Commits.
 
@@ -159,36 +115,31 @@ Versioning + changelog auto depuis Conventional Commits.
 |---|---|
 | `npm run release:dry` | preview (aucune écriture) |
 | `npm run release` | bump version + CHANGELOG + commit + tag |
-| `npm run release:version` | bump version seul |
-| `npm run release:changelog` | génère CHANGELOG seul |
-| `npm run release:publish` | publish (si on pousse des libs sur npm) |
 
 ---
 
-## 7. Outils Nx (rares)
-
-Le plus souvent inutile au quotidien. Ces commandes existent pour les cas où Nx fait des choses bizarres.
+## 8. Outils Nx (rares)
 
 | Commande | Effet |
 |---|---|
-| `npm run nx:graph` | UI navigable du dependency graph (utile pour comprendre les boundaries) |
-| `npm run nx:projects` | liste tous les projets Nx (api, web, ui, data-access, …) |
-| `npm run nx:reset` | vide le cache Nx (à utiliser si une commande renvoie un vieux résultat) |
+| `npm run graph` | UI navigable du dependency graph (utile pour comprendre les boundaries) |
+| `npx nx show projects` | liste tous les projets Nx (api, web, ui, data-access, …) |
+| `npx nx reset` | vide le cache Nx (à utiliser si une commande renvoie un vieux résultat) |
 
 ---
 
-## 8. Combinaisons fréquentes
+## 9. Combinaisons fréquentes
 
 ```bash
 # Démarrer ma journée
 npm run docker:up && npm start
 
 # Vérification avant de commit
-npm run lint:fix && npm test
+npm run lint:fix && npm run typecheck && npm test
 
 # Vérification "comme la CI" (seulement ce qui a changé)
 npm run lint:affected && npm run test:affected
 
 # Wipe complet et repartir from scratch
-npm run docker:reset && npm run nx:reset && npm install && npm run docker:up
+npm run docker:reset && npx nx reset && npm install && npm run db:reset
 ```
