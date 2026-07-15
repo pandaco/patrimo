@@ -24,6 +24,7 @@
     <div class="card-head" style="padding-top:12px">
       <div class="card-title">Répartition par enveloppe</div>
     </div>
+    <div class="table-scroll">
     <table class="tbl tbl-compact">
       <thead>
         <tr>
@@ -42,6 +43,7 @@
         }
       </tbody>
     </table>
+    </div>
   </div>
 
   @if (liabilityRows().length > 0) {
@@ -49,6 +51,7 @@
       <div class="card-head" style="padding-top:12px">
         <div class="card-title">Crédits en cours</div>
       </div>
+      <div class="table-scroll">
       <table class="tbl tbl-compact">
         <thead>
           <tr>
@@ -67,6 +70,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
   }
 
@@ -143,6 +147,7 @@
     @if (monthlyTx().length === 0) {
       <p class="muted small" style="padding:12px 0">Aucun opération ce mois-ci.</p>
     } @else {
+      <div class="table-scroll">
       <table class="tbl tbl-compact">
         <thead>
           <tr>
@@ -167,6 +172,7 @@
           }
         </tbody>
       </table>
+      </div>
     }
   </div>
 

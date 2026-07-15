@@ -138,6 +138,7 @@
   </div>
 
   <div class="card" style="padding:4px 12px">
+    <div class="table-scroll">
     <table class="tbl">
       <thead>
         <tr>
@@ -181,6 +182,7 @@
         }
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- TWR vs TAUXRENTABILITEINTERNE — le marché vs ton timing (PP9) -->
@@ -290,8 +292,9 @@
       </div>
 
       @if (stats.monthlyRows.length >= 2) {
-        <div style="margin-top:20px;overflow-x:auto">
+        <div style="margin-top:20px">
           <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">Rendements mensuels</div>
+          <div class="table-scroll">
           <table class="tbl" style="font-size:11px;min-width:600px">
             <thead>
               <tr>
@@ -321,6 +324,7 @@
               }
             </tbody>
           </table>
+          </div>
         </div>
       }
     </div>

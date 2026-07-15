@@ -169,6 +169,7 @@
     </div>
 
     <div class="card" style="padding:4px 12px">
+      <div class="table-scroll fit">
       <table class="tbl">
         <thead>
           <tr>
@@ -210,6 +211,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <p class="muted small" style="margin-top:12px">
@@ -245,6 +247,7 @@
           <a class="btn sm" routerLink="/transactions">+ Nouvelle opération</a>
         </div>
       } @else {
+        <div class="table-scroll">
         <table class="tbl" style="font-size:12px">
           <thead>
             <tr>
@@ -271,6 +274,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     </div>
 
@@ -298,6 +302,7 @@
           </div>
         </div>
         @if (fees().byEtf.length > 0) {
+          <div class="table-scroll">
           <table class="tbl" style="font-size:12px">
             <thead>
               <tr><th>ETF</th><th class="r"><span data-tip="Total Expense Ratio — frais annuels de gestion de l'ETF, prélevés quotidiennement. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER %</span></th><th class="r">Valeur</th><th class="r"><span data-tip="Impact réel du TER sur cette position depuis le 1ᵉʳ janvier de l'année (en anglais : « drag »).">Coût cette année</span></th></tr>
@@ -313,6 +318,7 @@
               }
             </tbody>
           </table>
+          </div>
         }
       }
     </div>

@@ -58,6 +58,7 @@
       @if (plan.transactions.length === 0) {
         <p class="muted small" style="margin:0">Portefeuille en ligne — aucun opération nécessaire.</p>
       } @else {
+        <div class="table-scroll">
         <table class="tbl" style="font-size:13px">
           <thead>
             <tr>
@@ -90,6 +91,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     </div>
   }
@@ -227,6 +229,7 @@
   </div>
 
   <div class="card" style="padding:4px 12px">
+    <div class="table-scroll">
     <table class="tbl">
       <thead>
         <tr>
@@ -279,12 +282,14 @@
         }
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- ENVELOPE TARGETS -->
   <h2 class="section-title" style="margin-top:32px">Par enveloppe <em>réel vs cible</em></h2>
   @if (envelopeTargetRows().length > 0) {
     <div class="card" style="padding:4px 12px">
+      <div class="table-scroll">
       <table class="tbl">
         <thead>
           <tr>
@@ -325,6 +330,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
     <p class="muted small" style="margin-top:10px">
       Poids mesurés sur le patrimoine total (livrets et cash inclus), par famille

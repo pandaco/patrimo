@@ -64,6 +64,7 @@
         </div>
       </div>
       <div class="card" style="padding:4px 12px">
+        <div class="table-scroll">
         <table class="tbl tbl-compact" #rulesTable>
           <tbody>
             @for (m of rulesWithMeta(); track m.meta.type) {
@@ -110,6 +111,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

@@ -141,6 +141,7 @@
       @if (etfTargets().length === 0) {
         <p class="muted small">Aucun ETF dans le catalogue. Ajoute ta première ligne avec « + Ajouter un ETF hors liste ».</p>
       } @else {
+        <div class="table-scroll">
         <table class="tbl" style="font-size:13px">
           <thead>
             <tr>
@@ -165,6 +166,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     }
 
@@ -193,6 +195,7 @@
           <a class="btn sm" routerLink="/wealth">+ Créer une enveloppe</a>
         </div>
       } @else {
+        <div class="table-scroll">
         <table class="tbl" style="font-size:13px">
           <thead>
             <tr>
@@ -217,6 +220,7 @@
             }
           </tbody>
         </table>
+        </div>
       }
     }
 

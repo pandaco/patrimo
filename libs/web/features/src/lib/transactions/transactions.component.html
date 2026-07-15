@@ -83,7 +83,7 @@
       </button>
     </div>
     @if (showCashDetails()) {
-      <div style="margin-top:14px;overflow-x:auto">
+      <div class="table-scroll" style="margin-top:14px">
         <table class="tbl" style="font-size:12px">
           <thead>
             <tr>
@@ -123,6 +123,7 @@
       <div class="row" style="padding:0 4px 8px;border-bottom:1px solid var(--rule)">
         <div class="skeleton" style="height:18px;width:140px;border-radius:4px"></div>
       </div>
+      <div class="table-scroll">
       <table class="tbl tbl-compact">
         <tbody>
           @for (i of [1,2,3,4,5,6]; track i) {
@@ -143,6 +144,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
   }
   @for (group of pagedGroups(); track group.month) {
@@ -154,6 +156,7 @@
           {{ group.total >= 0 ? '+' : '−' }} {{ fmtEur(abs(group.total), 2) }}
         </span>
       </div>
+      <div class="table-scroll">
       <table class="tbl tbl-compact">
         <thead>
           <tr class="muted small">
@@ -232,6 +235,7 @@
           }
         </tbody>
       </table>
+      </div>
     </div>
   }
 

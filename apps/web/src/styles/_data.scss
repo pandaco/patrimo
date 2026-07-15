@@ -37,6 +37,18 @@
 }
 .tbl-compact th, .tbl-compact td { padding-top: 7px; padding-bottom: 7px; }
 
+// Horizontal-scroll shield for data tables: when a table's min-content width
+// exceeds its container, the wrapper scrolls instead of the page. The default
+// adds no min-width so tables in narrow desktop columns keep shrinking as
+// before; `wide` floors dense full-page tables (11-col positions), `fit`
+// pins column-per-item tables (comparator) at their natural width.
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  &.wide > .tbl { min-width: 880px; }
+  &.fit  > .tbl { min-width: max-content; }
+}
+
 // ============================================
 // PILLS / TAGS
 // ============================================
