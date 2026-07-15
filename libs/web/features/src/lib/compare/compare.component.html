@@ -102,10 +102,10 @@
             (click)="toggle(etf)">
             {{ etf.ticker }}
             <span class="muted tiny" style="margin-left:6px">{{ etf.name }}</span>
+            @if (etf.qty > 0) {
+              <span style="color: var(--gain); font-size: 14px; margin-left: 6px; line-height: 1" title="Détenu en portefeuille">●</span>
+            }
           </button>
-          @if (etf.qty > 0) {
-            <span class="pill olive" title="En portefeuille — position issue de tes opérations">Détenu</span>
-          }
           <button type="button" class="btn icon ghost"
                   [attr.aria-label]="'Modifier ' + etf.ticker"
                   title="Modifier"
@@ -122,111 +122,92 @@
     }
   </div>
 
-  <!-- CARDS GRID -->
+  <!-- COMPARATOR TABLE -->
   @if (candidates().length > 0) {
-    <div class="grid cols-4">
-      @for (etf of candidates(); track etf.isin) {
-        <div class="card">
-          <div class="row" style="margin-bottom:14px">
-            <span class="pill solid">{{ etf.ticker }}</span>
-            <span class="muted small">{{ etf.issuer }}</span>
-            <button type="button" class="btn icon ghost" style="margin-left:auto"
-                    (click)="toggle(etf)" aria-label="Retirer de la comparaison" title="Retirer">×</button>
-          </div>
-          <div class="serif-italic" style="font-size:16px;line-height:1.2;margin-bottom:6px">{{ etf.name }}</div>
-          <div class="muted tiny num" style="margin-bottom:14px">{{ etf.isin }}</div>
-          <div class="kv"><dt><span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span></dt><dd>{{ fmtPctRaw(etf.ter, 2) }}</dd></div>
-          <div class="kv"><dt>Indice</dt><dd>{{ etf.index }}</dd></div>
-          <div class="kv"><dt>Réplication</dt><dd>{{ etf.repli }}</dd></div>
-          <div class="kv"><dt>Distribution</dt><dd>{{ etf.distrib }}</dd></div>
-          <div class="kv"><dt>PEA</dt><dd>{{ etf.pea ? '✓ éligible' : '✗ CTO seul' }}</dd></div>
-          <div class="kv"><dt>Devise</dt><dd>{{ etf.currency }}</dd></div>
-          <div class="kv"><dt>Catégorie</dt><dd>{{ etf.alloc }}</dd></div>
-          <div class="divider-soft"></div>
-          <div class="kv"><dt><span data-tip="Ce que les frais de gestion (TER) te coûteraient en € cumulés sur 5 ans, avec l'hypothèse 500 €/mois investis et 7 %/an de rendement. Calcul Patrimo, identique quel que soit ton courtier — les frais d'ordre du courtier ne sont pas inclus. Sert uniquement à comparer deux ETFs entre eux.">Frais sur 5 ans</span></dt><dd>≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</dd></div>
-          <div class="divider-soft"></div>
-          @if (etf.qty > 0) {
-            <div class="muted small" style="margin-top:10px">
-              <span class="pill olive">Détenu</span> {{ fmtNum(etf.qty, 0) }} part{{ etf.qty > 1 ? 's' : '' }} en portefeuille
-            </div>
-          } @else {
-            <div class="muted small" style="margin-top:10px">
-              Non détenu — au catalogue pour comparaison
-            </div>
-          }
-          <button type="button" class="btn primary sm" style="width:100%;margin-top:14px;justify-content:center"
-                  (click)="buy(etf)">
-            + Acheter cet instrument
-          </button>
-        </div>
-      }
-    </div>
-
-    <!-- DETAIL TABLE -->
-    <div class="section-head">
-      <h2 class="section-title">Critères <em>détaillés</em></h2>
-      <span class="section-sub">comparaison ligne par ligne (catalogue)</span>
-    </div>
-
-    <div class="card" style="padding:4px 12px">
+    <div class="card" style="padding:0; overflow:hidden">
       <div class="table-scroll fit">
-      <table class="tbl">
+      <table class="tbl" style="min-width: 800px; margin: 0; border: none;">
         <thead>
-          <tr>
-            <th>Critère</th>
+          <tr style="background: var(--surface-2)">
+            <th style="width: 200px; border-bottom: 2px solid var(--rule); padding: 20px;">
+              <span class="muted small">Comparatif</span>
+            </th>
             @for (etf of candidates(); track etf.isin) {
-              <th>{{ etf.ticker }}</th>
+              <th style="border-bottom: 2px solid var(--rule); padding: 20px; vertical-align: top; width: calc(100% / {{ candidates().length }})">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <span class="pill solid" style="font-size: 14px; padding: 4px 10px">{{ etf.ticker }}</span>
+                    @if (etf.qty > 0) {
+                      <span style="color: var(--gain); font-size: 14px;" title="Détenu en portefeuille ({{ fmtNum(etf.qty, 0) }} parts)">●</span>
+                    }
+                  </div>
+                  <button type="button" class="btn icon ghost xs" (click)="toggle(etf)" aria-label="Retirer" title="Retirer">✕</button>
+                </div>
+                <div class="serif-italic" style="font-size:16px; line-height:1.2; margin-bottom:8px; font-weight: normal; text-transform: none; color: var(--ink)">{{ etf.name }}</div>
+                <div class="muted tiny num" style="font-weight: normal; margin-bottom: 16px">{{ etf.isin }}</div>
+                <button type="button" class="btn primary sm" style="width:100%; justify-content:center" (click)="buy(etf)">
+                  Acheter
+                </button>
+              </th>
             }
           </tr>
         </thead>
         <tbody>
-          <tr><td class="muted small">Émetteur</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.issuer }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Émetteur</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.issuer }}</td> }
           </tr>
-          <tr><td class="muted small">Indice répliqué</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.index }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Indice répliqué</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.index }}</td> }
           </tr>
-          <tr><td class="muted small">TER annuel</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ fmtPctRaw(etf.ter, 2) }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">
+              <span data-tip="Total Expense Ratio — frais annuels de gestion. Ex : 0,20 % = 2 € / an pour 1 000 € investis.">TER annuel</span>
+            </td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px; font-weight: 600">{{ fmtPctRaw(etf.ter, 2) }}</td> }
           </tr>
-          <tr><td class="muted small">Réplication</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.repli }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Réplication</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.repli }}</td> }
           </tr>
-          <tr><td class="muted small">Politique distribution</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.distrib }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Distribution</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.distrib }}</td> }
           </tr>
-          <tr><td class="muted small">Éligibilité PEA</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.pea ? '✓' : '✗' }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Éligibilité PEA</td>
+            @for (etf of candidates(); track etf.isin) { 
+              <td class="num small" style="padding: 16px 20px;" [class.position]="etf.pea">
+                {{ etf.pea ? '✓ PEA' : '✗ CTO seul' }}
+              </td> 
+            }
           </tr>
-          <tr><td class="muted small">Devise cotation</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.currency }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Devise de cotation</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.currency }}</td> }
           </tr>
-          <tr><td class="muted small">Catégorie d'allocation</td>
-            @for (etf of candidates(); track etf.isin) { <td class="num small">{{ etf.alloc }}</td> }
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Catégorie</td>
+            @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.alloc }}</td> }
           </tr>
-          <tr><td class="muted small">Frais sur 5 ans (500 €/m, 7 %/an)</td>
+          <tr style="background: rgba(0,0,0,0.015)">
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">
+              <span data-tip="Impact cumulé du TER si tu investis 500 €/mois avec 7 %/an de rendement sur 5 ans.">Coût cumulé sur 5 ans</span>
+            </td>
             @for (etf of candidates(); track etf.isin) {
-              <td class="num small">≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</td>
+              <td class="num small" style="padding: 16px 20px; font-weight: 600">≈ {{ fmtNum(tco5y(etf.ter), 0) }} €</td>
             }
           </tr>
         </tbody>
       </table>
       </div>
     </div>
-
-    <p class="muted small" style="margin-top:12px">
-      « Frais sur 5 ans » = impact cumulé du TER si tu investis 500 €/mois avec
-      7 %/an de rendement marché. C'est un calcul Patrimo, identique quel que
-      soit ton courtier — ses frais d'ordre et le spread (écart achat/vente)
-      n'y sont pas. Le
-      chiffre absolu compte peu : c'est l'écart entre deux ETFs qui t'aide à
-      choisir.
-    </p>
   } @else {
     <div class="card" style="text-align:center;padding:48px 24px">
       <div style="font-size:32px;margin-bottom:12px">📊</div>
       <p style="font-size:15px;font-weight:600;margin:0 0 6px">Commence par sélectionner des instruments</p>
-      <p class="muted small" style="margin:0">Coche un ou plusieurs ETF / ETC dans la liste ci-dessus pour les comparer côte à côte.</p>
+      <p class="muted small" style="margin:0">Coche un ou plusieurs ETF / ETC dans la liste ci-dessus pour les comparer côte à côte dans un tableau détaillé.</p>
     </div>
   }
 
