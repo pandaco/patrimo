@@ -116,6 +116,19 @@ export class CompareComponent {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(this.selectedIsins()));
       }
     });
+
+    // Prune ghost ISINs (e.g. if an ETF was deleted in another tab or directly in DB)
+    effect(() => {
+      if (this.etfService.loading()) return;
+      const allIsins = new Set(this.etfService.all().map(e => e.isin));
+      const current = this.selectedIsins();
+      const valid = current.filter(isin => allIsins.has(isin));
+      if (valid.length !== current.length) {
+        // Use untracked to avoid cyclical effect triggers if we want, but since
+        // the new length is equal, it's a stable state.
+        this.selectedIsins.set(valid);
+      }
+    }, { allowSignalWrites: true });
   }
 
   protected isSelected(isin: string): boolean {

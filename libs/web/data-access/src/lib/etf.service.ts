@@ -113,6 +113,13 @@ export class EtfService {
     );
   }
 
+  /** Fetch exact ETF metadata from JustETF by ISIN. */
+  async metadata(isin: string) {
+    return firstValueFrom(
+      this.http.get<import('@patrimo/contracts').EtfMetadataDto>(`${this.baseUrl}/etfs/metadata/${encodeURIComponent(isin)}`)
+    );
+  }
+
   /** Update catalog metadata for an existing instrument. */
   async update(isin: string, input: Partial<CreateEtfDto>): Promise<EtfDto> {
     const updated = await firstValueFrom(

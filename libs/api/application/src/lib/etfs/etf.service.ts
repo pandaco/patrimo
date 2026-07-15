@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Etf, EtfRepository, TransactionRepository } from '@patrimo/api-domain';
-import { CreateEtfDto, EtfDto, EtfLookupResultDto } from '@patrimo/contracts';
+import { CreateEtfDto, EtfDto, EtfLookupResultDto, EtfMetadataDto } from '@patrimo/contracts';
 import { UpdateEtfDtoBody } from './dto/update-etf.dto';
 import { ETF_REPOSITORY, TRANSACTION_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
@@ -42,6 +42,15 @@ export class EtfService {
       throw new BadRequestException('query must be at least 2 characters');
     }
     return this.prices.searchSymbols(trimmed);
+  }
+
+  /** Scrape JustETF to return exact metadata for a specific ISIN */
+  async metadata(isin: string): Promise<EtfMetadataDto> {
+    const trimmed = isin.trim().toUpperCase();
+    if (trimmed.length !== 12) {
+      throw new BadRequestException('invalid ISIN');
+    }
+    return this.prices.getEtfMetadata(trimmed);
   }
 
   /**

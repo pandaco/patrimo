@@ -66,13 +66,24 @@ export class EtfDialogComponent {
     }
   }
 
-  protected pick(result: EtfLookupResultDto): void {
+  protected async pick(result: EtfLookupResultDto): Promise<void> {
     this.ticker.set(result.symbol);
     this.name.set(result.name);
     if (result.currency) this.currency.set(result.currency);
     if (result.ter !== null) this.ter.set(result.ter);
     const query = this.searchQuery().trim().toUpperCase();
-    if (ISIN_PATTERN.test(query)) this.isin.set(query);
+    if (ISIN_PATTERN.test(query)) {
+      this.isin.set(query);
+      try {
+        const meta = await this.etfService.metadata(query);
+        if (meta.ter !== null) this.ter.set(meta.ter);
+        if (meta.repli) this.repli.set(meta.repli as any);
+        if (meta.distrib) this.distrib.set(meta.distrib as any);
+        if (meta.issuer) this.issuer.set(meta.issuer);
+      } catch (e) {
+        // Ignore metadata fetch errors
+      }
+    }
     this.searchResults.set([]);
     this.searched.set(false);
   }

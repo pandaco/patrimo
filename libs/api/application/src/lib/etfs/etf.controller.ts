@@ -35,6 +35,11 @@ export class EtfController {
     return this.etfs.lookup(query);
   }
 
+  @Get('metadata/:isin')
+  metadata(@Param('isin') isin: string) {
+    return this.etfs.metadata(isin);
+  }
+
   @Post()
   create(@Body() body: CreateEtfDtoBody): Promise<EtfDto> {
     return this.etfs.create(body);

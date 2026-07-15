@@ -59,12 +59,23 @@ export class PriceService {
 
   async getEtfExposure(isin: string): Promise<{ geography: Record<string, number>; sector: Record<string, number> }> {
     const key = `justetf:${isin}`;
-    const hit = await this.cache.get<any>(key);
-    if (hit) return hit;
+    const cached = await this.cache.get<{ geography: Record<string, number>; sector: Record<string, number> }>(key);
+    if (cached) return cached;
 
     const fresh = await this.justEtf.fetchExposure(isin);
-    // Cache for 1 week
-    await this.cache.set(key, fresh, 86400 * 7);
+    // Cache for 7 days
+    await this.cache.set(key, fresh, 7 * 24 * 60 * 60);
+    return fresh;
+  }
+
+  async getEtfMetadata(isin: string) {
+    const key = `justetf-meta:${isin}`;
+    const cached = await this.cache.get<any>(key);
+    if (cached) return cached;
+
+    const fresh = await this.justEtf.fetchMetadata(isin);
+    // Cache for 7 days
+    await this.cache.set(key, fresh, 7 * 24 * 60 * 60);
     return fresh;
   }
 

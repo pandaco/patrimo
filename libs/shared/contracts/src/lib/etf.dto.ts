@@ -58,3 +58,10 @@ export interface CreateEtfDto {
   pea: boolean;
   alloc: EtfAllocationDto;
 }
+
+export interface EtfMetadataDto {
+  ter: number | null;
+  repli: string | null;
+  distrib: string | null;
+  issuer: string | null;
+}
