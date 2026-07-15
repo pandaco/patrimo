@@ -1,8 +1,9 @@
 // ============================================
 // RESPONSIVE — md ≤900px: icon-rail sidebar
 // ============================================
+@use './breakpoints' as *;
 
-@media (max-width: 900px) {
+@include respond-below(md) {
   :root { --shell-w: 58px; }
 
   .sidebar {
@@ -43,7 +44,7 @@
 // RESPONSIVE — sm ≤600px: bottom nav, single col
 // ============================================
 
-@media (max-width: 600px) {
+@include respond-below(sm) {
   :root { --shell-w: 0px; }
 
   .app { grid-template-columns: 1fr; }

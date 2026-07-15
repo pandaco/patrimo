@@ -1,0 +1,34 @@
+// ============================================
+// BREAKPOINTS — single source of truth for viewport queries.
+//
+// Pure Sass module (variables + mixin only, emits no CSS): safe to @use
+// from any partial or component stylesheet without duplicating output.
+//
+// Bands (desktop-first, max-width — matches the whole existing cascade):
+//   lg 1200px — half-screen laptops: dense grids lose a column
+//   md  900px — tablet: sidebar collapses to the 58px icon rail
+//   sm  600px — phone: sidebar hidden, bottom nav + drawer take over
+//
+// Design floor: 360px. There is deliberately no query below `sm` —
+// layouts must stay intrinsically fluid down to 360px via auto-fit /
+// minmax, flex-wrap and min-width: 0.
+//
+// The shell component mirrors md/sm as matchMedia constants — keep the
+// values in sync (see shell.component.ts).
+// ============================================
+@use 'sass:map';
+
+$breakpoints: (
+  lg: 1200px,
+  md: 900px,
+  sm: 600px,
+);
+
+@mixin respond-below($name) {
+  @if not map.has-key($breakpoints, $name) {
+    @error "Unknown breakpoint `#{$name}` — expected one of #{map.keys($breakpoints)}";
+  }
+  @media (max-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}

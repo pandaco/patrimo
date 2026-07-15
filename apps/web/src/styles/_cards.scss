@@ -1,6 +1,7 @@
 // ============================================
 // CARDS / GRID
 // ============================================
+@use './breakpoints' as *;
 
 .grid { display: grid; gap: 16px; }
 .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -128,13 +129,13 @@
     a:hover { color: var(--ink); }
   }
 }
-@media (max-width: 1180px) {
+@include respond-below(lg) {
   .kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
-@media (max-width: 880px) {
+@include respond-below(md) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
-@media (max-width: 540px) {
+@include respond-below(sm) {
   .kpi-grid { grid-template-columns: 1fr !important; }
 }
 
@@ -259,7 +260,7 @@
     line-height: 1;
   }
 }
-@media (max-width: 720px) {
+@include respond-below(md) {
   .onboarding-step { padding: 14px; }
   .card ol[style*="grid-template-columns:repeat(3,1fr)"] {
     grid-template-columns: 1fr !important;

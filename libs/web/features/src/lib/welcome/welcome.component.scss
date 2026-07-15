@@ -58,7 +58,9 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
+  // 600px = `sm` in apps/web/src/styles/_breakpoints.scss (kept literal:
+  // feature libs don't import app partials).
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
 }
 
 .risk-card {
@@ -119,7 +121,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
 }
 
 .next-card {
