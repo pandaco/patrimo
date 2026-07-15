@@ -19,16 +19,6 @@
     .brand-name, .brand-sub { display: none; }
     .nav-label { display: none; }
     .nav-group { gap: 2px; width: 100%; }
-    .nav-item {
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 8px 4px;
-      gap: 0;
-      span:not(.ico):not(.badge) { display: none; }
-      .ico { width: 18px; height: 18px; opacity: 1; }
-      .badge { display: none; }
-    }
     .sidebar-footer {
       flex-direction: column;
       gap: 8px;
