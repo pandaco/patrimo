@@ -12,9 +12,9 @@
   }
   .brand { justify-content: center; padding: 2px 0; }
   .brand-name, .brand-sub { display: none; }
-  .valeurLiquidative-label { display: none; }
-  .valeurLiquidative-group { gap: 2px; width: 100%; }
-  .valeurLiquidative-item {
+  .nav-label { display: none; }
+  .nav-group { gap: 2px; width: 100%; }
+  .nav-item {
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -40,7 +40,7 @@
 }
 
 // ============================================
-// RESPONSIVE — sm ≤600px: bottom valeurLiquidative, single col
+// RESPONSIVE — sm ≤600px: bottom nav, single col
 // ============================================
 
 @media (max-width: 600px) {

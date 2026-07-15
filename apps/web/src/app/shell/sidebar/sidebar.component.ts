@@ -16,7 +16,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// Beginner-friendly valeurLiquidative: 5 entries instead of 12, plain-French labels.
+// Beginner-friendly nav: 5 entries instead of 12, plain-French labels.
 const NAV_SIMPLE: NavGroup[] = [
   {
     label: 'Essentiel',
@@ -30,7 +30,7 @@ const NAV_SIMPLE: NavGroup[] = [
   },
 ];
 
-const VALEURLIQUIDATIVE: NavGroup[] = [
+const NAV_EXPERT: NavGroup[] = [
   {
     label: 'Aperçu',
     items: [
@@ -81,7 +81,7 @@ export class SidebarComponent {
   private readonly preferences  = inject(PreferencesService);
 
   protected readonly uiMode = computed(() => this.preferences.current()?.uiMode || 'simple');
-  protected readonly valeurLiquidative    = computed(() => this.uiMode() === 'simple' ? NAV_SIMPLE : VALEURLIQUIDATIVE);
+  protected readonly navGroups = computed(() => this.uiMode() === 'simple' ? NAV_SIMPLE : NAV_EXPERT);
   protected readonly user = inject(UserService).currentUser;
   protected readonly menuOpen = signal(false);
 
@@ -112,7 +112,7 @@ export class SidebarComponent {
     try {
       await this.preferences.update({ uiMode: next });
     } catch {
-      // Preference save failed — valeurLiquidative simply stays as it was.
+      // Preference save failed — the nav simply stays as it was.
     }
   }
 
