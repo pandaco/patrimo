@@ -85,7 +85,7 @@ export function xirr(flows: CashFlow[], guess = 0.1): number | null {
 
 /**
  * Builds the XIRR cash-flow series from a transaction history and a
- * current portfolio value. Returns `null` if a meaningful TAUXRENTABILITEINTERNE cannot be
+ * current portfolio value. Returns `null` if a meaningful TRI cannot be
  * computed (no deposits, no current value).
  */
 export function computeTri(transactions: Transaction[], currentValue: number, today: Date = new Date()): number | null {

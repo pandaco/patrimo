@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { EnvelopeService, TauxChangeService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { fmtNum } from '@patrimo/ui';
 import { computeProjection } from '../portfolio/projection';
-import { computeTri } from '../portfolio/tauxRentabiliteInterne';
+import { computeTri } from '../portfolio/tri';
 import { WealthChartComponent } from '../dashboard/wealth-chart.component';
 
 @Component({
@@ -21,19 +21,19 @@ export class ProjectionComponent {
 
   protected readonly totalValue = this.envelopes.total;
 
-  private readonly tauxRentabiliteInterne = computed(() => computeTri(this.txService.all(), this.totalValue()));
+  private readonly tri = computed(() => computeTri(this.txService.all(), this.totalValue()));
 
   protected readonly monthlyContribution = signal<number | null>(null);
   protected readonly annualRatePct       = signal<number | null>(null);
   protected readonly years               = signal(20);
 
-  // Defaults follow the user's own numbers once preferences/TAUXRENTABILITEINTERNE resolve, but
+  // Defaults follow the user's own numbers once preferences/TRI resolve, but
   // stay editable — this is a "what if" tool, not a locked-in forecast.
   protected readonly effectiveContribution = computed(() =>
     this.monthlyContribution() ?? this.preferences.current().monthlyTarget ?? 0,
   );
   protected readonly effectiveRate = computed(() =>
-    this.annualRatePct() ?? this.tauxRentabiliteInterne() ?? 7,
+    this.annualRatePct() ?? this.tri() ?? 7,
   );
 
   protected readonly points = computed(() =>

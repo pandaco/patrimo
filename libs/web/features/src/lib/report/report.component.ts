@@ -3,7 +3,7 @@ import { AuthService, EnvelopeService, TauxChangeService, LiabilityService, Tran
 import { TipDirective, fmtDate, fmtNum } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTaxEstimate } from '../performance/tax-estimate';
-import { computeTri } from '../portfolio/tauxRentabiliteInterne';
+import { computeTri } from '../portfolio/tri';
 
 @Component({
   selector: 'app-report',
@@ -37,7 +37,7 @@ export class ReportComponent {
 
   protected readonly liabilityRows = this.liabilities.all;
 
-  protected readonly tauxRentabiliteInterne = computed(() => computeTri(this.txService.all(), this.totalValue()));
+  protected readonly tri = computed(() => computeTri(this.txService.all(), this.totalValue()));
   protected readonly realizedYtd = computed(() =>
     computeRealized(this.txService.all(), startOfYearISO()).realizedSince,
   );

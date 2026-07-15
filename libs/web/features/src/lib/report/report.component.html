@@ -76,10 +76,10 @@
 
   <div class="grid cols-2" style="gap:14px;margin-bottom:20px">
     <div class="card kpi-tile">
-      <div class="label">TAUXRENTABILITEINTERNE (XIRR)</div>
-      @if (tauxRentabiliteInterne() !== null) {
-        <div class="value" [class.position]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
-          {{ tauxRentabiliteInterne()! >= 0 ? '+' : '' }}{{ fmtNum(tauxRentabiliteInterne()!, 1) }} % <small>/an</small>
+      <div class="label">TRI (XIRR)</div>
+      @if (tri() !== null) {
+        <div class="value" [class.position]="tri()! >= 0" [class.neg]="tri()! < 0">
+          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} % <small>/an</small>
         </div>
       } @else {
         <div class="value">—</div>

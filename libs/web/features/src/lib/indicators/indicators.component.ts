@@ -4,7 +4,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { AllocationService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
 import { TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
-import { computeTri } from '../portfolio/tauxRentabiliteInterne';
+import { computeTri } from '../portfolio/tri';
 
 const KPI_IDS = ['rente', 'realized', 'concentration', 'dividends', 'streak', 'milestone', 'doubling'] as const;
 type KpiId = (typeof KPI_IDS)[number];
@@ -177,7 +177,7 @@ export class IndicatorsComponent {
   });
 
   /** 10. Money-weighted return (XIRR) — true annualised rate counting deposit timing. */
-  protected readonly tauxRentabiliteInterne = computed(() =>
+  protected readonly tri = computed(() =>
     computeTri(this.txService.all(), this.totalValue()),
   );
 

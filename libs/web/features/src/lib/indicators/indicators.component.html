@@ -20,12 +20,12 @@
 
   <div class="grid cols-4 kpi-grid" style="gap:14px;margin-bottom:14px">
 
-    <!-- TAUXRENTABILITEINTERNE / XIRR -->
+    <!-- TRI / XIRR -->
     <div class="card kpi-tile">
-      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TAUXRENTABILITEINTERNE</span></div>
-      @if (tauxRentabiliteInterne() !== null) {
-        <div class="value" [class.position]="tauxRentabiliteInterne()! >= 0" [class.neg]="tauxRentabiliteInterne()! < 0">
-          {{ tauxRentabiliteInterne()! >= 0 ? '+' : '' }}{{ fmtNum(tauxRentabiliteInterne()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
+      <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TRI</span></div>
+      @if (tri() !== null) {
+        <div class="value" [class.position]="tri()! >= 0" [class.neg]="tri()! < 0">
+          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
         </div>
         <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
       } @else {

@@ -4,7 +4,7 @@ import { EnvelopeService, EtfService, TauxChangeService, PerformanceService, Pre
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
-import { computeTri } from '../portfolio/tauxRentabiliteInterne';
+import { computeTri } from '../portfolio/tri';
 
 const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
   { id: '1W',  label: '1S'  },
@@ -95,24 +95,24 @@ export class PerformanceComponent {
   protected readonly metrics       = this.performanceService.metrics;
   protected readonly loadingMetrics = this.performanceService.loadingMetrics;
 
-  // ─── TWR vs TAUXRENTABILITEINTERNE (PP9) — le marché vs ton timing ───────────────────────────
+  // ─── TWR vs TRI (PP9) — le marché vs ton timing ───────────────────────────
 
   /** Money-weighted return (XIRR) since inception — annualised by construction. */
-  protected readonly tauxRentabiliteInterne = computed(() =>
+  protected readonly tri = computed(() =>
     computeTri(this.transactionService.all(), this.envelopeService.total()),
   );
 
   /**
-   * Timing effect: TAUXRENTABILITEINTERNE − CAGR, in points per year. Only meaningful when both
-   * figures cover the same span, i.e. the MAX period — TAUXRENTABILITEINTERNE always spans the
+   * Timing effect: TRI − CAGR, in points per year. Only meaningful when both
+   * figures cover the same span, i.e. the MAX period — TRI always spans the
    * full history while the CAGR follows the active window.
    */
   protected readonly timingVerdict = computed(() => {
     if (this.activePeriod() !== 'MAX') return null;
-    const tauxRentabiliteInterne  = this.tauxRentabiliteInterne();
+    const tri  = this.tri();
     const cagr = this.annualized();
-    if (tauxRentabiliteInterne === null || cagr === null) return null;
-    return { deltaPts: tauxRentabiliteInterne - cagr, helped: tauxRentabiliteInterne >= cagr };
+    if (tri === null || cagr === null) return null;
+    return { deltaPts: tri - cagr, helped: tri >= cagr };
   });
   // Server-computed return per period (same replay as the chart), so every
   // row shows its value — not just the active one.
