@@ -9,10 +9,15 @@ const DEV_LOGIN_URL = `${API_URL}/api/auth/dev-login`;
  */
 async function readTotalTxCount(page: Page): Promise<number> {
   const eyebrow = page.locator('.page-eyebrow');
-  await expect(eyebrow).toContainText(/Journal — \d+ mouvement/);
+  // "opération" since the 2026-07-13 wording harmonization (ex-"mouvement").
+  await expect(eyebrow).toContainText(/Journal — \d+ opération/);
   const text = (await eyebrow.textContent()) ?? '';
   const match = /Journal — (\d+)/.exec(text);
   return match ? Number(match[1]) : 0;
+}
+
+async function navigateTo(page: Page, href: string) {
+  await page.locator(`a[href="${href}"]`).filter({ visible: true }).first().click({ force: true });
 }
 
 /**
@@ -94,7 +99,9 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto(DEV_LOGIN_URL);
     await page.waitForURL(/\/dashboard(\?|#|$)/);
 
-    await page.click('a[href="/transactions"]');
+    // Both the sidebar and the bottom nav carry this link; click whichever is
+    // visible at the current viewport (sidebar is display:none on phones).
+    await navigateTo(page, '/transactions');
     await page.waitForURL(/\/transactions(\?|#|$)/);
 
     // Import button exists and starts in idle state.
@@ -179,7 +186,7 @@ test.describe('Patrimo E2E Tests', () => {
     await page.waitForURL(/\/transactions(\?|#|$)/);
 
     // Wait for the journal header to render (signals data hydrated from API).
-    // The eyebrow text `Journal — N mouvements` is the single source of truth
+    // The eyebrow text `Journal — N opérations` is the single source of truth
     // for total transaction count, independent of pagination.
     const initialCount = await readTotalTxCount(page);
 
@@ -202,6 +209,6 @@ test.describe('Patrimo E2E Tests', () => {
     await expect(page.locator('.transaction-dialog-panel')).toBeHidden();
 
     // Eyebrow count must increment by exactly one
-    await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} mouvement`);
+    await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} opération`);
   });
 });

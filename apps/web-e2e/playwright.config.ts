@@ -56,12 +56,13 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
 
-    // Uncomment for mobile browsers support
-    /* {
+    // Mobile viewport (393×851, touch, Chromium engine — no extra browser
+    // binary needed; engine diversity is already covered by webkit above).
+    {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
-    {
+    /* {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
     }, */

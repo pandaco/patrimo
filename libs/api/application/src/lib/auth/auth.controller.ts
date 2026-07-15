@@ -71,7 +71,11 @@ export class AuthController {
   }
 
   @Get('dev-login')
-  @Throttle({ default: { ttl: 60_000, limit: 5 } })
+  // Generous on purpose: every Playwright test authenticates through here and
+  // two browser projects run in parallel. The endpoint is already dev-gated
+  // (403 unless NODE_ENV != production AND ALLOW_DEV_LOGIN=true), so the
+  // throttle only guards against runaway loops, not abuse.
+  @Throttle({ default: { ttl: 60_000, limit: 60 } })
   async devLogin(
     @Req() req: Request,
     @Res() res: Response,
