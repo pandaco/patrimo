@@ -1,4 +1,11 @@
 <header class="topbar" role="banner">
+  <button class="btn ghost burger" type="button" (click)="toggleDrawer.emit()"
+          aria-label="Ouvrir la navigation"
+          [attr.aria-expanded]="drawerOpen()"
+          aria-controls="app-sidebar">
+    <span aria-hidden="true" style="display:inline-flex;font-size:18px;line-height:1">☰</span>
+  </button>
+
   <nav aria-label="Fil d'Ariane" class="crumb">
     @for (crumb of crumbs(); track $index; let i = $index, last = $last) {
       @if (i > 0) {

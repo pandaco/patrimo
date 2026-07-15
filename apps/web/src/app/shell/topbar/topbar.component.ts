@@ -13,7 +13,9 @@ import { AppIconComponent, KeyboardShortcutService } from '@patrimo/ui';
 })
 export class TopbarComponent {
   crumbs = input.required<string[]>();
+  drawerOpen = input(false);
   newTransaction = output<void>();
+  toggleDrawer = output<void>();
 
   private readonly etfService   = inject(EtfService);
   private readonly alertService = inject(AlertService);

@@ -73,6 +73,9 @@ const NAV_EXPERT: NavGroup[] = [
 })
 export class SidebarComponent {
   openShortcuts = output<void>();
+  // Rail chevron (visible in the md band only) asking the shell to open the
+  // sidebar as a full-width drawer overlay.
+  expandRequest = output<void>();
 
   private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);

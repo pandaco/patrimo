@@ -9,6 +9,11 @@
     </div>
   </div>
 
+  <button class="rail-expand" type="button" (click)="expandRequest.emit()"
+          aria-label="Déployer la navigation">
+    <span aria-hidden="true">»</span>
+  </button>
+
   @for (group of navGroups(); track group.label) {
     <nav class="nav-group" [attr.aria-label]="group.label">
       <div class="nav-label">{{ group.label }}</div>
@@ -18,7 +23,7 @@
           [routerLink]="item.route"
           routerLinkActive="active"
           [attr.aria-keyshortcuts]="item.shortcut ? 'g ' + item.shortcut.toLowerCase() : null"
-          [attr.title]="item.shortcut ? 'Raccourci : G puis ' + item.shortcut : null"
+          [attr.title]="item.label + (item.shortcut ? ' — Raccourci : G puis ' + item.shortcut : '')"
         >
           <span class="ico" aria-hidden="true">
             <app-ico [name]="item.icon" />

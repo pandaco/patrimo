@@ -1,14 +1,25 @@
 <ui-toast />
 
-<div class="app">
-  <app-sidebar (openShortcuts)="onOpenShortcuts()" />
+<div class="app" [class.drawer-open]="drawerOpen()">
+  <app-sidebar id="app-sidebar"
+               (openShortcuts)="onOpenShortcuts()"
+               (expandRequest)="toggleDrawer()"
+               [cdkTrapFocus]="drawerOpen()"
+               [cdkTrapFocusAutoCapture]="drawerOpen()" />
   <div class="main">
-    <app-topbar [crumbs]="crumbs()" (newTransaction)="onNewTransaction()" />
+    <app-topbar [crumbs]="crumbs()"
+                [drawerOpen]="drawerOpen()"
+                (toggleDrawer)="toggleDrawer()"
+                (newTransaction)="onNewTransaction()" />
     <main id="main" tabindex="-1" [attr.aria-label]="crumbs().join(', ')">
       <router-outlet />
     </main>
   </div>
 </div>
+
+@if (drawerOpen()) {
+  <div class="drawer-backdrop" (click)="closeDrawer()" aria-hidden="true"></div>
+}
 
 <nav class="bottom-nav" aria-label="Navigation rapide">
   <a routerLink="/dashboard"    routerLinkActive="active" aria-label="Tableau de bord">

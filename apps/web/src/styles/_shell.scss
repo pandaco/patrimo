@@ -65,6 +65,25 @@
   letter-spacing: 0;
 }
 
+// Rail chevron — hidden on desktop, revealed in the md band by _responsive.scss.
+// Kept global (not in sidebar.component.scss) so the responsive reveal never
+// loses a specificity fight against emulated-encapsulation attribute selectors.
+.rail-expand {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink-3);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  &:hover { background: var(--surface-2); color: var(--ink); }
+}
+
 .nav-group { display: flex; flex-direction: column; gap: 1px; }
 .nav-label {
   font-size: 10.5px;
@@ -123,6 +142,9 @@
   b { color: var(--ink); font-weight: 600; }
 }
 .topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+// Drawer burger — hidden on desktop, revealed at sm by _responsive.scss.
+.burger { display: none; }
 
 .search {
   display: flex; align-items: center; gap: 8px;
