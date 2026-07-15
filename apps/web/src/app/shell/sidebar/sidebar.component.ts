@@ -24,7 +24,7 @@ const NAV_SIMPLE: NavGroup[] = [
       { id: 'dashboard', label: 'Mon patrimoine',  route: '/dashboard',      icon: 'dashboard', shortcut: 'D' },
       { id: 'transaction',        label: 'Mes opérations',  route: '/transactions',   icon: 'transaction',        shortcut: 'T' },
       { id: 'alloc',     label: 'Mon plan',        route: '/allocation',     icon: 'alloc',     shortcut: 'L' },
-      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
+      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'tips',      shortcut: 'I' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
     ],
   },
@@ -51,13 +51,13 @@ const NAV_EXPERT: NavGroup[] = [
   {
     label: 'Outils',
     items: [
-      { id: 'analyses',  label: 'Analyses',        route: '/tools/analyses', icon: 'perf' },
+      { id: 'analyses',  label: 'Analyses',        route: '/tools/analyses', icon: 'analyses' },
       { id: 'dca',       label: 'DCA helper',      route: '/tools/dca',      icon: 'dca' },
       { id: 'calendar',  label: 'Calendrier & revenus', route: '/tools/calendar', icon: 'calendar', shortcut: 'C' },
       { id: 'compare',   label: 'Comparateur',     route: '/tools/compare',  icon: 'compare',   shortcut: 'M' },
       { id: 'alerts',    label: 'Alertes',         route: '/tools/alerts',   icon: 'alert',     shortcut: 'A' },
       { id: 'glossary',  label: 'Glossaire',       route: '/tools/glossary', icon: 'glossary',  shortcut: 'R' },
-      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'glossary',  shortcut: 'I' },
+      { id: 'tips',      label: 'Conseils',        route: '/tools/tips',     icon: 'tips',      shortcut: 'I' },
       { id: 'report',    label: 'Bilan PDF',       route: '/tools/report',   icon: 'report' },
     ],
   },
@@ -73,9 +73,6 @@ const NAV_EXPERT: NavGroup[] = [
 })
 export class SidebarComponent {
   openShortcuts = output<void>();
-  // Rail chevron (visible in the md band only) asking the shell to open the
-  // sidebar as a full-width drawer overlay.
-  expandRequest = output<void>();
 
   private readonly auth   = inject(AuthService);
   private readonly router = inject(Router);

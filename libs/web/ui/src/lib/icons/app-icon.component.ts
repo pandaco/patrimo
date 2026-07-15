@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 export type AppIconName =
   | 'dashboard' | 'wealth' | 'portfolio' | 'transaction' | 'alloc' | 'perf'
   | 'dca' | 'calendar' | 'compare' | 'alert' | 'glossary' | 'settings'
-  | 'search' | 'plus' | 'bell' | 'chevron' | 'upload' | 'liability' | 'cashflow' | 'projection' | 'report';
+  | 'search' | 'plus' | 'bell' | 'chevron' | 'upload' | 'liability' | 'cashflow' | 'projection' | 'report' | 'tips' | 'analyses';
 
 const PATHS: Record<AppIconName, string> = {
   dashboard: 'M2 8 L8 3 L14 8 M3.5 7 V13.5 H6.5 V10 H9.5 V13.5 H12.5 V7',
@@ -27,6 +27,8 @@ const PATHS: Record<AppIconName, string> = {
   cashflow:  'M2.5 6 H9 M9 6 L6.5 3.5 M9 6 L6.5 8.5 M13.5 10 H7 M7 10 L9.5 7.5 M7 10 L9.5 12.5',
   projection: 'M2.5 12.5 L6 8.5 L9 10.5 L13.5 4 M2.5 12.5 H13.5 M9.5 12.5 V10.5 M6 12.5 V8.5',
   report:    'M4 2.5 H10 L12.5 5 V13.5 H4 Z M10 2.5 V5 H12.5 M6 8 H10.5 M6 10.5 H10.5',
+  tips:      'M8 2.5 A3.5 3.5 0 0 0 4.5 6 C4.5 8 6 9 6 10.5 H10 C10 9 11.5 8 11.5 6 A3.5 3.5 0 0 0 8 2.5 Z M7 12.5 H9 M7.5 14 H8.5',
+  analyses:  'M3 13.5 V7 H6 V13.5 Z M6.5 13.5 V3 H9.5 V13.5 Z M10 13.5 V9 H13 V13.5 Z',
 };
 
 @Component({
@@ -34,7 +36,7 @@ const PATHS: Record<AppIconName, string> = {
   standalone: true,
   template: `
     <svg
-      width="14" height="14"
+      width="1em" height="1em"
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"

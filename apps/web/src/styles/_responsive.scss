@@ -14,10 +14,32 @@
       padding: 16px 8px;
       gap: 14px;
       align-items: center;
+      overflow-x: hidden;
     }
-    .brand { justify-content: center; padding: 2px 0; }
-    .brand-name, .brand-sub { display: none; }
+    .brand { justify-content: center; padding: 2px 0; gap: 0; }
+    .brand-text { display: none; }
     .nav-label { display: none; }
+    .nav-item {
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      padding: 8px 4px !important;
+      gap: 0 !important;
+
+      .nav-item-label, .badge, .nav-kbd { display: none !important; }
+      .ico { 
+        width: 18px !important; 
+        height: 18px !important; 
+        opacity: 1 !important; 
+        justify-content: center; 
+        align-items: center; 
+      }
+    }
+    .user-trigger {
+      padding: 8px 0 !important;
+      justify-content: center !important;
+      span { display: none !important; }
+    }
     .nav-group { gap: 2px; width: 100%; }
     .sidebar-footer {
       flex-direction: column;
@@ -44,10 +66,19 @@
     background: rgba(0, 0, 0, 0.35);
     z-index: 55;
   }
-  .rail-expand { display: inline-flex; }
+
 
   // Primary action shrinks to its icon; the label lives on in aria-label/title.
-  .topbar .btn.primary .btn-label { display: none; }
+  .topbar .btn.primary {
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    justify-content: center;
+    line-height: 1;
+    font-size: 16px;
+    gap: 0;
+    .btn-label { display: none; }
+  }
 
   .grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
   .grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
@@ -68,7 +99,7 @@
 
   // The topbar burger takes over from the rail chevron as drawer trigger.
   .burger { display: inline-flex; }
-  .rail-expand { display: none; }
+
 
   .topbar { padding: 10px 14px; gap: 8px; }
   .crumb {

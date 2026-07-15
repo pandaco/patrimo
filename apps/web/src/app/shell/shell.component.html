@@ -3,7 +3,6 @@
 <div class="app" [class.drawer-open]="drawerOpen()">
   <app-sidebar id="app-sidebar"
                (openShortcuts)="onOpenShortcuts()"
-               (expandRequest)="toggleDrawer()"
                [cdkTrapFocus]="drawerOpen()"
                [cdkTrapFocusAutoCapture]="drawerOpen()" />
   <div class="main">

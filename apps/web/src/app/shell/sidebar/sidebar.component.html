@@ -1,18 +1,11 @@
 <aside class="sidebar" aria-label="Navigation principale">
-  <a href="#main" class="skip-link">Aller au contenu principal</a>
-
   <div class="brand">
     <div class="brand-mark" aria-hidden="true">P</div>
-    <div>
+    <div class="brand-text">
       <div class="brand-name">Patrimo</div>
       <div class="brand-sub">Tracker · v0.1</div>
     </div>
   </div>
-
-  <button class="rail-expand" type="button" (click)="expandRequest.emit()"
-          aria-label="Déployer la navigation">
-    <span aria-hidden="true">»</span>
-  </button>
 
   @for (group of navGroups(); track group.label) {
     <nav class="nav-group" [attr.aria-label]="group.label">

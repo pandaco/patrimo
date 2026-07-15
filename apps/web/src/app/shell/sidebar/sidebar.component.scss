@@ -56,20 +56,6 @@
     background: var(--paper);
     color: var(--ink-2);
   }
-
-  @media (max-width: 900px) {
-    :host-context(.app:not(.drawer-open)) & {
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 8px 4px;
-      gap: 0;
-
-      span:not(.ico):not(.badge) { display: none; }
-      .ico { width: 18px; height: 18px; opacity: 1; }
-      .badge { display: none; }
-    }
-  }
 }
 
 .user-trigger {
@@ -87,14 +73,6 @@
   
   &:hover {
     background: var(--surface-2);
-  }
-
-  @media (max-width: 900px) {
-    :host-context(.app:not(.drawer-open)) & {
-      padding: 8px 0;
-      justify-content: center;
-      span { display: none; }
-    }
   }
 }
 

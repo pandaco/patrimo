@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, input, output, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AlertService, EtfService } from '@patrimo/data-access';
 import { AppIconComponent, KeyboardShortcutService } from '@patrimo/ui';
 
@@ -19,7 +19,14 @@ export class TopbarComponent {
 
   private readonly etfService   = inject(EtfService);
   private readonly alertService = inject(AlertService);
-  private readonly keyboardShortcuts       = inject(KeyboardShortcutService);
+  private readonly keyboardShortcuts = inject(KeyboardShortcutService);
+  private readonly router = inject(Router);
+
+  protected navigateToAlerts(event: Event): void {
+    event.preventDefault();
+    this.notifOpen.set(false);
+    this.router.navigate(['/tools/alerts']);
+  }
 
   protected readonly refreshing  = signal(false);
   protected readonly notifOpen   = signal(false);

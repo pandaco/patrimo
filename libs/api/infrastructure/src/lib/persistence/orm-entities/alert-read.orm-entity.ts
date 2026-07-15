@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { UserOrmEntity } from './user.orm-entity';
 
 @Entity({ name: 'alert_read' })
+@Unique(['userId', 'alertHash'])
 export class AlertReadOrmEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

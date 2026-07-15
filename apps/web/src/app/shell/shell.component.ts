@@ -104,9 +104,9 @@ export class ShellComponent {
 
   // The sidebar is never destroyed (same node in rail and overlay modes), so
   // the focus trap has nothing to auto-restore — refocus whichever trigger
-  // (topbar burger / sidebar rail chevron) is visible at the current width.
+  // (topbar burger) is visible at the current width.
   private refocusDrawerTrigger(): void {
-    const triggers = document.querySelectorAll<HTMLElement>('.burger, .rail-expand');
+    const triggers = document.querySelectorAll<HTMLElement>('.burger');
     for (const trigger of Array.from(triggers)) {
       if (trigger.offsetParent !== null) {
         trigger.focus();

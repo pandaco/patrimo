@@ -28,7 +28,7 @@
       <span class="kbd" aria-hidden="true">⌘K</span>
     </button>
 
-    <button class="btn ghost" (click)="refresh()" [disabled]="refreshing()"
+    <button class="btn icon ghost" (click)="refresh()" [disabled]="refreshing()"
             aria-label="Rafraîchir les prix" title="Rafraîchir les prix (bypass cache)">
       <span aria-hidden="true"
             style="display:inline-flex;font-size:18px;line-height:1"
@@ -36,7 +36,7 @@
     </button>
 
     <div class="notif-wrap" [class.open]="notifOpen()">
-      <button class="btn ghost notif-btn"
+      <button class="btn icon ghost notif-btn"
               (click)="toggleNotif()"
               [attr.aria-expanded]="notifOpen()"
               [attr.aria-label]="unreadCount() > 0 ? (unreadCount() + ' notifications non lues') : 'Notifications'"
@@ -53,7 +53,7 @@
         <div class="notif-panel" role="dialog" aria-label="Notifications">
           <div class="notif-panel-head">
             <span class="notif-panel-title">Notifications</span>
-            <a routerLink="/tools/alerts" class="notif-panel-link" (click)="notifOpen.set(false)">
+            <a href="/tools/alerts" class="notif-panel-link" (click)="navigateToAlerts($event)">
               Tout voir
             </a>
           </div>
@@ -84,9 +84,7 @@
 
     <button class="btn primary" (click)="newTransaction.emit()" aria-keyshortcuts="n"
             aria-label="Nouvelle opération" title="Nouvelle opération — Raccourci : N">
-      <span aria-hidden="true" style="display:inline-flex">
-        <app-ico name="plus" />
-      </span>
+      <app-ico name="plus" aria-hidden="true" />
       <span class="btn-label">Nouvelle opération</span>
     </button>
   </div>

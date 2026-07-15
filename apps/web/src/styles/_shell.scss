@@ -65,24 +65,7 @@
   letter-spacing: 0;
 }
 
-// Rail chevron — hidden on desktop, revealed in the md band by _responsive.scss.
-// Kept global (not in sidebar.component.scss) so the responsive reveal never
-// loses a specificity fight against emulated-encapsulation attribute selectors.
-.rail-expand {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 28px;
-  border: 1px solid var(--rule);
-  border-radius: var(--r);
-  background: var(--surface);
-  color: var(--ink-3);
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  &:hover { background: var(--surface-2); color: var(--ink); }
-}
+// Rail chevron removed per user request
 
 .nav-group { display: flex; flex-direction: column; gap: 1px; }
 .nav-label {
@@ -135,6 +118,9 @@
   z-index: 10;
 }
 .crumb {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
   font-size: 12.5px;
   color: var(--ink-3);
   font-weight: 500;

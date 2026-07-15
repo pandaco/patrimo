@@ -30,6 +30,7 @@ import { WealthSnapshotOrmEntity } from './orm-entities/wealth-snapshot.orm-enti
 import { AddLiability1782259200000 } from './migrations/1782259200000-AddLiability';
 import { LiabilityOrmEntity } from './orm-entities/liability.orm-entity';
 import { DropEtfWatchOnly1783987200000 } from './migrations/1783987200000-DropEtfWatchOnly';
+import { AlertReadUnique1784141530365 } from './migrations/1784141530365-alert_read_unique';
 
 export const ORM_ENTITIES = [
   UserOrmEntity,
@@ -66,6 +67,7 @@ export const ORM_MIGRATIONS = [
   AddWealthSnapshot1782172800000,
   AddLiability1782259200000,
   DropEtfWatchOnly1783987200000,
+  AlertReadUnique1784141530365,
 ];
 
 export function buildDataSourceOptions(databaseUrl: string): DataSourceOptions {
