@@ -191,6 +191,22 @@
             <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Catégorie</td>
             @for (etf of candidates(); track etf.isin) { <td class="num small" style="padding: 16px 20px;">{{ etf.alloc }}</td> }
           </tr>
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Taille du fonds</td>
+            @for (etf of candidates(); track etf.isin) { 
+              <td class="num small" style="padding: 16px 20px;">
+                {{ candidatesMetadata()[etf.isin]?.size ? fmtNum(candidatesMetadata()[etf.isin]!.size!, 0) + ' M€' : '—' }}
+              </td> 
+            }
+          </tr>
+          <tr>
+            <td class="muted small" style="font-weight: 500; padding: 16px 20px;">Date de création</td>
+            @for (etf of candidates(); track etf.isin) { 
+              <td class="num small" style="padding: 16px 20px;">
+                {{ candidatesMetadata()[etf.isin]?.inception || '—' }}
+              </td> 
+            }
+          </tr>
           <tr style="background: rgba(0,0,0,0.015)">
             <td class="muted small" style="font-weight: 500; padding: 16px 20px;">
               <span data-tip="Impact cumulé du TER si tu investis 500 €/mois avec 7 %/an de rendement sur 5 ans.">Coût cumulé sur 5 ans</span>

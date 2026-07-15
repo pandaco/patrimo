@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { EtfDto } from '@patrimo/contracts';
+import { EtfDto, EtfMetadataDto } from '@patrimo/contracts';
 import { Etf, EtfService, TauxChangeService, PerformanceService, PreferencesService, ToastService } from '@patrimo/data-access';
 import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
 
@@ -88,12 +88,35 @@ export class CompareComponent {
     return this.etfService.all().filter(e => selected.has(e.isin));
   });
 
+  protected readonly candidatesMetadata = signal<Record<string, EtfMetadataDto>>({});
+
   protected readonly canAddMore = computed(() => this.selectedIsins().length < MAX_SELECTION);
 
   private readonly seeded = signal(false);
 
   constructor() {
     const STORAGE_KEY = 'compare:selected';
+
+    // Fetch dynamic metadata for selected candidates
+    effect(() => {
+      const isins = this.selectedIsins();
+      if (isins.length === 0) return;
+      
+      const current = untracked(this.candidatesMetadata);
+      const missing = isins.filter(i => !current[i]);
+      if (missing.length === 0) return;
+
+      Promise.all(missing.map(isin => this.etfService.metadata(isin).then(meta => ({ isin, meta })).catch(() => ({ isin, meta: null }))))
+        .then(results => {
+          this.candidatesMetadata.update(prev => {
+            const next = { ...prev };
+            for (const r of results) {
+              if (r.meta) next[r.isin] = r.meta;
+            }
+            return next;
+          });
+        });
+    });
 
     // Restore persisted selection before the catalog effect runs.
     const stored = localStorage.getItem(STORAGE_KEY);

@@ -64,7 +64,7 @@ export class JustEtfProvider {
     }
   }
 
-  async fetchMetadata(isin: string): Promise<{ ter: number | null; repli: string | null; distrib: string | null; issuer: string | null }> {
+  async fetchMetadata(isin: string): Promise<{ ter: number | null; repli: string | null; distrib: string | null; issuer: string | null; size: number | null; inception: string | null }> {
     try {
       const html = await this.fetchUrl(`https://www.justetf.com/en/etf-profile.html?isin=${isin}`);
       const $ = cheerio.load(html);
@@ -83,16 +83,28 @@ export class JustEtfProvider {
       if (distribRaw.includes('distributing')) distrib = 'Distribuant';
 
       const issuer = $('[data-testid="tl_etf-basics_value_fund-provider"]').text().trim() || null;
+      
+      const inception = $('[data-testid="tl_etf-basics_value_launch-date"]').text().trim() || null;
+      
+      const sizeText = $('[data-testid="etf-basics_row_fund-size"]').text().trim().replace(/\s+/g, ' ');
+      // SizeText looks like "Fund size EUR 351 m"
+      let size: number | null = null;
+      const sizeMatch = sizeText.match(/([\d,\.]+)\s*m/);
+      if (sizeMatch) {
+        size = parseFloat(sizeMatch[1].replace(',', ''));
+      }
 
       return {
         ter: ter > 0 ? ter : null,
         repli,
         distrib,
         issuer,
+        size,
+        inception
       };
     } catch (err) {
       this.logger.error(`Failed to fetch JustETF metadata for ${isin}`, err);
-      return { ter: null, repli: null, distrib: null, issuer: null };
+      return { ter: null, repli: null, distrib: null, issuer: null, size: null, inception: null };
     }
   }
 

@@ -64,4 +64,6 @@ export interface EtfMetadataDto {
   repli: string | null;
   distrib: string | null;
   issuer: string | null;
+  size: number | null;
+  inception: string | null;
 }
