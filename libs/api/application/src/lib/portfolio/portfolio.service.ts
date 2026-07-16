@@ -212,8 +212,8 @@ export class PortfolioService {
     }
 
     const asset = meta?.assetProfile;
-    if (asset?.sector) sector[asset.sector] = 1;
-    if (asset?.country) geography[asset.country] = 1;
+    if (asset?.sector && Object.keys(sector).length === 0) sector[asset.sector] = 1;
+    if (asset?.country && Object.keys(geography).length === 0) geography[asset.country] = 1;
 
     return { geography, sector, currency };
   }

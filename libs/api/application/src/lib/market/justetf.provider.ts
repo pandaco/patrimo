@@ -31,8 +31,8 @@ export class JustEtfProvider {
 
       // Fallback for synthetic ETFs tracking major indices that hide their exposure
       if (Object.keys(geography).length === 0) {
-        if (isin === 'LU1681043599' || isin === 'FR0010315770' || isin === 'FR0011550185') {
-          // MSCI World (CW8) or S&P 500 (ESE, PE500)
+        if (isin === 'LU1681043599' || isin === 'FR0010315770' || isin === 'FR0011550185' || isin === 'FR001400U5Q4') {
+          // MSCI World (CW8/DCAM) or S&P 500 (ESE, PE500)
           geography['United States'] = 0.70;
           if (isin !== 'FR0010315770' && isin !== 'FR0011550185') {
             geography['Japan'] = 0.06;
@@ -41,15 +41,15 @@ export class JustEtfProvider {
           } else {
             geography['United States'] = 1.0;
           }
-        } else if (isin === 'LU1681045370') {
+        } else if (isin === 'LU1681045370' || isin === 'FR0013412020') {
           // MSCI Emerging Markets (PAEEM)
           geography['China'] = 0.25;
           geography['India'] = 0.16;
           geography['Taiwan'] = 0.16;
           geography['South Korea'] = 0.12;
           geography['Brazil'] = 0.05;
-        } else if (isin === 'LU1861134382') {
-          // STOXX Europe 600 (ETZ)
+        } else if (isin === 'LU1861134382' || isin === 'FR0013412038') {
+          // STOXX Europe 600 (ETZ) / MSCI Europe (PCEU)
           geography['United Kingdom'] = 0.22;
           geography['France'] = 0.17;
           geography['Switzerland'] = 0.15;
