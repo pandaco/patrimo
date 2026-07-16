@@ -45,8 +45,7 @@ export class TypeOrmDcaPlanRepository implements DcaPlanRepository {
 
   async findActiveDueForExecution(beforeOrEqual: Date): Promise<DcaPlan[]> {
     const rows = await this.repo.find({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      where: { active: true, nextExecution: LessThanOrEqual(beforeOrEqual.toISOString().slice(0, 10) as any) },
+      where: { active: true, nextExecution: LessThanOrEqual(beforeOrEqual.toISOString().slice(0, 10) as unknown as Date) },
     });
     return rows.map(toDomain);
   }
@@ -64,8 +63,7 @@ export class TypeOrmDcaPlanRepository implements DcaPlanRepository {
   ): Promise<DcaPlan | null> {
     const existing = await this.repo.findOne({ where: { id, userId } });
     if (!existing) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updatePayload: any = { ...patch };
+    const updatePayload: Partial<DcaPlanOrmEntity> = { ...patch } as Partial<DcaPlanOrmEntity>;
     if (patch.dayOfMonth !== undefined && patch.nextExecution === undefined) {
       updatePayload.nextExecution = computeNextExecution(patch.dayOfMonth);
     }

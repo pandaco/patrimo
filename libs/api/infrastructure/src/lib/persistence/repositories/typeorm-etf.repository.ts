@@ -47,15 +47,13 @@ export class TypeOrmEtfRepository implements EtfRepository {
   }
 
   async updateExposure(isin: string, exposure: Etf['exposure']): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await this.repo.update({ isin }, { exposure: exposure as any });
+    await this.repo.update({ isin }, { exposure: exposure as unknown as EtfOrmEntity['exposure'] });
   }
 
   async clearAllExposures(): Promise<void> {
     await this.repo.createQueryBuilder()
       .update()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .set({ exposure: null as any })
+      .set({ exposure: null as unknown as EtfOrmEntity['exposure'] })
       .execute();
   }
 

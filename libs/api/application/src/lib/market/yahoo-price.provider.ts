@@ -42,8 +42,7 @@ export class YahooPriceProvider {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async fetchMetadata(symbol: string): Promise<any> {
+  async fetchMetadata(symbol: string): Promise<Record<string, unknown> | null> {
     try {
       const response = await yahooFinance.quoteSummary(symbol, {
         modules: ['assetProfile', 'fundProfile', 'summaryDetail', 'calendarEvents', 'topHoldings'],
@@ -63,12 +62,14 @@ export class YahooPriceProvider {
    */
   async fetchSearchDetail(symbol: string): Promise<{ currency: string | null; price: number | null; ter: number | null }> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const summary: any = await yahooFinance.quoteSummary(symbol, { modules: ['price', 'fundProfile'] });
-      const ratio = pickNumber(summary?.fundProfile?.feesExpensesInvestment, 'annualReportExpenseRatio');
+      const summary = await yahooFinance.quoteSummary(symbol, { modules: ['price', 'fundProfile'] }) as Record<string, unknown>;
+      const fundProfile = summary?.['fundProfile'] as Record<string, unknown> | undefined;
+      const feesExpensesInvestment = fundProfile?.['feesExpensesInvestment'] as Record<string, unknown> | undefined;
+      const ratio = pickNumber(feesExpensesInvestment, 'annualReportExpenseRatio');
+      const price = summary?.['price'] as Record<string, unknown> | undefined;
       return {
-        currency: typeof summary?.price?.currency === 'string' ? summary.price.currency : null,
-        price:    pickNumber(summary?.price, 'regularMarketPrice'),
+        currency: typeof price?.['currency'] === 'string' ? price['currency'] : null,
+        price:    pickNumber(price, 'regularMarketPrice'),
         ter:      ratio !== null ? Number((ratio * 100).toFixed(2)) : null,
       };
     } catch {

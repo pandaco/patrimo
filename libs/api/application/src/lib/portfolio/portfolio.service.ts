@@ -186,34 +186,36 @@ export class PortfolioService {
       .sort((a, b) => b.pct - a.pct);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private parseYahooExposure(meta: any) {
+  private parseYahooExposure(meta: Record<string, unknown> | null) {
     const geography: Record<string, number> = {};
     const sector: Record<string, number> = {};
     const currency: Record<string, number> = {};
 
-    const fund = meta?.fundProfile;
-    const topHoldings = meta?.topHoldings;
+    const fund = meta?.['fundProfile'] as Record<string, unknown> | undefined;
+    const topHoldings = meta?.['topHoldings'] as Record<string, unknown> | undefined;
     
     // Some funds return regionHoldings under fundProfile. We can try that.
-    if (fund?.regionHoldings) {
-      for (const r of fund.regionHoldings) {
-        if (r.region && r.relativeWeight) geography[r.region] = r.relativeWeight;
+    const regionHoldings = fund?.['regionHoldings'] as Array<Record<string, unknown>> | undefined;
+    if (regionHoldings) {
+      for (const r of regionHoldings) {
+        if (typeof r['region'] === 'string' && typeof r['relativeWeight'] === 'number') {
+          geography[r['region']] = r['relativeWeight'];
+        }
       }
     }
 
     // sectorWeightings is often found in topHoldings.
-    const sectors = topHoldings?.sectorWeightings || fund?.sectorWeightings;
+    const sectors = (topHoldings?.['sectorWeightings'] || fund?.['sectorWeightings']) as Array<Record<string, number>> | undefined;
     if (sectors) {
       for (const s of sectors) {
         const key = Object.keys(s)[0];
-        if (key && s[key]) sector[key] = s[key];
+        if (key && typeof s[key] === 'number') sector[key] = s[key];
       }
     }
 
-    const asset = meta?.assetProfile;
-    if (asset?.sector && Object.keys(sector).length === 0) sector[asset.sector] = 1;
-    if (asset?.country && Object.keys(geography).length === 0) geography[asset.country] = 1;
+    const asset = meta?.['assetProfile'] as Record<string, unknown> | undefined;
+    if (typeof asset?.['sector'] === 'string' && Object.keys(sector).length === 0) sector[asset['sector']] = 1;
+    if (typeof asset?.['country'] === 'string' && Object.keys(geography).length === 0) geography[asset['country']] = 1;
 
     return { geography, sector, currency };
   }
@@ -336,9 +338,8 @@ export class PortfolioService {
       let annualRate = 0;
       try {
         const meta = await this.priceService.getMetadata(p.etfIsin, p.ticker);
-        annualRate = meta?.summaryDetail?.dividendRate
-          ?? meta?.summaryDetail?.trailingAnnualDividendRate
-          ?? 0;
+        const summary = meta?.['summaryDetail'] as Record<string, unknown> | undefined;
+        annualRate = (summary?.['dividendRate'] ?? summary?.['trailingAnnualDividendRate'] ?? 0) as number;
       } catch { /* unknown rate → treat as non-distributing */ }
 
       const forwardAnnualIncome = Number((p.qty * annualRate).toFixed(2));
@@ -386,24 +387,24 @@ export class PortfolioService {
       const meta = await this.priceService.getMetadata(etf.isin, etf.ticker);
       if (!meta) continue;
 
-      const calendar = meta.calendarEvents;
-      const summary = meta.summaryDetail;
+      const calendar = meta['calendarEvents'] as Record<string, unknown> | undefined;
+      const summary = meta['summaryDetail'] as Record<string, unknown> | undefined;
 
-      if (calendar?.dividendExDate) {
+      if (calendar?.['dividendExDate']) {
         dividends.push({
-          date: new Date(calendar.dividendExDate).toISOString().slice(0, 10),
+          date: new Date(calendar['dividendExDate'] as string | number).toISOString().slice(0, 10),
           ticker: etf.ticker,
           name: etf.name,
-          amount: calendar.dividendAmount ?? summary?.dividendRate ?? 0,
+          amount: (calendar['dividendAmount'] ?? summary?.['dividendRate'] ?? 0) as number,
           currency: etf.currency,
           status: 'CONFIRMED',
         });
-      } else if (summary?.exDividendDate) {
+      } else if (summary?.['exDividendDate']) {
         dividends.push({
-          date: new Date(summary.exDividendDate * 1000).toISOString().slice(0, 10),
+          date: new Date((summary['exDividendDate'] as number) * 1000).toISOString().slice(0, 10),
           ticker: etf.ticker,
           name: etf.name,
-          amount: summary.dividendRate ?? 0,
+          amount: (summary['dividendRate'] ?? 0) as number,
           currency: etf.currency,
           status: 'ESTIMATED',
         });

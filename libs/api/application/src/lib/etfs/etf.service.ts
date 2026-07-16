@@ -50,7 +50,8 @@ export class EtfService {
     if (trimmed.length !== 12) {
       throw new BadRequestException('invalid ISIN');
     }
-    return this.prices.getEtfMetadata(trimmed);
+    const meta = await this.prices.getEtfMetadata(trimmed);
+    return meta as unknown as EtfMetadataDto;
   }
 
   /**

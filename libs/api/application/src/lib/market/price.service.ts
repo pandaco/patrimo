@@ -44,12 +44,10 @@ export class PriceService {
     return this.refresh(toYahooSymbol(isin, ticker));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async getMetadata(isin: string, ticker: string): Promise<any> {
+  async getMetadata(isin: string, ticker: string): Promise<Record<string, unknown> | null> {
     const symbol = toYahooSymbol(isin, ticker);
     const key = `meta:v2:${symbol}`;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hit = await this.cache.get<any>(key);
+    const hit = await this.cache.get<Record<string, unknown>>(key);
     if (hit) return hit;
 
     const fresh = await this.provider.fetchMetadata(symbol);
@@ -68,9 +66,9 @@ export class PriceService {
     return fresh;
   }
 
-  async getEtfMetadata(isin: string) {
+  async getEtfMetadata(isin: string): Promise<Record<string, unknown> | null> {
     const key = `justetf-meta:${isin}`;
-    const cached = await this.cache.get<any>(key);
+    const cached = await this.cache.get<Record<string, unknown>>(key);
     if (cached) return cached;
 
     const fresh = await this.justEtf.fetchMetadata(isin);
