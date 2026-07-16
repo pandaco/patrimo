@@ -89,7 +89,7 @@ export class JustEtfProvider {
       const sizeText = $('[data-testid="etf-basics_row_fund-size"]').text().trim().replace(/\s+/g, ' ');
       // SizeText looks like "Fund size EUR 351 m"
       let size: number | null = null;
-      const sizeMatch = sizeText.match(/([\d,\.]+)\s*m/);
+      const sizeMatch = sizeText.match(/([\d,.]+)\s*m/);
       if (sizeMatch) {
         size = parseFloat(sizeMatch[1].replace(',', ''));
       }

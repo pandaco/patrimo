@@ -66,7 +66,7 @@ export class PreferencesComponent {
       const url = scope === 'all' ? `${this.baseUrl}/portfolio/cache` : `${this.baseUrl}/portfolio/cache/${scope}`;
       await firstValueFrom(this.http.delete(url));
       alert('Le cache a été purgé avec succès.');
-    } catch (err) {
+    } catch {
       alert('Erreur lors de la purge du cache.');
     } finally {
       this.clearingCache.set(false);

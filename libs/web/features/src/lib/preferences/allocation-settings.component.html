@@ -57,8 +57,8 @@
                  [ngModel]="stocksPct()" (ngModelChange)="stocksPct.set($event)" />
         </div>
         <div class="field">
-          <label>Obligations (%)</label>
-          <input type="number" class="num-input sm" style="width:80px"
+          <label for="as-bonds-strat">Obligations (%)</label>
+          <input id="as-bonds-strat" type="number" class="num-input sm" style="width:80px"
                  [ngModel]="bondsStratPct()" (ngModelChange)="bondsStratPct.set($event)" />
         </div>
       </div>
@@ -94,13 +94,13 @@
                  [ngModel]="corePct()" (ngModelChange)="corePct.set($event)" />
         </div>
         <div class="field">
-          <label>Satellite (%)</label>
-          <input type="number" class="num-input sm" style="width:80px"
+          <label for="as-satellite">Satellite (%)</label>
+          <input id="as-satellite" type="number" class="num-input sm" style="width:80px"
                  [ngModel]="satellitePct()" (ngModelChange)="satellitePct.set($event)" />
         </div>
         <div class="field">
-          <label>Obligations (%)</label>
-          <input type="number" class="num-input sm" style="width:80px"
+          <label for="as-bonds-tactic">Obligations (%)</label>
+          <input id="as-bonds-tactic" type="number" class="num-input sm" style="width:80px"
                  [ngModel]="bondsTacticPct()" (ngModelChange)="bondsTacticPct.set($event)" />
         </div>
       </div>
