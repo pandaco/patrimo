@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService } from '@patrimo/data-access';
 import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
 import { computeEtfOverlaps } from './overlap';
@@ -11,7 +12,7 @@ type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective],
+  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, PerfChartComponent],
   templateUrl: './portfolio.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -24,6 +25,11 @@ export class PortfolioComponent {
 
   protected readonly allocFilter = signal<AllocFilter>('Toutes');
   protected readonly allocTabs: AllocFilter[] = ['Toutes', 'Core', 'Satellite', 'Obligations'];
+  protected readonly expandedIsin = signal<string | null>(null);
+
+  protected toggleRow(isin: string): void {
+    this.expandedIsin.update(current => current === isin ? null : isin);
+  }
 
   // Held positions only — catalog entries browsed in the comparateur have
   // no place in the portfolio table or its totals.

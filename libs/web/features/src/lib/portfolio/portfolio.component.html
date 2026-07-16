@@ -176,12 +176,15 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           }
         }
         @for (etf of filtered(); track etf.isin) {
-          <tr>
+          <tr (click)="toggleRow(etf.isin)" [style.background]="expandedIsin() === etf.isin ? 'var(--paper-2)' : ''" style="cursor:pointer; transition: background 0.15s">
             <td>
               <div>
-                <div class="row gap-12">
+                <div class="row gap-12" style="align-items: center;">
                   <span class="pill solid" style="min-width:48px;justify-content:center">{{ etf.ticker }}</span>
                   <span class="serif-italic" style="font-size:15px">{{ etf.name }}</span>
+                  <span class="muted" style="margin-left:auto; font-size:10px; transform: scaleY(0.8)">
+                    {{ expandedIsin() === etf.isin ? '▲' : '▼' }}
+                  </span>
                 </div>
                 <div class="muted tiny" style="margin-top:3px">
                   <span data-tip="International Securities Identification Number — code unique à 12 caractères qui identifie ce titre boursier dans le monde entier.">{{ etf.isin }}</span>
@@ -229,6 +232,59 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
               </div>
             </td>
           </tr>
+          @if (expandedIsin() === etf.isin) {
+            <tr style="background: var(--paper-2); border-top: 1px solid var(--rule-soft);">
+              <td colspan="11" style="padding: 24px; box-shadow: inset 0 3px 6px rgba(0,0,0,0.02)">
+                <div class="row gap-24" style="align-items: flex-start">
+                  <div style="flex: 1; min-width: 0;">
+                    <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Évolution du cours (1A)</h4>
+                    <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px;">
+                      @if (sparks()[etf.ticker] && sparks()[etf.ticker].length > 0) {
+                        <app-perf-chart [portfolio]="sparks()[etf.ticker]" [benchmark]="[]" />
+                      } @else {
+                        <div class="muted small" style="text-align: center; padding: 40px 0;">Données de cours non disponibles</div>
+                      }
+                    </div>
+                  </div>
+                  <div style="width: 320px; flex-shrink: 0;">
+                    <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Détails de l'instrument</h4>
+                    <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; font-size: 13px;">
+                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <span class="muted">ISIN</span>
+                        <span style="font-family:var(--font-mono)">{{ etf.isin }}</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <span class="muted">Émetteur</span>
+                        <span>{{ etf.issuer }}</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <span class="muted">Frais (TER)</span>
+                        <span>{{ fmtNum(etf.ter, 2) }} %</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <span class="muted">Distribution</span>
+                        <span>{{ etf.distrib || 'Capitalisant' }}</span>
+                      </div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                        <span class="muted">Réplication</span>
+                        <span>{{ etf.repli || 'Physique' }}</span>
+                      </div>
+                      <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--rule-soft)">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                          <span class="muted">Valeur de marché</span>
+                          <span style="font-weight:600">{{ fmtNum(rowValue(etf), 2) }} €</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                          <span class="muted">Coût d'achat (PRU)</span>
+                          <span>{{ fmtNum(rowCost(etf), 2) }} €</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>
