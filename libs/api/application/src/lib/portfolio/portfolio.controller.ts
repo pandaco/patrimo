@@ -1,4 +1,4 @@
-import { Controller, Get, Header, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Header, HttpCode, HttpStatus, Post, UseGuards, Delete, Param } from '@nestjs/common';
 import { PositionDto, PortfolioExposureDto, RebalancePlanDto, DividendDto, IncomeForecastDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
@@ -56,5 +56,17 @@ export class PortfolioController {
   @Header('Content-Disposition', 'attachment; filename="positions.csv"')
   exportCsv(@SessionUser() user: AuthUser): Promise<string> {
     return this.portfolio.exportCsv(user.id);
+  }
+
+  @Delete('cache')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  clearAllCache(): Promise<void> {
+    return this.portfolio.clearCache('all');
+  }
+
+  @Delete('cache/:scope')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  clearCacheScope(@Param('scope') scope: string): Promise<void> {
+    return this.portfolio.clearCache(scope);
   }
 }

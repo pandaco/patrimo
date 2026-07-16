@@ -51,6 +51,14 @@ export class TypeOrmEtfRepository implements EtfRepository {
     await this.repo.update({ isin }, { exposure: exposure as any });
   }
 
+  async clearAllExposures(): Promise<void> {
+    await this.repo.createQueryBuilder()
+      .update()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .set({ exposure: null as any })
+      .execute();
+  }
+
   async deleteByIsin(isin: string): Promise<void> {
     await this.repo.delete({ isin });
   }

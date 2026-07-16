@@ -124,4 +124,17 @@ export class PriceService {
     await this.cache.setQuote(symbol, fresh);
     return fresh;
   }
+
+  async clearCache(scope?: string): Promise<void> {
+    if (!scope || scope === 'all') {
+      await this.cache.clearAll();
+    } else if (scope === 'market') {
+      await this.cache.clearPrefix('price:');
+      await this.cache.clearPrefix('history:');
+      await this.cache.clearPrefix('meta:');
+    } else if (scope === 'exposure') {
+      await this.cache.clearPrefix('justetf:');
+      await this.cache.clearPrefix('justetf-meta:');
+    }
+  }
 }

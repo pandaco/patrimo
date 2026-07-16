@@ -39,6 +39,10 @@ const ACTIVITY_DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
 
 interface ActivityRow { id: string; label: string; when: string }
 
+import { API_BASE_URL } from '@patrimo/data-access';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+
 @Component({
   selector: 'app-preferences',
   standalone: true,
@@ -50,6 +54,24 @@ export class PreferencesComponent {
   private readonly preferences  = inject(PreferencesService);
   private readonly auditLog = inject(AuditLogService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL);
+
+  protected readonly clearingCache = signal(false);
+
+  protected async clearCache(scope: 'market' | 'exposure' | 'all'): Promise<void> {
+    if (this.clearingCache()) return;
+    this.clearingCache.set(true);
+    try {
+      const url = scope === 'all' ? `${this.baseUrl}/portfolio/cache` : `${this.baseUrl}/portfolio/cache/${scope}`;
+      await firstValueFrom(this.http.delete(url));
+      alert('Le cache a été purgé avec succès.');
+    } catch (err) {
+      alert('Erreur lors de la purge du cache.');
+    } finally {
+      this.clearingCache.set(false);
+    }
+  }
 
   protected readonly riskProfiles = RISK_PROFILES;
   protected readonly currencies   = CURRENCIES;

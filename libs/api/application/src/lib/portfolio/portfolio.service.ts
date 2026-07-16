@@ -412,4 +412,11 @@ export class PortfolioService {
 
     return dividends.sort((a, b) => a.date.localeCompare(b.date));
   }
+
+  async clearCache(scope?: string): Promise<void> {
+    await this.priceService.clearCache(scope);
+    if (!scope || scope === 'all' || scope === 'exposure') {
+      await this.etfRepository.clearAllExposures();
+    }
+  }
 }

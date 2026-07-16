@@ -124,6 +124,33 @@ export class PriceCacheService implements OnApplicationShutdown {
     } catch { /* ignore */ }
   }
 
+  async clearPrefix(prefix: string): Promise<void> {
+    for (const key of this.localCache.keys()) {
+      if (key.startsWith(prefix)) this.localCache.delete(key);
+    }
+    if (this.redis.status !== 'ready') return;
+    try {
+      const keys = await this.redis.keys(prefix + '*');
+      if (keys.length > 0) await this.redis.del(...keys);
+    } catch (err) {
+      this.logger.warn(`Redis keys/del failed for prefix ${prefix}: ${(err as Error).message}`);
+    }
+  }
+
+  async clearAll(): Promise<void> {
+    this.localCache.clear();
+    if (this.redis.status !== 'ready') return;
+    try {
+      await this.clearPrefix('price:');
+      await this.clearPrefix('history:');
+      await this.clearPrefix('meta:');
+      await this.clearPrefix('justetf:');
+      await this.clearPrefix('justetf-meta:');
+    } catch (err) {
+      this.logger.warn(`Redis clearAll failed: ${(err as Error).message}`);
+    }
+  }
+
   async onApplicationShutdown(): Promise<void> {
     await this.redis.quit().catch(() => undefined);
   }

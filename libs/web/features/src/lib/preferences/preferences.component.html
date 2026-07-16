@@ -132,4 +132,42 @@
     }
   </div>
 
+  <!-- Maintenance (Cache) -->
+  <div class="card" style="max-width:720px;padding:24px;margin-top:28px;margin-bottom:28px;">
+    <div class="card-head">
+      <div class="card-title">Maintenance <em>système</em></div>
+      <span class="card-sub">purger les données temporaires de l'application</span>
+    </div>
+
+    <div class="row" style="align-items:flex-start;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--rule-soft)">
+      <div style="flex:1;padding-right:24px">
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px">📉 Rafraîchir les cours boursiers (Market Data)</div>
+        <p class="muted small" style="margin:0;line-height:1.4">
+          Supprime les historiques de prix et les cotations en cache. Le prochain affichage de votre portefeuille sera légèrement plus lent car il devra retélécharger les données depuis Yahoo Finance. (Ne touche pas à la répartition géographique).
+        </p>
+      </div>
+      <button type="button" class="btn sm ghost" (click)="clearCache('market')" [disabled]="clearingCache()">Purger</button>
+    </div>
+
+    <div class="row" style="align-items:flex-start;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--rule-soft)">
+      <div style="flex:1;padding-right:24px">
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px">🌍 Rafraîchir l'exposition géographique (Compositions)</div>
+        <p class="muted small" style="margin:0;line-height:1.4">
+          Force l'application à scraper à nouveau la composition interne de vos ETF. Utile si votre répartition géographique vous semble erronée (ex: 100% États-Unis).
+        </p>
+      </div>
+      <button type="button" class="btn sm ghost" (click)="clearCache('exposure')" [disabled]="clearingCache()">Purger</button>
+    </div>
+
+    <div class="row" style="align-items:flex-start;justify-content:space-between;padding:16px 0">
+      <div style="flex:1;padding-right:24px">
+        <div style="font-size:14px;font-weight:500;color:var(--loss);margin-bottom:4px">🧨 Purge complète du système</div>
+        <p class="muted small" style="margin:0;line-height:1.4">
+          Remet à zéro absolument toutes les données temporaires. L'application sera ralentie pendant une dizaine de secondes lors du prochain chargement pour tout reconstruire, mais cela garantit un état 100% frais.
+        </p>
+      </div>
+      <button type="button" class="btn sm ghost" style="color:var(--loss);border-color:var(--loss-soft)" (click)="clearCache('all')" [disabled]="clearingCache()">Tout purger</button>
+    </div>
+  </div>
+
 </div>
