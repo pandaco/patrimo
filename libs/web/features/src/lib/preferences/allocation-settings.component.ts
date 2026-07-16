@@ -80,7 +80,7 @@ export class AllocationSettingsComponent {
 
   /** Suggested tactic from the current strategic split: Core = 80% of equities. */
   protected readonly suggestedTactic = computed(() => {
-    const stocks = this.stocksPct();
+    const stocks = this.stocksPct() ?? 0;
     const core = Math.round(stocks * 0.8);
     return { core, satellite: stocks - core, bonds: this.bondsStratPct() };
   });

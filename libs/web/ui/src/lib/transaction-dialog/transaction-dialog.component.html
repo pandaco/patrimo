@@ -141,10 +141,10 @@
         <div style="font-size:14px;margin-bottom:8px">
           {{ type() === 'BUY' ? 'Achat' : 'Vente' }} de
           <b>{{ qty() }} × {{ selectedEtf()?.ticker || '—' }}</b> à
-          <b>{{ fmtEur(price(), 2) }}</b> =
+          <b>{{ fmtEur(price() ?? 0, 2) }}</b> =
           <b>{{ fmtEur(txAmount(), 2) }}</b>
           @if (type() === 'BUY') {
-            + frais {{ fmtEur(fees(), 2) }}@if (taxes() > 0) { + taxes {{ fmtEur(taxes(), 2) }} } = <b>{{ fmtEur(total(), 2) }}</b>
+            + frais {{ fmtEur(fees() ?? 0, 2) }}@if ((taxes() ?? 0) > 0) { + taxes {{ fmtEur(taxes() ?? 0, 2) }} } = <b>{{ fmtEur(total(), 2) }}</b>
           }
         </div>
         <div class="recap-line">
@@ -169,7 +169,7 @@
       } @else {
         <div class="recap-line">
           <span>{{ type() === 'DEPOSIT' ? 'Dépôt' : 'Mouvement' }} sur {{ selectedEnv()?.label || '' }}</span>
-          <b>{{ fmtEur(amount(), 2) }}</b>
+          <b>{{ fmtEur(amount() ?? 0, 2) }}</b>
         </div>
       }
     </div>

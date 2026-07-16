@@ -6,7 +6,7 @@ import { AppIconComponent, KeyboardShortcutService } from '@patrimo/ui';
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [AppIconComponent, RouterLink],
+  imports: [AppIconComponent],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
