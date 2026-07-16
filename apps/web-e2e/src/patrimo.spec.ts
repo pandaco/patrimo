@@ -211,4 +211,62 @@ test.describe('Patrimo E2E Tests', () => {
     // Eyebrow count must increment by exactly one
     await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} opération`);
   });
+
+  test('should expand a portfolio row to show details and chart', async ({ page }) => {
+    await page.route('**/api/portfolio', route => route.fulfill({ json: [
+      {
+        etfIsin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
+        qty: 10, avgPrice: 80, invested: 800, currentPrice: 85, prevClose: 84,
+      }
+    ] }));
+    await page.route('**/api/etfs/IE00B4L5Y983/sparks', route => route.fulfill({ json: [80, 82, 85] }));
+
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    await page.goto('/portfolio');
+    await page.waitForURL(/\/portfolio(\?|#|$)/);
+
+    // Verify row is present
+    const row = page.locator('[data-testid="positions-table"] tbody tr').first();
+    await expect(row).toBeVisible();
+
+    // Click the row to expand details
+    await row.click();
+
+    // The detail panel should become visible
+    const detailPanel = page.locator('.position-detail-content');
+    await expect(detailPanel).toBeVisible();
+    await expect(detailPanel).toContainText('TER');
+    await expect(detailPanel).toContainText('ISIN');
+  });
+
+  test('should successfully trigger a cache clear from the preferences page', async ({ page }) => {
+    // Intercept the DELETE request to return 204 No Content
+    let cacheCleared = false;
+    await page.route('**/api/portfolio/cache/market', route => {
+      cacheCleared = true;
+      route.fulfill({ status: 204 });
+    });
+
+    await page.goto(DEV_LOGIN_URL);
+    await page.waitForURL(/\/dashboard(\?|#|$)/);
+
+    await page.goto('/preferences');
+    await page.waitForURL(/\/preferences(\?|#|$)/);
+
+    // Click the market data cache clear button
+    // It is in the Maintenance section, let's target by text
+    const btn = page.locator('button', { hasText: 'Purger' }).first();
+    await expect(btn).toBeVisible();
+
+    // Mock window.alert to automatically accept and verify its text
+    page.on('dialog', dialog => {
+      expect(dialog.message()).toContain('succès');
+      dialog.accept();
+    });
+
+    await btn.click();
+    expect(cacheCleared).toBe(true);
+  });
 });

@@ -9,6 +9,7 @@
     "build": "nx run-many -t build -p web api",
     "test": "nx run-many -t test",
     "test:affected": "nx affected -t test",
+    "test:e2e": "nx e2e web-e2e",
     "test:integration": "nx run infrastructure:integration",
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint --fix",
