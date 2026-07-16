@@ -10,6 +10,7 @@
     "test": "nx run-many -t test",
     "test:affected": "nx affected -t test",
     "test:e2e": "nx e2e web-e2e",
+    "test:e2e:fast": "nx e2e web-e2e --project=chromium",
     "test:integration": "nx run infrastructure:integration",
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint --fix",

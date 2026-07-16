@@ -52,7 +52,8 @@ Tests une seule fois par défaut (mode CI). Les runners sont séparés par couch
 | `npm test` | tous les tests (web + api + libs) |
 | `npm run test:affected` | teste seulement les projets impactés par ta diff vs main (idéal CI) |
 | `npm run test:integration` | repos TypeORM contre un vrai Postgres (nécessite `docker:up` ; base dédiée `patrimo_integration`, la base dev n'est jamais touchée) |
-| `npm run test:e2e` | E2E Playwright en mode headless (chromium ; nécessite `ALLOW_DEV_LOGIN=true` dans `.env`, démarre web + api tout seul) |
+| `npm run test:e2e` | Lancer les tests E2E sur tous les navigateurs (nécessite `ALLOW_DEV_LOGIN=true` dans `.env`) |
+| `npm run test:e2e:fast` | Lancer les tests E2E uniquement sur Chromium (plus rapide) |
 | `npx nx e2e web-e2e --ui` | Ouvre l'interface de Playwright pour visualiser le navigateur en direct et déboguer les tests E2E |
 | `npx nx test web` | un seul projet |
 | `npx nx test web --testFile=path/to/file.spec.ts` | un seul fichier |
