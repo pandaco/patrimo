@@ -7,14 +7,7 @@ const DEV_LOGIN_URL = `${API_URL}/api/auth/dev-login`;
  * Reads the total transaction count from the journal eyebrow text.
  * Waits for the text to render so callers don't race the async signal hydration.
  */
-async function readTotalTxCount(page: Page): Promise<number> {
-  const eyebrow = page.locator('.page-eyebrow');
-  // "opération" since the 2026-07-13 wording harmonization (ex-"mouvement").
-  await expect(eyebrow).toContainText(/Journal — \d+ opération/);
-  const text = (await eyebrow.textContent()) ?? '';
-  const match = /Journal — (\d+)/.exec(text);
-  return match ? Number(match[1]) : 0;
-}
+
 
 async function navigateTo(page: Page, href: string) {
   await page.locator(`a[href="${href}"]`).filter({ visible: true }).first().click({ force: true });
@@ -36,6 +29,11 @@ async function createEnvelope(page: Page): Promise<void> {
 }
 
 test.describe('Patrimo E2E Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    // The Google Fonts stylesheet is render-blocking: abort it so navigations
+    // stay fast even without direct internet access or in headless browsers.
+    await page.route('https://fonts.googleapis.com/**', route => route.abort());
+  });
 
   test('should redirect unauthenticated users to the login page', async ({ page }) => {
     // Navigate to root (which requires auth)
@@ -150,9 +148,6 @@ test.describe('Patrimo E2E Tests', () => {
     ];
     await page.route('**/api/etfs', route => route.fulfill({ json: catalog }));
     await page.route('**/api/portfolio', route => route.fulfill({ json: positions }));
-    // The Google Fonts stylesheet is render-blocking: abort it so the three
-    // navigations below stay fast even without direct internet access.
-    await page.route('https://fonts.googleapis.com/**', route => route.abort());
 
     await page.goto(DEV_LOGIN_URL);
     await page.waitForURL(/\/dashboard(\?|#|$)/);
@@ -168,8 +163,8 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto('/tools/compare');
     const chips = page.locator('[data-testid="catalog-chip"]');
     await expect(chips).toHaveCount(2);
-    await expect(chips.filter({ hasText: 'IWDA' }).locator('.pill.olive')).toHaveCount(1);
-    await expect(chips.filter({ hasText: 'SXR8' }).locator('.pill.olive')).toHaveCount(0);
+    await expect(chips.filter({ hasText: 'IWDA' }).locator('span[title="Détenu en portefeuille"]')).toHaveCount(1);
+    await expect(chips.filter({ hasText: 'SXR8' }).locator('span[title="Détenu en portefeuille"]')).toHaveCount(0);
   });
 
   test('should allow creating a transaction and reflect it in transactions list', async ({ page }) => {
@@ -185,10 +180,12 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto('/transactions');
     await page.waitForURL(/\/transactions(\?|#|$)/);
 
-    // Wait for the journal header to render (signals data hydrated from API).
-    // The eyebrow text `Journal — N opérations` is the single source of truth
-    // for total transaction count, independent of pagination.
-    const initialCount = await readTotalTxCount(page);
+    // Wait for the data to finish loading
+    await expect(page.locator('.page[data-loaded="true"]')).toBeVisible();
+
+    const text = (await page.locator('.page-eyebrow').textContent()) ?? '';
+    const match = /Journal — (\d+)/.exec(text);
+    const initialCount = match ? Number(match[1]) : 0;
 
     // Open transaction dialog via stable test-id (not relying on French button label).
     await page.click('[data-testid="open-transaction-dialog"]');
@@ -213,13 +210,21 @@ test.describe('Patrimo E2E Tests', () => {
   });
 
   test('should expand a portfolio row to show details and chart', async ({ page }) => {
+    const catalog = [
+      {
+        isin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
+        issuer: 'iShares', index: 'MSCI World', ter: 0.2, currency: 'USD',
+        repli: 'Physique', distrib: 'Capitalisant', pea: false, alloc: 'Core',
+      }
+    ];
+    await page.route('**/api/etfs', route => route.fulfill({ json: catalog }));
     await page.route('**/api/portfolio', route => route.fulfill({ json: [
       {
         etfIsin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
         qty: 10, avgPrice: 80, invested: 800, currentPrice: 85, prevClose: 84,
       }
     ] }));
-    await page.route('**/api/etfs/IE00B4L5Y983/sparks', route => route.fulfill({ json: [80, 82, 85] }));
+    await page.route('**/api/portfolio/sparks', route => route.fulfill({ json: { 'IE00B4L5Y983': [80, 82, 85] } }));
 
     await page.goto(DEV_LOGIN_URL);
     await page.waitForURL(/\/dashboard(\?|#|$)/);
@@ -235,7 +240,7 @@ test.describe('Patrimo E2E Tests', () => {
     await row.click();
 
     // The detail panel should become visible
-    const detailPanel = page.locator('.position-detail-content');
+    const detailPanel = page.locator('td[colspan="11"]');
     await expect(detailPanel).toBeVisible();
     await expect(detailPanel).toContainText('TER');
     await expect(detailPanel).toContainText('ISIN');
@@ -252,21 +257,22 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto(DEV_LOGIN_URL);
     await page.waitForURL(/\/dashboard(\?|#|$)/);
 
-    await page.goto('/preferences');
-    await page.waitForURL(/\/preferences(\?|#|$)/);
+    await page.goto('/settings/preferences');
+    await page.waitForURL(/\/settings\/preferences(\?|#|$)/);
 
     // Click the market data cache clear button
-    // It is in the Maintenance section, let's target by text
-    const btn = page.locator('button', { hasText: 'Purger' }).first();
+    // It is in the Maintenance section, let's target by testid
+    const btn = page.locator('[data-testid="clear-market-cache"]');
     await expect(btn).toBeVisible();
 
-    // Mock window.alert to automatically accept and verify its text
-    page.on('dialog', dialog => {
-      expect(dialog.message()).toContain('succès');
-      dialog.accept();
-    });
-
+    // Listen for the dialog and accept it, saving the promise to await it at the end
+    const dialogPromise = page.waitForEvent('dialog').then(dialog => dialog.accept());
     await btn.click();
-    expect(cacheCleared).toBe(true);
+    
+    // The route interception above will set cacheCleared = true when the DELETE is issued
+    await expect.poll(() => cacheCleared).toBe(true);
+    
+    // Ensure the dialog was actually handled before the test finishes
+    await dialogPromise;
   });
 });

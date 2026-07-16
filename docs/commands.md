@@ -135,8 +135,11 @@ Versioning + changelog auto depuis Conventional Commits.
 # Démarrer ma journée
 npm run docker:up && npm start
 
-# Vérification avant de commit
+# Vérification de base (avant de commit)
 npm run lint:fix && npm run typecheck && npm test
+
+# Vérification complète (avant de push/PR) : lint, build, unit, et E2E
+npm run validate
 
 # Vérification "comme la CI" (seulement ce qui a changé)
 npm run lint:affected && npm run test:affected

@@ -146,7 +146,7 @@
           Supprime les historiques de prix et les cotations en cache. Le prochain affichage de votre portefeuille sera légèrement plus lent car il devra retélécharger les données depuis Yahoo Finance. (Ne touche pas à la répartition géographique).
         </p>
       </div>
-      <button type="button" class="btn sm ghost" (click)="clearCache('market')" [disabled]="clearingCache()">Purger</button>
+      <button type="button" class="btn sm ghost" data-testid="clear-market-cache" (click)="clearCache('market')" [disabled]="clearingCache()">Purger</button>
     </div>
 
     <div class="row" style="align-items:flex-start;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--rule-soft)">

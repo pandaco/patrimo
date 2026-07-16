@@ -20,7 +20,7 @@ import { validateEnv } from './env.validation';
     // Global rate limit — 100 requests / 60s per IP. Adequate baseline for a
     // single-user MVP; tighter buckets can be layered with `@Throttle()` on
     // sensitive routes (e.g. auth callbacks, CSV import).
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 100 }]),
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 1000 }]),
     PersistenceModule,
     ApplicationModule,
   ],

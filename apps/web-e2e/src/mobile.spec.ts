@@ -19,6 +19,12 @@ test.describe('Mobile shell & responsive smoke', () => {
   // Only meaningful on the mobile viewport project (Pixel 5).
   test.skip(({ isMobile }) => !isMobile, 'mobile viewport only');
 
+  test.beforeEach(async ({ page }) => {
+    // The Google Fonts stylesheet is render-blocking: abort it so navigations
+    // stay fast even without direct internet access or in headless browsers.
+    await page.route('https://fonts.googleapis.com/**', route => route.abort());
+  });
+
   test('bottom nav is visible and navigates', async ({ page }) => {
     await login(page);
 
@@ -60,8 +66,8 @@ test.describe('Mobile shell & responsive smoke', () => {
 
     // Navigating from a drawer link closes it too.
     await burger.click();
-    await sidebar.locator('a[href="/wealth"]').click();
-    await page.waitForURL(/\/wealth(\?|#|$)/);
+    await sidebar.locator('a[href="/allocation"]').click();
+    await page.waitForURL(/\/allocation(\?|#|$)/);
     await expect(sidebar).toBeHidden();
   });
 
