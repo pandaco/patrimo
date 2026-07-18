@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PersistenceModule } from '@patrimo/infrastructure';
 import { AuthModule } from '../auth/auth.module';
-import { TauxChangeController } from './tauxChange.controller';
-import { TauxChangeService } from './tauxChange.service';
+import { TauxChangeController } from './taux-change.controller';
+import { TauxChangeService } from './taux-change.service';
 import { PriceCacheService } from './price-cache.service';
 import { PriceService } from './price.service';
 import { PriceWarmerCron } from './price-warmer.cron';
