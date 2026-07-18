@@ -10,7 +10,7 @@
   <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:16px">
     <div class="card" style="padding:14px 20px;flex:1;margin-right:16px">
       <div class="muted small">Total restant dû</div>
-      <div style="font-size:22px;font-weight:600">{{ fmtEur(total(), 0) }}</div>
+      <div style="font-size:22px;font-weight:600">{{ formatEuro(total(), 0) }}</div>
     </div>
     <button class="btn primary" (click)="openCreate()">+ Ajouter un crédit</button>
   </div>
@@ -43,10 +43,10 @@
             <tr>
               <td>{{ l.label }}</td>
               <td><span class="pill soft">{{ kindLabel(l.kind) }}</span></td>
-              <td class="r num">{{ fmtEur(l.initialAmount, 0) }}</td>
-              <td class="r num">{{ fmtEur(l.currentBalance, 0) }}</td>
-              <td class="r num">{{ fmtNum(l.ratePct, 2) }} %</td>
-              <td class="r num">{{ fmtEur(l.monthlyPayment, 0) }}</td>
+              <td class="r num">{{ formatEuro(l.initialAmount, 0) }}</td>
+              <td class="r num">{{ formatEuro(l.currentBalance, 0) }}</td>
+              <td class="r num">{{ formatNumber(l.ratePct, 2) }} %</td>
+              <td class="r num">{{ formatEuro(l.monthlyPayment, 0) }}</td>
               <td style="min-width:120px">
                 <div class="bar" style="height:6px">
                   <span [style.width.%]="progressPct(l)"></span>

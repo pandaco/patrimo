@@ -83,7 +83,7 @@
         }
         @if (selectedEtf()) {
           <div class="field-help">
-            Dernier cours {{ fmtEur(selectedEtf()!.price, 2) }} · TER {{ fmtPctRaw(selectedEtf()!.ter, 2) }} · {{ selectedEtf()!.distrib }}
+            Dernier cours {{ formatEuro(selectedEtf()!.price, 2) }} · TER {{ formatPercentRaw(selectedEtf()!.ter, 2) }} · {{ selectedEtf()!.distrib }}
           </div>
         }
       </div>
@@ -94,13 +94,13 @@
       <div class="field-row">
         <div class="field">
           <label for="transaction-qty">Quantité</label>
-          <input id="transaction-qty" type="number" class="num-input" [ngModel]="qty()" (ngModelChange)="qty.set($event)" />
+          <input id="transaction-qty" type="number" step="any" class="num-input" [ngModel]="qty()" (ngModelChange)="qty.set($event)" />
         </div>
         <div class="field">
           <label for="transaction-price">Prix unitaire (€)</label>
           <input id="transaction-price" type="number" step="0.01" class="num-input" [ngModel]="price()" (ngModelChange)="price.set($event)" />
           @if (selectedEtf()) {
-            <div class="field-help">Prix live à l'instant : {{ fmtEur(selectedEtf()!.price, 2) }}</div>
+            <div class="field-help">Prix live à l'instant : {{ formatEuro(selectedEtf()!.price, 2) }}</div>
           }
         </div>
       </div>
@@ -141,27 +141,27 @@
         <div style="font-size:14px;margin-bottom:8px">
           {{ type() === 'BUY' ? 'Achat' : 'Vente' }} de
           <b>{{ qty() }} × {{ selectedEtf()?.ticker || '—' }}</b> à
-          <b>{{ fmtEur(price() ?? 0, 2) }}</b> =
-          <b>{{ fmtEur(txAmount(), 2) }}</b>
+          <b>{{ formatEuro(price() ?? 0, 2) }}</b> =
+          <b>{{ formatEuro(txAmount(), 2) }}</b>
           @if (type() === 'BUY') {
-            + frais {{ fmtEur(fees() ?? 0, 2) }}@if ((taxes() ?? 0) > 0) { + taxes {{ fmtEur(taxes() ?? 0, 2) }} } = <b>{{ fmtEur(total(), 2) }}</b>
+            + frais {{ formatEuro(fees() ?? 0, 2) }}@if ((taxes() ?? 0) > 0) { + taxes {{ formatEuro(taxes() ?? 0, 2) }} } = <b>{{ formatEuro(total(), 2) }}</b>
           }
         </div>
         <div class="recap-line">
           <span>Cash {{ selectedEnv()?.code || '' }} après</span>
-          <b>{{ fmtEur(cashAfter(), 2) }}</b>
+          <b>{{ formatEuro(cashAfter(), 2) }}</b>
         </div>
         <div class="recap-line">
           <span>Poids {{ selectedEtf()?.ticker || '—' }} après</span>
           <span>
-            <b>{{ fmtNum(newWeight(), 1) }} %</b>
-            <span class="muted" style="margin-left:6px">(actuel {{ fmtNum(currentWeight(), 1) }} %)</span>
+            <b>{{ formatNumber(newWeight(), 1) }} %</b>
+            <span class="muted" style="margin-left:6px">(actuel {{ formatNumber(currentWeight(), 1) }} %)</span>
           </span>
         </div>
         <div class="recap-line total">
           <span><b>Cohérence</b></span>
           @if (cashInsufficient()) {
-            <span class="pill loss"><span class="dot"></span>Cash insuffisant · découvert de {{ fmtEur(-cashAfter(), 2) }}</span>
+            <span class="pill loss"><span class="dot"></span>Cash insuffisant · découvert de {{ formatEuro(-cashAfter(), 2) }}</span>
           } @else {
             <span class="pill gain"><span class="dot"></span>Cash suffisant</span>
           }
@@ -169,7 +169,7 @@
       } @else {
         <div class="recap-line">
           <span>{{ type() === 'DEPOSIT' ? 'Dépôt' : 'Mouvement' }} sur {{ selectedEnv()?.label || '' }}</span>
-          <b>{{ fmtEur(amount() ?? 0, 2) }}</b>
+          <b>{{ formatEuro(amount() ?? 0, 2) }}</b>
         </div>
       }
     </div>

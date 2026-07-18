@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AllocationService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
-import { TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
+import { TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTri } from '../portfolio/tri';
 
@@ -215,7 +215,7 @@ export class IndicatorsComponent {
   });
 
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum = fmtNum;
-  protected readonly fmtPct = fmtPct;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber = formatNumber;
+  protected readonly formatPercent = formatPercent;
 }

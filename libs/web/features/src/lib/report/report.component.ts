@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AuthService, EnvelopeService, TauxChangeService, LiabilityService, TransactionService } from '@patrimo/data-access';
-import { TipDirective, fmtDate, fmtNum } from '@patrimo/ui';
+import { TipDirective, formatDate, formatNumber } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTaxEstimate } from '../performance/tax-estimate';
 import { computeTri } from '../portfolio/tri';
@@ -66,9 +66,9 @@ export class ReportComponent {
     return this.envelopes.all().find(e => e.id === id);
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum  = fmtNum;
-  protected readonly fmtDate = fmtDate;
+  protected readonly formatEuro = (n: number, d = 0): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber  = formatNumber;
+  protected readonly formatDate = formatDate;
   protected readonly abs     = Math.abs;
 
   protected print(): void {

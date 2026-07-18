@@ -50,7 +50,7 @@
     <div class="card" style="margin-bottom:24px">
       <div class="card-head">
         <div class="card-title">Plan de rééquilibrage</div>
-        <span class="card-sub">{{ fmtEur(plan.totalValue, 0) }} de patrimoine boursier</span>
+        <span class="card-sub">{{ formatEuro(plan.totalValue, 0) }} de patrimoine boursier</span>
         <div class="card-right">
           <button class="btn sm ghost" (click)="closeRebalance()">✕ Fermer</button>
         </div>
@@ -80,13 +80,13 @@
                     {{ transaction.action === 'BUY' ? 'Acheter' : 'Vendre' }}
                   </span>
                 </td>
-                <td class="r num">{{ transaction.qty }}</td>
-                <td class="r num muted">{{ fmtEur(transaction.price, 2) }}</td>
+                <td class="r num">{{ formatQuantity(transaction.qty) }}</td>
+                <td class="r num muted">{{ formatEuro(transaction.price, 2) }}</td>
                 <td class="r num" [class.position]="transaction.action === 'BUY'" [class.neg]="transaction.action === 'SELL'">
-                  {{ fmtEur(transaction.amount, 0) }}
+                  {{ formatEuro(transaction.amount, 0) }}
                 </td>
-                <td class="r muted small">{{ fmtPct(transaction.targetWeight, 1) }}</td>
-                <td class="r muted small">{{ fmtPct(transaction.currentWeight, 1) }}</td>
+                <td class="r muted small">{{ formatPercent(transaction.targetWeight, 1) }}</td>
+                <td class="r muted small">{{ formatPercent(transaction.currentWeight, 1) }}</td>
               </tr>
             }
           </tbody>
@@ -114,8 +114,8 @@
             <div style="margin-bottom:8px">
               <div class="row" style="margin-bottom:4px">
                 <span style="font-size:13.5px">{{ row.label }}</span>
-                <span class="num small" style="margin-left:auto">{{ fmtNum(row.real, 1) }} %</span>
-                <span class="muted tiny">cible {{ fmtNum(row.target, 0) }} %</span>
+                <span class="num small" style="margin-left:auto">{{ formatNumber(row.real, 1) }} %</span>
+                <span class="muted tiny">cible {{ formatNumber(row.target, 0) }} %</span>
                 <ui-delta [value]="row.real - row.target" suffix=" pts" [digits]="1" />
               </div>
               <!-- DriftBar -->
@@ -131,7 +131,7 @@
           }
           <div class="divider-soft"></div>
           @let stratDrift = abs(strategicReal().stocks - targets().strategic.stocks);
-          <div class="kv"><dt><span data-tip="Écart entre le poids réel et le poids cible. Un drift > 5 pts suggère de rééquilibrer en renforçant l'actif sous-pondéré.">Drift max</span></dt><dd>{{ fmtNum(stratDrift, 1) }} pts</dd></div>
+          <div class="kv"><dt><span data-tip="Écart entre le poids réel et le poids cible. Un drift > 5 pts suggère de rééquilibrer en renforçant l'actif sous-pondéré.">Drift max</span></dt><dd>{{ formatNumber(stratDrift, 1) }} pts</dd></div>
           <div class="kv"><dt>Statut</dt><dd>
             <span class="pill" [class.gain]="stratDrift <= 2" [class.warn]="stratDrift > 2 && stratDrift <= 5" [class.loss]="stratDrift > 5">
               <span class="dot"></span>{{ stratDrift <= 2 ? 'Aligné' : stratDrift <= 5 ? 'Drift léger' : 'Drift important' }}
@@ -159,8 +159,8 @@
             <div style="margin-bottom:8px">
               <div class="row" style="margin-bottom:4px">
                 <span style="font-size:13.5px">{{ row.label }}</span>
-                <span class="num small" style="margin-left:auto">{{ fmtNum(row.real, 1) }} %</span>
-                <span class="muted tiny">cible {{ fmtNum(row.target, 0) }} %</span>
+                <span class="num small" style="margin-left:auto">{{ formatNumber(row.real, 1) }} %</span>
+                <span class="muted tiny">cible {{ formatNumber(row.target, 0) }} %</span>
                 <ui-delta [value]="row.real - row.target" suffix=" pts" [digits]="1" />
               </div>
               <div style="position:relative;height:12px">
@@ -182,7 +182,7 @@
           @let tacticMax = tDrifts[0] > tDrifts[1]
                             ? (tDrifts[0] > tDrifts[2] ? tDrifts[0] : tDrifts[2])
                             : (tDrifts[1] > tDrifts[2] ? tDrifts[1] : tDrifts[2]);
-          <div class="kv"><dt>Drift max</dt><dd>{{ fmtNum(tacticMax, 1) }} pts</dd></div>
+          <div class="kv"><dt>Drift max</dt><dd>{{ formatNumber(tacticMax, 1) }} pts</dd></div>
           <div class="kv"><dt>Statut</dt><dd>
             <span class="pill" [class.gain]="tacticMax <= 2" [class.warn]="tacticMax > 2 && tacticMax <= 5" [class.loss]="tacticMax > 5">
               <span class="dot"></span>{{ tacticMax <= 2 ? 'Aligné' : tacticMax <= 5 ? 'Drift léger' : 'Drift important' }}
@@ -209,8 +209,8 @@
               <div class="row" style="margin-bottom:4px">
                 <span [style.background]="row.color" style="width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px"></span>
                 <span style="font-size:13.5px;font-weight:500">{{ row.label }}</span>
-                <span class="num small" style="margin-left:auto">{{ fmtEur(row.value, 0) }}</span>
-                <span class="num small muted" style="min-width:60px;text-align:right">{{ fmtNum(row.pct, 1) }} %</span>
+                <span class="num small" style="margin-left:auto">{{ formatEuro(row.value, 0) }}</span>
+                <span class="num small muted" style="min-width:60px;text-align:right">{{ formatNumber(row.pct, 1) }} %</span>
               </div>
               <div class="bar">
                 <span [style.width.%]="row.pct" [style.background]="row.color"></span>
@@ -253,11 +253,11 @@
                 <span class="muted small">{{ etf.alloc }}</span>
               </div>
             </td>
-            <td class="r num">{{ fmtNum(tgt, 0) }} %</td>
-            <td class="r num">{{ fmtNum(real, 1) }} %</td>
+            <td class="r num">{{ formatNumber(tgt, 0) }} %</td>
+            <td class="r num">{{ formatNumber(real, 1) }} %</td>
             <td class="r">
               <span class="num" [class.position]="d > 0" [class.neg]="d < 0">
-                {{ d >= 0 ? '+' : '' }}{{ fmtNum(d, 1) }} pts
+                {{ d >= 0 ? '+' : '' }}{{ formatNumber(d, 1) }} pts
               </span>
             </td>
             <td>
@@ -274,7 +274,7 @@
               <span class="pill" [class.gain]="driftSev(d)==='gain'" [class.warn]="driftSev(d)==='warn'" [class.loss]="driftSev(d)==='loss'">{{ action(d) }}</span>
               @if (action(d) !== 'Tenir') {
                 <div class="num tiny muted" style="margin-top:3px">
-                  ≈ {{ fmtEur(abs(d) / 100 * total(), 0) }}
+                  ≈ {{ formatEuro(abs(d) / 100 * total(), 0) }}
                 </div>
               }
             </td>
@@ -309,11 +309,11 @@
                   <span class="muted small">{{ row.label }}</span>
                 </div>
               </td>
-              <td class="r num">{{ fmtNum(row.target, 0) }} %</td>
-              <td class="r num">{{ fmtNum(row.real, 1) }} %</td>
+              <td class="r num">{{ formatNumber(row.target, 0) }} %</td>
+              <td class="r num">{{ formatNumber(row.real, 1) }} %</td>
               <td class="r">
                 <span class="num" [class.position]="row.drift > 0" [class.neg]="row.drift < 0">
-                  {{ row.drift >= 0 ? '+' : '' }}{{ fmtNum(row.drift, 1) }} pts
+                  {{ row.drift >= 0 ? '+' : '' }}{{ formatNumber(row.drift, 1) }} pts
                 </span>
               </td>
               <td>

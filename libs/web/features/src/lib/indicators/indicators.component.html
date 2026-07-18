@@ -25,7 +25,7 @@
       <div class="label"><span data-tip="Taux de Rentabilité Interne (XIRR) — rendement annualisé qui tient compte du moment où tu as versé ton argent. Plus fidèle que le CAGR pour un portefeuille alimenté progressivement. C'est la même méthode qu'Excel XIRR.">TRI</span></div>
       @if (tri() !== null) {
         <div class="value" [class.position]="tri()! >= 0" [class.neg]="tri()! < 0">
-          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
+          {{ tri()! >= 0 ? '+' : '' }}{{ formatNumber(tri()!, 1) }} %<small style="font-size:0.55em;font-weight:500"> /an</small>
         </div>
         <div class="sub">depuis ton 1ᵉʳ versement · repère : actions monde ≈ 7 %/an</div>
       } @else {
@@ -39,7 +39,7 @@
       <div class="label"><span data-tip="Écart par rapport au point le plus haut atteint par ton portefeuille (en anglais : drawdown). À -20 %, c'est psychologiquement difficile ; à -35 %, tu vis un krach.">Repli vs sommet</span></div>
       @if (currentDrawdown() !== null) {
         <div class="value" [class.neg]="currentDrawdown()! < -0.5" [class.position]="currentDrawdown()! >= -0.5">
-          {{ fmtPct(currentDrawdown()!, 1) }}
+          {{ formatPercent(currentDrawdown()!, 1) }}
         </div>
         <div class="sub">repère : −34 % au krach 2020</div>
       } @else {
@@ -51,7 +51,7 @@
     <!-- Vélocité épargne -->
     <div class="card kpi-tile">
       <div class="label"><span data-tip="Moyenne mensuelle de tes versements (BUY + DEPOSIT) sur les 12 derniers mois. Ton effort d'épargne en un chiffre.">Vélocité épargne</span></div>
-      <div class="value">{{ fmtEur(savingsVelocity(), 0) }}</div>
+      <div class="value">{{ formatEuro(savingsVelocity(), 0) }}</div>
       <div class="sub">par mois · 12 derniers mois</div>
     </div>
 
@@ -60,7 +60,7 @@
       <div class="label"><span data-tip="Plus gros écart absolu entre ta cible Actions/Obligations et la réalité. Au-delà de 5 pts, rééquilibrage conseillé.">Drift allocation</span></div>
       @if (driftMax() !== null) {
         <div class="value" [class.neg]="driftMax()! > 10" [class.warn]="driftMax()! > 5 && driftMax()! <= 10" [class.position]="driftMax()! <= 5">
-          {{ fmtNum(driftMax()!, 1) }}<small style="font-size:0.55em;font-weight:500"> pts</small>
+          {{ formatNumber(driftMax()!, 1) }}<small style="font-size:0.55em;font-weight:500"> pts</small>
         </div>
         <div class="sub">
           @if (driftMax()! > 5) {
@@ -94,7 +94,7 @@
           @case ('rente') {
             <!-- Rente théorique 4 % -->
             <div class="label"><span data-tip="Règle des 4 % (Safe Withdrawal Rate, étude Trinity) : un portefeuille bien diversifié peut durer 30 ans en retirant 4 %/an. Affiche ici le revenu mensuel équivalent.">Rente 4 %</span></div>
-            <div class="value">{{ fmtEur(swrIncome(), 0) }}</div>
+            <div class="value">{{ formatEuro(swrIncome(), 0) }}</div>
             <div class="sub">/ mois théorique (FIRE)</div>
           }
 
@@ -102,7 +102,7 @@
             <!-- PV réalisée YTD -->
             <div class="label"><span data-tip="Plus-Value réalisée depuis le 1ᵉʳ janvier (FIFO, frais inclus) — « YTD » en anglais. Base pour ta déclaration fiscale CTO en mai prochain.">PV réalisée cette année</span></div>
             <div class="value" [class.position]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
-              {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+              {{ realizedYtd() >= 0 ? '+' : '' }}{{ formatEuro(realizedYtd(), 0) }}
             </div>
             <div class="sub">depuis le 1ᵉʳ janv.</div>
           }
@@ -112,7 +112,7 @@
             <div class="label"><span data-tip="Poids cumulé des 3 plus grosses positions ETF. Au-delà de 70 %, ton portefeuille tient sur peu de paris — réfléchis à diversifier.">Concentration top 3</span></div>
             @if (concentrationTop3() !== null) {
               <div class="value" [class.neg]="concentrationTop3()! > 75" [class.warn]="concentrationTop3()! > 60 && concentrationTop3()! <= 75">
-                {{ fmtNum(concentrationTop3()!, 0) }} %
+                {{ formatNumber(concentrationTop3()!, 0) }} %
               </div>
               <div class="sub">des positions ETF · <a routerLink="/portfolio" style="color:var(--ink-3)">détail →</a></div>
             } @else {
@@ -124,7 +124,7 @@
           @case ('dividends') {
             <!-- Dividendes 12M -->
             <div class="label"><span data-tip="Total des DIVIDEND + INTEREST encaissés sur 12 mois glissants. Inclut les coupons obligataires et intérêts livrets si tu les saisis comme transactions.">Dividendes 12M</span></div>
-            <div class="value">{{ fmtEur(dividends12M().total, 0) }}</div>
+            <div class="value">{{ formatEuro(dividends12M().total, 0) }}</div>
             <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
           }
 
@@ -144,18 +144,18 @@
           @case ('milestone') {
             <!-- Prochain palier -->
             <div class="label"><span data-tip="Le prochain palier rond vers lequel tu te diriges. Affiche la progression depuis le palier précédent.">Prochain palier</span></div>
-            <div class="value">{{ fmtEur(milestoneProgress().target, 0) }}</div>
+            <div class="value">{{ formatEuro(milestoneProgress().target, 0) }}</div>
             <div class="bar" style="margin-top:8px;height:6px">
               <span [style.width.%]="milestoneProgress().pct"></span>
             </div>
-            <div class="sub" style="margin-top:6px">{{ fmtNum(milestoneProgress().pct, 0) }} % parcouru</div>
+            <div class="sub" style="margin-top:6px">{{ formatNumber(milestoneProgress().pct, 0) }} % parcouru</div>
           }
 
           @case ('doubling') {
             <!-- Vitesse de doublement (règle de 72) -->
             <div class="label"><span data-tip="Règle de 72 : nombre d'années pour doubler ton capital au CAGR actuel. À 7 %/an, ton patrimoine double tous les ~10 ans.">Doublement</span></div>
             @if (doublingYears() !== null) {
-              <div class="value">{{ fmtNum(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
+              <div class="value">{{ formatNumber(doublingYears()!, 1) }}<small style="font-size:0.55em;font-weight:500"> ans</small></div>
               <div class="sub">au rythme CAGR actuel</div>
             } @else {
               <div class="value">—</div>
@@ -189,17 +189,17 @@
       <div class="grid cols-3" style="gap:18px;align-items:end">
         <div>
           <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur boursière avant</div>
-          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressBaseValue(), 0) }}</div>
+          <div class="serif" style="font-size:24px;line-height:1">{{ formatEuro(stressBaseValue(), 0) }}</div>
           <div class="muted tiny" style="margin-top:4px">Livrets et cash exclus — non exposés au marché.</div>
         </div>
         <div>
           <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Perte théorique</div>
-          <div class="serif neg" style="font-size:24px;line-height:1">{{ fmtEur(stressLoss(), 0) }}</div>
+          <div class="serif neg" style="font-size:24px;line-height:1">{{ formatEuro(stressLoss(), 0) }}</div>
           <div class="muted tiny" style="margin-top:4px">{{ activeStress().drawdownPct }} % du portefeuille boursier.</div>
         </div>
         <div>
           <div class="muted tiny" style="margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Valeur après krach</div>
-          <div class="serif" style="font-size:24px;line-height:1">{{ fmtEur(stressAfter(), 0) }}</div>
+          <div class="serif" style="font-size:24px;line-height:1">{{ formatEuro(stressAfter(), 0) }}</div>
           <div class="muted tiny" style="margin-top:4px">Ce que vaudrait ta poche actions au creux.</div>
         </div>
       </div>

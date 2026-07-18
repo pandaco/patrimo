@@ -21,7 +21,7 @@ const DIMENSIONS: OverlapDimension[] = ['geography', 'sector'];
  * two funds both 60% exposed to the US contribute at least 60 to the score.
  */
 export function computeEtfOverlaps(etfs: Etf[], threshold = 50): EtfOverlap[] {
-  const held = etfs.filter(e => e.qty > 0 && e.exposure);
+  const held = etfs.filter(e => e.qty > 1e-6 && e.exposure);
   const results: EtfOverlap[] = [];
 
   for (let i = 0; i < held.length; i++) {

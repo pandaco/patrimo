@@ -53,7 +53,7 @@
 
       <div style="margin-bottom:20px">
         <div class="display-num" style="font-size:56px;line-height:1">
-          {{ fmtNum(amount(), 0) }} <small>€</small>
+          {{ formatNumber(amount(), 0) }} <small>€</small>
         </div>
         <input type="range" min="100" max="3000" step="50"
           [ngModel]="amount()" (ngModelChange)="amount.set($event)"
@@ -106,10 +106,10 @@
       <div class="divider"></div>
 
       @if (selectedEnvelope(); as env) {
-        <div class="kv"><dt>Cash dispo {{ env.code }}</dt><dd>{{ fmtEur(env.cash, 2) }}</dd></div>
-        <div class="kv"><dt>Cash après DCA</dt><dd [class.neg]="cashAfter() < 0">{{ fmtEur(cashAfter(), 2) }}</dd></div>
+        <div class="kv"><dt>Cash dispo {{ env.code }}</dt><dd>{{ formatEuro(env.cash, 2) }}</dd></div>
+        <div class="kv"><dt>Cash après DCA</dt><dd [class.neg]="cashAfter() < 0">{{ formatEuro(cashAfter(), 2) }}</dd></div>
       }
-      <div class="kv"><dt>Net investi</dt><dd>{{ fmtEur(amount() - normalized().length * 0.99, 2) }}</dd></div>
+      <div class="kv"><dt>Net investi</dt><dd>{{ formatEuro(amount() - normalized().length * 0.99, 2) }}</dd></div>
     </div>
 
     <!-- RIGHT: computed split -->
@@ -146,19 +146,19 @@
                   <span class="serif-italic small">{{ r.e.name.split(' ').slice(0, 3).join(' ') }}</span>
                 </div>
               </td>
-              <td class="r num">{{ fmtNum(r.target, 0) }} %</td>
-              <td class="r num small">{{ fmtNum(r.realPct, 1) }} %</td>
+              <td class="r num">{{ formatNumber(r.target, 0) }} %</td>
+              <td class="r num small">{{ formatNumber(r.realPct, 1) }} %</td>
               <td class="r">
                 <span class="num small" [class.position]="r.drift > 0" [class.neg]="r.drift < 0">
-                  {{ r.drift >= 0 ? '+' : '' }}{{ fmtNum(r.drift, 1) }}
+                  {{ r.drift >= 0 ? '+' : '' }}{{ formatNumber(r.drift, 1) }}
                 </span>
               </td>
-              <td class="r num"><b>{{ fmtNum(c, 2) }} €</b></td>
+              <td class="r num"><b>{{ formatNumber(c, 2) }} €</b></td>
               <td class="r num">{{ q }}</td>
               <td>
                 <div class="row gap-12">
                   <ui-bar [pct]="(c / amount()) * 100" [max]="50" />
-                  <span class="num tiny">{{ fmtNum((c / amount()) * 100, 0) }}%</span>
+                  <span class="num tiny">{{ formatNumber((c / amount()) * 100, 0) }}%</span>
                 </div>
               </td>
             </tr>
@@ -167,7 +167,7 @@
         <tfoot>
           <tr style="background:var(--paper-2)">
             <td colspan="4" class="r"><b>Total</b></td>
-            <td class="r num"><b>{{ fmtNum(totalSpent(), 2) }} €</b></td>
+            <td class="r num"><b>{{ formatNumber(totalSpent(), 2) }} €</b></td>
             <td class="r num"><b>{{ totalQty() }}</b></td>
             <td></td>
           </tr>
@@ -176,13 +176,13 @@
       </div>
 
       <div class="recap" style="margin-top:16px">
-        <div class="recap-line"><span>Cash après opération</span><b>{{ fmtEur(cashAfter(), 2) }}</b></div>
+        <div class="recap-line"><span>Cash après opération</span><b>{{ formatEuro(cashAfter(), 2) }}</b></div>
         <div class="recap-line"><span>Drift moy. avant → après</span>
-          <b>{{ fmtNum(avgDriftBefore(), 1) }} → {{ fmtNum(avgDriftAfter(), 1) }} pts</b></div>
-        <div class="recap-line"><span>Frais courtage estimés</span><b>{{ fmtEur(normalized().length * 0.99, 2) }}</b></div>
+          <b>{{ formatNumber(avgDriftBefore(), 1) }} → {{ formatNumber(avgDriftAfter(), 1) }} pts</b></div>
+        <div class="recap-line"><span>Frais courtage estimés</span><b>{{ formatEuro(normalized().length * 0.99, 2) }}</b></div>
         <div class="recap-line total"><span><b>Vérification cohérence</b></span>
           @if (cashAfter() < 0) {
-            <span class="pill loss"><span class="dot"></span>Cash insuffisant · découvert de {{ fmtEur(-cashAfter(), 2) }}</span>
+            <span class="pill loss"><span class="dot"></span>Cash insuffisant · découvert de {{ formatEuro(-cashAfter(), 2) }}</span>
           } @else {
             <span class="pill gain"><span class="dot"></span>OK</span>
           }
@@ -193,7 +193,7 @@
         @if (confirmingExecute()) {
           <button class="btn ghost" (click)="cancelExecute()" [disabled]="executing()">Annuler</button>
           <button class="btn primary" (click)="executePlan()" [disabled]="executing()">
-            {{ executing() ? 'Création en cours…' : 'Confirmer ' + executableRows().length + ' achat' + (executableRows().length > 1 ? 's' : '') + ' (' + fmtEur(totalSpent(), 2) + ')' }}
+            {{ executing() ? 'Création en cours…' : 'Confirmer ' + executableRows().length + ' achat' + (executableRows().length > 1 ? 's' : '') + ' (' + formatEuro(totalSpent(), 2) + ')' }}
           </button>
         } @else {
           <button class="btn" (click)="savePlan()">Programmer mensuel</button>
@@ -224,14 +224,14 @@
           </div>
           <button class="btn sm outline" (click)="deletePlan(plan.id)">Supprimer</button>
         </div>
-        <div class="display-num" style="font-size:28px;line-height:1">{{ fmtEur(plan.amount) }} <small>par exécution</small></div>
+        <div class="display-num" style="font-size:28px;line-height:1">{{ formatEuro(plan.amount) }} <small>par exécution</small></div>
         <div class="kv" style="margin-top:14px"><dt>Prochaine exécution</dt><dd>{{ plan.nextExecution | date:'longDate' }}</dd></div>
         <div class="divider-soft"></div>
         <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Composition</div>
         @for (item of plan.allocations | keyvalue; track item.key) {
           <div class="row" style="padding:4px 0;justify-content:space-between">
             <span class="pill solid" style="font-size:10.5px">{{ item.key }}</span>
-            <span class="num small">{{ fmtEur(item.value, 2) }}</span>
+            <span class="num small">{{ formatEuro(item.value, 2) }}</span>
           </div>
         }
       </div>

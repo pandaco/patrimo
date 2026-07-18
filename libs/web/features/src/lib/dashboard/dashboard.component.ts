@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
-import { TermComponent, TipDirective, fmtNum, fmtPct } from '@patrimo/ui';
+import { TermComponent, TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeContributed } from './contributed';
@@ -276,9 +276,9 @@ export class DashboardComponent {
 
   protected readonly abs       = Math.abs;
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum    = fmtNum;
-  protected readonly fmtPct    = fmtPct;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber    = formatNumber;
+  protected readonly formatPercent    = formatPercent;
 
   protected severityClass(sev: string): string {
     return sev === 'warn' ? 'warn' : sev === 'gain' ? 'gain' : 'info';

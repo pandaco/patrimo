@@ -126,7 +126,7 @@ export class CalendarComponent {
         return {
           date: transaction.date,
           type: 'DIV' as const,
-          label: `Dividende ${ticker} · ${this.fmtEur(transaction.amount, 2)}`,
+          label: `Dividende ${ticker} · ${this.formatEuro(transaction.amount, 2)}`,
           envCode: env?.code ?? '',
           amount: transaction.amount,
           past: true,
@@ -136,7 +136,7 @@ export class CalendarComponent {
     const upcoming = this.dividendService.upcoming().map((d: DividendDto) => ({
       date: d.date,
       type: 'DIV' as const,
-      label: `Dividende ${d.ticker} · ${this.fmtEur(d.amount, 2)} (estimation.)`,
+      label: `Dividende ${d.ticker} · ${this.formatEuro(d.amount, 2)} (estimation.)`,
       envCode: '?',
       amount: d.amount,
       past: false,
@@ -293,6 +293,6 @@ export class CalendarComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
   protected readonly eventColor = eventColor;
 }

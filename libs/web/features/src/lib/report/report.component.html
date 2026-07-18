@@ -12,10 +12,10 @@
     <div class="card-head">
       <div class="card-title">Patrimoine net</div>
     </div>
-    <div style="font-size:26px;font-weight:700">{{ fmtEur(netWorth(), 0) }}</div>
+    <div style="font-size:26px;font-weight:700">{{ formatEuro(netWorth(), 0) }}</div>
     @if (totalLiabilities() > 0) {
       <div class="muted small" style="margin-top:4px">
-        {{ fmtEur(totalValue(), 0) }} d'actifs − {{ fmtEur(totalLiabilities(), 0) }} de crédits
+        {{ formatEuro(totalValue(), 0) }} d'actifs − {{ formatEuro(totalLiabilities(), 0) }} de crédits
       </div>
     }
   </div>
@@ -37,8 +37,8 @@
         @for (e of envRows(); track e.id) {
           <tr>
             <td>{{ e.label }}</td>
-            <td class="r num">{{ fmtEur(e.value, 0) }}</td>
-            <td class="r num muted">{{ fmtNum(e.pct, 1) }} %</td>
+            <td class="r num">{{ formatEuro(e.value, 0) }}</td>
+            <td class="r num muted">{{ formatNumber(e.pct, 1) }} %</td>
           </tr>
         }
       </tbody>
@@ -64,8 +64,8 @@
           @for (l of liabilityRows(); track l.id) {
             <tr>
               <td>{{ l.label }}</td>
-              <td class="r num">{{ fmtEur(l.currentBalance, 0) }}</td>
-              <td class="r num">{{ fmtEur(l.monthlyPayment, 0) }}</td>
+              <td class="r num">{{ formatEuro(l.currentBalance, 0) }}</td>
+              <td class="r num">{{ formatEuro(l.monthlyPayment, 0) }}</td>
             </tr>
           }
         </tbody>
@@ -79,7 +79,7 @@
       <div class="label">TRI (XIRR)</div>
       @if (tri() !== null) {
         <div class="value" [class.position]="tri()! >= 0" [class.neg]="tri()! < 0">
-          {{ tri()! >= 0 ? '+' : '' }}{{ fmtNum(tri()!, 1) }} % <small>/an</small>
+          {{ tri()! >= 0 ? '+' : '' }}{{ formatNumber(tri()!, 1) }} % <small>/an</small>
         </div>
       } @else {
         <div class="value">—</div>
@@ -89,7 +89,7 @@
     <div class="card kpi-tile">
       <div class="label">PV réalisée cette année</div>
       <div class="value" [class.position]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
-        {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 0) }}
+        {{ realizedYtd() >= 0 ? '+' : '' }}{{ formatEuro(realizedYtd(), 0) }}
       </div>
       <div class="sub">depuis le 1ᵉʳ janv.</div>
     </div>
@@ -103,17 +103,17 @@
     <div class="row" style="flex-wrap:wrap;gap:20px 36px">
       <div class="stat-block">
         <div class="k"><span data-tip="Plus-values réalisées cette année sur tes comptes-titres (CTO) et crypto — les seules imposables dans l'année. Les ventes dans un PEA, une assurance-vie ou un PER ne déclenchent pas d'impôt.">PV taxable {{ currentYear }}</span></div>
-        <div class="v">{{ fmtEur(taxEstimate().taxableRealizedYtd, 2) }}</div>
+        <div class="v">{{ formatEuro(taxEstimate().taxableRealizedYtd, 2) }}</div>
         <div class="sub">CTO + crypto</div>
       </div>
       <div class="stat-block">
         <div class="k"><span data-tip="Flat tax (PFU) de 30 % sur les plus-values imposables : 12,8 % d'impôt sur le revenu + 17,2 % de prélèvements sociaux.">Impôt estimé (PFU 30 %)</span></div>
-        <div class="v neg">{{ fmtEur(taxEstimate().pfuTotal, 2) }}</div>
-        <div class="sub">IR {{ fmtEur(taxEstimate().incomeTax, 0) }} + PS {{ fmtEur(taxEstimate().socialTax, 0) }}</div>
+        <div class="v neg">{{ formatEuro(taxEstimate().pfuTotal, 2) }}</div>
+        <div class="sub">IR {{ formatEuro(taxEstimate().incomeTax, 0) }} + PS {{ formatEuro(taxEstimate().socialTax, 0) }}</div>
       </div>
       <div class="stat-block">
         <div class="k"><span data-tip="Plus-values réalisées dans tes enveloppes fiscalement avantagées (PEA, AV, PER, PEE). Non imposées dans l'année — l'impôt est différé, et souvent réduit, au moment du retrait.">PV différée</span></div>
-        <div class="v">{{ fmtEur(taxEstimate().deferredRealizedYtd, 2) }}</div>
+        <div class="v">{{ formatEuro(taxEstimate().deferredRealizedYtd, 2) }}</div>
         <div class="sub">PEA · AV · PER · PEE</div>
       </div>
     </div>
@@ -162,11 +162,11 @@
             @let env = getEnv(transaction.envelope);
             @let typeLabel = txLabels[transaction.type];
             <tr>
-              <td class="muted small">{{ fmtDate(transaction.date) }}</td>
+              <td class="muted small">{{ formatDate(transaction.date) }}</td>
               <td>{{ typeLabel.label }}</td>
               <td>{{ env?.label || '—' }}</td>
               <td class="r num" [class.position]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
-                {{ typeLabel.dir }}{{ fmtEur(transaction.amount, 2) }}
+                {{ typeLabel.dir }}{{ formatEuro(transaction.amount, 2) }}
               </td>
             </tr>
           }

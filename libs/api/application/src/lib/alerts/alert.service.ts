@@ -28,7 +28,7 @@ function humanDate(days: number): string {
   return `il y a ${days} j`;
 }
 
-function fmtEur(n: number): string {
+function formatEuro(n: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 })
     .format(n)
     .replace(NBSP_RE, ' ');
@@ -83,7 +83,7 @@ export class AlertService {
         'CASH_IDLE',
         'warn',
         `Cash dormant — ${env.code}`,
-        `${fmtEur(env.cash)} disponibles depuis ${Number.isFinite(days) ? `${days} jours` : 'longtemps'} sur ${env.label}. Pense à investir pour ne pas rater le compounding.`,
+        `${formatEuro(env.cash)} disponibles depuis ${Number.isFinite(days) ? `${days} jours` : 'longtemps'} sur ${env.label}. Pense à investir pour ne pas rater le compounding.`,
         'Lancer le DCA',
         Number.isFinite(days) ? humanDate(days) : 'info',
         readMap,
@@ -115,7 +115,7 @@ export class AlertService {
         'PLAFOND_NEAR',
         ratio >= 0.95 ? 'warn' : 'info',
         `Plafond ${env.code} proche`,
-        `${Math.round(ratio * 100)} % du plafond atteints. Reste ${fmtEur(Math.max(0, remaining))} avant blocage des versements.`,
+        `${Math.round(ratio * 100)} % du plafond atteints. Reste ${formatEuro(Math.max(0, remaining))} avant blocage des versements.`,
         "Voir l'enveloppe",
         'info',
         readMap,
@@ -134,7 +134,7 @@ export class AlertService {
         'DIVIDEND_RECENT',
         'gain',
         `Dividende reçu — ${ticker}`,
-        `+${fmtEur(div.amount)} crédités sur ${env?.code ?? 'ton compte'}. Pense à réinvestir pour conserver l'effet boule de neige.`,
+        `+${formatEuro(div.amount)} crédités sur ${env?.code ?? 'ton compte'}. Pense à réinvestir pour conserver l'effet boule de neige.`,
         'Réinvestir',
         humanDate(daysSince(div.date, now)),
         readMap,
@@ -202,7 +202,7 @@ export class AlertService {
           'DCA_PENDING',
           'warn',
           'Versement DCA en attente',
-          `Objectif de ${fmtEur(monthlyTarget)}/mois configuré, mais aucun achat passé en ${monthLabel}. Pense à investir pour ne pas perdre une mensualité.`,
+          `Objectif de ${formatEuro(monthlyTarget)}/mois configuré, mais aucun achat passé en ${monthLabel}. Pense à investir pour ne pas perdre une mensualité.`,
           'Passer un ordre',
           'ce mois-ci',
           readMap,

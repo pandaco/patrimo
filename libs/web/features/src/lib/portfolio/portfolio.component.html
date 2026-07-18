@@ -11,7 +11,7 @@
       </p>
     } @else {
       <p class="page-sub">
-        {{ allEtfs().length }} ligne{{ allEtfs().length === 1 ? '' : 's' }}, {{ fmtEur(total(), 0) }} valorisés.
+        {{ allEtfs().length }} ligne{{ allEtfs().length === 1 ? '' : 's' }}, {{ formatEuro(total(), 0) }} valorisés.
         <ui-term term="PRU">PRU</ui-term> et plus-values
         calculés à partir de tes opérations — aucune saisie manuelle de position.
       </p>
@@ -77,7 +77,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
       <div class="grid cols-5" style="gap:0">
         <div class="stat">
           <div class="label">Valeur portefeuille</div>
-          <div class="value">{{ fmtEur(total(), 2) }}</div>
+          <div class="value">{{ formatEuro(total(), 2) }}</div>
           <div class="sub">
             @if (total() > 0) { <ui-delta [value]="totalDay() / total() * 100" /> aujourd'hui }
             @else { <span class="muted">—</span> }
@@ -85,14 +85,14 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
         </div>
         <div class="stat">
           <div class="label">Coût total (PRU)</div>
-          <div class="value">{{ fmtEur(totalCost(), 2) }}</div>
+          <div class="value">{{ formatEuro(totalCost(), 2) }}</div>
           <div class="sub">prix de revient</div>
         </div>
         <div class="stat">
           <div class="label">PV latente</div>
-          <div class="value">{{ fmtEur(totalPnl(), 2) }}</div>
+          <div class="value">{{ formatEuro(totalPnl(), 2) }}</div>
           <div class="sub">
-            @if (totalCost() > 0) { <span [class.position]="totalPnl() >= 0" [class.neg]="totalPnl() < 0">{{ fmtPctRaw(totalPnl() / totalCost() * 100, 2) }}</span> }
+            @if (totalCost() > 0) { <span [class.position]="totalPnl() >= 0" [class.neg]="totalPnl() < 0">{{ formatPercentRaw(totalPnl() / totalCost() * 100, 2) }}</span> }
             @else { <span class="muted">—</span> }
           </div>
         </div>
@@ -101,7 +101,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <span data-tip="Plus-Value réalisée depuis le 1er janvier (« YTD » en anglais). Calculée en FIFO : chaque vente est appariée aux achats les plus anciens du même ETF. Frais d'achat et de vente inclus dans le coût.">PV réalisée cette année</span>
           </div>
           <div class="value" [class.position]="realizedYtd() >= 0" [class.neg]="realizedYtd() < 0">
-            {{ realizedYtd() >= 0 ? '+' : '' }}{{ fmtEur(realizedYtd(), 2) }}
+            {{ realizedYtd() >= 0 ? '+' : '' }}{{ formatEuro(realizedYtd(), 2) }}
           </div>
           @if (orphanSellCount() > 0) {
             <div class="sub">
@@ -116,7 +116,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
         </div>
         <div class="stat">
           <div class="label">Dividendes 12M</div>
-          <div class="value">{{ fmtEur(dividends12M().total, 2) }}</div>
+          <div class="value">{{ formatEuro(dividends12M().total, 2) }}</div>
           <div class="sub">{{ dividends12M().count }} paiement{{ dividends12M().count > 1 ? 's' : '' }}</div>
         </div>
       </div>
@@ -189,7 +189,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                 <div class="muted tiny" style="margin-top:3px">
                   <span data-tip="International Securities Identification Number — code unique à 12 caractères qui identifie ce titre boursier dans le monde entier.">{{ etf.isin }}</span>
                   · {{ etf.issuer }} ·
-                  <span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span> {{ fmtNum(etf.ter, 2) }} %
+                  <span data-tip="Total Expense Ratio — frais annuels de gestion, prélevés quotidiennement sur la valeur du fonds. Ex : 0,20 % = 2 € par an pour 1 000 € investis.">TER</span> {{ formatNumber(etf.ter, 2) }} %
                 </div>
               </div>
             </td>
@@ -211,24 +211,24 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <td>
               <span class="pill soft" style="font-size:10px">{{ etf.pea ? 'PEA' : 'CTO' }}</span>
             </td>
-            <td class="r num">{{ fmtNum(etf.qty, 0) }}</td>
-            <td class="r num">{{ fmtNum(etf.pru, 2) }} €</td>
-            <td class="r num">{{ fmtNum(etf.price, 2) }} €</td>
+            <td class="r num">{{ formatQuantity(etf.qty) }}</td>
+            <td class="r num">{{ formatNumber(etf.pru, 2) }} €</td>
+            <td class="r num">{{ formatNumber(etf.price, 2) }} €</td>
             <td class="r"><ui-delta [value]="rowDayPct(etf)" /></td>
-            <td class="r num">{{ fmtNum(rowValue(etf), 0) }} €</td>
+            <td class="r num">{{ formatNumber(rowValue(etf), 0) }} €</td>
             <td class="r">
               <div class="num" [class.position]="rowPnl(etf) >= 0" [class.neg]="rowPnl(etf) < 0">
-                {{ rowPnl(etf) >= 0 ? '+' : '' }}{{ fmtNum(rowPnl(etf), 0) }} €
+                {{ rowPnl(etf) >= 0 ? '+' : '' }}{{ formatNumber(rowPnl(etf), 0) }} €
               </div>
               <div class="num tiny" [style.color]="rowPnlPct(etf) >= 0 ? 'var(--gain)' : 'var(--loss)'">
-                {{ fmtPctRaw(rowPnlPct(etf), 2) }}
+                {{ formatPercentRaw(rowPnlPct(etf), 2) }}
               </div>
             </td>
             <td><ui-sparkline [data]="sparks()[etf.ticker] || []" [fill]="true" /></td>
             <td style="min-width:100px">
               <div class="row gap-12">
                 <ui-bar [pct]="wt(etf)" [max]="40" />
-                <span class="num tiny" style="min-width:36px">{{ fmtNum(wt(etf), 1) }}%</span>
+                <span class="num tiny" style="min-width:36px">{{ formatNumber(wt(etf), 1) }}%</span>
               </div>
             </td>
           </tr>
@@ -259,7 +259,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                       </div>
                       <div style="display:flex; justify-content:space-between; margin-bottom:10px">
                         <span class="muted">Frais (TER)</span>
-                        <span>{{ fmtNum(etf.ter, 2) }} %</span>
+                        <span>{{ formatNumber(etf.ter, 2) }} %</span>
                       </div>
                       <div style="display:flex; justify-content:space-between; margin-bottom:10px">
                         <span class="muted">Distribution</span>
@@ -272,11 +272,11 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                       <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--rule-soft)">
                         <div style="display:flex; justify-content:space-between; margin-bottom:10px">
                           <span class="muted">Valeur de marché</span>
-                          <span style="font-weight:600">{{ fmtNum(rowValue(etf), 2) }} €</span>
+                          <span style="font-weight:600">{{ formatNumber(rowValue(etf), 2) }} €</span>
                         </div>
                         <div style="display:flex; justify-content:space-between;">
                           <span class="muted">Coût d'achat (PRU)</span>
-                          <span>{{ fmtNum(rowCost(etf), 2) }} €</span>
+                          <span>{{ formatNumber(rowCost(etf), 2) }} €</span>
                         </div>
                       </div>
                     </div>
@@ -308,7 +308,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <div style="margin-bottom:9px">
               <div class="row" style="margin-bottom:4px">
                 <span style="font-size:13px">{{ row.key }}</span>
-                <span class="num tiny" style="margin-left:auto;color:var(--ink-3)">{{ fmtPctRaw(row.pct * 100, 1) }}</span>
+                <span class="num tiny" style="margin-left:auto;color:var(--ink-3)">{{ formatPercentRaw(row.pct * 100, 1) }}</span>
               </div>
               <ui-bar [pct]="row.pct" [max]="maxExp(card.data)" />
             </div>
@@ -339,7 +339,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
             <tr>
               <td><span class="pill solid">{{ o.tickerA }}</span> × <span class="pill solid">{{ o.tickerB }}</span></td>
               <td class="muted small">{{ o.dimension === 'geography' ? 'Géographique' : 'Sectorielle' }}</td>
-              <td class="r num" [class.warn]="o.overlapPct < 70" [class.neg]="o.overlapPct >= 70">{{ fmtNum(o.overlapPct, 0) }} %</td>
+              <td class="r num" [class.warn]="o.overlapPct < 70" [class.neg]="o.overlapPct >= 70">{{ formatNumber(o.overlapPct, 0) }} %</td>
             </tr>
           }
         </tbody>
@@ -376,10 +376,10 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                 <span class="pill solid">{{ p.ticker }}</span>
                 <span class="muted small" style="margin-left:8px">{{ p.name }}</span>
               </td>
-              <td class="r num muted">{{ fmtEur(p.buyCost, 2) }}</td>
-              <td class="r num">{{ fmtEur(p.sellProceeds, 2) }}</td>
+              <td class="r num muted">{{ formatEuro(p.buyCost, 2) }}</td>
+              <td class="r num">{{ formatEuro(p.sellProceeds, 2) }}</td>
               <td class="r num" [class.position]="p.realizedPnl >= 0" [class.neg]="p.realizedPnl < 0">
-                {{ p.realizedPnl >= 0 ? '+' : '' }}{{ fmtEur(p.realizedPnl, 2) }}
+                {{ p.realizedPnl >= 0 ? '+' : '' }}{{ formatEuro(p.realizedPnl, 2) }}
               </td>
               <td class="r muted small">{{ p.lastSell }}</td>
             </tr>
@@ -390,7 +390,7 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           <tr style="background:var(--paper-2)">
             <td colspan="3" class="r"><b>Total réalisé</b></td>
             <td class="r num" [class.position]="closedTotal >= 0" [class.neg]="closedTotal < 0">
-              <b>{{ closedTotal >= 0 ? '+' : '' }}{{ fmtEur(closedTotal, 2) }}</b>
+              <b>{{ closedTotal >= 0 ? '+' : '' }}{{ formatEuro(closedTotal, 2) }}</b>
             </td>
             <td></td>
           </tr>

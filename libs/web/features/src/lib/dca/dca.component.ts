@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DatePipe, KeyValuePipe } from '@angular/common';
 import { AllocationService, DcaPlanService, EnvelopeService, EtfService, etfValue, TauxChangeService, ToastService, TransactionService } from '@patrimo/data-access';
-import { BarComponent, brokerageFee, fmtNum, fmtPctRaw, TipDirective } from '@patrimo/ui';
+import { BarComponent, brokerageFee, formatNumber, formatPercentRaw, TipDirective } from '@patrimo/ui';
 
 // Glyphs eligible as a DCA destination — securities-bearing envelopes only
 // (livret / crypto / immo / metal cannot host an ETF buy).
@@ -88,10 +88,10 @@ export class DcaComponent {
   });
 
   protected readonly totalSpent = computed(() =>
-    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price) * r.e.price, 0),
+    this.normalized().reduce((a, r) => a + this.qty(r.eur, r.e.price) * r.e.price, 0),
   );
   protected readonly totalQty = computed(() =>
-    this.normalized().reduce((a, r) => a + Math.floor(r.eur / r.e.price), 0),
+    this.normalized().reduce((a, r) => a + this.qty(r.eur, r.e.price), 0),
   );
 
   private readonly toasts = inject(ToastService);
@@ -121,11 +121,17 @@ export class DcaComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum    = fmtNum;
-  protected readonly fmtPctRaw = fmtPctRaw;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber    = formatNumber;
+  protected readonly formatPercentRaw = formatPercentRaw;
 
-  protected qty(eur: number, price: number)  { return price > 0 ? Math.floor(eur / price) : 0; }
+  protected qty(eur: number, price: number) {
+    if (price <= 0) return 0;
+    const env = this.selectedEnvelope();
+    const isPEA = env?.glyph === 'pea' || env?.glyph === 'peapme';
+    const q = eur / price;
+    return isPEA ? Math.floor(q) : Number(q.toFixed(6));
+  }
   protected cost(eur: number, price: number) { return this.qty(eur, price) * price; }
 
   // « Exécuter maintenant » : confirmation en deux temps, puis création d'un
@@ -172,7 +178,7 @@ export class DcaComponent {
         });
         created++;
       }
-      this.toasts.success(`${created} achat${created > 1 ? 's' : ''} créé${created > 1 ? 's' : ''} — ${this.fmtEur(this.totalSpent(), 2)} investis sur ${env.code}.`);
+      this.toasts.success(`${created} achat${created > 1 ? 's' : ''} créé${created > 1 ? 's' : ''} — ${this.formatEuro(this.totalSpent(), 2)} investis sur ${env.code}.`);
     } catch (err) {
       console.error(err);
       this.toasts.error(created > 0

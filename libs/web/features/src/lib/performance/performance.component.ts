@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { EnvelopeService, EtfService, TauxChangeService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
-import { DeltaComponent, TipDirective, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { DeltaComponent, TipDirective, formatNumber, formatPercent, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { computeTri } from '../portfolio/tri';
 
@@ -215,11 +215,11 @@ export class PerformanceComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
   protected readonly abs       = Math.abs;
-  protected readonly fmtPct    = fmtPct;
-  protected readonly fmtPctRaw = fmtPctRaw;
-  protected readonly fmtNum    = fmtNum;
+  protected readonly formatPercent    = formatPercent;
+  protected readonly formatPercentRaw = formatPercentRaw;
+  protected readonly formatNumber    = formatNumber;
 
   protected setPeriod(period: PerformancePeriod): void {
     this.performanceService.setPeriod(period);

@@ -14,7 +14,7 @@
   <div class="grid cols-3" style="margin-bottom:24px">
     <div class="card tight">
       <div class="eyebrow" style="margin-bottom:6px">Dividendes reçus (12 derniers mois)</div>
-      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">{{ fmtEur(divTotalPast(), 2) }}</div>
+      <div class="serif" style="font-size:26px;line-height:1;letter-spacing:-0.01em">{{ formatEuro(divTotalPast(), 2) }}</div>
       <div class="muted small" style="margin-top:4px">{{ divCount() }} paiement{{ divCount() === 1 ? '' : 's' }}</div>
     </div>
     <div class="card tight">
@@ -94,7 +94,7 @@
         </div>
       </span>
       @if (selectedEvent()!.amount !== null) {
-        <span class="num" style="font-size:18px;font-weight:700">{{ fmtEur(selectedEvent()!.amount!, 2) }}</span>
+        <span class="num" style="font-size:18px;font-weight:700">{{ formatEuro(selectedEvent()!.amount!, 2) }}</span>
       }
       <button class="btn icon ghost" (click)="closePopover()" aria-label="Fermer">✕</button>
     </div>
@@ -128,9 +128,9 @@
             @for (row of paymentYears(); track row.year) {
               <tr>
                 <td class="serif-italic">{{ row.year }}</td>
-                <td class="r num">{{ fmtEur(row.dividends, 2) }}</td>
-                <td class="r num">{{ fmtEur(row.interest, 2) }}</td>
-                <td class="r num bold">{{ fmtEur(row.total, 2) }}</td>
+                <td class="r num">{{ formatEuro(row.dividends, 2) }}</td>
+                <td class="r num">{{ formatEuro(row.interest, 2) }}</td>
+                <td class="r num bold">{{ formatEuro(row.total, 2) }}</td>
                 <td class="r num muted">{{ row.count }}</td>
               </tr>
             }
@@ -142,7 +142,7 @@
     <div class="card">
       <div class="card-head">
         <div class="card-title">{{ currentYear }} <em>par source</em></div>
-        <span class="card-sub" data-tip="Somme des dividendes et intérêts encaissés sur les 12 derniers mois glissants — une estimation simple de ton revenu passif annuel au rythme actuel.">run-rate 12M : {{ fmtEur(incomeRunRate(), 0) }}/an</span>
+        <span class="card-sub" data-tip="Somme des dividendes et intérêts encaissés sur les 12 derniers mois glissants — une estimation simple de ton revenu passif annuel au rythme actuel.">run-rate 12M : {{ formatEuro(incomeRunRate(), 0) }}/an</span>
       </div>
       @if (paymentsBySource().length === 0) {
         <p class="muted small" style="margin:0">Aucun revenu encaissé cette année pour l'instant.</p>
@@ -150,7 +150,7 @@
         @for (row of paymentsBySource(); track row.source) {
           <div class="row" style="justify-content:space-between;padding:5px 0;font-size:13px">
             <span class="serif-italic">{{ row.source }}</span>
-            <span class="num">{{ fmtEur(row.total, 2) }}</span>
+            <span class="num">{{ formatEuro(row.total, 2) }}</span>
           </div>
         }
       }
@@ -178,7 +178,7 @@
       </div>
       <div class="card tight">
         <div class="eyebrow" style="margin-bottom:6px" data-tip="Projection des revenus des 12 prochains mois : quantité détenue × taux de distribution annuel actuel de chaque fonds. Estimation, pas une garantie.">Revenus projetés 12M</div>
-        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(income().totalForwardAnnual, 0) }}</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ formatEuro(income().totalForwardAnnual, 0) }}</div>
         <div class="muted small" style="margin-top:4px">au taux de distribution actuel</div>
       </div>
       <div class="card tight">
@@ -203,9 +203,9 @@
           @for (row of income().positions; track row.etfIsin) {
             <tr>
               <td class="serif-italic">{{ row.ticker }}</td>
-              <td class="r num">{{ fmtEur(row.trailing12mDividends, 2) }}</td>
+              <td class="r num">{{ formatEuro(row.trailing12mDividends, 2) }}</td>
               <td class="r num">{{ row.yieldOnCostPct.toFixed(2) }} %</td>
-              <td class="r num">{{ fmtEur(row.forwardAnnualIncome, 2) }}</td>
+              <td class="r num">{{ formatEuro(row.forwardAnnualIncome, 2) }}</td>
               <td class="r num muted">{{ row.forwardYieldPct.toFixed(2) }} %</td>
             </tr>
           }

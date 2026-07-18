@@ -190,12 +190,12 @@ export class PerfChartComponent {
       yPort:   yFor(vPort),
       yBench:  yFor(vBench),
       label:   this.xLabelAt(clamped, port.length),
-      portStr:  this.fmt(vPort),
-      benchStr: this.fmt(vBench),
+      portStr:  this.format(vPort),
+      benchStr: this.format(vBench),
     });
   }
 
-  private fmt(v: number): string {
+  private format(v: number): string {
     return v.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' €';
   }
 

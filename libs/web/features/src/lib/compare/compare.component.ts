@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { EtfDto, EtfMetadataDto } from '@patrimo/contracts';
 import { Etf, EtfService, TauxChangeService, PerformanceService, PreferencesService, ToastService } from '@patrimo/data-access';
-import { EtfDialogComponent, TipDirective, TransactionDialogComponent, fmtNum, fmtPct, fmtPctRaw } from '@patrimo/ui';
+import { EtfDialogComponent, TipDirective, TransactionDialogComponent, formatNumber, formatQuantity, formatPercent, formatPercentRaw } from '@patrimo/ui';
 
 const MAX_SELECTION = 4;
 
@@ -37,8 +37,8 @@ export class CompareComponent {
   });
 
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtPct = fmtPct;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatPercent = formatPercent;
 
   private readonly dialog = inject(MatDialog);
 
@@ -235,6 +235,7 @@ export class CompareComponent {
     return drag;
   }
 
-  protected readonly fmtNum    = fmtNum;
-  protected readonly fmtPctRaw = fmtPctRaw;
+  protected readonly formatNumber    = formatNumber;
+  protected readonly formatQuantity    = formatQuantity;
+  protected readonly formatPercentRaw = formatPercentRaw;
 }

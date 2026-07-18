@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TauxChangeService, TransactionService } from '@patrimo/data-access';
-import { fmtNum } from '@patrimo/ui';
+import { formatNumber } from '@patrimo/ui';
 import { computeMonthlyCashflow } from '../portfolio/cashflow';
 
 @Component({
@@ -42,7 +42,7 @@ export class CashflowComponent {
     return d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '');
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum = fmtNum;
+  protected readonly formatEuro = (n: number, d = 0): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber = formatNumber;
   protected readonly abs    = Math.abs;
 }

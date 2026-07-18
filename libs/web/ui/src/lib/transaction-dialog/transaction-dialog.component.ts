@@ -12,7 +12,7 @@ import {
   etfValue,
 } from '@patrimo/data-access';
 import { EtfDialogComponent } from '../etf-dialog/etf-dialog.component';
-import { fmtEur, fmtNum, fmtPctRaw } from '../format';
+import { formatEuro, formatNumber, formatPercentRaw } from '../format';
 
 export interface TransactionDialogData {
   transaction?: Transaction;
@@ -178,9 +178,9 @@ export class TransactionDialogComponent {
     this.fees.set(this.showQtyPrice() ? brokerageFee(this.txAmount()) : 0);
   }
 
-  protected readonly fmtEur    = fmtEur;
-  protected readonly fmtNum    = fmtNum;
-  protected readonly fmtPctRaw = fmtPctRaw;
+  protected readonly formatEuro    = formatEuro;
+  protected readonly formatNumber    = formatNumber;
+  protected readonly formatPercentRaw = formatPercentRaw;
 
   protected openAddInstrument(): void {
     const ref = this.dialog.open(EtfDialogComponent, { panelClass: 'transaction-dialog-panel', maxWidth: 'min(580px, calc(100vw - 24px))', width: '100%' });

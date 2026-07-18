@@ -17,7 +17,7 @@ import {
 } from '@patrimo/data-access';
 import { computeLivretInterest } from './livret-interest';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
-import { DeltaComponent, EnvGlyphComponent, fmtPctRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
+import { DeltaComponent, EnvGlyphComponent, formatPercentRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 
@@ -124,8 +124,8 @@ export class WealthComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtPctRaw = fmtPctRaw;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatPercentRaw = formatPercentRaw;
 
   protected plusValue = unrealizedPlusValue;
   protected pnlPct = unrealizedPnlPct;

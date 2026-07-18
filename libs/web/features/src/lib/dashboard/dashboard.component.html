@@ -10,8 +10,8 @@
     @if (!isEmpty()) {
       <p class="page-sub">
         Aujourd'hui, ton patrimoine {{ dayValue() >= 0 ? 'gagne' : 'perd' }}
-        <span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ fmtEur(abs(dayValue()), 0) }}</span>
-        (<span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ fmtPct(dayPct(), 2) }}</span>).
+        <span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ formatEuro(abs(dayValue()), 0) }}</span>
+        (<span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ formatPercent(dayPct(), 2) }}</span>).
         @if (topAlerts().length > 0) {
           <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
         }
@@ -140,11 +140,11 @@
             <span class="perf-line-title">Performance</span>
             @if (r.twrPct !== null) {
               <span class="perf-line-pct" [class.position]="r.twrPct >= 0" [class.neg]="r.twrPct < 0">
-                {{ r.twrPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.twrPct), 2) }} %
+                {{ r.twrPct >= 0 ? '+' : '−' }}{{ formatNumber(abs(r.twrPct), 2) }} %
               </span>
             }
             <span class="perf-line-eur" [class.position]="r.eur >= 0" [class.neg]="r.eur < 0">
-              {{ r.eur >= 0 ? '+' : '−' }}{{ fmtEur(abs(r.eur), 0) }}
+              {{ r.eur >= 0 ? '+' : '−' }}{{ formatEuro(abs(r.eur), 0) }}
             </span>
             <span class="perf-line-cap">
               <span data-tip="Tes dépôts et retraits ne comptent ni comme gain ni comme perte : seule la performance de tes placements est mesurée (TWR).">hors apports</span>
@@ -152,7 +152,7 @@
               @if (wealthFilterCaption(); as f) { · {{ f }} }
             </span>
             @if (r.annualizedPct !== null) {
-              <span class="perf-line-cap">· ≈ {{ r.annualizedPct >= 0 ? '+' : '−' }}{{ fmtNum(abs(r.annualizedPct), 1) }} %/an</span>
+              <span class="perf-line-cap">· ≈ {{ r.annualizedPct >= 0 ? '+' : '−' }}{{ formatNumber(abs(r.annualizedPct), 1) }} %/an</span>
             }
           } @else {
             <span class="perf-line-cap">Pas assez de données sur la période pour mesurer la performance.</span>
@@ -162,21 +162,21 @@
         <div class="wealth-hero-breakdowns">
           <div class="wealth-breakdown-chip">
             <span class="label" data-tip="PEA, CTO, AV, PER — exposé aux marchés actions/obligations.">Boursier</span>
-            <span class="value">{{ fmtEur(totalBourse(), 0) }}</span>
+            <span class="value">{{ formatEuro(totalBourse(), 0) }}</span>
             @if (totalValue() > 0) {
-              <span class="muted small">{{ fmtNum(totalBourse() / totalValue() * 100, 1) }} %</span>
+              <span class="muted small">{{ formatNumber(totalBourse() / totalValue() * 100, 1) }} %</span>
             }
           </div>
           <div class="wealth-breakdown-chip">
             <span class="label" data-tip="Livret A, LDDS, LEP — capital garanti, intérêts exonérés.">Épargne</span>
-            <span class="value">{{ fmtEur(totalLivret(), 0) }}</span>
+            <span class="value">{{ formatEuro(totalLivret(), 0) }}</span>
             @if (totalValue() > 0) {
-              <span class="muted small">{{ fmtNum(totalLivret() / totalValue() * 100, 1) }} %</span>
+              <span class="muted small">{{ formatNumber(totalLivret() / totalValue() * 100, 1) }} %</span>
             }
           </div>
           <div class="wealth-breakdown-chip">
             <span class="label" data-tip="Cash dormant sur comptes courants — perd de la valeur face à l'inflation.">Cash</span>
-            <span class="value">{{ fmtEur(totalCash() - totalLivret(), 0) }}</span>
+            <span class="value">{{ formatEuro(totalCash() - totalLivret(), 0) }}</span>
             @if (totalCash() - totalLivret() > 0) {
               <span class="pill warn" style="font-size:10px"><span class="dot"></span>à investir</span>
             }
@@ -184,7 +184,7 @@
           @if (totalLiabilities() > 0) {
             <div class="wealth-breakdown-chip">
               <span class="label" data-tip="Capital restant dû sur tes crédits en cours (prêt immobilier, crédit conso).">Crédits</span>
-              <span class="value neg">− {{ fmtEur(totalLiabilities(), 0) }}</span>
+              <span class="value neg">− {{ formatEuro(totalLiabilities(), 0) }}</span>
               <a routerLink="/liabilities" class="muted small">Gérer →</a>
             </div>
           }
@@ -198,11 +198,11 @@
             @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
           </div>
           <div class="hero-networth-value">
-            {{ fmtNum(fxRate() * netWorth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
+            {{ formatNumber(fxRate() * netWorth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
           </div>
           @if (totalLiabilities() > 0) {
             <div class="hero-metric-cap">
-              {{ fmtEur(totalValue(), 0) }} d'actifs − {{ fmtEur(totalLiabilities(), 0) }} de crédits
+              {{ formatEuro(totalValue(), 0) }} d'actifs − {{ formatEuro(totalLiabilities(), 0) }} de crédits
             </div>
           }
         </div>
@@ -213,21 +213,21 @@
         @if (portfolioCost() > 0) {
           <div class="hero-metric">
             <div class="hero-metric-label"><span data-tip="L'argent réellement sorti de ta poche : tes dépôts (moins les retraits) quand tu les saisis, sinon tes achats nets — par enveloppe, sans jamais compter deux fois le même euro. Les virements entre enveloppes sont ignorés.">Montant versé</span></div>
-            <div class="hero-metric-value">{{ fmtEur(totalContributed(), 0) }}</div>
+            <div class="hero-metric-value">{{ formatEuro(totalContributed(), 0) }}</div>
             <div class="hero-metric-cap">dépôts et achats · depuis le début</div>
           </div>
 
           <div class="hero-metric">
             <div class="hero-metric-label"><span data-tip="Coût d'acquisition de tes positions actuelles : PRU × quantité, frais inclus. Valeur des titres = Investi + PV latente.">Investi en titres</span></div>
-            <div class="hero-metric-value">{{ fmtEur(portfolioCost(), 0) }}</div>
+            <div class="hero-metric-value">{{ formatEuro(portfolioCost(), 0) }}</div>
           </div>
 
           <div class="hero-metric">
             <div class="hero-metric-label"><ui-term term="PV latente">PV latente</ui-term></div>
             <div class="hero-metric-value" [class.position]="pnlValue() >= 0" [class.neg]="pnlValue() < 0">
-              {{ pnlValue() >= 0 ? '+' : '−' }}{{ fmtEur(abs(pnlValue()), 0) }}
+              {{ pnlValue() >= 0 ? '+' : '−' }}{{ formatEuro(abs(pnlValue()), 0) }}
             </div>
-            <div class="hero-metric-cap">depuis le début · {{ pnlPct() >= 0 ? '+' : '' }}{{ fmtNum(pnlPct(), 1) }} %</div>
+            <div class="hero-metric-cap">depuis le début · {{ pnlPct() >= 0 ? '+' : '' }}{{ formatNumber(pnlPct(), 1) }} %</div>
           </div>
         } @else {
           <div class="muted" style="font-size:13px">

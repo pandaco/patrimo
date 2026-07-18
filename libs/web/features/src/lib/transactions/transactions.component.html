@@ -101,13 +101,13 @@
               @let env = getEnv(row.envId);
               <tr>
                 <td>{{ env?.code ?? row.envId }}</td>
-                <td class="r num small position">+{{ fmtEur(row.deposits, 0) }}</td>
-                <td class="r num small neg">−{{ fmtEur(row.withdrawals, 0) }}</td>
-                <td class="r num small neg">−{{ fmtEur(row.buys, 0) }}</td>
-                <td class="r num small position">+{{ fmtEur(row.sells, 0) }}</td>
-                <td class="r num small position">+{{ fmtEur(row.dividends, 0) }}</td>
+                <td class="r num small position">+{{ formatEuro(row.deposits, 0) }}</td>
+                <td class="r num small neg">−{{ formatEuro(row.withdrawals, 0) }}</td>
+                <td class="r num small neg">−{{ formatEuro(row.buys, 0) }}</td>
+                <td class="r num small position">+{{ formatEuro(row.sells, 0) }}</td>
+                <td class="r num small position">+{{ formatEuro(row.dividends, 0) }}</td>
                 <td class="r num" [class.position]="row.cashBalance >= 0" [class.neg]="row.cashBalance < 0">
-                  {{ fmtEur(row.cashBalance, 2) }}
+                  {{ formatEuro(row.cashBalance, 2) }}
                 </td>
               </tr>
             }
@@ -153,7 +153,7 @@
         <span class="serif-italic" style="font-size:18px;text-transform:capitalize">{{ group.label }}</span>
         <span class="muted small">{{ group.transactions.length }} opération{{ group.transactions.length > 1 ? 's' : '' }}</span>
         <span style="margin-left:auto" class="num" [class.position]="group.total >= 0" [class.neg]="group.total < 0">
-          {{ group.total >= 0 ? '+' : '−' }} {{ fmtEur(abs(group.total), 2) }}
+          {{ group.total >= 0 ? '+' : '−' }} {{ formatEuro(abs(group.total), 2) }}
         </span>
       </div>
       <div class="table-scroll">
@@ -178,7 +178,7 @@
             @let typeLabel = labels[transaction.type];
             <tr>
               <td style="width:80px">
-                <div class="num small">{{ fmtDate(transaction.date) }}</div>
+                <div class="num small">{{ formatDate(transaction.date) }}</div>
               </td>
               <td style="width:36px">
                 <span class="env-glyph" style="width:24px;height:24px;font-size:11px"
@@ -203,17 +203,17 @@
                 }
               </td>
               <td class="r" style="width:70px">
-                @if (transaction.etf) { <span class="num small">{{ fmtNum(transaction.qty, 0) }}</span> }
+                @if (transaction.etf) { <span class="num small">{{ formatQuantity(transaction.qty) }}</span> }
               </td>
               <td class="r" style="width:90px">
-                @if (transaction.price) { <span class="num small">{{ fmtNum(transaction.price, 2) }} €</span> }
+                @if (transaction.price) { <span class="num small">{{ formatNumber(transaction.price, 2) }} €</span> }
               </td>
               <td class="r" style="width:70px">
-                @if (transaction.fees > 0) { <span class="num small muted">{{ fmtNum(transaction.fees, 2) }} €</span> }
+                @if (transaction.fees > 0) { <span class="num small muted">{{ formatNumber(transaction.fees, 2) }} €</span> }
               </td>
               <td class="r" style="width:130px">
                 <span class="num" [class.position]="typeLabel.dir === '+'" [class.neg]="typeLabel.dir === '−'">
-                  {{ typeLabel.dir === '+' ? '+' : '−' }} {{ fmtEur(transaction.amount, 2) }}
+                  {{ typeLabel.dir === '+' ? '+' : '−' }} {{ formatEuro(transaction.amount, 2) }}
                 </span>
               </td>
               <td style="width:104px" class="r">

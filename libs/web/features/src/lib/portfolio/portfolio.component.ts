@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService } from '@patrimo/data-access';
-import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, fmtNum, fmtPctRaw } from '@patrimo/ui';
+import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
@@ -92,9 +92,10 @@ export class PortfolioComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum    = fmtNum;
-  protected readonly fmtPctRaw = fmtPctRaw;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber    = formatNumber;
+  protected readonly formatQuantity    = formatQuantity;
+  protected readonly formatPercentRaw = formatPercentRaw;
 
   protected rowValue(e: Etf)  { return etfValue(e); }
   protected rowCost(e: Etf)  { return etfCost(e); }

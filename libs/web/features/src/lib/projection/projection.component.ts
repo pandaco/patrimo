@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EnvelopeService, TauxChangeService, PreferencesService, TransactionService } from '@patrimo/data-access';
-import { fmtNum } from '@patrimo/ui';
+import { formatNumber } from '@patrimo/ui';
 import { computeProjection } from '../portfolio/projection';
 import { computeTri } from '../portfolio/tri';
 import { WealthChartComponent } from '../dashboard/wealth-chart.component';
@@ -60,6 +60,6 @@ export class ProjectionComponent {
     this.years.set(value);
   }
 
-  protected readonly fmtEur = (n: number, d = 0): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum = fmtNum;
+  protected readonly formatEuro = (n: number, d = 0): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber = formatNumber;
 }

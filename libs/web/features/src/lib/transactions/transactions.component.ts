@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { API_BASE_URL, EnvelopeService, EtfService, TauxChangeService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
-import { EnvGlyphComponent, fmtDate, fmtNum, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
+import { EnvGlyphComponent, formatDate, formatNumber, formatQuantity, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
 import { firstValueFrom } from 'rxjs';
 
 type FilterType = TransactionType | 'ALL';
@@ -170,9 +170,10 @@ export class TransactionsComponent {
 
   private readonly tauxChangeService = inject(TauxChangeService);
   // TAUXCHANGE-aware: converts EUR-base amounts into the display currency.
-  protected readonly fmtEur = (n: number, d = 2): string => this.tauxChangeService.fmt(n, d);
-  protected readonly fmtNum  = fmtNum;
-  protected readonly fmtDate = fmtDate;
+  protected readonly formatEuro = (n: number, d = 2): string => this.tauxChangeService.format(n, d);
+  protected readonly formatNumber  = formatNumber;
+  protected readonly formatQuantity  = formatQuantity;
+  protected readonly formatDate = formatDate;
   protected readonly abs     = Math.abs;
 
   protected getEnv(id: string) {
@@ -217,7 +218,7 @@ export class TransactionsComponent {
   protected async deleteTx(transaction: Transaction): Promise<void> {
     const env  = this.getEnv(transaction.envelope);
     const typeLabel  = this.labels[transaction.type].label;
-    const date = fmtDate(transaction.date);
+    const date = formatDate(transaction.date);
     const target = env ? `${typeLabel} sur ${env.code} du ${date}` : `${typeLabel} du ${date}`;
     if (!confirm(`Supprimer l'opération « ${target} » ?`)) return;
     try {

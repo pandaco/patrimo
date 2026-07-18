@@ -29,7 +29,7 @@
   <div class="card" style="padding:20px;margin-bottom:20px">
     <div class="card-head">
       <div class="card-title">Patrimoine projeté</div>
-      <span class="card-sub">départ : {{ fmtEur(totalValue(), 0) }}</span>
+      <span class="card-sub">départ : {{ formatEuro(totalValue(), 0) }}</span>
     </div>
     <app-wealth-chart [data]="chartData()" [labels]="chartLabels()" />
   </div>
@@ -38,17 +38,17 @@
     <div class="grid cols-3" style="gap:14px">
       <div class="card kpi-tile">
         <div class="label">Dans {{ years() }} ans</div>
-        <div class="value">{{ fmtEur(f.value, 0) }}</div>
+        <div class="value">{{ formatEuro(f.value, 0) }}</div>
         <div class="sub">valeur projetée</div>
       </div>
       <div class="card kpi-tile">
         <div class="label">Dont versé</div>
-        <div class="value muted">{{ fmtEur(f.contributed, 0) }}</div>
-        <div class="sub">{{ fmtNum(f.value - f.contributed >= 0 ? (f.value / f.contributed - 1) * 100 : 0, 0) }} % de gain composé</div>
+        <div class="value muted">{{ formatEuro(f.contributed, 0) }}</div>
+        <div class="sub">{{ formatNumber(f.value - f.contributed >= 0 ? (f.value / f.contributed - 1) * 100 : 0, 0) }} % de gain composé</div>
       </div>
       <div class="card kpi-tile">
         <div class="label">Rente 4 % équivalente</div>
-        <div class="value">{{ fmtEur(f.swrMonthly, 0) }}</div>
+        <div class="value">{{ formatEuro(f.swrMonthly, 0) }}</div>
         <div class="sub">/ mois à ce terme</div>
       </div>
     </div>

@@ -27,7 +27,7 @@
   <div class="card" style="margin-bottom:24px">
     <div class="card-head">
       <div class="card-title">Répartition <em>par famille</em></div>
-      <span class="card-sub">total {{ fmtEur(total(), 0) }}</span>
+      <span class="card-sub">total {{ formatEuro(total(), 0) }}</span>
       <div class="card-right">
         <div class="segmented">
           <button [class.active]="activeView() === 'famille'"   (click)="activeView.set('famille')">Par famille</button>
@@ -48,8 +48,8 @@
           <div class="row gap-12">
             <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.family.color"></span>
             <span style="font-weight:500">{{ row.family.label }}</span>
-            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
-            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+            <span class="num bold">{{ formatEuro(row.value, 0) }}</span>
+            <span class="num muted">{{ formatPercentRaw(row.pct, 1) }}</span>
           </div>
         }
       </div>
@@ -65,8 +65,8 @@
           <div class="row gap-12">
             <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.color"></span>
             <span style="font-weight:500">{{ row.label }}</span>
-            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
-            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+            <span class="num bold">{{ formatEuro(row.value, 0) }}</span>
+            <span class="num muted">{{ formatPercentRaw(row.pct, 1) }}</span>
           </div>
         }
       </div>
@@ -88,8 +88,8 @@
           <div class="row gap-12">
             <span style="width:10px;height:10px;border-radius:3px;flex-shrink:0" [style.background]="row.color"></span>
             <span style="font-weight:500">{{ row.label }}</span>
-            <span class="num bold">{{ fmtEur(row.value, 0) }}</span>
-            <span class="num muted">{{ fmtPctRaw(row.pct, 1) }}</span>
+            <span class="num bold">{{ formatEuro(row.value, 0) }}</span>
+            <span class="num muted">{{ formatPercentRaw(row.pct, 1) }}</span>
           </div>
         }
       </div>
@@ -104,18 +104,18 @@
         <h3>{{ row.family.label }}</h3>
         <div class="muted small" style="margin-top:6px">
           <span class="count-chip">{{ row.envelopes.length }}</span>
-          compte{{ row.envelopes.length > 1 ? 's' : '' }} · {{ fmtPctRaw(row.pct, 1) }} du patrimoine
+          compte{{ row.envelopes.length > 1 ? 's' : '' }} · {{ formatPercentRaw(row.pct, 1) }} du patrimoine
         </div>
       </div>
       <div class="stats">
         <div class="stat-block">
           <div class="k">Valeur</div>
-          <div class="v">{{ fmtEur(row.value, 0) }}</div>
+          <div class="v">{{ formatEuro(row.value, 0) }}</div>
         </div>
         <div class="stat-block">
           <div class="k" data-tip="Plus-value latente : valeur actuelle − montant investi. Rien n'est vendu, donc rien n'est encore imposable.">Plus-value</div>
           <div class="v" [class.position]="row.plusValue >= 0" [class.neg]="row.plusValue < 0">
-            {{ row.plusValue >= 0 ? '+' : '' }}{{ fmtEur(row.plusValue, 0) }}
+            {{ row.plusValue >= 0 ? '+' : '' }}{{ formatEuro(row.plusValue, 0) }}
           </div>
         </div>
         <div class="stat-block">
@@ -152,24 +152,24 @@
             <ui-delta [value]="pnlPct(env)" />
           </div>
           <div class="display-num" style="font-size:32px;margin-bottom:6px;letter-spacing:-0.04em">
-            {{ fmtEur(env.value, 0) }}
+            {{ formatEuro(env.value, 0) }}
           </div>
           <div class="row" style="gap:6px;font-size:12px;color:var(--ink-3)">
             <span class="num" [class.position]="plusValue(env) >= 0" [class.neg]="plusValue(env) < 0">
-              {{ plusValue(env) >= 0 ? '+' : '' }}{{ fmtEur(plusValue(env), 0) }}
+              {{ plusValue(env) >= 0 ? '+' : '' }}{{ formatEuro(plusValue(env), 0) }}
             </span>
-            <span class="num muted">({{ fmtPctRaw(pnlPct(env), 1) }})</span>
+            <span class="num muted">({{ formatPercentRaw(pnlPct(env), 1) }})</span>
             <span data-tip="Plus-value latente de l'enveloppe : valeur actuelle − montant investi, depuis l'ouverture.">depuis l'achat</span>
             @if (env.cash > 0 && env.cash < env.value) {
               <span style="margin-left:auto">·</span>
-              <span class="num" data-tip="Liquidités non investies : dépôts − achats + ventes + dividendes. De l'argent qui attend d'être placé.">{{ fmtEur(env.cash, 0) }} cash</span>
+              <span class="num" data-tip="Liquidités non investies : dépôts − achats + ventes + dividendes. De l'argent qui attend d'être placé.">{{ formatEuro(env.cash, 0) }} cash</span>
             }
           </div>
           @if (ytdRealized(env.id) !== 0) {
             <div class="row" style="gap:6px;font-size:12px;margin-top:4px">
               <span class="num" [class.position]="ytdRealized(env.id) >= 0" [class.neg]="ytdRealized(env.id) < 0"
                     data-tip="Plus-value réalisée depuis le 1er janv. (FIFO, frais inclus). YTD = year-to-date.">
-                {{ ytdRealized(env.id) >= 0 ? '+' : '' }}{{ fmtEur(ytdRealized(env.id), 0) }}
+                {{ ytdRealized(env.id) >= 0 ? '+' : '' }}{{ formatEuro(ytdRealized(env.id), 0) }}
               </span>
               <span class="muted">réalisé YTD</span>
             </div>
@@ -179,8 +179,8 @@
               <span [style.width.%]="capPct(env)!"></span>
             </div>
             <div class="row small muted" style="margin-top:6px">
-              <span data-tip="Plafond légal de versements de cette enveloppe (ex. 22 950 € pour le Livret A, 150 000 € pour le PEA). La barre montre ton remplissage — seuls les versements comptent, pas les gains.">Versements : {{ fmtEur(env.contributed, 0) }} / {{ fmtEur(env.plafond!, 0) }}</span>
-              <span class="num" style="margin-left:auto">{{ fmtPctRaw(capPct(env)!, 0) }}</span>
+              <span data-tip="Plafond légal de versements de cette enveloppe (ex. 22 950 € pour le Livret A, 150 000 € pour le PEA). La barre montre ton remplissage — seuls les versements comptent, pas les gains.">Versements : {{ formatEuro(env.contributed, 0) }} / {{ formatEuro(env.plafond!, 0) }}</span>
+              <span class="num" style="margin-left:auto">{{ formatPercentRaw(capPct(env)!, 0) }}</span>
             </div>
           }
           <button class="btn sm ghost" style="margin-top:14px;width:100%"
@@ -199,8 +199,8 @@
     <div class="grid cols-3" style="margin-bottom:12px">
       <div class="card tight">
         <div class="eyebrow" style="margin-bottom:6px" data-tip="Intérêts annuels estimés de tes livrets réglementés, calculés sur le cash détenu aux taux en vigueur. Versés une fois par an.">Intérêts projetés / an</div>
-        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(livretInterest().totalAnnualInterest, 0) }}</div>
-        <div class="muted small" style="margin-top:4px">sur {{ fmtEur(livretInterest().totalCash, 0) }} de cash</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ formatEuro(livretInterest().totalAnnualInterest, 0) }}</div>
+        <div class="muted small" style="margin-top:4px">sur {{ formatEuro(livretInterest().totalCash, 0) }} de cash</div>
       </div>
       <div class="card tight">
         <div class="eyebrow" style="margin-bottom:6px" data-tip="Moyenne des taux de tes livrets, pondérée par le cash placé sur chacun.">Taux moyen pondéré</div>
@@ -209,7 +209,7 @@
       </div>
       <div class="card tight">
         <div class="eyebrow" style="margin-bottom:6px">Soit par mois</div>
-        <div class="serif" style="font-size:26px;line-height:1">{{ fmtEur(livretInterest().totalAnnualInterest / 12, 0) }}</div>
+        <div class="serif" style="font-size:26px;line-height:1">{{ formatEuro(livretInterest().totalAnnualInterest / 12, 0) }}</div>
         <div class="muted small" style="margin-top:4px">≈ moyenne mensuelle</div>
       </div>
     </div>
@@ -223,9 +223,9 @@
           @for (row of livretInterest().rows; track row.code) {
             <tr>
               <td class="serif-italic">{{ row.label }}</td>
-              <td class="r num">{{ fmtEur(row.cash, 0) }}</td>
+              <td class="r num">{{ formatEuro(row.cash, 0) }}</td>
               <td class="r num">{{ row.ratePct.toFixed(2) }} %</td>
-              <td class="r num">{{ fmtEur(row.annualInterest, 2) }}</td>
+              <td class="r num">{{ formatEuro(row.annualInterest, 2) }}</td>
             </tr>
           }
         </tbody>

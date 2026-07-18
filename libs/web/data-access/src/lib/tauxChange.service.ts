@@ -35,10 +35,10 @@ export class TauxChangeService {
 
   /**
    * Convert an EUR-base amount to the display currency and format it with
-   * the right symbol — drop-in replacement for the `fmtEur` helper in
-   * components. Non-breaking spaces are normalised like in `fmtEur`.
+   * the right symbol — drop-in replacement for the `formatEuro` helper in
+   * components. Non-breaking spaces are normalised like in `formatEuro`.
    */
-  fmt(eur: number, d = 2): string {
+  format(eur: number, d = 2): string {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: this.displayCurrency(),

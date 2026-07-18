@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { fmtNum } from '../format';
+import { formatNumber } from '../format';
 
 @Component({
   selector: 'ui-delta',
@@ -39,6 +39,6 @@ export class DeltaComponent {
   protected text = computed(() => {
     const v = this.value() ?? 0;
     const sign = v > 0 ? '+' : '';
-    return `${sign}${fmtNum(v, this.digits())}${this.suffix()}`;
+    return `${sign}${formatNumber(v, this.digits())}${this.suffix()}`;
   });
 }
