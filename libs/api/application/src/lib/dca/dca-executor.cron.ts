@@ -7,6 +7,8 @@ import {
   TransactionRepository,
   ETF_REPOSITORY,
   EtfRepository,
+  ENVELOPE_REPOSITORY,
+  EnvelopeRepository,
   DcaPlan
 } from '@patrimo/api-domain';
 import { PriceService } from '../market/price.service';
@@ -22,6 +24,8 @@ export class DcaExecutorCron {
     private readonly transactionRepository: TransactionRepository,
     @Inject(ETF_REPOSITORY)
     private readonly etfRepository: EtfRepository,
+    @Inject(ENVELOPE_REPOSITORY)
+    private readonly envelopeRepository: EnvelopeRepository,
     private readonly priceService: PriceService,
   ) {}
 
@@ -47,6 +51,9 @@ export class DcaExecutorCron {
   }
 
   private async processPlan(plan: DcaPlan, execDate: Date) {
+    const envelope = await this.envelopeRepository.findById(plan.envelopeId);
+    const isPEA = envelope?.glyph === 'pea' || envelope?.glyph === 'peapme';
+
     let totalInvested = 0;
 
     for (const [isin, amountEur] of Object.entries(plan.allocations)) {
@@ -64,7 +71,8 @@ export class DcaExecutorCron {
         continue;
       }
 
-      const qty = Math.floor(amountEur / quote.price);
+      const q = amountEur / quote.price;
+      const qty = isPEA ? Math.floor(q) : Number(q.toFixed(6));
       if (qty <= 0) {
         this.logger.warn(`DCA Execution: Amount ${amountEur}€ insufficient to buy 1 share of ${etf.ticker} (${quote.price}€)`);
         continue;

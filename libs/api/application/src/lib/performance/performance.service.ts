@@ -928,7 +928,7 @@ export class PerformanceService {
     const byEtf: FeesYtdDto['byEtf'] = [];
     await Promise.allSettled(
       Array.from(qtyMap.entries())
-        .filter(([, qty]) => qty > 0)
+        .filter(([, qty]) => qty > 1e-6)
         .map(async ([isin, qty]) => {
           const etf  = etfByIsin.get(isin);
           if (!etf) return;

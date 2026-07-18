@@ -58,7 +58,7 @@ export class PortfolioService {
 
     const positions = await Promise.all(
       Array.from(byIsin.entries())
-        .filter(([isin, position]) => position.qty > 0 && etfByIsin.has(isin))
+        .filter(([isin, position]) => position.qty > 1e-6 && etfByIsin.has(isin))
         .map(async ([isin, position]) => {
           const etf = etfByIsin.get(isin);
           if (!etf) return null;

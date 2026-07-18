@@ -87,7 +87,7 @@ export class EtfService {
    * Held positions only — catalog rows backed by a net BUY quantity (> 0),
    * as computed by `GET /portfolio` from the transaction history.
    */
-  readonly positions = computed<Etf[]>(() => this.all().filter(e => e.qty > 0));
+  readonly positions = computed<Etf[]>(() => this.all().filter(e => e.qty > 1e-6));
 
   readonly loading = computed(() => this.catalogResource.isLoading() || this.portfolioResource.isLoading());
   readonly error   = computed(() => this.catalogResource.error() ?? this.portfolioResource.error());
