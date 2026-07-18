@@ -33,8 +33,9 @@
     }
     <div style="margin-left:auto;display:flex;gap:6px">
       <input type="file" #fileInput hidden (change)="importFile($event)" accept=".csv" [disabled]="importing()">
+      <button class="btn sm ghost" (click)="downloadTemplate()" data-tip="Télécharger un fichier modèle pour voir le format attendu.">Modèle CSV</button>
       <button class="btn sm" (click)="fileInput.click()" [disabled]="importing()" [attr.aria-busy]="importing()"
-              data-tip="Réimporte un export Patrimo ou un CSV broker au même format — utilise « Exporter » pour voir les colonnes attendues.">
+              data-tip="Importe un fichier modèle rempli ou un export Patrimo.">
         @if (importing()) { Import en cours… } @else { Import CSV }
       </button>
       <button class="btn sm" (click)="exportCsv()">Exporter</button>

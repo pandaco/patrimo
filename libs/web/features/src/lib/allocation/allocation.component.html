@@ -93,6 +93,61 @@
         </table>
         </div>
       }
+
+      @if (executableRebalanceTransactions().length > 0) {
+        <div style="margin-top:24px;border-top:1px solid var(--rule-soft);padding-top:16px">
+          <h3 style="margin:0 0 16px;font-size:16px">Assistant de rééquilibrage pas-à-pas</h3>
+          
+          @if (currentRebalanceStep() < executableRebalanceTransactions().length) {
+            @let stepTx = executableRebalanceTransactions()[currentRebalanceStep()];
+            <div style="background:var(--bg-2);padding:16px;border-radius:8px;">
+              <div style="font-size:11px;font-weight:600;color:var(--ink-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
+                Étape {{ currentRebalanceStep() + 1 }} sur {{ executableRebalanceTransactions().length }}
+              </div>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.5">
+                <span [class.gain]="stepTx.action === 'BUY'" [class.loss]="stepTx.action === 'SELL'" style="font-weight:600">
+                  {{ stepTx.action === 'BUY' ? 'Achète' : 'Vends' }}
+                </span>
+                <b>{{ formatQuantity(stepTx.qty) }} part{{ stepTx.qty > 1 ? 's' : '' }}</b> de
+                <span class="pill solid">{{ stepTx.ticker }}</span> {{ stepTx.name }}
+                <br>
+                <span class="muted small">Montant estimé : environ {{ formatEuro(stepTx.amount, 2) }}</span>
+              </p>
+              
+              <div class="field-row" style="align-items:flex-end">
+                <div class="field" style="margin:0;flex:2">
+                  <label for="step-env-select">Sur quelle enveloppe as-tu passé l'ordre ?</label>
+                  <select id="step-env-select" #envSelect [disabled]="executingStep()">
+                    <option value="" disabled selected>Choisir une enveloppe...</option>
+                    @for (env of envelopes(); track env.id) {
+                      <!-- Afficher uniquement les enveloppes boursières -->
+                      @if (env.glyph !== 'livret' && env.glyph !== 'crypto' && env.glyph !== 'immo') {
+                        <option [value]="env.id">{{ env.label }} ({{ env.broker }})</option>
+                      }
+                    }
+                  </select>
+                </div>
+                <div class="field" style="margin:0;flex:1">
+                  <label for="step-fees-input">Frais retenus (€)</label>
+                  <input id="step-fees-input" type="number" step="0.01" #feesInput value="0" class="num-input" [disabled]="executingStep()">
+                </div>
+                <button class="btn primary" style="height:40px;margin-bottom:1px"
+                        (click)="executeCurrentStep(envSelect.value, feesInput.valueAsNumber || 0)" 
+                        [disabled]="executingStep() || !envSelect.value">
+                  {{ executingStep() ? 'Enregistrement...' : 'C\'est fait ! →' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div style="text-align:center;padding:24px 0;background:var(--gain-soft);border-radius:8px;color:var(--gain)">
+              <div style="font-size:24px;margin-bottom:8px">🎉</div>
+              <div style="font-weight:600;margin-bottom:4px">Rééquilibrage terminé !</div>
+              <p style="margin:0 0 16px;font-size:13px">Ton portefeuille est de nouveau aligné sur ta cible.</p>
+              <button class="btn" (click)="closeRebalance()">Fermer l'assistant</button>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 

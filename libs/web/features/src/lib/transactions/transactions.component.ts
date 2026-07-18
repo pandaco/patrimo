@@ -238,6 +238,21 @@ export class TransactionsComponent {
     URL.revokeObjectURL(url);
   }
 
+  protected downloadTemplate(): void {
+    const header = "date,type,envelope,etf,qty,price,fees,taxes,amount,transferId";
+    const example1 = "2024-01-15,DEPOSIT,pea,,,0,0,0,1000,";
+    const example2 = "2024-01-16,BUY,pea,IE00B5BMR087,2,450.50,0.99,0,901.99,";
+    const csvContent = `${header}\n${example1}\n${example2}\n`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'patrimo_transactions_modele.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   protected async importFile(event: Event): Promise<void> {
     const el   = event.target as HTMLInputElement;
     const file = el.files?.[0];

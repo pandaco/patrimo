@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import {
   AllocationService, API_BASE_URL, EnvelopeService, EtfService, etfValue, TauxChangeService,
-  PreferencesService, StrategyVersionService, ToastService,
+  PreferencesService, StrategyVersionService, ToastService, TransactionService,
 } from '@patrimo/data-access';
 import { AllocationTargetsDto, RebalancePlanDto, StrategyVersionDto } from '@patrimo/contracts';
 import { DeltaComponent, DonutComponent, TermComponent, TipDirective, formatNumber, formatQuantity, formatPercent } from '@patrimo/ui';
@@ -59,8 +59,12 @@ export class AllocationComponent {
   private readonly http     = inject(HttpClient);
   private readonly baseUrl  = inject(API_BASE_URL);
 
+  protected readonly envelopes = this.envelopeService.all;
+
   protected readonly rebalancePlan      = signal<RebalancePlanDto | null>(null);
   protected readonly loadingRebalance   = signal(false);
+  protected readonly currentRebalanceStep = signal<number>(0);
+  protected readonly executingStep = signal(false);
   protected readonly savingVersion      = signal(false);
   /** Currently expanded version row, by id (null = none). */
   protected readonly selectedStrategyV  = signal<string | null>(null);
@@ -220,12 +224,59 @@ export class AllocationComponent {
     if (this.loadingRebalance()) return;
     this.loadingRebalance.set(true);
     this.http.get<RebalancePlanDto>(`${this.baseUrl}/portfolio/rebalance`).subscribe({
-      next: plan => { this.rebalancePlan.set(plan); this.loadingRebalance.set(false); },
+      next: plan => { 
+        this.rebalancePlan.set(plan); 
+        this.currentRebalanceStep.set(0);
+        this.loadingRebalance.set(false); 
+      },
       error: ()  => { this.loadingRebalance.set(false); },
     });
   }
 
-  protected closeRebalance(): void { this.rebalancePlan.set(null); }
+  protected closeRebalance(): void { 
+    this.rebalancePlan.set(null); 
+    this.currentRebalanceStep.set(0);
+  }
+
+  private readonly transactionService = inject(TransactionService);
+
+  protected readonly executableRebalanceTransactions = computed(() => {
+    const plan = this.rebalancePlan();
+    if (!plan) return [];
+    return plan.transactions.filter(t => t.qty > 0);
+  });
+
+  protected async executeCurrentStep(envelopeId: string, customFees: number): Promise<void> {
+    const txs = this.executableRebalanceTransactions();
+    const step = this.currentRebalanceStep();
+    const tx = txs[step];
+    if (!tx || this.executingStep() || !envelopeId) return;
+
+    this.executingStep.set(true);
+    try {
+      await this.transactionService.create({
+        envelopeId,
+        etfIsin: tx.etfIsin,
+        type: tx.action,
+        date: new Date().toISOString().slice(0, 10),
+        quantity: tx.qty,
+        price: tx.price,
+        fees: customFees,
+        taxes: 0,
+        amount: tx.qty * tx.price,
+      });
+      this.toast.success('Opération enregistrée !');
+      if (step < txs.length - 1) {
+        this.currentRebalanceStep.set(step + 1);
+      } else {
+        this.closeRebalance();
+      }
+    } catch {
+      this.toast.error('Erreur lors de l\'enregistrement.');
+    } finally {
+      this.executingStep.set(false);
+    }
+  }
 
   protected readonly coherenceChecks = computed(() => {
     const t         = this.targets();

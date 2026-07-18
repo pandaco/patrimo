@@ -87,6 +87,7 @@ export class TransactionDialogComponent {
 
   // Les frais suivent le barème tant que l'utilisateur n'a pas saisi de valeur.
   protected readonly feesManual = signal(this.editing);
+  protected readonly showAdvanced = signal(this.editing && ((this.source?.taxes ?? 0) > 0 || this.feesManual()));
 
   private lastPrefilledIsin: string | null = null;
 
