@@ -10,7 +10,7 @@ const DEV_LOGIN_URL = `${API_URL}/api/auth/dev-login`;
 
 
 async function navigateTo(page: Page, href: string) {
-  await page.locator(`a[href="${href}"]`).filter({ visible: true }).first().click({ force: true });
+  await page.locator(`a[href="${href}"]`).filter({ visible: true }).first().click();
 }
 
 /**
@@ -183,9 +183,10 @@ test.describe('Patrimo E2E Tests', () => {
     // Wait for the data to finish loading
     await expect(page.locator('.page[data-loaded="true"]')).toBeVisible();
 
-    const text = (await page.locator('.page-eyebrow').textContent()) ?? '';
-    const match = /Journal — (\d+)/.exec(text);
-    const initialCount = match ? Number(match[1]) : 0;
+    await expect(page.locator('.page-eyebrow')).toHaveText(/Journal — \d+/);
+    const text = (await page.locator('.page-eyebrow').textContent()) as string;
+    const match = /Journal — (\d+)/.exec(text) as RegExpExecArray;
+    const initialCount = Number(match[1]);
 
     // Open transaction dialog via stable test-id (not relying on French button label).
     await page.click('[data-testid="open-transaction-dialog"]');

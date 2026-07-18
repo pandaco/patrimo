@@ -59,7 +59,7 @@ patrimo/
 ├── design/                   # Prototype de référence visuelle
 ├── docs/                     # Documentation publique (+ docs/adr/ — décisions)
 ├── docker-compose.yml        # postgres:18.4-alpine + redis:8.6-alpine
-├── libs/api/application/src/lib/market/synthetic-exposures.json # Config des ETF Synthétiques
+├── libs/api/application/src/lib/market/synthetic-exposures.ts    # Config des ETF Synthétiques
 └── .env.example
 ```
 

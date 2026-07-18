@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostListener, inject, input, output, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AlertService, EtfService } from '@patrimo/data-access';
 import { AppIconComponent, KeyboardShortcutService } from '@patrimo/ui';
 

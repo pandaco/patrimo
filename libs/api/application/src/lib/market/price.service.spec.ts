@@ -6,14 +6,14 @@ import { JustEtfProvider } from './justetf.provider';
 
 describe('PriceService', () => {
   let service: PriceService;
-  let cache: any;
-  let provider: any;
-  let justEtf: any;
+  let cache: jest.Mocked<PriceCacheService>;
+  let provider: jest.Mocked<YahooPriceProvider>;
+  let justEtf: jest.Mocked<JustEtfProvider>;
 
   beforeEach(async () => {
-    cache = { get: jest.fn(), set: jest.fn(), getQuote: jest.fn(), setQuote: jest.fn(), invalidate: jest.fn(), getHistory: jest.fn(), setHistory: jest.fn() };
-    provider = { fetch: jest.fn(), fetchMetadata: jest.fn(), fetchHistorical: jest.fn() };
-    justEtf = { fetchExposure: jest.fn() };
+    cache = { get: jest.fn(), set: jest.fn(), getQuote: jest.fn(), setQuote: jest.fn(), invalidate: jest.fn(), getHistory: jest.fn(), setHistory: jest.fn() } as unknown as jest.Mocked<PriceCacheService>;
+    provider = { fetch: jest.fn(), fetchMetadata: jest.fn(), fetchHistorical: jest.fn() } as unknown as jest.Mocked<YahooPriceProvider>;
+    justEtf = { fetchExposure: jest.fn() } as unknown as jest.Mocked<JustEtfProvider>;
 
     const mod = await Test.createTestingModule({
       providers: [

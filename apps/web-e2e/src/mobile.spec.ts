@@ -16,7 +16,7 @@ async function login(page: Page): Promise<void> {
 }
 
 test.describe('Mobile shell & responsive smoke', () => {
-  // Only meaningful on the mobile viewport project (Pixel 5).
+  // eslint-disable-next-line playwright/no-skipped-test
   test.skip(({ isMobile }) => !isMobile, 'mobile viewport only');
 
   test.beforeEach(async ({ page }) => {
@@ -32,7 +32,7 @@ test.describe('Mobile shell & responsive smoke', () => {
     await expect(bottomNav).toBeVisible();
     await expect(bottomNav.locator('a')).toHaveCount(5);
 
-    await bottomNav.locator('a[href="/portfolio"]').click({ force: true });
+    await bottomNav.locator('a[href="/portfolio"]').click();
     await page.waitForURL(/\/portfolio(\?|#|$)/);
     await expect(bottomNav.locator('a[href="/portfolio"]')).toHaveClass(/active/);
   });
@@ -118,12 +118,9 @@ test.describe('Mobile shell & responsive smoke', () => {
     const modal = page.locator('.transaction-dialog-panel .modal');
     await expect(modal).toBeVisible();
 
-    const viewport = page.viewportSize();
-    const box = await modal.boundingBox();
-    expect(box).not.toBeNull();
-    if (box && viewport) {
-      expect(box.width).toBeLessThanOrEqual(viewport.width);
-    }
+    const viewport = page.viewportSize() as { width: number; height: number };
+    const box = (await modal.boundingBox()) as { width: number; height: number };
+    expect(box.width).toBeLessThanOrEqual(viewport.width);
     // The type picker wraps instead of cramming 3 fixed columns.
     await expect(page.locator('.type-picker button').first()).toBeVisible();
   });

@@ -77,10 +77,10 @@ export class EtfDialogComponent {
       try {
         const meta = await this.etfService.metadata(query);
         if (meta.ter !== null) this.ter.set(meta.ter);
-        if (meta.repli) this.repli.set(meta.repli as any);
-        if (meta.distrib) this.distrib.set(meta.distrib as any);
+        if (meta.repli) this.repli.set(meta.repli as '' | 'Physique' | 'Synthétique');
+        if (meta.distrib) this.distrib.set(meta.distrib as 'Capitalisant' | 'Distribuant');
         if (meta.issuer) this.issuer.set(meta.issuer);
-      } catch (e) {
+      } catch {
         // Ignore metadata fetch errors
       }
     }
