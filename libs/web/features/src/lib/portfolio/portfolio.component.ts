@@ -32,6 +32,13 @@ export class PortfolioComponent {
   protected readonly expandedIsin = signal<string | null>(null);
   protected readonly envelopeFilter = signal<string | null>(null);
 
+  protected readonly envelopeFilterLabel = computed(() => {
+    const id = this.envelopeFilter();
+    if (!id) return '';
+    const env = this.envelopeService.all().find(e => e.id === id);
+    return env ? `${env.label} — ${env.broker}` : '';
+  });
+
   constructor() {
     this.route.queryParams.subscribe(params => {
       if (params['env']) {
