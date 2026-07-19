@@ -182,6 +182,10 @@
               <span data-tip="Plafond légal de versements de cette enveloppe (ex. 22 950 € pour le Livret A, 150 000 € pour le PEA). La barre montre ton remplissage — seuls les versements comptent, pas les gains.">Versements : {{ formatEuro(env.contributed, 0) }} / {{ formatEuro(env.plafond!, 0) }}</span>
               <span class="num" style="margin-left:auto">{{ formatPercentRaw(capPct(env)!, 0) }}</span>
             </div>
+          } @else {
+            <div class="row small muted" style="margin-top:14px">
+              <span data-tip="Montant total versé sur cette enveloppe (dépôts nets).">Versements : {{ formatEuro(env.contributed, 0) }}</span>
+            </div>
           }
           <button class="btn sm ghost" style="margin-top:14px;width:100%"
                   (click)="openAddTx(env)">+ Ajouter une opération</button>
