@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { API_BASE_URL, EnvelopeService, EtfService, TauxChangeService, ToastService, Transaction, TransactionService, TransactionType } from '@patrimo/data-access';
@@ -44,6 +45,15 @@ export class TransactionsComponent {
   protected readonly envelopeFilter = signal('');
   protected readonly etfFilter      = signal('');
   protected readonly searchQuery    = signal('');
+
+  constructor() {
+    const route = inject(ActivatedRoute);
+    route.queryParams.subscribe(params => {
+      if (params['env']) this.envelopeFilter.set(params['env']);
+      if (params['etf']) this.etfFilter.set(params['etf']);
+      if (params['type']) this.activeFilter.set(params['type'] as FilterType);
+    });
+  }
 
   protected readonly loading   = this.transactionService.loading;
   protected readonly envelopes = this.envelopeService.all;

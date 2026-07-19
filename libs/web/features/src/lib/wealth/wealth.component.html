@@ -144,9 +144,9 @@
           <div class="row" style="margin-bottom:14px;padding-right:68px">
             <ui-env-glyph [env]="env" [size]="36" />
             <div class="grow">
-              <div class="serif" style="font-size:16px;line-height:1.1;letter-spacing:-0.02em;font-weight:600">
+              <a [routerLink]="['/transactions']" [queryParams]="{env: env.id}" class="serif" style="font-size:16px;line-height:1.1;letter-spacing:-0.02em;font-weight:600; text-decoration:none; color:inherit; display:block">
                 {{ env.label }}
-              </div>
+              </a>
               <div class="muted small">{{ env.broker }}</div>
             </div>
             <ui-delta [value]="pnlPct(env)" />
