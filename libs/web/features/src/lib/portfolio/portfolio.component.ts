@@ -72,11 +72,11 @@ export class PortfolioComponent {
         const sign = t.type === 'BUY' ? 1 : -1;
         const price = t.price ?? 0;
         const costs = (t.fees ?? 0) + (t.taxes ?? 0);
-        const grossCost = t.quantity * price + (t.type === 'BUY' ? costs : -costs);
-        pos.qty += sign * t.quantity;
+        const grossCost = t.qty * price + (t.type === 'BUY' ? costs : -costs);
+        pos.qty += sign * t.qty;
         pos.invested += sign * grossCost;
         if (sign > 0) {
-          pos.buyQty += t.quantity;
+          pos.buyQty += t.qty;
           pos.buyCost += grossCost;
         }
       }

@@ -7,7 +7,7 @@
               style="padding: 4px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink-2); outline: none; cursor: pointer; margin-left: -8px;">
         <option value="" [selected]="!envelopeFilter()">TOUTES ENVELOPPES CONFONDUES</option>
         @for (env of envelopeService.all(); track env.id) {
-          <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label | uppercase }}</option>
+          <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label }}</option>
         }
       </select>
     </div>
