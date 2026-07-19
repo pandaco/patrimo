@@ -138,15 +138,15 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
         <span class="muted tiny" aria-live="polite">· mise à jour…</span>
       }
     </span>
-    <div class="section-right" style="gap: 12px; display: flex; align-items: center;">
-      <select [value]="envelopeFilter() || ''" (change)="setEnvelopeFilter($any($event.target).value)"
-              aria-label="Filtrer par enveloppe"
-              style="padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer;">
-        <option value="" [selected]="!envelopeFilter()">Toutes les enveloppes</option>
-        @for (env of envelopeService.all(); track env.id) {
-          <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label }} — {{ env.broker }}</option>
-        }
-      </select>
+    <select [value]="envelopeFilter() || ''" (change)="setEnvelopeFilter($any($event.target).value)"
+            aria-label="Filtrer par enveloppe"
+            style="max-width:100%;padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer;margin-bottom:8px;">
+      <option value="" [selected]="!envelopeFilter()">Toutes les enveloppes</option>
+      @for (env of envelopeService.all(); track env.id) {
+        <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label }} — {{ env.broker }}</option>
+      }
+    </select>
+    <div class="section-right" style="flex-wrap: wrap; justify-content: flex-end;">
       <div class="tabs">
         @for (tab of allocTabs; track tab) {
           <button [class.active]="allocFilter() === tab" (click)="allocFilter.set(tab)">{{ tab }}</button>
