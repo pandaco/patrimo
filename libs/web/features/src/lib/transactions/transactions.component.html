@@ -55,17 +55,17 @@
     <select [value]="envelopeFilter()" (change)="envelopeFilter.set($any($event.target).value)"
             aria-label="Filtrer par enveloppe"
             style="padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)">
-      <option value="">Toutes les enveloppes</option>
+      <option value="" [selected]="envelopeFilter() === ''">Toutes les enveloppes</option>
       @for (env of envelopes(); track env.id) {
-        <option [value]="env.id">{{ env.label }} — {{ env.broker }}</option>
+        <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label }} — {{ env.broker }}</option>
       }
     </select>
     <select [value]="etfFilter()" (change)="etfFilter.set($any($event.target).value)"
             aria-label="Filtrer par instrument"
             style="padding:6px 10px;font-size:12.5px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)">
-      <option value="">Tous les instruments</option>
+      <option value="" [selected]="etfFilter() === ''">Tous les instruments</option>
       @for (etf of tradedEtfs(); track etf.isin) {
-        <option [value]="etf.isin">{{ etf.ticker }} — {{ etf.name }}</option>
+        <option [value]="etf.isin" [selected]="etfFilter() === etf.isin">{{ etf.ticker }} — {{ etf.name }}</option>
       }
     </select>
     @if (hasActiveFilters()) {

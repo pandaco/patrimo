@@ -54,6 +54,7 @@ export interface FamilyRow {
   standalone: true,
   imports: [RouterLink, DeltaComponent, EnvGlyphComponent, TipDirective],
   templateUrl: './wealth.component.html',
+  styles: [`.env-title-link { transition: opacity 0.15s; } .env-title-link:hover { text-decoration: underline !important; opacity: 0.8; }`],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WealthComponent {
