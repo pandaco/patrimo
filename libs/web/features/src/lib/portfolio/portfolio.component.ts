@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService } from '@patrimo/data-access';
+import { ActivatedRoute, Router } from '@angular/router';
+import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService, EnvelopeService } from '@patrimo/data-access';
 import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
@@ -20,20 +21,83 @@ export class PortfolioComponent {
   private readonly etfService  = inject(EtfService);
   private readonly exposureService  = inject(ExposureService);
   private readonly transactionService   = inject(TransactionService);
+  protected readonly envelopeService = inject(EnvelopeService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly http    = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
   protected readonly allocFilter = signal<AllocFilter>('Toutes');
   protected readonly allocTabs: AllocFilter[] = ['Toutes', 'Core', 'Satellite', 'Obligations'];
   protected readonly expandedIsin = signal<string | null>(null);
+  protected readonly envelopeFilter = signal<string | null>(null);
+
+  constructor() {
+    this.route.queryParams.subscribe(params => {
+      if (params['env']) {
+        this.envelopeFilter.set(params['env']);
+      } else {
+        this.envelopeFilter.set(null);
+      }
+    });
+  }
+
+  protected setEnvelopeFilter(envId: string): void {
+    if (envId) {
+      this.router.navigate([], { queryParams: { env: envId }, queryParamsHandling: 'merge' });
+    } else {
+      const currentParams = { ...this.route.snapshot.queryParams };
+      delete currentParams['env'];
+      this.router.navigate([], { queryParams: currentParams });
+    }
+  }
 
   protected toggleRow(isin: string): void {
     this.expandedIsin.update(current => current === isin ? null : isin);
   }
 
-  // Held positions only — catalog entries browsed in the comparateur have
-  // no place in the portfolio table or its totals.
-  protected readonly allEtfs  = this.etfService.positions;
+  // Cost-basis-aware local accumulation if envelope is selected
+  protected readonly allEtfs = computed(() => {
+    const envId = this.envelopeFilter();
+    const globalEtfs = this.etfService.all();
+    if (!envId) return this.etfService.positions();
+
+    const txs = this.transactionService.all().filter(t => t.envelope === envId);
+    const byIsin = new Map<string, { qty: number; invested: number; buyQty: number; buyCost: number }>();
+
+    for (const t of txs) {
+      if (!t.etf) continue;
+      const pos = byIsin.get(t.etf) ?? { qty: 0, invested: 0, buyQty: 0, buyCost: 0 };
+      if (t.type === 'BUY' || t.type === 'SELL') {
+        const sign = t.type === 'BUY' ? 1 : -1;
+        const price = t.price ?? 0;
+        const costs = (t.fees ?? 0) + (t.taxes ?? 0);
+        const grossCost = t.quantity * price + (t.type === 'BUY' ? costs : -costs);
+        pos.qty += sign * t.quantity;
+        pos.invested += sign * grossCost;
+        if (sign > 0) {
+          pos.buyQty += t.quantity;
+          pos.buyCost += grossCost;
+        }
+      }
+      byIsin.set(t.etf, pos);
+    }
+
+    return Array.from(byIsin.entries())
+      .filter(([isin, pos]) => pos.qty > 1e-6)
+      .map(([isin, pos]) => {
+        const etf = globalEtfs.find(e => e.isin === isin);
+        if (!etf) return null;
+        return {
+          ...etf,
+          qty: pos.qty,
+          pru: pos.buyQty > 0 ? pos.buyCost / pos.buyQty : 0,
+        };
+      })
+      .filter((e): e is Etf => e !== null)
+      .sort((a, b) => etfValue(b) - etfValue(a));
+  });
+
   protected readonly sparks   = this.etfService.sparks;
   protected readonly loading  = this.etfService.loading;
   protected readonly geography     = this.exposureService.geography;
@@ -52,9 +116,12 @@ export class PortfolioComponent {
 
   // Cost-basis-aware FIFO replay of every BUY/SELL, scoped to the current
   // calendar year. The pure function and its spec live in `realized-plusValue.ts`.
-  private readonly realizedReport = computed(() =>
-    computeRealized(this.transactionService.all(), startOfYearISO()),
-  );
+  private readonly realizedReport = computed(() => {
+    const envId = this.envelopeFilter();
+    let txs = this.transactionService.all();
+    if (envId) txs = txs.filter(t => t.envelope === envId);
+    return computeRealized(txs, startOfYearISO());
+  });
   protected readonly realizedYtd      = computed(() => this.realizedReport().realizedSince);
   protected readonly orphanSellCount  = computed(() => this.realizedReport().orphanSellCount);
   protected readonly orphanSellUnits  = computed(() => this.realizedReport().orphanSellUnits);
@@ -82,9 +149,13 @@ export class PortfolioComponent {
   protected readonly overlaps = computed(() => computeEtfOverlaps(this.allEtfs()));
 
   protected readonly dividends12M = computed(() => {
+    const envId = this.envelopeFilter();
     const cutoff = new Date();
     cutoff.setFullYear(cutoff.getFullYear() - 1);
-    const divs = this.transactionService.all().filter(t =>
+    let txs = this.transactionService.all();
+    if (envId) txs = txs.filter(t => t.envelope === envId);
+    
+    const divs = txs.filter(t =>
       (t.type === 'DIVIDEND' || t.type === 'INTEREST') && new Date(t.date) >= cutoff,
     );
     return { total: divs.reduce((a, t) => a + t.amount, 0), count: divs.length };

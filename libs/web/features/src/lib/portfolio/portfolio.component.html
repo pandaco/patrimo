@@ -1,7 +1,16 @@
 <div class="page">
 
   <div class="page-head">
-    <div class="page-eyebrow">Toutes enveloppes confondues</div>
+    <div class="page-eyebrow">
+      <select [value]="envelopeFilter() || ''" (change)="setEnvelopeFilter($any($event.target).value)"
+              aria-label="Filtrer par enveloppe"
+              style="padding: 4px 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); color: var(--ink-2); outline: none; cursor: pointer; margin-left: -8px;">
+        <option value="" [selected]="!envelopeFilter()">TOUTES ENVELOPPES CONFONDUES</option>
+        @for (env of envelopeService.all(); track env.id) {
+          <option [value]="env.id" [selected]="envelopeFilter() === env.id">{{ env.label | uppercase }}</option>
+        }
+      </select>
+    </div>
     <h1 class="page-title">Portefeuille <em>boursier</em></h1>
     @if (allEtfs().length === 0) {
       <p class="page-sub">
