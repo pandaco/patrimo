@@ -17,6 +17,7 @@ const YAHOO_OVERRIDES: Record<string, string> = {
   'FR0013346681': 'OBLI.PA',
   'IE00B44Z5B48': 'SPYY.DE',
   'LU0908500753': 'MEUD.PA',
+  'FR0013416716': 'GOLD-EUR.PA',
 };
 
 export function toYahooSymbol(isin: string, ticker: string): string {
