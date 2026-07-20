@@ -174,6 +174,26 @@ export class DashboardComponent {
 
   protected readonly topAlerts    = computed(() => this.alerts.all().slice(0, 3));
 
+  // --- NOUVEAUTÉ: Projets & Benchmarking Social ---
+  protected readonly goalTarget = signal(50000); // Objectif "Apport Maison" 50k
+  protected readonly goalProgress = computed(() => {
+    const wealth = this.totalValue();
+    if (wealth === 0) return 0;
+    return Math.min(100, (wealth / this.goalTarget()) * 100);
+  });
+  
+  protected readonly socialBenchmark = computed(() => {
+    const wealth = this.totalValue();
+    if (wealth < 5000) return { pct: 80, text: "Tu commences à construire ton patrimoine. Continue !" };
+    if (wealth < 20000) return { pct: 70, text: "Tu as plus de patrimoine que 30% des Français." };
+    if (wealth < 50000) return { pct: 60, text: "Tu as plus de patrimoine que 40% des Français." };
+    if (wealth < 100000) return { pct: 50, text: "Tu as plus de patrimoine que la moitié des Français !" };
+    if (wealth < 200000) return { pct: 30, text: "Tu fais partie des 30% des Français les plus aisés." };
+    if (wealth < 500000) return { pct: 10, text: "Tu fais partie des 10% des Français les plus aisés." };
+    return { pct: 1, text: "Tu fais partie des 1% des Français les plus riches." };
+  });
+  // ------------------------------------------------
+
   // httpResource resets `value()` to the default while re-fetching, so a bare
   // read would blank the chart on every period switch. These linked signals
   // hold on to the last non-empty payload: the old curve stays rendered
