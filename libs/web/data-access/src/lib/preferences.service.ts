@@ -15,6 +15,8 @@ const DEFAULTS: UserPreferencesDto = {
   benchmarkIsin:   'FR0010261198',
   livretRatePct:   2.4,
   allocationTargets: null,
+  goalName:        'Apport Maison',
+  goalTarget:      50000,
 };
 
 @Injectable({ providedIn: 'root' })

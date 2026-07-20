@@ -17,6 +17,8 @@ const DEFAULTS: UserPreferencesDto = {
   benchmarkIsin:   'FR0010261198',
   livretRatePct:   2.4,
   allocationTargets: null,
+  goalName:        'Apport Maison',
+  goalTarget:      50000,
 };
 
 function toDto(row: UserPreferences | null): UserPreferencesDto {
@@ -31,6 +33,8 @@ function toDto(row: UserPreferences | null): UserPreferencesDto {
     benchmarkIsin:     row.benchmarkIsin,
     livretRatePct:     row.livretRatePct,
     allocationTargets: row.allocationTargets,
+    goalName:          row.goalName,
+    goalTarget:        row.goalTarget,
   };
 }
 

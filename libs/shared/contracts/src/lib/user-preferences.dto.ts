@@ -19,6 +19,10 @@ export interface UserPreferencesDto {
   /** Reference Livret A rate (%/yr) the dashboard compares the portfolio against. */
   livretRatePct:     number;
   allocationTargets: AllocationTargetsDto | null;
+  /** Name of the user's primary savings goal (e.g., Apport Maison). */
+  goalName:          string | null;
+  /** Target amount for the user's primary savings goal. */
+  goalTarget:        number | null;
 }
 
 export type UpdateUserPreferencesDto = Partial<UserPreferencesDto>;

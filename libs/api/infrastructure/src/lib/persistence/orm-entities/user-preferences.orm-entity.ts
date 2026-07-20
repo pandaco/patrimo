@@ -48,6 +48,12 @@ export class UserPreferencesOrmEntity {
   @Column({ name: 'allocation_targets', type: 'jsonb', nullable: true })
   allocationTargets!: unknown | null;
 
+  @Column({ name: 'goal_name', type: 'varchar', length: 128, nullable: true })
+  goalName!: string | null;
+
+  @Column({ name: 'goal_target', type: 'numeric', precision: 18, scale: 6, nullable: true, transformer: decimalTransformer })
+  goalTarget!: number | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

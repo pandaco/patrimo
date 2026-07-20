@@ -96,6 +96,8 @@ export class PreferencesComponent {
   protected uiMode          = signal<'simple' | 'expert' | ''>('');
   protected benchmarkIsin   = signal('');
   protected livretRatePct   = signal<number | null>(2.4);
+  protected goalName        = signal('');
+  protected goalTarget      = signal<number | null>(50000);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -111,6 +113,8 @@ export class PreferencesComponent {
       if (!this.uiMode()) this.uiMode.set(c.uiMode);
       if (!this.benchmarkIsin()) this.benchmarkIsin.set(c.benchmarkIsin);
       if (this.livretRatePct() === 2.4 && c.livretRatePct !== 2.4) this.livretRatePct.set(c.livretRatePct);
+      if (!this.goalName() && c.goalName) this.goalName.set(c.goalName);
+      if (this.goalTarget() === 50000 && c.goalTarget !== 50000) this.goalTarget.set(c.goalTarget);
     });
   }
 
@@ -128,6 +132,8 @@ export class PreferencesComponent {
       benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
       livretRatePct:     Math.max(0, Math.min(20, this.livretRatePct() ?? 0)),
       allocationTargets: this.preferences.current().allocationTargets,
+      goalName:          this.goalName().trim() || 'Apport Maison',
+      goalTarget:        Math.max(0, this.goalTarget() ?? 50000),
     };
 
     this.submitting.set(true);

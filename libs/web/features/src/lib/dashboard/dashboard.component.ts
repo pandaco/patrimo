@@ -175,7 +175,9 @@ export class DashboardComponent {
   protected readonly topAlerts    = computed(() => this.alerts.all().slice(0, 3));
 
   // --- NOUVEAUTÉ: Projets & Benchmarking Social ---
-  protected readonly goalTarget = signal(50000); // Objectif "Apport Maison" 50k
+  protected readonly goalTarget = computed(() => this.preferences.current().goalTarget || 50000);
+  protected readonly goalName = computed(() => this.preferences.current().goalName || '🏡 Apport Maison');
+  
   protected readonly goalProgress = computed(() => {
     const wealth = this.totalValue();
     if (wealth === 0) return 0;

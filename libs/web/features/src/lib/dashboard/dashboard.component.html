@@ -241,7 +241,7 @@
         <div class="hero-side-title" data-tip="Ces outils t'aident à situer ton patrimoine dans la vie réelle, au-delà des chiffres.">Projets & Repères</div>
         
         <div class="hero-metric">
-          <div class="hero-metric-label">Objectif : 🏡 Apport Maison</div>
+          <div class="hero-metric-label">Objectif : {{ goalName() }}</div>
           <div class="hero-metric-value">{{ formatEuro(goalTarget(), 0) }}</div>
           <div class="progress-bar-wrap" style="margin-top: 6px; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; position: relative;">
             <div style="height: 100%; background: var(--ink); border-radius: 4px; transition: width 0.3s;" [style.width]="goalProgress() + '%'"></div>

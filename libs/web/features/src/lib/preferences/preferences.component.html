@@ -80,6 +80,24 @@
     </div>
 
     <div class="divider-soft" style="margin:20px 0 16px"></div>
+    <div class="card-title" style="margin-bottom:16px">Projet de <em>vie</em></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="pref-goal-name">Nom du projet</label>
+        <input id="pref-goal-name" type="text" class="text-input" placeholder="Ex: Apport Maison"
+               [ngModel]="goalName()" (ngModelChange)="goalName.set($event)" />
+        <div class="field-help">Donne un but concret à ton épargne pour rester motivé (affiché sur le tableau de bord).</div>
+      </div>
+      <div class="field">
+        <label for="pref-goal-target">Montant cible (€)</label>
+        <input id="pref-goal-target" type="number" min="0" step="1000" class="num-input"
+               [ngModel]="goalTarget()" (ngModelChange)="goalTarget.set($event)" />
+        <div class="field-help">La somme totale que tu vises. La jauge de complétion se mettra à jour en temps réel.</div>
+      </div>
+    </div>
+
+    <div class="divider-soft" style="margin:20px 0 16px"></div>
 
     <div class="row" style="align-items:center;justify-content:space-between">
       <div>

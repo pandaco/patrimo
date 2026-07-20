@@ -63,4 +63,15 @@ export class UpdatePreferencesDtoBody {
   @IsOptional()
   @IsObject()
   allocationTargets?: Record<string, unknown> | null;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 128)
+  goalName?: string | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  goalTarget?: number | null;
 }

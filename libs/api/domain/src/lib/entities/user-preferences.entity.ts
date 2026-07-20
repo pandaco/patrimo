@@ -14,6 +14,10 @@ export interface UserPreferences {
   livretRatePct:   number;
   /** Optional allocation targets (strategic/tactic/etf). `null` while the user has not set them. */
   allocationTargets: AllocationTargets | null;
+  /** Name of the user's primary savings goal (e.g., Apport Maison). */
+  goalName:        string | null;
+  /** Target amount for the user's primary savings goal. */
+  goalTarget:      number | null;
   createdAt: Date;
   updatedAt: Date;
 }
