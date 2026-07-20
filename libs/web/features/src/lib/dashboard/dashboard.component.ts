@@ -175,13 +175,15 @@ export class DashboardComponent {
   protected readonly topAlerts    = computed(() => this.alerts.all().slice(0, 3));
 
   // --- NOUVEAUTÉ: Projets & Benchmarking Social ---
-  protected readonly goalTarget = computed(() => this.preferences.current().goalTarget || 50000);
-  protected readonly goalName = computed(() => this.preferences.current().goalName || '🏡 Apport Maison');
+  protected readonly goalTarget = computed(() => this.preferences.current().goalTarget);
+  protected readonly goalName = computed(() => this.preferences.current().goalName);
   
   protected readonly goalProgress = computed(() => {
+    const target = this.goalTarget();
+    if (!target) return 0;
     const wealth = this.totalValue();
     if (wealth === 0) return 0;
-    return Math.min(100, (wealth / this.goalTarget()) * 100);
+    return Math.min(100, (wealth / target) * 100);
   });
   
   protected readonly socialBenchmark = computed(() => {

@@ -11,7 +11,7 @@ import { PreferencesService } from '@patrimo/data-access';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GoalsSettingsComponent {
-  private readonly preferences  = inject(PreferencesService);
+  protected readonly preferences  = inject(PreferencesService);
 
   protected goalName   = signal('');
   protected goalTarget = signal<number | null>(50000);

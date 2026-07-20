@@ -240,14 +240,22 @@
         <div class="hero-metric-rule"></div>
         <div class="hero-side-title" data-tip="Ces outils t'aident à situer ton patrimoine dans la vie réelle, au-delà des chiffres.">Projets & Repères</div>
         
-        <div class="hero-metric">
-          <div class="hero-metric-label">Objectif : {{ goalName() }}</div>
-          <div class="hero-metric-value">{{ formatEuro(goalTarget(), 0) }}</div>
-          <div class="progress-bar-wrap" style="margin-top: 6px; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; position: relative;">
-            <div style="height: 100%; background: var(--ink); border-radius: 4px; transition: width 0.3s;" [style.width]="goalProgress() + '%'"></div>
+        @if (goalName() && goalTarget()) {
+          <div class="hero-metric">
+            <div class="hero-metric-label">Objectif : {{ goalName() }}</div>
+            <div class="hero-metric-value">{{ formatEuro(goalTarget()!, 0) }}</div>
+            <div class="progress-bar-wrap" style="margin-top: 6px; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; position: relative;">
+              <div style="height: 100%; background: var(--ink); border-radius: 4px; transition: width 0.3s;" [style.width]="goalProgress() + '%'"></div>
+            </div>
+            <div class="hero-metric-cap" style="margin-top: 4px;">{{ formatPercent(goalProgress(), 1) }} financé (reste {{ formatEuro(goalTarget()! - totalValue(), 0) }})</div>
           </div>
-          <div class="hero-metric-cap" style="margin-top: 4px;">{{ formatPercent(goalProgress(), 1) }} financé (reste {{ formatEuro(goalTarget() - totalValue(), 0) }})</div>
-        </div>
+        } @else {
+          <div class="hero-metric">
+            <div class="hero-metric-label">Projet de vie</div>
+            <div class="hero-metric-cap" style="margin-bottom: 8px;">Donne un but concret à ton épargne.</div>
+            <a routerLink="/settings/goals" class="btn sm ghost" style="width: 100%; justify-content: center; border-color: var(--rule-soft)">Définir mon objectif</a>
+          </div>
+        }
 
         <div class="hero-metric" style="margin-top: 16px;">
           <div class="hero-metric-label"><span data-tip="Basé sur la distribution INSEE du patrimoine des Français.">📊 Benchmarking Social</span></div>
