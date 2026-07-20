@@ -1,0 +1,26 @@
+<div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
+  <div class="card-head">
+    <div class="card-title">Historique <em>d'audit</em></div>
+    <span class="card-sub">Tes dernières modifications de compte (sécurité)</span>
+  </div>
+
+  @if (activityLoading()) {
+    <p class="muted small" style="margin:0">Chargement…</p>
+  } @else if (recentActivity().length === 0) {
+    <p class="muted small" style="margin:0">
+      Aucune activité pour l'instant. Tes créations, modifications et
+      suppressions apparaîtront ici.
+    </p>
+  } @else {
+    <div style="margin-top: 16px;">
+      @for (a of recentActivity(); track a.id) {
+        <div class="row" style="justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--rule-soft);font-size:13.5px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-weight:500">{{ a.label }}</span>
+          </div>
+          <span class="muted tiny num">{{ a.when }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

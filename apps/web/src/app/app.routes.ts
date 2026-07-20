@@ -153,15 +153,35 @@ export const appRoutes: Route[] = [
           ),
       },
       {
-        path: 'settings/preferences',
+        path: 'settings',
         loadComponent: () =>
-          import('@patrimo/features').then((m) => m.PreferencesComponent),
+          import('@patrimo/features').then((m) => m.SettingsLayoutComponent),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'general' },
+          {
+            path: 'general',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.GeneralSettingsComponent),
+          },
+          {
+            path: 'goals',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.GoalsSettingsComponent),
+          },
+          {
+            path: 'allocation',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.AllocationSettingsComponent),
+          },
+          {
+            path: 'audit',
+            loadComponent: () =>
+              import('@patrimo/features').then((m) => m.AuditSettingsComponent),
+          },
+        ]
       },
-      {
-        path: 'settings/allocation',
-        loadComponent: () =>
-          import('@patrimo/features').then((m) => m.AllocationSettingsComponent),
-      },
+      // Keep old links working or remove them since they are covered by the new ones
+      { path: 'settings/preferences', redirectTo: 'settings/general' },
     ],
   },
 ];

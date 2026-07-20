@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuditLogEntryDto, UpdateUserPreferencesDto } from '@patrimo/contracts';
-import { AuditLogService, EtfService, PreferencesService } from '@patrimo/data-access';
+import { UpdateUserPreferencesDto } from '@patrimo/contracts';
+import { EtfService, PreferencesService } from '@patrimo/data-access';
+import { API_BASE_URL } from '@patrimo/data-access';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 const RISK_PROFILES = [
   'Prudent',
@@ -14,45 +17,15 @@ const RISK_PROFILES = [
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'] as const;
 
-// Code resource (controller-derived) → French label for the activity feed.
-const RESOURCE_LABELS: Record<string, string> = {
-  Envelope:    'Enveloppe',
-  Transaction: 'Opération',
-  Etf:         'ETF',
-  Dca:         'Plan DCA',
-  Alert:       "Règle d'alerte",
-  Preferences: 'Préférences',
-  Strategy:    'Version de stratégie',
-  Portfolio:   'Portefeuille',
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  create:  'Création',
-  update:  'Modification',
-  delete:  'Suppression',
-  refresh: 'Rafraîchissement',
-};
-
-const ACTIVITY_DATE_FMT = new Intl.DateTimeFormat('fr-FR', {
-  day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-});
-
-interface ActivityRow { id: string; label: string; when: string }
-
-import { API_BASE_URL } from '@patrimo/data-access';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-
 @Component({
-  selector: 'app-preferences',
+  selector: 'app-general-settings',
   standalone: true,
-  imports: [FormsModule, RouterLink],
-  templateUrl: './preferences.component.html',
+  imports: [FormsModule],
+  templateUrl: './general-settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PreferencesComponent {
+export class GeneralSettingsComponent {
   private readonly preferences  = inject(PreferencesService);
-  private readonly auditLog = inject(AuditLogService);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
@@ -78,17 +51,6 @@ export class PreferencesComponent {
   protected readonly loading      = this.preferences.loading;
   protected readonly etfCatalog   = inject(EtfService).all;
 
-  protected readonly activityLoading = this.auditLog.loading;
-
-  /** Recent account mutations, French-labelled, newest first. */
-  protected readonly recentActivity = computed<ActivityRow[]>(() =>
-    this.auditLog.all().map((entry: AuditLogEntryDto) => ({
-      id:    entry.id,
-      label: `${ACTION_LABELS[entry.action] ?? entry.method} · ${RESOURCE_LABELS[entry.resource] ?? entry.resource}`,
-      when:  ACTIVITY_DATE_FMT.format(new Date(entry.createdAt)),
-    })),
-  );
-
   protected riskProfile     = signal('');
   protected horizonYears    = signal<number | null>(25);
   protected monthlyTarget   = signal<number | null>(0);
@@ -96,8 +58,6 @@ export class PreferencesComponent {
   protected uiMode          = signal<'simple' | 'expert' | ''>('');
   protected benchmarkIsin   = signal('');
   protected livretRatePct   = signal<number | null>(2.4);
-  protected goalName        = signal('');
-  protected goalTarget      = signal<number | null>(50000);
 
   protected readonly submitting = signal(false);
   protected readonly error      = signal<string | null>(null);
@@ -113,8 +73,6 @@ export class PreferencesComponent {
       if (!this.uiMode()) this.uiMode.set(c.uiMode);
       if (!this.benchmarkIsin()) this.benchmarkIsin.set(c.benchmarkIsin);
       if (this.livretRatePct() === 2.4 && c.livretRatePct !== 2.4) this.livretRatePct.set(c.livretRatePct);
-      if (!this.goalName() && c.goalName) this.goalName.set(c.goalName);
-      if (this.goalTarget() === 50000 && c.goalTarget !== 50000) this.goalTarget.set(c.goalTarget);
     });
   }
 
@@ -132,8 +90,6 @@ export class PreferencesComponent {
       benchmarkIsin:     this.benchmarkIsin() || 'FR0010261198',
       livretRatePct:     Math.max(0, Math.min(20, this.livretRatePct() ?? 0)),
       allocationTargets: this.preferences.current().allocationTargets,
-      goalName:          this.goalName().trim() || 'Apport Maison',
-      goalTarget:        Math.max(0, this.goalTarget() ?? 50000),
     };
 
     this.submitting.set(true);

@@ -1,15 +1,4 @@
-<div class="page">
-
-  <div class="page-head">
-    <div class="page-eyebrow">Paramètres</div>
-    <h1 class="page-title">Tes <em>préférences</em></h1>
-    <p class="page-sub">
-      Profil de risque, horizon, objectif mensuel et devise d'affichage.
-      Stockés côté serveur, reflétés dans le dashboard et le DCA helper.
-    </p>
-  </div>
-
-  <div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
+<div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
     <div class="card-head">
       <div class="card-title">Profil <em>investisseur</em></div>
     </div>
@@ -79,32 +68,12 @@
       </div>
     </div>
 
-    <div class="divider-soft" style="margin:20px 0 16px"></div>
-    <div class="card-title" style="margin-bottom:16px">Projet de <em>vie</em></div>
-
-    <div class="field-row">
-      <div class="field">
-        <label for="pref-goal-name">Nom du projet</label>
-        <input id="pref-goal-name" type="text" class="text-input" placeholder="Ex: Apport Maison"
-               [ngModel]="goalName()" (ngModelChange)="goalName.set($event)" />
-        <div class="field-help">Donne un but concret à ton épargne pour rester motivé (affiché sur le tableau de bord).</div>
-      </div>
-      <div class="field">
-        <label for="pref-goal-target">Montant cible (€)</label>
-        <input id="pref-goal-target" type="number" min="0" step="1000" class="num-input"
-               [ngModel]="goalTarget()" (ngModelChange)="goalTarget.set($event)" />
-        <div class="field-help">La somme totale que tu vises. La jauge de complétion se mettra à jour en temps réel.</div>
-      </div>
-    </div>
-
-    <div class="divider-soft" style="margin:20px 0 16px"></div>
-
     <div class="row" style="align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:13.5px;font-weight:500">Cibles d'allocation</div>
-        <div class="muted tiny" style="margin-top:2px">Stratégique · Tactique · Par ETF · Par enveloppe</div>
+      <div class="row" style="gap:12px;margin-top:24px">
+        <button class="btn primary" [class.loading]="submitting()" (click)="save()">
+          Sauvegarder
+        </button>
       </div>
-      <a routerLink="/settings/allocation" class="btn sm">Modifier →</a>
     </div>
   </div>
 
@@ -119,36 +88,6 @@
     </div>
   }
 
-  <div class="row" style="max-width:720px;gap:12px;justify-content:flex-end">
-    <button type="button" class="btn ghost" (click)="back()" [disabled]="submitting()">Retour au dashboard</button>
-    <button type="button" class="btn primary" (click)="save()" [disabled]="submitting() || loading()">
-      {{ submitting() ? 'Enregistrement…' : 'Enregistrer' }}
-    </button>
-  </div>
-
-  <!-- Recent account activity (audit log) -->
-  <div class="card" style="max-width:720px;padding:24px;margin-top:28px">
-    <div class="card-head">
-      <div class="card-title">Activité <em>récente</em></div>
-      <span class="card-sub">tes dernières modifications de compte</span>
-    </div>
-
-    @if (activityLoading()) {
-      <p class="muted small" style="margin:0">Chargement…</p>
-    } @else if (recentActivity().length === 0) {
-      <p class="muted small" style="margin:0">
-        Aucune activité pour l'instant. Tes créations, modifications et
-        suppressions apparaîtront ici.
-      </p>
-    } @else {
-      @for (a of recentActivity(); track a.id) {
-        <div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--rule-soft);font-size:13px">
-          <span>{{ a.label }}</span>
-          <span class="muted tiny num">{{ a.when }}</span>
-        </div>
-      }
-    }
-  </div>
 
   <!-- Maintenance (Cache) -->
   <div class="card" style="max-width:720px;padding:24px;margin-top:28px;margin-bottom:28px;">
@@ -187,5 +126,3 @@
       <button type="button" class="btn sm ghost" style="color:var(--loss);border-color:var(--loss-soft)" (click)="clearCache('all')" [disabled]="clearingCache()">Tout purger</button>
     </div>
   </div>
-
-</div>

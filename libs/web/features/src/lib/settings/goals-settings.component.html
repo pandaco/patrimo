@@ -1,0 +1,45 @@
+<div class="card" style="max-width:720px;padding:24px;margin-bottom:24px">
+  <div class="card-head" style="margin-bottom: 24px;">
+    <div class="card-title">Projet de <em>vie</em></div>
+    <span class="card-sub">Fixe un but concret à ton épargne pour rester motivé (affiché sur le tableau de bord).</span>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="pref-goal-name">Nom du projet</label>
+      <input id="pref-goal-name" type="text" class="text-input" placeholder="Ex: Apport Maison"
+             [ngModel]="goalName()" (ngModelChange)="goalName.set($event)" />
+      <div class="field-help">Le titre de ton objectif principal.</div>
+    </div>
+    <div class="field">
+      <label for="pref-goal-target">Montant cible (€)</label>
+      <input id="pref-goal-target" type="number" min="0" step="1000" class="num-input"
+             [ngModel]="goalTarget()" (ngModelChange)="goalTarget.set($event)" />
+      <div class="field-help">La somme totale que tu vises. La jauge de complétion se mettra à jour en temps réel.</div>
+    </div>
+  </div>
+
+  <div class="divider-soft" style="margin:20px 0 16px"></div>
+
+  <div class="row" style="align-items:center;justify-content:space-between">
+    <button type="button" class="btn ghost danger" (click)="removeGoal()">
+      Supprimer l'objectif
+    </button>
+    <div class="row" style="gap:12px">
+      <button class="btn primary" [class.loading]="submitting()" (click)="save()">
+        Sauvegarder
+      </button>
+    </div>
+  </div>
+</div>
+
+@if (error()) {
+  <div role="alert" style="margin-bottom:12px;padding:10px 12px;border-radius:8px;background:var(--loss-soft);color:var(--loss);font-size:13px;max-width:720px">
+    {{ error() }}
+  </div>
+}
+@if (success()) {
+  <div role="status" style="margin-bottom:12px;padding:10px 12px;border-radius:8px;background:var(--gain-soft);color:var(--gain);font-size:13px;max-width:720px">
+    Objectif mis à jour.
+  </div>
+}
