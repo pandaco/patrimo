@@ -194,6 +194,31 @@ export class DashboardComponent {
     if (wealth < 500000) return { pct: 10, text: "Tu fais partie des 10% des Français les plus aisés." };
     return { pct: 1, text: "Tu fais partie des 1% des Français les plus riches." };
   });
+
+  protected readonly dcaStreak = computed(() => {
+    const monthSet = new Set<string>();
+    for (const t of this.txService.all()) {
+      if (t.type === 'BUY' || t.type === 'DEPOSIT') monthSet.add(t.date.slice(0, 7));
+    }
+    let streak = 0;
+    const cursor = new Date();
+    cursor.setDate(1);
+    for (let i = 0; i < 240; i++) {
+      const ym = cursor.toISOString().slice(0, 7);
+      if (!monthSet.has(ym)) break;
+      streak++;
+      cursor.setMonth(cursor.getMonth() - 1);
+    }
+    return streak;
+  });
+
+  protected readonly crashDrop = computed(() => {
+    return this.envelopes.totalBourse() * 0.35; // Krach standard de -35% (ex: Covid 2020)
+  });
+  
+  protected readonly crashWealth = computed(() => {
+    return this.totalValue() - this.crashDrop();
+  });
   // ------------------------------------------------
 
   // httpResource resets `value()` to the default while re-fetching, so a bare

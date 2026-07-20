@@ -254,6 +254,22 @@
           <div class="hero-metric-value">{{ socialBenchmark().pct }} %</div>
           <div class="hero-metric-cap">{{ socialBenchmark().text }}</div>
         </div>
+
+        <div class="hero-metric" style="margin-top: 16px;">
+          <div class="hero-metric-label" style="color: var(--loss);"><span data-tip="Test de résistance : que se passe-t-il si la bourse chute de 35% demain (type Covid-19) ?">📉 Simulateur de Krach</span></div>
+          <div class="hero-metric-value" style="color: var(--loss);">{{ formatEuro(crashWealth(), 0) }}</div>
+          <div class="hero-metric-cap">Soit une perte latente de {{ formatEuro(crashDrop(), 0) }}.<br/>L'important est de conserver ton sang-froid et ton horizon de placement !</div>
+        </div>
+        
+        <div class="hero-metric" style="margin-top: 16px;">
+          <div class="hero-metric-label"><span data-tip="Nombre de mois consécutifs avec au moins un achat. L'arme secrète du DCA.">🔥 Série DCA</span></div>
+          <div class="hero-metric-value">{{ dcaStreak() }} mois</div>
+          <div class="hero-metric-cap">
+            @if (dcaStreak() >= 12) { Félicitations, ta routine d'investissement est parfaitement en place ! }
+            @else if (dcaStreak() >= 3) { Tu es sur la bonne voie, garde le rythme ! }
+            @else { Chaque mois compte, commence ta série de DCA ! }
+          </div>
+        </div>
         <!-- FIN NOUVEAUTÉ -->
 
       </div>
