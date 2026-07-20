@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { PreferencesService } from '@patrimo/data-access';
@@ -21,11 +21,9 @@ export class GoalsSettingsComponent {
   protected readonly success    = signal(false);
 
   constructor() {
-    effect(() => {
-      const c = this.preferences.current();
-      if (this.goalName() !== c.goalName) this.goalName.set(c.goalName || '');
-      if (this.goalTarget() !== c.goalTarget) this.goalTarget.set(c.goalTarget);
-    });
+    const c = this.preferences.current();
+    this.goalName.set(c.goalName || '');
+    this.goalTarget.set(c.goalTarget || 50000);
   }
 
   protected async save(): Promise<void> {
