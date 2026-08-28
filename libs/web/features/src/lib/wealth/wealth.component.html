@@ -183,8 +183,9 @@
               <span class="num" style="margin-left:auto">{{ formatPercentRaw(capPct(env)!, 0) }}</span>
             </div>
           } @else {
-            <div class="row small muted" style="margin-top:14px">
+            <div class="row small muted" style="margin-top:14px; display:flex; flex-direction:column; gap:4px; align-items:flex-start">
               <span data-tip="Montant total versé sur cette enveloppe (dépôts nets).">Versements : {{ formatEuro(env.contributed, 0) }}</span>
+              <span data-tip="Valeur d'acquisition (coût d'achat total) des actifs actuellement détenus.">Investi : {{ formatEuro(env.invested, 0) }}</span>
             </div>
           }
           <button class="btn sm ghost" style="margin-top:14px;width:100%"
