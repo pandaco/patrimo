@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { PreferencesService } from '@patrimo/data-access';

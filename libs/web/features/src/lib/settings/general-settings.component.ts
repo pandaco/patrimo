@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { UpdateUserPreferencesDto } from '@patrimo/contracts';
 import { EtfService, PreferencesService } from '@patrimo/data-access';
 import { API_BASE_URL } from '@patrimo/data-access';

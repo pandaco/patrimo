@@ -91,7 +91,7 @@ export class PortfolioComponent {
     }
 
     return Array.from(byIsin.entries())
-      .filter(([isin, pos]) => pos.qty > 1e-6)
+      .filter(([, pos]) => pos.qty > 1e-6)
       .map(([isin, pos]) => {
         const etf = globalEtfs.find(e => e.isin === isin);
         if (!etf) return null;
