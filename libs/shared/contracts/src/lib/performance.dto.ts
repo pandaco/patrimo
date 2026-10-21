@@ -155,3 +155,45 @@ export interface FeesYtdDto {
   /** `ter` in percent points (0.15 = 0.15 %/yr). */
   byEtf: { ticker: string; name: string; ter: number; value: number; terDragYtd: number }[];
 }
+
+/**
+ * Market variation of one line over a period — excluding contributions: a
+ * purchase or deposit is never a gain, a sale or withdrawal never a loss.
+ */
+export interface VariationDto {
+  /** Current value in EUR (0 for a line sold during the window). */
+  value: number;
+  /** Plus-value latente since purchase (value − cost), in EUR. */
+  pnl: number;
+  /** Plus-value latente in %. `null` when the cost base is too small. */
+  pnlPct: number | null;
+  /** Flow-adjusted gain over the period in EUR: end − start − net contributions. */
+  variation: number;
+  /**
+   * Gain over the money at work (`variation ÷ (opening value + net contributions)`),
+   * in %. `null` when that base is too small to divide — never a misleading 0.
+   */
+  variationPct: number | null;
+}
+
+export interface VariationRowDto extends VariationDto {
+  /** ISIN for a position, envelope id for an envelope row. */
+  id: string;
+  label: string;
+}
+
+export interface PositionVariationDto extends VariationRowDto {
+  /** The same figures split per envelope holding this instrument. */
+  byEnvelope: VariationRowDto[];
+}
+
+/**
+ * Period variation over the financial scope (securities + livrets): every held
+ * position (aggregated across envelopes), every envelope, and the total.
+ */
+export interface PeriodVariationDto {
+  period: PerformancePeriod;
+  total: VariationDto;
+  positions: PositionVariationDto[];
+  envelopes: VariationRowDto[];
+}
