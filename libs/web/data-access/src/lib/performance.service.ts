@@ -1,9 +1,16 @@
 import { httpResource } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
-import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthSeriesDto } from '@patrimo/contracts';
+import { Injectable, computed, inject, linkedSignal, signal } from '@angular/core';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, PeriodVariationDto, WealthSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
 import { safeValue, safeValueOrUndefined } from './safe';
+
+const EMPTY_VARIATION: PeriodVariationDto = {
+  period: 'YTD',
+  total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
+  positions: [],
+  envelopes: [],
+};
 
 @Injectable({ providedIn: 'root' })
 export class PerformanceService {
@@ -91,6 +98,31 @@ export class PerformanceService {
   readonly loadingFees  = this.feesResource.isLoading;
   readonly periodReturns        = computed(() => safeValue(this.periodReturnsResource, [] as PeriodReturnDto[]));
   readonly loadingPeriodReturns = this.periodReturnsResource.isLoading;
+
+  /**
+   * Market variation (excluding contributions) of every position and envelope
+   * over `variationPeriod`. `httpResource` resets `value()` to the default during
+   * a re-fetch, so `variationHeld` keeps the last non-empty payload for the UI
+   * to dim instead of flashing empty.
+   */
+  readonly variationPeriod = signal<PerformancePeriod>('YTD');
+
+  private readonly variationResource = httpResource<PeriodVariationDto>(
+    () => (this.auth.isAuthenticated()
+      ? `${this.baseUrl}/performance/variation?period=${this.variationPeriod()}`
+      : undefined),
+    { defaultValue: EMPTY_VARIATION },
+  );
+
+  readonly variation        = computed(() => safeValue(this.variationResource, EMPTY_VARIATION));
+  readonly variationLoading = this.variationResource.isLoading;
+  readonly variationHeld    = linkedSignal<PeriodVariationDto, PeriodVariationDto>({
+    source: this.variation,
+    computation: (next, previous) =>
+      next.positions.length > 0 || next.envelopes.length > 0 ? next : (previous?.value ?? next),
+  });
+
+  setVariationPeriod(period: PerformancePeriod): void { this.variationPeriod.set(period); }
 
   setPeriod(period: PerformancePeriod): void { this.period.set(period); }
   reload(): void { this.resource.reload(); }
