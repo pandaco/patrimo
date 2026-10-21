@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, LiabilityService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
 import { TermComponent, TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
@@ -59,7 +59,6 @@ export class DashboardComponent {
   private readonly txService  = inject(TransactionService);
   private readonly alerts     = inject(AlertService);
   private readonly performanceService    = inject(PerformanceService);
-  private readonly liabilityService    = inject(LiabilityService);
   private readonly auth       = inject(AuthService);
   private readonly preferences      = inject(PreferencesService);
   private readonly router     = inject(Router);
@@ -117,9 +116,8 @@ export class DashboardComponent {
   protected readonly totalBourse  = this.envelopes.totalBourse;
   protected readonly totalLivret  = this.envelopes.totalLivret;
   protected readonly totalCash    = this.envelopes.totalCash;
-  protected readonly totalLiabilities = this.liabilityService.total;
-  /** Actifs (enveloppes) moins le capital restant dû sur les crédits en cours. */
-  protected readonly netWorth = computed(() => this.totalValue() - this.totalLiabilities());
+  /** Somme des enveloppes — les crédits sont masqués de l'UI (cf. ticket 06). */
+  protected readonly netWorth = computed(() => this.totalValue());
 
   // True when the user has not yet declared any envelope nor a single
   // transaction. The dashboard then swaps the noisy hero for an onboarding

@@ -52,13 +52,9 @@ export const appRoutes: Route[] = [
             (m) => m.PortfolioComponent,
           ),
       },
-      {
-        path: 'liabilities',
-        loadComponent: () =>
-          import('@patrimo/features').then(
-            (m) => m.LiabilitiesComponent,
-          ),
-      },
+      // Crédits masqués de l'UI (données et API conservées) : les anciens
+      // favoris retombent sur le tableau de bord.
+      { path: 'liabilities', redirectTo: 'dashboard' },
       {
         path: 'transactions',
         loadComponent: () =>

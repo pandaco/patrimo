@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { AuthService, EnvelopeService, TauxChangeService, LiabilityService, TransactionService } from '@patrimo/data-access';
+import { AuthService, EnvelopeService, TauxChangeService, TransactionService } from '@patrimo/data-access';
 import { TipDirective, formatDate, formatNumber } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTaxEstimate } from '../performance/tax-estimate';
@@ -14,7 +14,6 @@ import { computeTri } from '../portfolio/tri';
 })
 export class ReportComponent {
   private readonly envelopes  = inject(EnvelopeService);
-  private readonly liabilities = inject(LiabilityService);
   private readonly txService  = inject(TransactionService);
   private readonly auth       = inject(AuthService);
   private readonly tauxChangeService  = inject(TauxChangeService);
@@ -25,8 +24,7 @@ export class ReportComponent {
   });
 
   protected readonly totalValue       = this.envelopes.total;
-  protected readonly totalLiabilities = this.liabilities.total;
-  protected readonly netWorth         = computed(() => this.totalValue() - this.totalLiabilities());
+  protected readonly netWorth         = computed(() => this.totalValue());
 
   protected readonly envRows = computed(() =>
     this.envelopes.all()
@@ -35,7 +33,6 @@ export class ReportComponent {
       .sort((a, b) => b.value - a.value),
   );
 
-  protected readonly liabilityRows = this.liabilities.all;
 
   protected readonly tri = computed(() => computeTri(this.txService.all(), this.totalValue()));
   protected readonly realizedYtd = computed(() =>

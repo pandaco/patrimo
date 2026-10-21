@@ -13,11 +13,6 @@
       <div class="card-title">Patrimoine net</div>
     </div>
     <div style="font-size:26px;font-weight:700">{{ formatEuro(netWorth(), 0) }}</div>
-    @if (totalLiabilities() > 0) {
-      <div class="muted small" style="margin-top:4px">
-        {{ formatEuro(totalValue(), 0) }} d'actifs − {{ formatEuro(totalLiabilities(), 0) }} de crédits
-      </div>
-    }
   </div>
 
   <div class="card" style="padding:4px 12px;margin-bottom:20px">
@@ -45,34 +40,6 @@
     </table>
     </div>
   </div>
-
-  @if (liabilityRows().length > 0) {
-    <div class="card" style="padding:4px 12px;margin-bottom:20px">
-      <div class="card-head" style="padding-top:12px">
-        <div class="card-title">Crédits en cours</div>
-      </div>
-      <div class="table-scroll">
-      <table class="tbl tbl-compact">
-        <thead>
-          <tr>
-            <th>Libellé</th>
-            <th class="r">Restant dû</th>
-            <th class="r">Mensualité</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (l of liabilityRows(); track l.id) {
-            <tr>
-              <td>{{ l.label }}</td>
-              <td class="r num">{{ formatEuro(l.currentBalance, 0) }}</td>
-              <td class="r num">{{ formatEuro(l.monthlyPayment, 0) }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      </div>
-    </div>
-  }
 
   <div class="grid cols-2" style="gap:14px;margin-bottom:20px">
     <div class="card kpi-tile">

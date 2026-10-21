@@ -181,30 +181,18 @@
               <span class="pill warn" style="font-size:10px"><span class="dot"></span>à investir</span>
             }
           </div>
-          @if (totalLiabilities() > 0) {
-            <div class="wealth-breakdown-chip">
-              <span class="label" data-tip="Capital restant dû sur tes crédits en cours (prêt immobilier, crédit conso).">Crédits</span>
-              <span class="value neg">− {{ formatEuro(totalLiabilities(), 0) }}</span>
-              <a routerLink="/liabilities" class="muted small">Gérer →</a>
-            </div>
-          }
         </div>
       </div>
 
       <div class="wealth-hero-sidebar">
         <div class="hero-metric hero-networth">
           <div class="hero-metric-label">
-            <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash) moins le capital restant dû sur tes crédits en cours. Mis à jour en temps réel à partir de tes opérations et des cours Yahoo Finance.">Patrimoine net</span>
+            <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash). Mis à jour en temps réel à partir de tes opérations et des cours Yahoo Finance.">Patrimoine net</span>
             @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
           </div>
           <div class="hero-networth-value">
             {{ formatNumber(fxRate() * netWorth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
           </div>
-          @if (totalLiabilities() > 0) {
-            <div class="hero-metric-cap">
-              {{ formatEuro(totalValue(), 0) }} d'actifs − {{ formatEuro(totalLiabilities(), 0) }} de crédits
-            </div>
-          }
         </div>
 
         <div class="hero-metric-rule"></div>
