@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
+import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, PeriodVariationDto, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
 import { SessionGuard } from '../auth/session.guard';
 import { SessionUser } from '../auth/session-user.decorator';
 import { AuthUser } from '../auth/types';
@@ -43,6 +43,17 @@ export class PerformanceController {
       ? (period as PerformancePeriod)
       : '1M';
     return this.performance.getWealthSeries(user.id, safe);
+  }
+
+  @Get('variation')
+  variation(
+    @SessionUser() user: AuthUser,
+    @Query('period') period?: string,
+  ): Promise<PeriodVariationDto> {
+    const safe: PerformancePeriod = ALLOWED.includes(period as PerformancePeriod)
+      ? (period as PerformancePeriod)
+      : 'YTD';
+    return this.performance.getPeriodVariation(user.id, safe);
   }
 
   @Get('wealth-snapshots')
