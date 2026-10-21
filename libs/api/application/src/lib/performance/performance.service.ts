@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { EnvelopeRepository, EtfRepository, Transaction, TransactionRepository, UserPreferencesRepository, WealthSnapshotRepository } from '@patrimo/api-domain';
-import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
+import { DrawdownDto, EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, PeriodVariationDto, PositionVariationDto, VariationDto, VariationRowDto, WealthCategory, WealthReturnDto, WealthReturnKey, WealthSeriesDto, WealthSnapshotDto } from '@patrimo/contracts';
 import { ENVELOPE_REPOSITORY, ETF_REPOSITORY, TRANSACTION_REPOSITORY, USER_PREFERENCES_REPOSITORY, WEALTH_SNAPSHOT_REPOSITORY } from '@patrimo/infrastructure';
 import { PriceService } from '../market/price.service';
 
@@ -540,6 +540,153 @@ export class PerformanceService {
       }),
     );
     return results.sort((a, b) => a.ticker.localeCompare(b.ticker));
+  }
+
+  /**
+   * Market variation over `period` for every held position (aggregated across
+   * envelopes) on the financial scope. A purchase is a contribution, not a
+   * gain: positions are valued qty × close on a clean base and run through the
+   * same flow-neutral `periodReturn` as the wealth series, so the figures
+   * reconcile with `getWealthSeries`.
+   */
+  async getPeriodVariation(userId: string, period: PerformancePeriod): Promise<PeriodVariationDto> {
+    const now    = new Date();
+    const isLong = LONG_PERIODS.includes(period);
+    const interval: '1d' | '1wk' = isLong ? '1wk' : '1d';
+
+    const [envelopes, transactions, etfs] = await Promise.all([
+      this.envelopeRepository.findByUserId(userId),
+      this.transactionRepository.findByUserId(userId),
+      this.etfRepository.findAll(),
+    ]);
+
+    const allDates     = transactions.map(t => t.date.getTime());
+    const earliestDate = allDates.length > 0 ? new Date(Math.min(...allDates)) : undefined;
+    const labels       = enumerateDates(computeStart(period, now, earliestDate), now, isLong);
+    const days         = period === 'MAX'
+      ? Math.ceil((now.getTime() - (earliestDate?.getTime() ?? now.getTime())) / 86400000) + 1
+      : Math.max(30, PERIOD_DAYS[period]);
+    const spanDays     = labels.length >= 2
+      ? (new Date(labels[labels.length - 1]).getTime() - new Date(labels[0]).getTime()) / 86_400_000
+      : 0;
+
+    const etfByIsin = new Map(etfs.map(e => [e.isin, e]));
+    const bourseEnvelopeIds = new Set(
+      envelopes.filter(e => glyphToCategory(e.glyph) === 'bourse').map(e => e.id),
+    );
+    const tradesByIsin = new Map<string, Transaction[]>();
+    for (const transaction of transactions) {
+      if (!transaction.etfIsin || !bourseEnvelopeIds.has(transaction.envelopeId)) continue;
+      if (transaction.type !== 'BUY' && transaction.type !== 'SELL') continue;
+      const list = tradesByIsin.get(transaction.etfIsin) ?? [];
+      list.push(transaction);
+      tradesByIsin.set(transaction.etfIsin, list);
+    }
+
+    const closesByIsin = new Map<string, Map<string, number>>();
+    await Promise.all(
+      Array.from(tradesByIsin.keys()).map(async isin => {
+        const etf = etfByIsin.get(isin);
+        if (!etf) return;
+        const history = await this.priceService.getHistorical(isin, etf.ticker, days, interval);
+        closesByIsin.set(isin, new Map(history.map(p => [p.date, p.close])));
+      }),
+    );
+
+    const positions: PositionVariationDto[] = [];
+    for (const [isin, trades] of tradesByIsin) {
+      const base  = this.buildEnvelopeEtfValueSeries(labels, trades, closesByIsin);
+      // Never held inside the window (e.g. sold long before it): nothing to show.
+      if (!base.some(v => v > 0)) continue;
+      const flows = this.buildEnvelopeInvestFlowDeltas(labels, trades);
+      const label = etfByIsin.get(isin)?.name ?? isin;
+
+      // Same figures per envelope holding it, in the user's envelope order.
+      const byEnvelope: VariationRowDto[] = [];
+      for (const envelope of envelopes) {
+        const held = trades.filter(t => t.envelopeId === envelope.id);
+        if (held.length === 0) continue;
+        const envelopeBase = this.buildEnvelopeEtfValueSeries(labels, held, closesByIsin);
+        if (!envelopeBase.some(v => v > 0)) continue;
+        byEnvelope.push({
+          id: envelope.id,
+          label: envelope.label,
+          ...this.variationOf(envelopeBase, this.buildEnvelopeInvestFlowDeltas(labels, held), this.costBasisOf(held), spanDays),
+        });
+      }
+
+      positions.push({
+        id: isin,
+        label,
+        ...this.variationOf(base, flows, this.costBasisOf(trades), spanDays),
+        byEnvelope,
+      });
+    }
+
+    // Envelope rows + total. Boursier envelopes use the clean ETF-value base,
+    // livrets their balance (deposits/withdrawals are the contributions, so
+    // what remains is the interest). Totals are summed series, so rows and total
+    // always reconcile.
+    const rows: VariationRowDto[] = [];
+    const totalBase  = new Array<number>(labels.length).fill(0);
+    const totalFlows = new Array<number>(labels.length).fill(0);
+    let totalCost = 0;
+    for (const envelope of envelopes) {
+      const category = glyphToCategory(envelope.glyph);
+      if (category !== 'bourse' && category !== 'livret') continue;
+      const envTransactions = transactions.filter(t => t.envelopeId === envelope.id);
+      const isBourse = category === 'bourse';
+      const base  = isBourse ? this.buildEnvelopeEtfValueSeries(labels, envTransactions, closesByIsin) : this.buildEnvelopeFlowSeries(labels, envTransactions);
+      const flows = isBourse ? this.buildEnvelopeInvestFlowDeltas(labels, envTransactions)             : this.buildEnvelopeFlowDeltas(labels, envTransactions);
+      const cost  = isBourse
+        ? this.costBasisOf(envTransactions)
+        : envTransactions.reduce((sum, t) => sum + (t.type === 'DEPOSIT' ? t.amount : t.type === 'WITHDRAWAL' ? -t.amount : 0), 0);
+      rows.push({ id: envelope.id, label: envelope.label, ...this.variationOf(base, flows, cost, spanDays) });
+      totalCost += cost;
+      for (let i = 0; i < labels.length; i++) {
+        totalBase[i]  = Number((totalBase[i]  + base[i]).toFixed(2));
+        totalFlows[i] = Number((totalFlows[i] + flows[i]).toFixed(2));
+      }
+    }
+
+    return { period, total: this.variationOf(totalBase, totalFlows, totalCost, spanDays), positions, envelopes: rows };
+  }
+
+  /** Cost basis of the shares still held: average buy cost (fees included) × remaining quantity. */
+  private costBasisOf(transactions: Transaction[]): number {
+    const qty      = new Map<string, number>();
+    const buyQty   = new Map<string, number>();
+    const buyCost  = new Map<string, number>();
+    for (const t of transactions) {
+      if (!t.etfIsin) continue;
+      if (t.type === 'BUY') {
+        qty.set(t.etfIsin,     (qty.get(t.etfIsin) ?? 0) + t.quantity);
+        buyQty.set(t.etfIsin,  (buyQty.get(t.etfIsin) ?? 0) + t.quantity);
+        buyCost.set(t.etfIsin, (buyCost.get(t.etfIsin) ?? 0) + t.quantity * (t.price ?? 0) + (t.fees ?? 0) + (t.taxes ?? 0));
+      } else if (t.type === 'SELL') {
+        qty.set(t.etfIsin, (qty.get(t.etfIsin) ?? 0) - t.quantity);
+      }
+    }
+    let cost = 0;
+    for (const [isin, held] of qty) {
+      const bought = buyQty.get(isin) ?? 0;
+      if (held > 1e-6 && bought > 0) cost += held * ((buyCost.get(isin) ?? 0) / bought);
+    }
+    return cost;
+  }
+
+  /** One variation line from a clean value series, its contribution series and its cost basis. */
+  private variationOf(base: number[], flows: number[], cost: number, spanDays: number): VariationDto {
+    const value = base[base.length - 1] ?? 0;
+    const pnl   = Number((value - cost).toFixed(2));
+    const { eur, investedReturnPct } = periodReturn(base, flows, spanDays);
+    return {
+      value,
+      pnl,
+      pnlPct: cost >= 100 ? Number(((pnl / cost) * 100).toFixed(2)) : null,
+      variation: eur,
+      variationPct: investedReturnPct,
+    };
   }
 
   async getWealthSeries(userId: string, period: PerformancePeriod): Promise<WealthSeriesDto> {

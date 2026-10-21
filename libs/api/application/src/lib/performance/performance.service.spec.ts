@@ -365,6 +365,159 @@ describe('PerformanceService', () => {
     });
   });
 
+  describe('getPeriodVariation', () => {
+    async function captureVariationLabels(period: '1M' = '1M'): Promise<string[]> {
+      const probe = await service.getWealthSeries('user-1', period);
+      priceService.getHistorical.mockClear();
+      return probe.labels;
+    }
+
+    it('measures a position bought mid-period from its purchase, never from zero', async () => {
+      const labels = await captureVariationLabels();
+      const buyLabel = labels[5];
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(buyLabel + 'T00:00:00Z') }),
+      ]);
+      // 40 € at the purchase, 44 € on the last label: a pure +10 % market move.
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+      const variation = await service.getPeriodVariation('user-1', '1M');
+
+      expect(variation.period).toBe('1M');
+      expect(variation.positions).toHaveLength(1);
+      const [position] = variation.positions;
+      expect(position.id).toBe('ISIN-ESE');
+      expect(position.value).toBe(440);
+      // The 400 € purchase is a contribution, not a gain: only the market move counts.
+      expect(position.variation).toBe(40);
+      expect(position.variationPct).toBeCloseTo(10, 1);
+    });
+
+    it('reports a livret\'s interest as its variation, a deposit never counting as a gain, and reconciles the total', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea', label: 'PEA' }),
+        env({ id: 'env-2', glyph: 'livret', label: 'Livret A' }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 1000, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+        // A second deposit mid-period: a contribution, not a gain.
+        transaction({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[10] + 'T00:00:00Z') }),
+        transaction({ type: 'INTEREST', amount: 12, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[15] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+      const variation = await service.getPeriodVariation('user-1', '1M');
+
+      const pea    = variation.envelopes.find(e => e.id === 'env-1');
+      const livret = variation.envelopes.find(e => e.id === 'env-2');
+      expect(pea?.label).toBe('PEA');
+      expect(pea?.variation).toBe(40);
+      expect(livret?.value).toBe(1512);
+      expect(livret?.variation).toBe(12);
+      // Total = sum of the envelope rows, on the financial scope.
+      expect(variation.total.value).toBe(440 + 1512);
+      expect(variation.total.variation).toBe(52);
+    });
+
+    it('keeps the gain realised while held when a position is sold mid-period, and never counts a withdrawal as a loss', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea', label: 'PEA' }),
+        env({ id: 'env-2', glyph: 'livret', label: 'Livret A' }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY',  quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0]  + 'T00:00:00Z') }),
+        transaction({ type: 'SELL', quantity: 10, price: 44, envelopeId: 'env-1', date: new Date(labels[20] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT',    amount: 1000, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0]  + 'T00:00:00Z') }),
+        transaction({ type: 'WITHDRAWAL', amount: 300,  etfIsin: null, envelopeId: 'env-2', date: new Date(labels[12] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < 10 ? 40 : 44 })) });
+
+      const variation = await service.getPeriodVariation('user-1', '1M');
+
+      const [position] = variation.positions;
+      expect(position.value).toBe(0);
+      expect(position.variation).toBe(40);
+      expect(variation.envelopes.find(e => e.id === 'env-2')?.variation).toBe(0);
+    });
+
+    it.each(['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y', 'MAX'] as const)(
+      'serves the %s period for a held position with a finite figure, never NaN',
+      async period => {
+        const bought = new Date();
+        bought.setDate(bought.getDate() - 20);
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: bought }),
+        ]);
+        mockHistory({});
+
+        const variation = await service.getPeriodVariation('user-1', period);
+
+        expect(variation.period).toBe(period);
+        // No price history: valued at cost, so no gain and no loss.
+        expect(variation.positions[0].variation).toBe(0);
+        expect(Number.isFinite(variation.total.value)).toBe(true);
+      },
+    );
+
+    it('omits a position closed before the window and returns zeros for an empty portfolio', async () => {
+      const labels = await captureVariationLabels();
+      const empty = await service.getPeriodVariation('user-1', '1M');
+      expect(empty).toEqual({
+        period: '1M',
+        total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
+        positions: [],
+        envelopes: [],
+      });
+
+      const longAgo = new Date(labels[0] + 'T00:00:00Z');
+      longAgo.setDate(longAgo.getDate() - 400);
+      const soldBefore = new Date(labels[0] + 'T00:00:00Z');
+      soldBefore.setDate(soldBefore.getDate() - 200);
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY',  quantity: 10, price: 40, envelopeId: 'env-1', date: longAgo }),
+        transaction({ type: 'SELL', quantity: 10, price: 42, envelopeId: 'env-1', date: soldBefore }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 44 })) });
+
+      expect((await service.getPeriodVariation('user-1', '1M')).positions).toEqual([]);
+    });
+
+    it('aggregates a position held in two envelopes on one row and exposes the per-envelope split', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea', label: 'PEA' }),
+        env({ id: 'env-2', glyph: 'cto', label: 'CTO' }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 5,  price: 40, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+      const { positions } = await service.getPeriodVariation('user-1', '1M');
+
+      expect(positions).toHaveLength(1);
+      expect(positions[0].value).toBe(660);
+      expect(positions[0].variation).toBe(60);
+      expect(positions[0].byEnvelope.map(r => [r.id, r.label, r.variation])).toEqual([
+        ['env-1', 'PEA', 40],
+        ['env-2', 'CTO', 20],
+      ]);
+    });
+  });
+
   describe('getWealthSeries — patrimoine total', () => {
     async function captureWealthLabels(period: '1D' | '1M' = '1M'): Promise<string[]> {
       const probe = await service.getWealthSeries('user-1', period);
