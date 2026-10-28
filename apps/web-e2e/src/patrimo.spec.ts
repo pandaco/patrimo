@@ -72,11 +72,14 @@ test.describe('Patrimo E2E Tests', () => {
     // Verify page content shows the seeded user first name "Antoine"
     await expect(page.locator('h1.page-title')).toContainText('Bonjour Antoine.');
 
-    // Verify some parts of the dashboard are loaded: the net-worth headline
-    // (sidebar), the period tabs (1J … MAX) and the selection's performance line.
+    // Verify some parts of the dashboard are loaded: the financial-wealth
+    // headline (sidebar), the period tabs (1J … MAX), the selection's
+    // performance line and the best/worst positions strip.
+    await expect(page.locator('.hero-networth')).toContainText('Patrimoine financier');
     await expect(page.locator('.hero-networth-value')).toBeVisible();
     await expect(page.locator('.tabs[aria-label="Période"] button')).toHaveCount(10);
     await expect(page.locator('.perf-line')).toBeVisible();
+    await expect(page.getByTestId('performance-strip')).toBeVisible();
   });
 
   test('should show the 11 KPI tiles on the Indicateurs page', async ({ page }) => {

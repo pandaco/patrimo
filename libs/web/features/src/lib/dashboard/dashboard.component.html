@@ -76,7 +76,7 @@
             </div>
             @if (chartMode() === 'wealth') {
               <select class="wealth-category-select" (change)="setWealthFilter($event)" aria-label="Filtrer par catégorie ou enveloppe">
-                <option value="all" [selected]="wealthFilter() === 'all'">Toutes les catégories</option>
+                <option value="all" [selected]="wealthFilter() === 'all'">Patrimoine financier</option>
                 <optgroup label="Catégories">
                   @for (cat of wealthFilterCategories; track cat.id) {
                     <option [value]="cat.id" [selected]="cat.id === wealthFilter()">{{ cat.label }}</option>
@@ -161,24 +161,17 @@
 
         <div class="wealth-hero-breakdowns">
           <div class="wealth-breakdown-chip">
-            <span class="label" data-tip="PEA, CTO, AV, PER — exposé aux marchés actions/obligations.">Boursier</span>
-            <span class="value">{{ formatEuro(totalBourse(), 0) }}</span>
-            @if (totalValue() > 0) {
-              <span class="muted small">{{ formatNumber(totalBourse() / totalValue() * 100, 1) }} %</span>
+            <span class="label" data-tip="Titres détenus sur PEA, CTO, AV, PER, PEE — à leur valeur de marché, hors liquidités non investies.">Titres</span>
+            <span class="value">{{ formatEuro(securitiesValue(), 0) }}</span>
+            @if (financialWealth() > 0) {
+              <span class="muted small">{{ formatNumber(securitiesValue() / financialWealth() * 100, 1) }} %</span>
             }
           </div>
           <div class="wealth-breakdown-chip">
             <span class="label" data-tip="Livret A, LDDS, LEP — capital garanti, intérêts exonérés.">Épargne</span>
-            <span class="value">{{ formatEuro(totalLivret(), 0) }}</span>
-            @if (totalValue() > 0) {
-              <span class="muted small">{{ formatNumber(totalLivret() / totalValue() * 100, 1) }} %</span>
-            }
-          </div>
-          <div class="wealth-breakdown-chip">
-            <span class="label" data-tip="Cash dormant sur comptes courants — perd de la valeur face à l'inflation.">Cash</span>
-            <span class="value">{{ formatEuro(totalCash() - totalLivret(), 0) }}</span>
-            @if (totalCash() - totalLivret() > 0) {
-              <span class="pill warn" style="font-size:10px"><span class="dot"></span>à investir</span>
+            <span class="value">{{ formatEuro(savingsValue(), 0) }}</span>
+            @if (financialWealth() > 0) {
+              <span class="muted small">{{ formatNumber(savingsValue() / financialWealth() * 100, 1) }} %</span>
             }
           </div>
         </div>
@@ -187,11 +180,15 @@
       <div class="wealth-hero-sidebar">
         <div class="hero-metric hero-networth">
           <div class="hero-metric-label">
-            <span data-tip="Somme de toutes tes enveloppes (comptes boursiers, livrets, cash). Mis à jour en temps réel à partir de tes opérations et des cours Yahoo Finance.">Patrimoine net</span>
+            <span data-tip="Tes titres (PEA, CTO, AV, PER, PEE) à leur valeur de marché et tes livrets. Le cash des comptes courants et les crédits ne sont pas comptés.">Patrimoine financier</span>
             @if (displayCurrency() !== 'EUR') { · {{ displayCurrency() }} }
           </div>
-          <div class="hero-networth-value">
-            {{ formatNumber(fxRate() * netWorth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
+          <div class="hero-networth-value" [class.refreshing]="variationLoading()">
+            @if (financialPending()) {
+              <span class="skeleton" style="display:inline-block;height:0.8em;width:5ch;border-radius:6px" role="status" aria-label="Chargement du patrimoine"></span>
+            } @else {
+              {{ formatNumber(fxRate() * financialWealth(), 0) }}<small> {{ tauxChangeService.symbol() }}</small>
+            }
           </div>
         </div>
 
@@ -235,7 +232,7 @@
             <div class="progress-bar-wrap" style="margin-top: 6px; height: 8px; background: var(--rule); border-radius: 4px; overflow: hidden; position: relative;">
               <div style="height: 100%; background: var(--ink); border-radius: 4px; transition: width 0.3s;" [style.width]="goalProgress() + '%'"></div>
             </div>
-            <div class="hero-metric-cap" style="margin-top: 4px;">{{ formatPercent(goalProgress(), 1) }} financé (reste {{ formatEuro(goalTarget()! - totalValue(), 0) }})</div>
+            <div class="hero-metric-cap" style="margin-top: 4px;">{{ formatPercent(goalProgress(), 1) }} financé (reste {{ formatEuro(goalTarget()! - financialWealth(), 0) }})</div>
           </div>
         } @else {
           <div class="hero-metric">
@@ -270,6 +267,54 @@
 
       </div>
     </div>
+
+    <!-- MA PERFORMANCE : meilleures et pires positions sur la période -->
+    <section class="performance-strip" data-testid="performance-strip" aria-labelledby="performance-strip-title">
+      <div class="performance-strip-head">
+        <h2 id="performance-strip-title">Ma <em>performance</em></h2>
+        <span class="muted small">{{ wealthPeriodCaption() }} · hors apports</span>
+        <div class="performance-strip-controls">
+          <div class="segmented" role="group" aria-label="Classer par">
+            <button type="button" [class.active]="stripMeasure() === 'eur'" [attr.aria-pressed]="stripMeasure() === 'eur'" (click)="stripMeasure.set('eur')">€</button>
+            <button type="button" [class.active]="stripMeasure() === 'pct'" [attr.aria-pressed]="stripMeasure() === 'pct'" (click)="stripMeasure.set('pct')">%</button>
+          </div>
+          <div class="segmented" role="group" aria-label="Ordre">
+            <button type="button" [class.active]="stripOrder() === 'best'" [attr.aria-pressed]="stripOrder() === 'best'" (click)="stripOrder.set('best')">▲ Meilleures</button>
+            <button type="button" [class.active]="stripOrder() === 'worst'" [attr.aria-pressed]="stripOrder() === 'worst'" (click)="stripOrder.set('worst')">▼ Pires</button>
+          </div>
+        </div>
+      </div>
+
+      @if (financialPending()) {
+        <div class="performance-strip-track" role="status" aria-label="Chargement des positions">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="performance-card skeleton" style="height:116px"></div>
+          }
+        </div>
+      } @else if (stripCards().length === 0) {
+        <p class="muted small performance-strip-empty">
+          Aucune position en titres pour l'instant.
+          <a routerLink="/transactions" style="color:var(--ink)">Saisis un premier achat →</a>
+        </p>
+      } @else {
+        <div class="performance-strip-track" [class.refreshing]="variationLoading()">
+          @for (card of stripCards(); track card.position.id) {
+            <button type="button" class="performance-card" (click)="openPosition(card.position.id)"
+                    [attr.aria-label]="'Ouvrir le détail de ' + card.position.label">
+              <span class="performance-card-head">
+                @if (card.ticker) { <span class="pill solid">{{ card.ticker }}</span> }
+                <span class="performance-card-label">{{ card.position.label }}</span>
+              </span>
+              <span class="performance-card-value num">{{ formatEuro(card.position.value, 0) }}</span>
+              <span class="performance-card-foot">
+                <ui-variation [amount]="card.position.variationPct === null ? null : card.position.variation" [pct]="card.position.variationPct" />
+                <ui-sparkline [data]="card.spark" [fill]="true" />
+              </span>
+            </button>
+          }
+        </div>
+      }
+    </section>
   }
 
   @if (!isEmpty()) {

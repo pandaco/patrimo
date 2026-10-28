@@ -174,3 +174,92 @@
   border-top: 1px solid var(--rule);
   margin: 14px 0 12px;
 }
+
+// Re-fetch after a period switch: keep the previous figures, dimmed.
+.hero-networth-value.refreshing,
+.performance-strip-track.refreshing {
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+// ─── Ma performance : bandeau des positions sur la période ─────────────────
+
+.performance-strip {
+  margin: 0 0 28px;
+}
+
+.performance-strip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin-bottom: 12px;
+
+  h2 { font-size: 18px; margin: 0; }
+}
+
+.performance-strip-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.performance-strip-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(190px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x proximity;
+}
+
+.performance-card {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  background: var(--surface);
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: border-color 0.15s ease;
+
+  &:hover { border-color: var(--ink-3); }
+  &:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+}
+
+.performance-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.performance-card-label {
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.performance-card-value {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.performance-card-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.performance-strip-empty {
+  margin: 0;
+}

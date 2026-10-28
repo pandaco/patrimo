@@ -2,22 +2,20 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { Router, RouterLink } from '@angular/router';
 import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, PERIOD_OPTIONS, PeriodService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
-import { TermComponent, TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
+import { SparklineComponent, TermComponent, TipDirective, VariationComponent, formatNumber, formatPercent } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeContributed } from './contributed';
+import { StripMeasure, StripOrder, sortStripPositions } from './performance-strip';
 
+// Financial scope only: current-account cash, immo, crypto and métaux stay off the dashboard.
 const WEALTH_CATEGORIES: { id: 'all' | WealthCategory; label: string }[] = [
-  { id: 'all',    label: 'Toutes les catégories' },
+  { id: 'all',    label: 'Patrimoine financier' },
   { id: 'bourse', label: 'Investissements boursiers' },
   { id: 'livret', label: 'Épargne réglementée' },
-  { id: 'immo',   label: 'Immobilier' },
-  { id: 'crypto', label: 'Crypto' },
-  { id: 'metal',  label: 'Métaux précieux' },
-  { id: 'cash',   label: 'Cash' },
 ];
 
-/** Chart filter: whole patrimoine, one category, or one envelope (`env:<id>`). */
+/** Chart filter: the financial wealth (`all`), one category, or one envelope (`env:<id>`). */
 type WealthFilter = 'all' | WealthCategory | `env:${string}`;
 
 // Euronext Paris core session: 09:00 – 17:30 Paris time, Mon–Fri.
@@ -37,7 +35,7 @@ function isParisMarketOpen(now: Date): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, PerfChartComponent, WealthChartComponent, TermComponent, TipDirective],
+  imports: [RouterLink, PerfChartComponent, WealthChartComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -85,11 +83,20 @@ export class DashboardComponent {
 
   protected readonly envAll       = this.envelopes.all;
   protected readonly totalValue   = this.envelopes.total;
-  protected readonly totalBourse  = this.envelopes.totalBourse;
-  protected readonly totalLivret  = this.envelopes.totalLivret;
-  protected readonly totalCash    = this.envelopes.totalCash;
-  /** Somme des enveloppes — les crédits sont masqués de l'UI (cf. ticket 06). */
-  protected readonly netWorth = computed(() => this.totalValue());
+
+  // ─── Patrimoine financier : titres + fonds euros + livrets ────────────────
+  // Same server payload as the Patrimoine and Portefeuille tables, so the
+  // headline, the chips and the strip never disagree with them. Current-account
+  // cash and liabilities are outside the scope.
+  private readonly variation = this.performanceService.variationHeld;
+  protected readonly variationLoading = this.performanceService.variationLoading;
+  protected readonly financialWealth  = computed(() => this.variation().total.value);
+  protected readonly securitiesValue  = computed(() => this.variation().positionsTotal.value);
+  protected readonly savingsValue     = computed(() => this.financialWealth() - this.securitiesValue());
+  /** Nothing to show yet: first load still in flight. */
+  protected readonly financialPending = computed(() =>
+    this.variationLoading() && this.variation().envelopes.length === 0
+  );
 
   // True when the user has not yet declared any envelope nor a single
   // transaction. The dashboard then swaps the noisy hero for an onboarding
@@ -151,13 +158,13 @@ export class DashboardComponent {
   protected readonly goalProgress = computed(() => {
     const target = this.goalTarget();
     if (!target) return 0;
-    const wealth = this.totalValue();
+    const wealth = this.financialWealth();
     if (wealth === 0) return 0;
     return Math.min(100, (wealth / target) * 100);
   });
   
   protected readonly socialBenchmark = computed(() => {
-    const wealth = this.totalValue();
+    const wealth = this.financialWealth();
     if (wealth < 5000) return { pct: 80, text: "Tu commences à construire ton patrimoine. Continue !" };
     if (wealth < 20000) return { pct: 70, text: "Tu as plus de patrimoine que 30% des Français." };
     if (wealth < 50000) return { pct: 60, text: "Tu as plus de patrimoine que 40% des Français." };
@@ -185,11 +192,11 @@ export class DashboardComponent {
   });
 
   protected readonly crashDrop = computed(() => {
-    return this.envelopes.totalBourse() * 0.35; // Krach standard de -35% (ex: Covid 2020)
+    return this.securitiesValue() * 0.35; // Krach standard de -35% (ex: Covid 2020)
   });
   
   protected readonly crashWealth = computed(() => {
-    return this.totalValue() - this.crashDrop();
+    return this.financialWealth() - this.crashDrop();
   });
   // ------------------------------------------------
 
@@ -223,9 +230,12 @@ export class DashboardComponent {
 
   protected readonly wealthFilterCategories = WEALTH_CATEGORIES.filter(c => c.id !== 'all');
   /** Envelope entries of the chart filter — the Trade Republic-style per-envelope view. */
-  protected readonly wealthFilterEnvelopes = computed(() =>
-    this.envelopes.all().map(e => ({ id: `env:${e.id}` as const, label: `${e.code} · ${e.label}` }))
-  );
+  protected readonly wealthFilterEnvelopes = computed(() => {
+    const financialIds = new Set(this.variation().envelopes.map(row => row.id));
+    return this.envelopes.all()
+      .filter(e => financialIds.has(e.id))
+      .map(e => ({ id: `env:${e.id}` as const, label: `${e.code} · ${e.label}` }));
+  });
   protected readonly wealthFilter       = signal<WealthFilter>('all');
   protected readonly wealthLoading      = this.performanceService.wealthLoading;
   protected readonly wealthPending      = computed(() => !this.auth.loaded() || this.wealthLoading());
@@ -233,7 +243,7 @@ export class DashboardComponent {
   protected readonly wealthChartData = computed(() => {
     const w      = this.heldWealth();
     const filter = this.wealthFilter();
-    if (filter === 'all') return w.total;
+    if (filter === 'all') return w.financial;
     if (filter.startsWith('env:')) return w.byEnvelope[filter.slice(4)] ?? [];
     return w.byCategory[filter as WealthCategory] ?? [];
   });
@@ -264,7 +274,7 @@ export class DashboardComponent {
     if (this.wealthChartData().length < 2) return null;
     const w = this.heldWealth();
     if (filter !== 'all' && filter.startsWith('env:')) return w.returnsByEnvelope[filter.slice(4)] ?? null;
-    return w.returns?.[filter as WealthReturnKey] ?? null;
+    return w.returns?.[filter === 'all' ? 'financial' : filter as WealthReturnKey] ?? null;
   });
 
   protected readonly wealthPeriodCaption = computed(() => {
@@ -272,13 +282,34 @@ export class DashboardComponent {
     return PERIOD_OPTIONS.find(p => p.id === id)?.caption ?? id;
   });
 
-  /** Human label of the active filter, `null` for the whole patrimoine. */
+  /** Human label of the active filter, `null` for the whole financial wealth. */
   protected readonly wealthFilterCaption = computed(() => {
     const filter = this.wealthFilter();
     if (filter === 'all') return null;
     if (filter.startsWith('env:')) return this.wealthFilterEnvelopes().find(e => e.id === filter)?.label ?? null;
     return WEALTH_CATEGORIES.find(c => c.id === filter)?.label ?? null;
   });
+
+  // ─── Ma performance : meilleures et pires positions sur la période ────────
+
+  protected readonly stripMeasure = signal<StripMeasure>('eur');
+  protected readonly stripOrder   = signal<StripOrder>('best');
+  private readonly tickerByIsin  = computed(() => new Map(this.etfs.all().map(e => [e.isin, e.ticker])));
+
+  /** Every position still held (a line sold during the window has no card). */
+  protected readonly stripCards = computed(() => {
+    const sparks  = this.etfs.sparks();
+    const tickers = this.tickerByIsin();
+    const held    = this.variation().positions.filter(p => p.value > 0);
+    return sortStripPositions(held, this.stripMeasure(), this.stripOrder()).map(position => {
+      const ticker = tickers.get(position.id) ?? '';
+      return { position, ticker, spark: sparks[ticker] ?? [] };
+    });
+  });
+
+  protected openPosition(isin: string): void {
+    this.router.navigate(['/portfolio'], { queryParams: { isin } });
+  }
 
   protected setDashboardPeriod(id: PerformancePeriod): void {
     this.periodService.set(id);
