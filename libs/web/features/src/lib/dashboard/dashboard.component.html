@@ -307,7 +307,7 @@
               </span>
               <span class="performance-card-value num">{{ formatEuro(card.position.value, 0) }}</span>
               <span class="performance-card-foot">
-                <ui-variation [amount]="card.position.variationPct === null ? null : card.position.variation" [pct]="card.position.variationPct" />
+                <ui-variation [amount]="card.position.variation" [pct]="card.position.variationPct" />
                 <ui-sparkline [data]="card.spark" [fill]="true" />
               </span>
             </button>

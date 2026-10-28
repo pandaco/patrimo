@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { VariationRowDto } from '@patrimo/contracts';
 import { sortEnvelopeRows } from './envelope-variation-rows';
 
-function row(id: string, value: number, pnl: number, variation: number, variationPct: number | null = 1): VariationRowDto {
+function row(id: string, value: number, pnl: number, variation: number | null, variationPct: number | null = 1): VariationRowDto {
   return { id, label: id, value, pnl, pnlPct: null, variation, variationPct };
 }
 
@@ -24,7 +24,7 @@ describe('sortEnvelopeRows', () => {
   });
 
   it('keeps an envelope whose period is not computable last in both directions', () => {
-    const fresh = row('fresh', 1_000, 0, 0, null);
+    const fresh = row('fresh', 1_000, 0, null, null);
     expect(sortEnvelopeRows([fresh, pea, cto], { key: 'variation', direction: 'desc' }).at(-1)?.id).toBe('fresh');
     expect(sortEnvelopeRows([fresh, pea, cto], { key: 'variation', direction: 'asc' }).at(-1)?.id).toBe('fresh');
   });

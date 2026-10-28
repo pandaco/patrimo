@@ -174,7 +174,7 @@
                 <td class="r num">{{ formatEuro(item.row.value, 0) }}</td>
                 <td class="r"><ui-variation [amount]="item.row.pnl" [pct]="item.row.pnlPct" /></td>
                 <td class="r" [style.opacity]="variationLoading() ? 0.5 : 1">
-                  <ui-variation [amount]="item.row.variationPct === null ? null : item.row.variation" [pct]="item.row.variationPct" />
+                  <ui-variation [amount]="item.row.variation" [pct]="item.row.variationPct" />
                 </td>
               </tr>
             }

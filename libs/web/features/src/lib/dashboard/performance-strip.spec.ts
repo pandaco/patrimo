@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PositionVariationDto } from '@patrimo/contracts';
 import { sortStripPositions } from './performance-strip';
 
-function position(id: string, variation: number, variationPct: number | null): PositionVariationDto {
+function position(id: string, variation: number | null, variationPct: number | null): PositionVariationDto {
   return { id, label: id, value: 1_000, pnl: 0, pnlPct: null, variation, variationPct, byEnvelope: [] };
 }
 
@@ -10,7 +10,9 @@ function position(id: string, variation: number, variationPct: number | null): P
 const world    = position('world', 300, 3);
 const smallCap = position('small-cap', 80, 16);
 const bonds    = position('bonds', -50, -2);
-const fresh    = position('fresh', 0, null);
+const fresh    = position('fresh', null, null);
+// Euro gain known, percentage not (cost base under 100 €).
+const tiny     = position('tiny', 407, null);
 
 describe('sortStripPositions', () => {
   it('defaults to best-to-worst in euros', () => {
@@ -28,6 +30,11 @@ describe('sortStripPositions', () => {
       .toEqual(['bonds', 'small-cap', 'world']);
     expect(sortStripPositions([world, bonds, smallCap], 'pct', 'worst').map(p => p.id))
       .toEqual(['bonds', 'world', 'small-cap']);
+  });
+
+  it('ranks a known euro gain even when its percentage is not computable', () => {
+    expect(sortStripPositions([world, tiny, bonds], 'eur', 'best').map(p => p.id)).toEqual(['tiny', 'world', 'bonds']);
+    expect(sortStripPositions([tiny, world, bonds], 'pct', 'best').at(-1)?.id).toBe('tiny');
   });
 
   it('keeps a position whose period is not computable last, in every order', () => {

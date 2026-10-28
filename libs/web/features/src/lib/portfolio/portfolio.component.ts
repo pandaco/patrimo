@@ -157,7 +157,8 @@ export class PortfolioComponent {
       return { variation: row?.variation ?? null, variationPct: row?.variationPct ?? null };
     }
     const rows = this.filtered().map(e => this.variationByIsin().get(e.isin)).filter((r): r is VariationDto => !!r);
-    return { variation: rows.length ? rows.reduce((a, r) => a + r.variation, 0) : null, variationPct: null };
+    const known = rows.filter(r => r.variation !== null);
+    return { variation: known.length ? known.reduce((a, r) => a + (r.variation ?? 0), 0) : null, variationPct: null };
   });
 
   // ─── Tri des colonnes ─────────────────────────────────────────────────────

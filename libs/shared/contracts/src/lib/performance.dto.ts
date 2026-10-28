@@ -174,8 +174,11 @@ export interface VariationDto {
   pnl: number;
   /** Plus-value latente in %. `null` when the cost base is too small. */
   pnlPct: number | null;
-  /** Flow-adjusted gain over the period in EUR: end − start − net contributions. */
-  variation: number;
+  /**
+   * Flow-adjusted gain over the period in EUR: end − start − net contributions.
+   * `null` when the line has no history to measure (a value the user declared).
+   */
+  variation: number | null;
   /**
    * Gain over the money at work (`variation ÷ (opening value + net contributions)`),
    * in %. `null` when that base is too small to divide — never a misleading 0.

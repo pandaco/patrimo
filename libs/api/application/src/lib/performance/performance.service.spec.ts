@@ -427,6 +427,49 @@ describe('PerformanceService', () => {
       expect(variation.positionsTotal.variation).toBe(40);
     });
 
+    it('counts an envelope that never bought anything at its declared value, without inventing a variation', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea', label: 'PEA' }),
+        // AV units entered as a declared value: deposits logged, no ETF bought.
+        env({ id: 'env-av', glyph: 'av', label: 'Assurance-Vie', value: 8543, invested: 8000 }),
+        // Livret A entered with its balance; only the interest is logged.
+        env({ id: 'env-la', glyph: 'livret', label: 'Livret A', value: 22950, invested: 21800 }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 1250, etfIsin: null, envelopeId: 'env-av', date: new Date(labels[5] + 'T00:00:00Z') }),
+        transaction({ type: 'INTEREST', amount: 100, etfIsin: null, envelopeId: 'env-la', date: new Date(labels[10] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+      const variation = await service.getPeriodVariation('user-1', '1M');
+
+      const av = variation.envelopes.find(e => e.id === 'env-av');
+      expect(av?.value).toBe(8543);
+      expect(av?.pnl).toBe(543);
+      expect(av?.variation).toBeNull();    // no history: a dash, never 0 €
+      expect(av?.variationPct).toBeNull();
+
+      const livret = variation.envelopes.find(e => e.id === 'env-la');
+      expect(livret?.value).toBe(22950);
+      expect(livret?.variation).toBe(100); // the logged interest
+      expect(livret?.variationPct).toBeCloseTo((100 / 22850) * 100, 2);
+
+      // Declared values count in the wealth, not in the variation.
+      expect(variation.total.value).toBe(440 + 8543 + 22950);
+      expect(variation.total.variation).toBe(40 + 100);
+      expect(variation.total.variationPct).toBeCloseTo((140 / (400 + 22850)) * 100, 2);
+
+      // The dashboard curve ends on the same figure and its return ignores the declared AV.
+      const wealth = await service.getWealthSeries('user-1', '1M');
+      expect(wealth.financial[wealth.financial.length - 1]).toBe(variation.total.value);
+      expect(wealth.financial[0]).toBe(400 + 8543 + 22850);
+      expect(wealth.returns.financial?.eur).toBe(variation.total.variation);
+      expect(wealth.returns.financial?.investedReturnPct).toBe(variation.total.variationPct);
+    });
+
     it('keeps the gain realised while held when a position is sold mid-period, and never counts a withdrawal as a loss', async () => {
       const labels = await captureVariationLabels();
       envelopeRepository.findByUserId.mockResolvedValue([

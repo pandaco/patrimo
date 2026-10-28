@@ -3,8 +3,8 @@ import { SortState, sortRows } from '../portfolio/sort-rows';
 
 /**
  * Sorts the enveloppe rows of the period-variation table, with the same rules as
- * the positions table. An enveloppe whose period is not computable (no % — no
- * history yet) has no variation to rank, so it always lands last.
+ * the positions table. An enveloppe whose period is not computable (a declared
+ * value, no history) has no variation to rank, so it always lands last.
  */
 export function sortEnvelopeRows(rows: readonly VariationRowDto[], sort: SortState): VariationRowDto[] {
   const accessor = (row: VariationRowDto): number | null => {
@@ -12,7 +12,7 @@ export function sortEnvelopeRows(rows: readonly VariationRowDto[], sort: SortSta
       case 'value':
       case 'weight':    return row.value;
       case 'pnl':       return row.pnl;
-      case 'variation': return row.variationPct === null ? null : row.variation;
+      case 'variation': return row.variation;
     }
   };
   return sortRows(rows, accessor, sort.direction);

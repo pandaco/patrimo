@@ -635,27 +635,40 @@ export class PerformanceService {
     const totalBase  = new Array<number>(labels.length).fill(0);
     const totalFlows = new Array<number>(labels.length).fill(0);
     let totalCost = 0;
+    let declaredValue = 0;
+    let declaredCost  = 0;
     for (const envelope of envelopes) {
-      const category = glyphToCategory(envelope.glyph);
-      if (category !== 'bourse' && category !== 'livret') continue;
       const envTransactions = transactions.filter(t => t.envelopeId === envelope.id);
-      const isBourse = category === 'bourse';
-      const base  = isBourse ? this.buildEnvelopeEtfValueSeries(labels, envTransactions, closesByIsin) : this.buildEnvelopeFlowSeries(labels, envTransactions);
-      const flows = isBourse ? this.buildEnvelopeInvestFlowDeltas(labels, envTransactions)             : this.buildEnvelopeFlowDeltas(labels, envTransactions);
-      const cost  = isBourse
-        ? this.costBasisOf(envTransactions)
-        : envTransactions.reduce((sum, t) => sum + (t.type === 'DEPOSIT' ? t.amount : t.type === 'WITHDRAWAL' ? -t.amount : 0), 0);
-      rows.push({ id: envelope.id, label: envelope.label, ...this.variationOf(base, flows, cost, spanDays) });
-      totalCost += cost;
+      const line = this.financialLineOf(envelope, envTransactions, labels, closesByIsin);
+      if (!line) continue;
+      if (!line.computable) {
+        rows.push({ id: envelope.id, label: envelope.label, ...this.declaredVariationOf(envelope.value, line.cost) });
+        declaredValue += envelope.value;
+        declaredCost  += line.cost;
+        continue;
+      }
+      rows.push({ id: envelope.id, label: envelope.label, ...this.variationOf(line.base, line.flows, line.cost, spanDays) });
+      totalCost += line.cost;
       for (let i = 0; i < labels.length; i++) {
-        totalBase[i]  = Number((totalBase[i]  + base[i]).toFixed(2));
-        totalFlows[i] = Number((totalFlows[i] + flows[i]).toFixed(2));
+        totalBase[i]  = Number((totalBase[i]  + line.base[i]).toFixed(2));
+        totalFlows[i] = Number((totalFlows[i] + line.flows[i]).toFixed(2));
       }
     }
 
+    // Declared values join the wealth and its PV latente, never the variation.
+    const market = this.variationOf(totalBase, totalFlows, totalCost, spanDays);
+    const totalValue = Number((market.value + declaredValue).toFixed(2));
+    const totalPnl   = Number((totalValue - totalCost - declaredCost).toFixed(2));
+    const totalBasis = totalCost + declaredCost;
+
     return {
       period,
-      total: this.variationOf(totalBase, totalFlows, totalCost, spanDays),
+      total: {
+        ...market,
+        value:  totalValue,
+        pnl:    totalPnl,
+        pnlPct: totalBasis >= 100 ? Number(((totalPnl / totalBasis) * 100).toFixed(2)) : null,
+      },
       positionsTotal: this.variationOf(positionsBase, positionsFlows, positionsCost, spanDays),
       positions,
       envelopes: rows,
@@ -683,6 +696,54 @@ export class PerformanceService {
       if (held > 1e-6 && bought > 0) cost += held * ((buyCost.get(isin) ?? 0) / bought);
     }
     return cost;
+  }
+
+  /**
+   * One envelope on the financial scope (securities + livrets), or `null` when
+   * it is outside it. Mirrors `EnvelopeService`: an envelope that never bought
+   * an ETF is valued at the figure the user declared (AV units, PEE, a livret
+   * entered with its balance). A livret's declared balance anchors its history
+   * — earlier points subtract the operations logged since — so its interest is
+   * still the variation. Any other declared envelope has no history at all: it
+   * counts at its value but is `computable: false`, kept out of every return.
+   */
+  private financialLineOf(
+    envelope: { glyph: string; value: number; invested: number },
+    transactions: Transaction[],
+    labels: string[],
+    closesByIsin: Map<string, Map<string, number>>,
+  ): { base: number[]; flows: number[]; cost: number; computable: boolean } | null {
+    const category = glyphToCategory(envelope.glyph);
+    if (category !== 'bourse' && category !== 'livret') return null;
+    const hasBuy = transactions.some(t => t.type === 'BUY');
+
+    if (category === 'bourse') {
+      if (hasBuy) {
+        return {
+          base:  this.buildEnvelopeEtfValueSeries(labels, transactions, closesByIsin),
+          flows: this.buildEnvelopeInvestFlowDeltas(labels, transactions),
+          cost:  this.costBasisOf(transactions),
+          computable: true,
+        };
+      }
+      return { base: new Array<number>(labels.length).fill(envelope.value), flows: new Array<number>(labels.length).fill(0), cost: envelope.invested, computable: false };
+    }
+
+    const declared = !hasBuy && envelope.value > 0;
+    return {
+      base:  declared ? this.buildDeclaredBalanceSeries(labels, envelope.value, transactions) : this.buildEnvelopeFlowSeries(labels, transactions),
+      flows: this.buildEnvelopeFlowDeltas(labels, transactions),
+      cost:  declared
+        ? envelope.invested
+        : transactions.reduce((sum, t) => sum + (t.type === 'DEPOSIT' ? t.amount : t.type === 'WITHDRAWAL' ? -t.amount : 0), 0),
+      computable: true,
+    };
+  }
+
+  /** A declared value has no history: its PV latente is known, its period variation is not. */
+  private declaredVariationOf(value: number, cost: number): VariationDto {
+    const pnl = Number((value - cost).toFixed(2));
+    return { value, pnl, pnlPct: cost >= 100 ? Number(((pnl / cost) * 100).toFixed(2)) : null, variation: null, variationPct: null };
   }
 
   /** One variation line from a clean value series, its contribution series and its cost basis. */
@@ -757,10 +818,12 @@ export class PerformanceService {
     const returnFlowByCat = new Map<WealthCategory, number[]>();
     const returnBaseAll = new Array<number>(labels.length).fill(0);
     const returnFlowAll = new Array<number>(labels.length).fill(0);
-    // Financial scope (securities + livrets): the clean return base doubles as
-    // the displayed curve, so the headline matches the period variation total.
+    // Financial scope (securities + livrets), built by `financialLineOf` exactly
+    // like the period variation, so the headline matches its total.
     const financialBase = new Array<number>(labels.length).fill(0);
     const financialFlow = new Array<number>(labels.length).fill(0);
+    // Declared values without history: shown on the curve, kept out of the return.
+    const financialDeclared = new Array<number>(labels.length).fill(0);
 
     const addInto = (map: Map<WealthCategory, number[]>, cat: WealthCategory, src: number[]) => {
       const acc = map.get(cat) ?? new Array<number>(labels.length).fill(0);
@@ -794,11 +857,13 @@ export class PerformanceService {
       addInto(flowsByCategoryArrays, category, chartFlow);
       addInto(returnBaseByCat, category, returnBase);
       addInto(returnFlowByCat, category, returnFlow);
-      const isFinancial = isBourse || category === 'livret';
+      const financialLine = this.financialLineOf(envelope, envTxs, labels, closesByIsin);
       for (let i = 0; i < labels.length; i++) {
-        if (isFinancial) {
-          financialBase[i] = Number((financialBase[i] + returnBase[i]).toFixed(2));
-          financialFlow[i] = Number((financialFlow[i] + returnFlow[i]).toFixed(2));
+        if (financialLine?.computable) {
+          financialBase[i] = Number((financialBase[i] + financialLine.base[i]).toFixed(2));
+          financialFlow[i] = Number((financialFlow[i] + financialLine.flows[i]).toFixed(2));
+        } else if (financialLine) {
+          financialDeclared[i] = Number((financialDeclared[i] + financialLine.base[i]).toFixed(2));
         }
         total[i]         = Number((total[i]         + chartValue[i]).toFixed(2));
         flows[i]         = Number((flows[i]         + chartFlow[i]).toFixed(2));
@@ -831,7 +896,8 @@ export class PerformanceService {
       await this.captureSnapshot(userId, labels, total, byCategory);
     }
 
-    return { period, labels, total, financial: financialBase, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
+    const financial = financialBase.map((v, i) => Number((v + financialDeclared[i]).toFixed(2)));
+    return { period, labels, total, financial, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
   }
 
   /**
@@ -965,6 +1031,22 @@ export class PerformanceService {
       series.push(Number(Math.max(0, value).toFixed(2)));
     }
     return series;
+  }
+
+  /**
+   * Balance per label for a livret whose current balance was declared: the
+   * declared figure minus every operation logged after that label, so the
+   * series ends exactly on the declared value.
+   */
+  private buildDeclaredBalanceSeries(labels: string[], declared: number, transactions: Transaction[]): number[] {
+    const signed = (t: Transaction): number =>
+      t.type === 'WITHDRAWAL' ? -t.amount
+        : t.type === 'DEPOSIT' || t.type === 'INTEREST' || t.type === 'DIVIDEND' ? t.amount
+          : 0;
+    return labels.map(label => {
+      const after = transactions.reduce((sum, t) => sum + (isoDate(t.date) > label ? signed(t) : 0), 0);
+      return Number(Math.max(0, declared - after).toFixed(2));
+    });
   }
 
   /**

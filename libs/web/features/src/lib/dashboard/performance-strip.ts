@@ -7,8 +7,9 @@ export type StripMeasure = 'eur' | 'pct';
 export type StripOrder = 'best' | 'worst';
 
 /**
- * Orders the dashboard "Ma performance" strip. A position whose period is not
- * computable (no % yet) has nothing to rank, so it always lands last.
+ * Orders the dashboard "Ma performance" strip. A figure that is not computable
+ * (no history, or a % on a base too small to divide) has nothing to rank, so
+ * that position lands last for that measure.
  */
 export function sortStripPositions(
   positions: readonly PositionVariationDto[],
@@ -16,7 +17,6 @@ export function sortStripPositions(
   order: StripOrder,
 ): PositionVariationDto[] {
   const accessor = (position: PositionVariationDto): number | null => {
-    if (position.variationPct === null) return null;
     return measure === 'eur' ? position.variation : position.variationPct;
   };
   return sortRows(positions, accessor, order === 'best' ? 'desc' : 'asc');

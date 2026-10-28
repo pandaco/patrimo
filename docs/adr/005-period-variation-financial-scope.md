@@ -24,6 +24,7 @@ For a line (position, envelope or total) over a window:
 - **€** = end value − start value − net contributions inside the window. A contribution is a buy/sell for securities and a deposit/withdrawal for balances (livrets). A deposit is never a gain, a withdrawal or a sale never a loss.
 - **%** = € ÷ (opening value + net contributions), the gain over the money at work.
 - Values are taken on a **clean base**: securities at quantity × close, livrets at their balance. Uninvested cash sitting in a boursier envelope is not part of the base.
+- An envelope that never bought an ETF is valued, as everywhere else in the app, at the figure the user **declared** (AV units, PEE, a livret entered with its balance). A declared livret anchors its history on that figure, so its logged interest is still its variation. Any other declared envelope has no history: it counts in the wealth and its PV latente, but its variation is `null` (a dash), and it stays out of every return.
 - A line bought mid-window is measured from its first purchase. A line sold mid-window keeps the gain it made while held.
 
 The computation reuses the `periodReturn` helper behind the wealth-series returns, so the per-envelope figures reconcile with the returns the dashboard already showed.
@@ -41,7 +42,7 @@ The single displayed scope is **securities + livrets** across PEA, PEA-PME, CTO,
 ## Consequences
 
 - `PeriodVariationDto` exposes two totals: `total` (securities + livrets) and `positionsTotal` (securities only, for the positions table, which lists no livret).
-- A `variationPct` of `null` means "not computable" (base under 100 €, no history). The UI shows a dash and sorts the line last, never a misleading 0 %.
-- **Known gap:** fonds euros have no dedicated model. Inside an AV they sit in the envelope's cash, which the clean boursier base leaves out, so they are currently **outside** the financial scope. Fix by modelling fonds euros explicitly, or by counting AV cash as fonds euros. Either change touches every figure listed in Scope.
+- `variation: null` means "no history to measure" (a declared value). `variationPct: null` alone means the € figure is known but its base is under 100 €. The UI shows a dash and sorts that figure last, never a misleading 0.
+- **Known gap:** fonds euros have no dedicated model. An AV entered as a declared value is counted (see above), but in an AV that also holds ETFs the fonds euros sit in the envelope's cash, which the clean boursier base leaves out. Fix by modelling fonds euros explicitly, or by counting AV cash as fonds euros. Either change touches every figure listed in Scope.
 - Liabilities are hidden from the UI only. Their table, endpoints and data are untouched and can be brought back.
 - Non-goals: tax effects, fees and realised P&L are not part of the variation figure. They stay in the existing Bilan/fiscalité cards.
