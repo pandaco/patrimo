@@ -1,22 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EnvelopeService, EtfService, TauxChangeService, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
+import { EnvelopeService, EtfService, TauxChangeService, PERIOD_OPTIONS, PerformanceService, PreferencesService, TransactionService } from '@patrimo/data-access';
 import { PerformancePeriod } from '@patrimo/contracts';
 import { DeltaComponent, TipDirective, formatNumber, formatPercent, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { computeTri } from '../portfolio/tri';
-
-const PERIOD_OPTIONS: { id: PerformancePeriod; label: string }[] = [
-  { id: '1W',  label: '1S'  },
-  { id: '1M',  label: '1M'  },
-  { id: '3M',  label: '3M'  },
-  { id: '6M',  label: '6M'  },
-  { id: 'YTD', label: 'YTD' },
-  { id: '1Y',  label: '1A'  },
-  { id: '3Y',  label: '3A'  },
-  { id: '5Y',  label: '5A'  },
-  { id: 'MAX', label: 'MAX' },
-];
 
 interface PeriodRow {
   id: PerformancePeriod;
@@ -119,7 +107,8 @@ export class PerformanceComponent {
   protected readonly loadingPeriodReturns = this.performanceService.loadingPeriodReturns;
   protected readonly periodRows = computed<PeriodRow[]>(() => {
     const byPeriod = new Map(this.performanceService.periodReturns().map(r => [r.period, r]));
-    return PERIOD_OPTIONS.map(opt => ({
+    // 1D has no row: a two-sample window carries no meaningful total return.
+    return PERIOD_OPTIONS.filter(opt => opt.id !== '1D').map(opt => ({
       id: opt.id,
       label: opt.label,
       totalPct: byPeriod.get(opt.id)?.totalPct ?? null,

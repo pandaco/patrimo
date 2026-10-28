@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { AllocationService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
+import { AllocationService, EnvelopeService, EtfService, TauxChangeService, PeriodService, PerformanceService, TransactionService, etfValue } from '@patrimo/data-access';
 import { TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
 import { computeTri } from '../portfolio/tri';
@@ -41,14 +41,17 @@ export class IndicatorsComponent {
   private readonly etfs       = inject(EtfService);
   private readonly txService  = inject(TransactionService);
   private readonly performanceService = inject(PerformanceService);
+  private readonly periodService      = inject(PeriodService);
   private readonly allocationService  = inject(AllocationService);
   private readonly tauxChangeService  = inject(TauxChangeService);
 
   constructor() {
     // All-time framing: "Repli vs sommet" reads against the all-time peak and
-    // the CAGR feeding "Doublement" only exists for ≥1-year windows. The
-    // dashboard re-asserts its own period on every visit, so no ping-pong.
+    // the CAGR feeding "Doublement" only exists for ≥1-year windows. The period
+    // is shared app-wide, so the user's own choice is put back on leaving.
+    const previousPeriod = this.periodService.period();
     this.performanceService.setPeriod('MAX');
+    inject(DestroyRef).onDestroy(() => this.periodService.set(previousPeriod));
 
     // Restore the user's own ordering of the reorderable tiles. Anything
     // stale (old id set, corrupt JSON) falls back to the default order

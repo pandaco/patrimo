@@ -1,8 +1,9 @@
 import { httpResource } from '@angular/common/http';
-import { Injectable, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Injectable, computed, inject, linkedSignal } from '@angular/core';
 import { EtfStatsDto, FeesYtdDto, PerformanceMetricsDto, PerformancePeriod, PerformanceSeriesDto, PeriodReturnDto, PeriodVariationDto, WealthSeriesDto } from '@patrimo/contracts';
 import { API_BASE_URL } from './api-base-url';
 import { AuthService } from './auth.service';
+import { PeriodService } from './period.service';
 import { safeValue, safeValueOrUndefined } from './safe';
 
 const EMPTY_VARIATION: PeriodVariationDto = {
@@ -17,9 +18,10 @@ const EMPTY_VARIATION: PeriodVariationDto = {
 export class PerformanceService {
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly auth    = inject(AuthService);
+  private readonly periodService = inject(PeriodService);
 
-  /** Period the resource is currently fetching for. Components mutate this signal. */
-  readonly period = signal<PerformancePeriod>('6M');
+  /** Shared period every resource below fetches for — owned by `PeriodService`. */
+  readonly period = this.periodService.period;
 
   private readonly resource = httpResource<PerformanceSeriesDto>(
     () => (this.auth.isAuthenticated()
@@ -61,7 +63,7 @@ export class PerformanceService {
   readonly loading = this.resource.isLoading;
   readonly error   = this.resource.error;
 
-  readonly wealthPeriod = signal<PerformancePeriod>('1M');
+  readonly wealthPeriod = this.periodService.period;
 
   private readonly wealthResource = httpResource<WealthSeriesDto>(
     () => (this.auth.isAuthenticated()
@@ -74,8 +76,6 @@ export class PerformanceService {
 
   readonly wealth        = computed(() => safeValue(this.wealthResource, { period: '1M', labels: [], total: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} }));
   readonly wealthLoading = this.wealthResource.isLoading;
-
-  setWealthPeriod(period: PerformancePeriod): void { this.wealthPeriod.set(period); }
 
   private readonly etfStatsResource = httpResource<EtfStatsDto[]>(
     () => (this.auth.isAuthenticated() ? `${this.baseUrl}/performance/etf-stats` : undefined),
@@ -102,15 +102,13 @@ export class PerformanceService {
 
   /**
    * Market variation (excluding contributions) of every position and envelope
-   * over `variationPeriod`. `httpResource` resets `value()` to the default during
+   * over the shared period. `httpResource` resets `value()` to the default during
    * a re-fetch, so `variationHeld` keeps the last non-empty payload for the UI
    * to dim instead of flashing empty.
    */
-  readonly variationPeriod = signal<PerformancePeriod>('YTD');
-
   private readonly variationResource = httpResource<PeriodVariationDto>(
     () => (this.auth.isAuthenticated()
-      ? `${this.baseUrl}/performance/variation?period=${this.variationPeriod()}`
+      ? `${this.baseUrl}/performance/variation?period=${this.period()}`
       : undefined),
     { defaultValue: EMPTY_VARIATION },
   );
@@ -123,8 +121,6 @@ export class PerformanceService {
       next.positions.length > 0 || next.envelopes.length > 0 ? next : (previous?.value ?? next),
   });
 
-  setVariationPeriod(period: PerformancePeriod): void { this.variationPeriod.set(period); }
-
-  setPeriod(period: PerformancePeriod): void { this.period.set(period); }
+  setPeriod(period: PerformancePeriod): void { this.periodService.set(period); }
   reload(): void { this.resource.reload(); }
 }

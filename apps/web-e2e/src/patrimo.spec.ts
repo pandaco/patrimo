@@ -75,7 +75,7 @@ test.describe('Patrimo E2E Tests', () => {
     // Verify some parts of the dashboard are loaded: the net-worth headline
     // (sidebar), the period tabs (1J … MAX) and the selection's performance line.
     await expect(page.locator('.hero-networth-value')).toBeVisible();
-    await expect(page.locator('.tabs[aria-label="Période"] button')).toHaveCount(8);
+    await expect(page.locator('.tabs[aria-label="Période"] button')).toHaveCount(10);
     await expect(page.locator('.perf-line')).toBeVisible();
   });
 

@@ -1,22 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, linkedSignal, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
+import { AlertService, AuthService, EnvelopeService, EtfService, TauxChangeService, PERIOD_OPTIONS, PeriodService, PerformanceService, PreferencesService, TransactionService, etfCost, etfValue } from '@patrimo/data-access';
 import { AlertType, PerformancePeriod, PerformanceSeriesDto, WealthCategory, WealthReturnKey, WealthSeriesDto } from '@patrimo/contracts';
 import { TermComponent, TipDirective, formatNumber, formatPercent } from '@patrimo/ui';
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeContributed } from './contributed';
-
-const WEALTH_PERIODS: { id: PerformancePeriod; label: string; caption: string }[] = [
-  { id: '1D',  label: '1J',  caption: 'sur 1 jour' },
-  { id: '1W',  label: '1S',  caption: 'sur 1 semaine' },
-  { id: '1M',  label: '1M',  caption: 'sur 1 mois' },
-  { id: '3M',  label: '3M',  caption: 'sur 3 mois' },
-  { id: '6M',  label: '6M',  caption: 'sur 6 mois' },
-  { id: 'YTD', label: 'YTD', caption: 'depuis le 1er janv.' },
-  { id: '1Y',  label: '1A',  caption: 'sur 1 an' },
-  { id: 'MAX', label: 'MAX', caption: 'depuis le début' },
-];
 
 const WEALTH_CATEGORIES: { id: 'all' | WealthCategory; label: string }[] = [
   { id: 'all',    label: 'Toutes les catégories' },
@@ -59,6 +48,7 @@ export class DashboardComponent {
   private readonly txService  = inject(TransactionService);
   private readonly alerts     = inject(AlertService);
   private readonly performanceService    = inject(PerformanceService);
+  private readonly periodService         = inject(PeriodService);
   private readonly auth       = inject(AuthService);
   private readonly preferences      = inject(PreferencesService);
   private readonly router     = inject(Router);
@@ -90,24 +80,6 @@ export class DashboardComponent {
       if (!this.preferences.loading() && !this.preferences.current().onboardingDone && this.isEmpty()) {
         this.router.navigateByUrl('/welcome');
       }
-    });
-
-    // Restore the last selected chart period so a reload does not silently
-    // reset the view (same pattern as compare:selected).
-    const PERIOD_STORAGE_KEY = 'dashboard:period';
-    const storedPeriod = localStorage.getItem(PERIOD_STORAGE_KEY);
-    if (storedPeriod !== null && WEALTH_PERIODS.some(p => p.id === storedPeriod)) {
-      this.dashboardPeriod.set(storedPeriod as PerformancePeriod);
-    }
-    effect(() => localStorage.setItem(PERIOD_STORAGE_KEY, this.dashboardPeriod()));
-
-    // Single source of truth for the evolution chart period: pushes the one
-    // dashboard period signal to both performance resources (wealth-series and
-    // perf-vs-benchmark) so the € and % views never drift out of sync.
-    effect(() => {
-      const p = this.dashboardPeriod();
-      this.performanceService.setPeriod(p);
-      this.performanceService.setWealthPeriod(p);
     });
   }
 
@@ -243,9 +215,9 @@ export class DashboardComponent {
 
   // ─── Evolution chart (single card: € patrimoine ↔ % vs indice) ────────────
 
-  /** One period drives both the wealth-series and perf-vs-benchmark resources. */
-  protected readonly dashboardPeriods = WEALTH_PERIODS;
-  protected readonly dashboardPeriod  = signal<PerformancePeriod>('1Y');
+  /** The shared period (`PeriodService`) drives every resource — wealth series, perf vs benchmark, variation. */
+  protected readonly dashboardPeriods = PERIOD_OPTIONS;
+  protected readonly dashboardPeriod  = this.periodService.period;
   /** `wealth` = patrimoine en euros · `perf` = performance vs benchmark en %. */
   protected readonly chartMode        = signal<'wealth' | 'perf'>('wealth');
 
@@ -297,7 +269,7 @@ export class DashboardComponent {
 
   protected readonly wealthPeriodCaption = computed(() => {
     const id = this.dashboardPeriod();
-    return WEALTH_PERIODS.find(p => p.id === id)?.caption ?? id;
+    return PERIOD_OPTIONS.find(p => p.id === id)?.caption ?? id;
   });
 
   /** Human label of the active filter, `null` for the whole patrimoine. */
@@ -309,7 +281,7 @@ export class DashboardComponent {
   });
 
   protected setDashboardPeriod(id: PerformancePeriod): void {
-    this.dashboardPeriod.set(id);
+    this.periodService.set(id);
   }
 
   protected setChartMode(mode: 'wealth' | 'perf'): void {

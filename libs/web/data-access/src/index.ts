@@ -16,6 +16,7 @@ export * from './lib/allocation.service';
 export * from './lib/alert.service';
 export * from './lib/dividend.service';
 export * from './lib/performance.service';
+export * from './lib/period.service';
 export * from './lib/exposure.service';
 export * from './lib/dca-plan.service';
 export * from './lib/strategy-version.service';
