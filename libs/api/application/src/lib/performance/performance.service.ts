@@ -594,6 +594,9 @@ export class PerformanceService {
     );
 
     const positions: PositionVariationDto[] = [];
+    const positionsBase  = new Array<number>(labels.length).fill(0);
+    const positionsFlows = new Array<number>(labels.length).fill(0);
+    let positionsCost = 0;
     for (const [isin, trades] of tradesByIsin) {
       const base  = this.buildEnvelopeEtfValueSeries(labels, trades, closesByIsin);
       // Never held inside the window (e.g. sold long before it): nothing to show.
@@ -615,12 +618,13 @@ export class PerformanceService {
         });
       }
 
-      positions.push({
-        id: isin,
-        label,
-        ...this.variationOf(base, flows, this.costBasisOf(trades), spanDays),
-        byEnvelope,
-      });
+      const cost = this.costBasisOf(trades);
+      positions.push({ id: isin, label, ...this.variationOf(base, flows, cost, spanDays), byEnvelope });
+      positionsCost += cost;
+      for (let i = 0; i < labels.length; i++) {
+        positionsBase[i]  = Number((positionsBase[i]  + base[i]).toFixed(2));
+        positionsFlows[i] = Number((positionsFlows[i] + flows[i]).toFixed(2));
+      }
     }
 
     // Envelope rows + total. Boursier envelopes use the clean ETF-value base,
@@ -649,7 +653,13 @@ export class PerformanceService {
       }
     }
 
-    return { period, total: this.variationOf(totalBase, totalFlows, totalCost, spanDays), positions, envelopes: rows };
+    return {
+      period,
+      total: this.variationOf(totalBase, totalFlows, totalCost, spanDays),
+      positionsTotal: this.variationOf(positionsBase, positionsFlows, positionsCost, spanDays),
+      positions,
+      envelopes: rows,
+    };
   }
 
   /** Cost basis of the shares still held: average buy cost (fees included) × remaining quantity. */

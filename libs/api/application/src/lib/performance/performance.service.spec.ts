@@ -422,6 +422,9 @@ describe('PerformanceService', () => {
       // Total = sum of the envelope rows, on the financial scope.
       expect(variation.total.value).toBe(440 + 1512);
       expect(variation.total.variation).toBe(52);
+      // The positions table's own total leaves the livret out.
+      expect(variation.positionsTotal.value).toBe(440);
+      expect(variation.positionsTotal.variation).toBe(40);
     });
 
     it('keeps the gain realised while held when a position is sold mid-period, and never counts a withdrawal as a loss', async () => {
@@ -474,6 +477,7 @@ describe('PerformanceService', () => {
       expect(empty).toEqual({
         period: '1M',
         total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
+        positionsTotal: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
         positions: [],
         envelopes: [],
       });

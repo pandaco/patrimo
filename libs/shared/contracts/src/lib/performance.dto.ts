@@ -193,7 +193,10 @@ export interface PositionVariationDto extends VariationRowDto {
  */
 export interface PeriodVariationDto {
   period: PerformancePeriod;
+  /** Securities and livrets together. */
   total: VariationDto;
+  /** Securities only: the total of the positions table, livrets left out. */
+  positionsTotal: VariationDto;
   positions: PositionVariationDto[];
   envelopes: VariationRowDto[];
 }
