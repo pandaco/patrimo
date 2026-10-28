@@ -155,7 +155,7 @@
             </tr>
           } @else {
             <tr class="total-row" data-testid="envelopes-variation-total">
-              <td><b>Total</b> <span class="muted tiny">{{ variationRows().length }} enveloppe{{ variationRows().length === 1 ? '' : 's' }}</span></td>
+              <td><b>Total</b>&nbsp;<span class="muted tiny">{{ variationRows().length }} enveloppe{{ variationRows().length === 1 ? '' : 's' }}</span></td>
               <td class="r num"><b>{{ formatEuro(variationTotal().value, 0) }}</b></td>
               <td class="r"><ui-variation [amount]="variationTotal().pnl" [pct]="variationTotal().pnlPct" /></td>
               <td class="r" [style.opacity]="variationLoading() ? 0.5 : 1"><ui-variation [amount]="variationTotal().variation" [pct]="variationTotal().variationPct" /></td>
