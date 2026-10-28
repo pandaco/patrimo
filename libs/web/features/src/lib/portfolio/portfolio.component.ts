@@ -51,6 +51,8 @@ export class PortfolioComponent {
       } else {
         this.envelopeFilter.set(null);
       }
+      // Deep link from the dashboard strip: open that position's detail row.
+      if (params['isin']) this.expandedIsin.set(params['isin']);
     });
   }
 
