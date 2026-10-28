@@ -1,13 +1,23 @@
 import { Envelope } from './models';
 
+/**
+ * Ce que l'on compare au montant investi. Avec des titres : leur valeur, le cash
+ * non investi exclu. Sans titres (livret, valeur déclarée), `invested` est le
+ * montant versé et `value` le solde : on compare tout le solde.
+ */
+function measuredValue(env: Envelope): number {
+  const securities = env.value - env.cash;
+  return securities <= 0 && env.invested > 0 ? env.value : securities;
+}
+
 /** PV latente : plus-value sur les positions actives, exclut le cash non investi. */
 export function unrealizedPlusValue(env: Envelope): number {
-  return (env.value - env.cash) - env.invested;
+  return measuredValue(env) - env.invested;
 }
 
 /** Rentabilité latente (en pourcentage) : PV latente / montant investi sur les positions actives. */
 export function unrealizedPnlPct(env: Envelope): number {
-  return env.invested ? ((env.value - env.cash) / env.invested - 1) * 100 : 0;
+  return env.invested ? (measuredValue(env) / env.invested - 1) * 100 : 0;
 }
 
 /** Taux de remplissage du plafond par rapport aux versements (dépôts nets). */
