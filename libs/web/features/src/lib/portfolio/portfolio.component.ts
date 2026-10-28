@@ -1,25 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, TauxChangeService, TransactionService, EnvelopeService } from '@patrimo/data-access';
-import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
+import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, PERIOD_OPTIONS, PeriodService, PerformanceService, TauxChangeService, TransactionService, EnvelopeService } from '@patrimo/data-access';
+import type { PerformancePeriod, VariationDto } from '@patrimo/contracts';
+import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
 import { computeEtfOverlaps } from './overlap';
+import { PositionSortKey, SortState, nextSort, sortRows } from './sort-rows';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, PerfChartComponent],
+  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, PerfChartComponent],
   templateUrl: './portfolio.component.html',
+  styleUrl: './portfolio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PortfolioComponent {
   private readonly etfService  = inject(EtfService);
   private readonly exposureService  = inject(ExposureService);
+  private readonly performanceService = inject(PerformanceService);
+  private readonly periodService      = inject(PeriodService);
   private readonly transactionService   = inject(TransactionService);
   protected readonly envelopeService = inject(EnvelopeService);
   private readonly router = inject(Router);
@@ -114,6 +119,69 @@ export class PortfolioComponent {
   protected readonly filtered = computed(() => {
     const f = this.allocFilter();
     return f === 'Toutes' ? this.allEtfs() : this.allEtfs().filter(e => e.alloc === f);
+  });
+
+  // ─── Variation sur la période (partagée avec le dashboard) ────────────────
+
+  protected readonly periodOptions = PERIOD_OPTIONS;
+  protected readonly period        = this.periodService.period;
+  protected readonly periodCaption = computed(() => PERIOD_OPTIONS.find(o => o.id === this.period())?.label ?? this.period());
+  protected readonly variationLoading = this.performanceService.variationLoading;
+  protected setPeriod(id: PerformancePeriod): void { this.periodService.set(id); }
+
+  /** Variation per ISIN — scoped to the selected enveloppe when a filter is active. */
+  private readonly variationByIsin = computed(() => {
+    const envId = this.envelopeFilter();
+    const map = new Map<string, VariationDto>();
+    for (const position of this.performanceService.variationHeld().positions) {
+      const row = envId ? position.byEnvelope.find(r => r.id === envId) : position;
+      if (row) map.set(position.id, row);
+    }
+    return map;
+  });
+
+  protected rowVariation(e: Etf): VariationDto | undefined { return this.variationByIsin().get(e.isin); }
+
+  /**
+   * Total row. Matches the service figures when the table is unfiltered or scoped
+   * to one enveloppe; with an allocation filter only the euro sum is exact, so
+   * the percentage is left out rather than guessed.
+   */
+  protected readonly totalVariation = computed<{ variation: number | null; variationPct: number | null }>(() => {
+    const data = this.performanceService.variationHeld();
+    const envId = this.envelopeFilter();
+    if (this.allocFilter() === 'Toutes') {
+      const row = envId ? data.envelopes.find(r => r.id === envId) : data.positionsTotal;
+      return { variation: row?.variation ?? null, variationPct: row?.variationPct ?? null };
+    }
+    const rows = this.filtered().map(e => this.variationByIsin().get(e.isin)).filter((r): r is VariationDto => !!r);
+    return { variation: rows.length ? rows.reduce((a, r) => a + r.variation, 0) : null, variationPct: null };
+  });
+
+  // ─── Tri des colonnes ─────────────────────────────────────────────────────
+
+  protected readonly sort = signal<SortState>({ key: 'value', direction: 'desc' });
+  protected toggleSort(key: PositionSortKey): void { this.sort.update(current => nextSort(current, key)); }
+  protected ariaSort(key: PositionSortKey): 'ascending' | 'descending' | 'none' {
+    const { key: active, direction } = this.sort();
+    return active !== key ? 'none' : direction === 'asc' ? 'ascending' : 'descending';
+  }
+  protected sortArrow(key: PositionSortKey): string {
+    const { key: active, direction } = this.sort();
+    return active !== key ? '' : direction === 'asc' ? '▲' : '▼';
+  }
+
+  protected readonly sorted = computed(() => {
+    const { key, direction } = this.sort();
+    const accessor = (e: Etf): number | null => {
+      switch (key) {
+        case 'value':     return etfValue(e);
+        case 'weight':    return etfValue(e);
+        case 'pnl':       return etfPnl(e);
+        case 'variation': return this.variationByIsin().get(e.isin)?.variation ?? null;
+      }
+    };
+    return sortRows(this.filtered(), accessor, direction);
   });
 
   protected readonly total     = computed(() => this.allEtfs().reduce((a, e) => a + etfValue(e), 0));
