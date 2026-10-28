@@ -236,18 +236,22 @@ test.describe('Patrimo E2E Tests', () => {
     await page.goto('/portfolio');
     await page.waitForURL(/\/portfolio(\?|#|$)/);
 
-    // Verify row is present
-    const row = page.locator('[data-testid="positions-table"] tbody tr').first();
+    // Verify row is present — the Total row comes first, skip it
+    const row = page.locator('[data-testid="positions-table"] tbody tr:not([data-testid="positions-total"])').first();
     await expect(row).toBeVisible();
 
     // Click the row to expand details
     await row.click();
 
     // The detail panel should become visible
-    const detailPanel = page.locator('td[colspan="11"]');
+    const detailPanel = page.locator('td[colspan="12"]');
     await expect(detailPanel).toBeVisible();
     await expect(detailPanel).toContainText('TER');
     await expect(detailPanel).toContainText('ISIN');
+
+    // Deep link used by the dashboard strip: `?isin=` opens the same detail
+    await page.goto('/portfolio?isin=IE00B4L5Y983');
+    await expect(page.locator('td[colspan="12"]')).toContainText('ISIN');
   });
 
   test('should successfully trigger a cache clear from the preferences page', async ({ page }) => {
