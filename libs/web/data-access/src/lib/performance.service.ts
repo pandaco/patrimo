@@ -70,11 +70,11 @@ export class PerformanceService {
       ? `${this.baseUrl}/performance/wealth-series?period=${this.wealthPeriod()}`
       : undefined),
     {
-      defaultValue: { period: '1M', labels: [], total: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} },
+      defaultValue: { period: '1M', labels: [], total: [], financial: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} },
     },
   );
 
-  readonly wealth        = computed(() => safeValue(this.wealthResource, { period: '1M', labels: [], total: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} }));
+  readonly wealth        = computed(() => safeValue(this.wealthResource, { period: '1M', labels: [], total: [], financial: [], flows: [], flowsByCategory: {}, byCategory: {}, byEnvelope: {}, returns: {}, returnsByEnvelope: {} }));
   readonly wealthLoading = this.wealthResource.isLoading;
 
   private readonly etfStatsResource = httpResource<EtfStatsDto[]>(

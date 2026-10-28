@@ -757,6 +757,10 @@ export class PerformanceService {
     const returnFlowByCat = new Map<WealthCategory, number[]>();
     const returnBaseAll = new Array<number>(labels.length).fill(0);
     const returnFlowAll = new Array<number>(labels.length).fill(0);
+    // Financial scope (securities + livrets): the clean return base doubles as
+    // the displayed curve, so the headline matches the period variation total.
+    const financialBase = new Array<number>(labels.length).fill(0);
+    const financialFlow = new Array<number>(labels.length).fill(0);
 
     const addInto = (map: Map<WealthCategory, number[]>, cat: WealthCategory, src: number[]) => {
       const acc = map.get(cat) ?? new Array<number>(labels.length).fill(0);
@@ -790,7 +794,12 @@ export class PerformanceService {
       addInto(flowsByCategoryArrays, category, chartFlow);
       addInto(returnBaseByCat, category, returnBase);
       addInto(returnFlowByCat, category, returnFlow);
+      const isFinancial = isBourse || category === 'livret';
       for (let i = 0; i < labels.length; i++) {
+        if (isFinancial) {
+          financialBase[i] = Number((financialBase[i] + returnBase[i]).toFixed(2));
+          financialFlow[i] = Number((financialFlow[i] + returnFlow[i]).toFixed(2));
+        }
         total[i]         = Number((total[i]         + chartValue[i]).toFixed(2));
         flows[i]         = Number((flows[i]         + chartFlow[i]).toFixed(2));
         returnBaseAll[i] = Number((returnBaseAll[i] + returnBase[i]).toFixed(2));
@@ -807,7 +816,8 @@ export class PerformanceService {
       ? (new Date(labels[labels.length - 1]).getTime() - new Date(labels[0]).getTime()) / 86_400_000
       : 0;
     const returns: Partial<Record<WealthReturnKey, WealthReturnDto>> = {
-      all: periodReturn(returnBaseAll, returnFlowAll, spanDays),
+      all:       periodReturn(returnBaseAll, returnFlowAll, spanDays),
+      financial: periodReturn(financialBase, financialFlow, spanDays),
     };
     for (const [cat, base] of returnBaseByCat) {
       returns[cat] = periodReturn(base, returnFlowByCat.get(cat) ?? [], spanDays);
@@ -821,7 +831,7 @@ export class PerformanceService {
       await this.captureSnapshot(userId, labels, total, byCategory);
     }
 
-    return { period, labels, total, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
+    return { period, labels, total, financial: financialBase, flows, byCategory, flowsByCategory, byEnvelope, returns, returnsByEnvelope };
   }
 
   /**

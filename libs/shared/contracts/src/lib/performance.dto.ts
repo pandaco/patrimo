@@ -76,7 +76,8 @@ export interface EtfStatsDto {
 export type WealthCategory = 'bourse' | 'livret' | 'immo' | 'crypto' | 'metal' | 'cash';
 
 /** Key for the period-return map: every category plus the `all` aggregate. */
-export type WealthReturnKey = 'all' | WealthCategory;
+/** `financial` = securities + livrets (the dashboard headline scope), on the same clean base as the period variation. */
+export type WealthReturnKey = 'all' | 'financial' | WealthCategory;
 
 export interface WealthReturnDto {
   /** Flow-adjusted euro gain over the period: value change minus contributions. */
@@ -104,6 +105,12 @@ export interface WealthSeriesDto {
   labels: string[];
   /** Total patrimoine across all categories. */
   total: number[];
+  /**
+   * Financial wealth: securities at market value plus livret balances —
+   * current-account cash and uninvested cash left out. Built on the same base
+   * as `PeriodVariationDto.total`, so its last point equals that total's value.
+   */
+  financial: number[];
   /**
    * Net external inflows per label day, summed across ALL envelopes:
    * sum(DEPOSIT) − sum(WITHDRAWAL). DIVIDEND and INTEREST are excluded — they

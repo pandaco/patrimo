@@ -600,6 +600,37 @@ describe('PerformanceService', () => {
       expect(w.returnsByEnvelope['env-2']).toBeDefined();
     });
 
+    it('exposes a financial series (securities + livrets) that reconciles with the period variation total', async () => {
+      const labels = await captureWealthLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([
+        env({ id: 'env-1', glyph: 'pea' }),
+        env({ id: 'env-2', glyph: 'livret' }),
+        env({ id: 'env-3', glyph: 'cash', code: 'CC', label: 'Compte courant' }),
+      ]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        // 1 000 € deposited on the PEA, 400 € invested: the 600 € left idle stay out of the financial scope.
+        transaction({ type: 'DEPOSIT', amount: 1000, etfIsin: null, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'DEPOSIT', amount: 500, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[0] + 'T00:00:00Z') }),
+        transaction({ type: 'INTEREST', amount: 5, etfIsin: null, envelopeId: 'env-2', date: new Date(labels[10] + 'T00:00:00Z') }),
+        // Current-account cash: never part of the financial wealth.
+        transaction({ type: 'DEPOSIT', amount: 3000, etfIsin: null, envelopeId: 'env-3', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+      const w = await service.getWealthSeries('user-1', '1M');
+      const last = labels.length - 1;
+      expect(w.financial[0]).toBe(400 + 500);
+      expect(w.financial[last]).toBe(440 + 505);
+      expect(w.returns.financial?.eur).toBe(45);
+
+      const variation = await service.getPeriodVariation('user-1', '1M');
+      expect(w.financial[last]).toBe(variation.total.value);
+      expect(w.returns.financial?.eur).toBe(variation.total.variation);
+      expect(w.returns.financial?.investedReturnPct).toBe(variation.total.variationPct);
+    });
+
     it('freezes today\'s valuation as a snapshot, once per user per day (PP8)', async () => {
       const labels = await captureWealthLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-2', glyph: 'livret' })]);
