@@ -26,6 +26,7 @@ weighted-average but went FIFO because…") belong here, not in code comments.
 | 002 | [App-wide toast pattern via `ToastService`](./002-toast-service.md) | Accepted |
 | 003 | [Security baseline (auth, headers, rate limit, dev-login gate)](./003-security-baseline.md) | Accepted |
 | 004 | [Redis-backed sessions with sliding TTL](./004-redis-sessions.md) | Accepted |
+| 005 | [Period variation excluding contributions, on the financial wealth](./005-period-variation-financial-scope.md) | Accepted |
 
 ## When to write an ADR
 
