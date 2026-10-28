@@ -14,10 +14,16 @@ import {
   unrealizedPlusValueMulti,
   unrealizedPnlPctMulti,
   capPct,
+  PERIOD_OPTIONS,
+  PerformanceService,
+  PeriodService,
 } from '@patrimo/data-access';
+import { PerformancePeriod } from '@patrimo/contracts';
 import { computeLivretInterest } from './livret-interest';
+import { sortEnvelopeRows } from './envelope-variation-rows';
+import { PositionSortKey, SortState, nextSort } from '../portfolio/sort-rows';
 import { computeRealized, startOfYearISO } from '../portfolio/realized-plusValue';
-import { DeltaComponent, EnvGlyphComponent, formatPercentRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent } from '@patrimo/ui';
+import { DeltaComponent, EnvGlyphComponent, formatPercentRaw, EnvelopeDialogComponent, TipDirective, TransactionDialogComponent, VariationComponent } from '@patrimo/ui';
 
 interface Family { label: string; glyphs: string[]; color: string }
 
@@ -52,9 +58,9 @@ export interface FamilyRow {
 @Component({
   selector: 'app-wealth',
   standalone: true,
-  imports: [RouterLink, DeltaComponent, EnvGlyphComponent, TipDirective],
+  imports: [RouterLink, DeltaComponent, EnvGlyphComponent, TipDirective, VariationComponent],
   templateUrl: './wealth.component.html',
-  styles: [`.env-title-link { transition: opacity 0.15s; } .env-title-link:hover { text-decoration: underline !important; opacity: 0.8; }`],
+  styleUrl: './wealth.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WealthComponent {
@@ -63,6 +69,8 @@ export class WealthComponent {
   private readonly transactionService = inject(TransactionService);
   private readonly dialog = inject(MatDialog);
   private readonly toasts = inject(ToastService);
+  private readonly performanceService = inject(PerformanceService);
+  private readonly periodService = inject(PeriodService);
 
   protected readonly activeView = signal<WealthView>('famille');
   protected readonly total      = this.envelopeService.total;
@@ -89,6 +97,34 @@ export class WealthComponent {
         pct:    total    ? (value / total) * 100 : 0,
       };
     });
+  });
+
+  // ─── Variation sur la période (partagée avec le dashboard et le Portefeuille) ─
+
+  protected readonly periodOptions = PERIOD_OPTIONS;
+  protected readonly period        = this.periodService.period;
+  protected readonly periodCaption = computed(() => PERIOD_OPTIONS.find(o => o.id === this.period())?.label ?? this.period());
+  protected readonly variationLoading = this.performanceService.variationLoading;
+  protected setPeriod(id: PerformancePeriod): void { this.periodService.set(id); }
+
+  /** Financial scope only (securities, fonds euros, livrets) — the service's own total. */
+  protected readonly variationTotal = computed(() => this.performanceService.variationHeld().total);
+
+  protected readonly variationSort = signal<SortState>({ key: 'value', direction: 'desc' });
+  protected toggleVariationSort(key: PositionSortKey): void { this.variationSort.update(current => nextSort(current, key)); }
+  protected ariaSort(key: PositionSortKey): 'ascending' | 'descending' | 'none' {
+    const { key: active, direction } = this.variationSort();
+    return active !== key ? 'none' : direction === 'asc' ? 'ascending' : 'descending';
+  }
+  protected sortArrow(key: PositionSortKey): string {
+    const { key: active, direction } = this.variationSort();
+    return active !== key ? '' : direction === 'asc' ? '▲' : '▼';
+  }
+
+  protected readonly variationRows = computed(() => {
+    const envelopesById = new Map(this.allEnv().map(e => [e.id, e]));
+    return sortEnvelopeRows(this.performanceService.variationHeld().envelopes, this.variationSort())
+      .map(row => ({ row, envelope: envelopesById.get(row.id) }));
   });
 
   protected readonly currencyRows = computed(() => {

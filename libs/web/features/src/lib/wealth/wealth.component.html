@@ -96,6 +96,95 @@
     }
   </div>
 
+  <!-- PERIOD VARIATION PER ENVELOPE -->
+  @if (allEnv().length > 0) {
+    <div class="section-head">
+      <h2 class="section-title">Variation <em>sur la période</em></h2>
+      <span class="section-sub">patrimoine financier · titres, fonds euros et livrets</span>
+      <div class="section-right">
+        <div class="tabs" role="tablist" aria-label="Période de la variation">
+          @for (option of periodOptions; track option.id) {
+            <button [class.active]="period() === option.id" (click)="setPeriod(option.id)"
+                    role="tab" [attr.aria-selected]="period() === option.id">{{ option.label }}</button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:4px 12px;margin-bottom:24px">
+      <div class="table-scroll">
+      <table class="tbl" data-testid="envelopes-variation-table">
+        <thead>
+          <tr>
+            <th>Enveloppe</th>
+            <th class="r" [attr.aria-sort]="ariaSort('value')">
+              <button type="button" class="sort-button" (click)="toggleVariationSort('value')">
+                <span data-tip="Valeur actuelle de l'enveloppe sur le périmètre financier : titres, fonds euros et livrets. Le cash des comptes courants n'est pas compté.">Valeur</span>
+                <span aria-hidden="true">{{ sortArrow('value') }}</span>
+              </button>
+            </th>
+            <th class="r" [attr.aria-sort]="ariaSort('pnl')">
+              <button type="button" class="sort-button" (click)="toggleVariationSort('pnl')">
+                <span data-tip="Plus-value latente depuis l'achat : valeur actuelle − montant investi.">PV latente</span>
+                <span aria-hidden="true">{{ sortArrow('pnl') }}</span>
+              </button>
+            </th>
+            <th class="r" [attr.aria-sort]="ariaSort('variation')">
+              <button type="button" class="sort-button" (click)="toggleVariationSort('variation')">
+                <span data-tip="Variation de marché sur la période choisie, hors apports : un versement n'est pas un gain, un retrait n'est pas une perte. Pour un livret ou un fonds euros, ce sont les intérêts produits.">Var. {{ periodCaption() }}</span>
+                <span aria-hidden="true">{{ sortArrow('variation') }}</span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (variationLoading() && variationRows().length === 0) {
+            @for (i of [1,2,3]; track i) {
+              <tr>
+                <td><div class="skeleton" style="height:18px;width:60%;border-radius:4px"></div></td>
+                <td class="r"><div class="skeleton" style="height:14px;width:80px;margin-left:auto;border-radius:4px"></div></td>
+                <td class="r"><div class="skeleton" style="height:14px;width:70px;margin-left:auto;border-radius:4px"></div></td>
+                <td class="r"><div class="skeleton" style="height:14px;width:70px;margin-left:auto;border-radius:4px"></div></td>
+              </tr>
+            }
+          } @else if (variationRows().length === 0) {
+            <tr>
+              <td colspan="4" class="muted small" style="text-align:center;padding:20px 0">
+                Aucune enveloppe financière pour l'instant — ajoute une opération sur un PEA, un livret ou une assurance-vie.
+              </td>
+            </tr>
+          } @else {
+            <tr class="total-row" data-testid="envelopes-variation-total">
+              <td><b>Total</b> <span class="muted tiny">{{ variationRows().length }} enveloppe{{ variationRows().length === 1 ? '' : 's' }}</span></td>
+              <td class="r num"><b>{{ formatEuro(variationTotal().value, 0) }}</b></td>
+              <td class="r"><ui-variation [amount]="variationTotal().pnl" [pct]="variationTotal().pnlPct" /></td>
+              <td class="r" [style.opacity]="variationLoading() ? 0.5 : 1"><ui-variation [amount]="variationTotal().variation" [pct]="variationTotal().variationPct" /></td>
+            </tr>
+            @for (item of variationRows(); track item.row.id) {
+              <tr>
+                <td>
+                  <div class="envelope-cell">
+                    @if (item.envelope) { <ui-env-glyph [env]="item.envelope" [size]="28" /> }
+                    <div>
+                      <div style="font-weight:500">{{ item.row.label }}</div>
+                      @if (item.envelope) { <div class="muted tiny">{{ item.envelope.broker }}</div> }
+                    </div>
+                  </div>
+                </td>
+                <td class="r num">{{ formatEuro(item.row.value, 0) }}</td>
+                <td class="r"><ui-variation [amount]="item.row.pnl" [pct]="item.row.pnlPct" /></td>
+                <td class="r" [style.opacity]="variationLoading() ? 0.5 : 1">
+                  <ui-variation [amount]="item.row.variationPct === null ? null : item.row.variation" [pct]="item.row.variationPct" />
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+      </div>
+    </div>
+  }
+
   <!-- FAMILIES -->
   @for (row of families(); track row.family.label) {
     <div class="family-head">
