@@ -161,7 +161,7 @@
 
         <div class="wealth-hero-breakdowns">
           <div class="wealth-breakdown-chip">
-            <span class="label" data-tip="Titres détenus sur PEA, CTO, AV, PER, PEE — à leur valeur de marché, hors liquidités non investies.">Titres</span>
+            <span class="label" data-tip="PEA, CTO, AV, PER, PEE — titres à leur valeur de marché (hors liquidités non investies) ou valeur que tu as déclarée.">Placements</span>
             <span class="value">{{ formatEuro(securitiesValue(), 0) }}</span>
             @if (financialWealth() > 0) {
               <span class="muted small">{{ formatNumber(securitiesValue() / financialWealth() * 100, 1) }} %</span>

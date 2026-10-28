@@ -91,8 +91,12 @@ export class DashboardComponent {
   private readonly variation = this.performanceService.variationHeld;
   protected readonly variationLoading = this.performanceService.variationLoading;
   protected readonly financialWealth  = computed(() => this.variation().total.value);
-  protected readonly securitiesValue  = computed(() => this.variation().positionsTotal.value);
-  protected readonly savingsValue     = computed(() => this.financialWealth() - this.securitiesValue());
+  /** Livrets (épargne réglementée) of the financial scope; everything else is invested (PEA, AV…). */
+  protected readonly savingsValue     = computed(() => {
+    const livretIds = new Set(this.envelopes.all().filter(e => e.glyph === 'livret').map(e => e.id));
+    return this.variation().envelopes.filter(row => livretIds.has(row.id)).reduce((sum, row) => sum + row.value, 0);
+  });
+  protected readonly securitiesValue  = computed(() => this.financialWealth() - this.savingsValue());
   /** Nothing to show yet: first load still in flight. */
   protected readonly financialPending = computed(() =>
     this.variationLoading() && this.variation().envelopes.length === 0
