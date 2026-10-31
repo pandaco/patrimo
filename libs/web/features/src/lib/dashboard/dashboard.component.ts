@@ -6,6 +6,7 @@ import { SparklineComponent, TermComponent, TipDirective, VariationComponent, fo
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeContributed } from './contributed';
+import { dayChangePercent, dayGreeting } from './day-greeting';
 import { headlineReturn } from './headline-return';
 import { StripMeasure, StripOrder, sortStripPositions } from './performance-strip';
 
@@ -151,18 +152,10 @@ export class DashboardComponent {
     return Number.isFinite(ratio) ? ratio : 0;
   });
 
-  /**
-   * The day move rolled over the whole financial wealth. The euro move comes from
-   * priced securities only (livrets and declared balances do not move intraday),
-   * so dividing it by the securities alone overstated it ~30x — a −28 € day read
-   * −1.79 % on €1.5k of tracked ETFs while the financial wealth is €44k.
-   */
-  protected readonly financialDayPct = computed(() => {
-    const base = this.financialWealth();
-    if (base < 1) return 0;
-    const ratio = (this.dayValue() / base) * 100;
-    return Number.isFinite(ratio) ? ratio : 0;
-  });
+  /** Day move rated on the whole financial wealth — see `dayChangePercent`. */
+  protected readonly financialDayPct = computed(() => dayChangePercent(this.dayValue(), this.financialWealth()));
+  /** The greeting sentence's wording, tone and figures. */
+  protected readonly greeting = computed(() => dayGreeting(this.dayValue(), this.financialWealth()));
 
   /** « Montant versé » — see `computeContributed` for the per-envelope rule. */
   protected readonly totalContributed = computed(() => computeContributed(this.txService.all()));
