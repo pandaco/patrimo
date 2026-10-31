@@ -6,6 +6,7 @@ import { SparklineComponent, TermComponent, TipDirective, VariationComponent, fo
 import { PerfChartComponent } from './perf-chart.component';
 import { WealthChartComponent } from './wealth-chart.component';
 import { computeContributed } from './contributed';
+import { headlineReturn } from './headline-return';
 import { StripMeasure, StripOrder, sortStripPositions } from './performance-strip';
 
 // Financial scope only: current-account cash, immo, crypto and métaux stay off the dashboard.
@@ -280,6 +281,9 @@ export class DashboardComponent {
     if (filter !== 'all' && filter.startsWith('env:')) return w.returnsByEnvelope[filter.slice(4)] ?? null;
     return w.returns?.[filter === 'all' ? 'financial' : filter as WealthReturnKey] ?? null;
   });
+
+  /** Percentage beside the euro gain: gain on money at work, TWR only as a fallback. */
+  protected readonly headline = computed(() => headlineReturn(this.wealthReturn()));
 
   protected readonly wealthPeriodCaption = computed(() => {
     const id = this.dashboardPeriod();
