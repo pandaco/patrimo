@@ -11,6 +11,7 @@ import { computeRealized, startOfYearISO } from './realized-plusValue';
 import { computeEtfOverlaps } from './overlap';
 import { envelopeBreakdown } from './envelope-breakdown';
 import { PositionSortKey, SortState, nextSort, sortRows } from './sort-rows';
+import { subsetVariation } from './subset-variation';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 
@@ -154,8 +155,8 @@ export class PortfolioComponent {
 
   /**
    * Total row. Matches the service figures when the table is unfiltered or scoped
-   * to one enveloppe; with an allocation filter only the euro sum is exact, so
-   * the percentage is left out rather than guessed.
+   * to one enveloppe; with an allocation filter it is rebuilt from the visible
+   * lines (Σ gain ÷ Σ capital base), exact and consistent with the unfiltered total.
    */
   protected readonly totalVariation = computed<{ variation: number | null; variationPct: number | null }>(() => {
     const data = this.performanceService.variationHeld();
@@ -165,8 +166,7 @@ export class PortfolioComponent {
       return { variation: row?.variation ?? null, variationPct: row?.variationPct ?? null };
     }
     const rows = this.filtered().map(e => this.variationByIsin().get(e.isin)).filter((r): r is VariationDto => !!r);
-    const known = rows.filter(r => r.variation !== null);
-    return { variation: known.length ? known.reduce((a, r) => a + (r.variation ?? 0), 0) : null, variationPct: null };
+    return subsetVariation(rows);
   });
 
   // ─── Tri des colonnes ─────────────────────────────────────────────────────

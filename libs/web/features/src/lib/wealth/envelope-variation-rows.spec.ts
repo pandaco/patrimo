@@ -3,7 +3,7 @@ import { VariationRowDto } from '@patrimo/contracts';
 import { sortEnvelopeRows } from './envelope-variation-rows';
 
 function row(id: string, value: number, pnl: number, variation: number | null, variationPct: number | null = 1): VariationRowDto {
-  return { id, label: id, value, pnl, pnlPct: null, variation, variationPct };
+  return { id, label: id, value, pnl, pnlPct: null, variation, variationPct, capitalBase: null };
 }
 
 const pea    = row('pea', 10_000, 1_500, 400);

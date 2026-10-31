@@ -86,6 +86,17 @@ function periodReturn(base: number[], flows: number[], spanDays: number, minCapi
   return { eur, twrPct, investedReturnPct, annualizedPct };
 }
 
+/**
+ * Money at work over a window: the opening value plus the net contributions that
+ * followed — exactly the denominator `periodReturn` divides by, exposed so that
+ * the percentage of any subset of lines can be rebuilt as Σ gain ÷ Σ base.
+ */
+function capitalBaseOf(base: number[], flows: number[]): number {
+  let capital = base[0] ?? 0;
+  for (let i = 1; i < base.length; i++) capital += flows[i] ?? 0;
+  return Number(capital.toFixed(2));
+}
+
 const PERIOD_DAYS: Record<PerformancePeriod, number> = {
   '1D':  1,
   '1W':  7,
@@ -749,7 +760,7 @@ export class PerformanceService {
   /** A declared value has no history: its PV latente is known, its period variation is not. */
   private declaredVariationOf(value: number, cost: number): VariationDto {
     const pnl = Number((value - cost).toFixed(2));
-    return { value, pnl, pnlPct: cost >= MIN_POSITION_CAPITAL ? Number(((pnl / cost) * 100).toFixed(2)) : null, variation: null, variationPct: null };
+    return { value, pnl, pnlPct: cost >= MIN_POSITION_CAPITAL ? Number(((pnl / cost) * 100).toFixed(2)) : null, variation: null, variationPct: null, capitalBase: null };
   }
 
   /** One variation line from a clean value series, its contribution series and its cost basis. */
@@ -763,6 +774,7 @@ export class PerformanceService {
       pnlPct: cost >= MIN_POSITION_CAPITAL ? Number(((pnl / cost) * 100).toFixed(2)) : null,
       variation: eur,
       variationPct: investedReturnPct,
+      capitalBase: capitalBaseOf(base, flows),
     };
   }
 

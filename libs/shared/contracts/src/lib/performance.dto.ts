@@ -184,6 +184,13 @@ export interface VariationDto {
    * in %. `null` when that base is too small to divide — never a misleading 0.
    */
   variationPct: number | null;
+  /**
+   * The money the percentage is computed on, in EUR: opening value + net
+   * contributions. Summed over any set of lines it is the exact base of their
+   * combined percentage (Σ variation ÷ Σ capitalBase), which a percentage alone
+   * cannot give. `null` for a declared value, which has no history.
+   */
+  capitalBase: number | null;
 }
 
 export interface VariationRowDto extends VariationDto {

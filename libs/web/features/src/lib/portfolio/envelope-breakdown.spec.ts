@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { envelopeBreakdown } from './envelope-breakdown';
 
 function row(id: string, value: number, variation = 0): VariationRowDto {
-  return { id, label: id.toUpperCase(), value, pnl: 0, pnlPct: null, variation, variationPct: null };
+  return { id, label: id.toUpperCase(), value, pnl: 0, pnlPct: null, variation, variationPct: null, capitalBase: null };
 }
 
 describe('envelopeBreakdown', () => {

@@ -8,8 +8,8 @@ import { safeValue, safeValueOrUndefined } from './safe';
 
 const EMPTY_VARIATION: PeriodVariationDto = {
   period: 'YTD',
-  total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
-  positionsTotal: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
+  total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null, capitalBase: 0 },
+  positionsTotal: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null, capitalBase: 0 },
   positions: [],
   envelopes: [],
 };

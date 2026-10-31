@@ -493,6 +493,32 @@ describe('PerformanceService', () => {
       expect(variation.envelopes.find(e => e.id === 'env-2')?.variation).toBe(0);
     });
 
+    it('exposes the capital base of every position so the percentage of any subset is exact', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      etfRepository.findAll.mockResolvedValue([etf({}), etf({ isin: 'ISIN-CW8', ticker: 'CW8', name: 'CW8' })]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        // ESE: 400 € held from the first label, +10 % on the last one (+40 €).
+        transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+        // CW8: 500 € bought mid-period (a contribution, so the base is 0 opening + 500), −10 % (−50 €).
+        transaction({ type: 'BUY', etfIsin: 'ISIN-CW8', quantity: 5, price: 100, amount: 500, envelopeId: 'env-1', date: new Date(labels[5] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({
+        'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })),
+        'ISIN-CW8': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 100 : 90 })),
+      });
+
+      const { positions, positionsTotal } = await service.getPeriodVariation('user-1', '1M');
+
+      const byId = Object.fromEntries(positions.map(p => [p.id, p]));
+      expect(byId['ISIN-ESE'].capitalBase).toBe(400);
+      expect(byId['ISIN-CW8'].capitalBase).toBe(500);
+      // The two together: (+40 − 50) ÷ (400 + 500) = −1.11 % — worked out by hand.
+      expect(positionsTotal.capitalBase).toBe(900);
+      expect(positionsTotal.variation).toBe(-10);
+      expect(positionsTotal.variationPct).toBeCloseTo(-1.11, 2);
+    });
+
     it('gives a percentage to a small position instead of hiding it below 100 € of capital', async () => {
       const labels = await captureVariationLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
@@ -551,8 +577,8 @@ describe('PerformanceService', () => {
       const empty = await service.getPeriodVariation('user-1', '1M');
       expect(empty).toEqual({
         period: '1M',
-        total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
-        positionsTotal: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null },
+        total: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null, capitalBase: 0 },
+        positionsTotal: { value: 0, pnl: 0, pnlPct: null, variation: 0, variationPct: null, capitalBase: 0 },
         positions: [],
         envelopes: [],
       });
