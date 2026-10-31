@@ -22,3 +22,10 @@
   align-items: center;
   gap: 10px;
 }
+
+// The period selector (10 tabs) is wider than a phone: the group scrolls inside
+// itself instead of widening the whole page.
+@media (max-width: 599px) {
+  .section-right { max-width: 100%; min-width: 0; }
+  .section-right .tabs { max-width: 100%; overflow-x: auto; }
+}

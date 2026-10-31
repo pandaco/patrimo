@@ -213,7 +213,7 @@ test.describe('Patrimo E2E Tests', () => {
     await expect(page.locator('.page-eyebrow')).toContainText(`Journal — ${initialCount + 1} opération`);
   });
 
-  test('should expand a portfolio row to show details and chart', async ({ page }) => {
+  test('should expand a portfolio row to show details and chart', async ({ page, isMobile }) => {
     const catalog = [
       {
         isin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
@@ -235,6 +235,17 @@ test.describe('Patrimo E2E Tests', () => {
 
     await page.goto('/portfolio');
     await page.waitForURL(/\/portfolio(\?|#|$)/);
+
+    // On a phone the positions are cards, not table rows (see mobile.spec.ts).
+    if (isMobile) {
+      const cards = page.locator('[data-testid="positions-cards"]');
+      await cards.locator('ui-position-card button.card-button').first().click();
+      await expect(cards).toContainText('ISIN');
+      await expect(cards).toContainText('TER');
+      await page.goto('/portfolio?isin=IE00B4L5Y983');
+      await expect(cards).toContainText('ISIN');
+      return;
+    }
 
     // Verify row is present — the Total row comes first, skip it
     const row = page.locator('[data-testid="positions-table"] tbody tr:not([data-testid="positions-total"])').first();
