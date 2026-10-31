@@ -772,10 +772,16 @@ export class PerformanceService {
 
     if (category === 'bourse') {
       if (hasBuy) {
+        const etfBase  = this.buildEnvelopeEtfValueSeries(labels, transactions, closesByIsin);
+        const etfFlows = this.buildEnvelopeInvestFlowDeltas(labels, transactions);
+        const etfCost  = this.costBasisOf(transactions);
+        // An AV has no cash pocket: what is not in ETFs sits in the fonds euros (ADR 006).
+        if (envelope.glyph !== 'av') return { base: etfBase, flows: etfFlows, cost: etfCost, computable: true };
+        const fondsEuros = this.buildFondsEurosLine(labels, transactions);
         return {
-          base:  this.buildEnvelopeEtfValueSeries(labels, transactions, closesByIsin),
-          flows: this.buildEnvelopeInvestFlowDeltas(labels, transactions),
-          cost:  this.costBasisOf(transactions),
+          base:  etfBase.map((value, i) => Number((value + fondsEuros.base[i]).toFixed(2))),
+          flows: etfFlows.map((flow, i) => Number((flow + fondsEuros.flows[i]).toFixed(2))),
+          cost:  etfCost + fondsEuros.cost,
           computable: true,
         };
       }
@@ -791,6 +797,43 @@ export class PerformanceService {
         : transactions.reduce((sum, t) => sum + (t.type === 'DEPOSIT' ? t.amount : t.type === 'WITHDRAWAL' ? -t.amount : 0), 0),
       computable: true,
     };
+  }
+
+  /**
+   * Cash of an AV with ETF purchases, read as its fonds euros: deposits − buys −
+   * withdrawals + sells + interest, floored at 0. Its contributions are the
+   * cash movements that are not income, so what remains over a period is the
+   * interest (and dividends) credited — a deposit or a buy never moves it.
+   */
+  private buildFondsEurosLine(labels: string[], transactions: Transaction[]): { base: number[]; flows: number[]; cost: number } {
+    const sorted = transactions.slice().sort((a, b) => a.date.getTime() - b.date.getTime());
+    const base: number[]   = [];
+    const income: number[] = [];
+    let cash = 0;
+    let cursor = 0;
+    let incomeTotal = 0;
+    for (const label of labels) {
+      let bucketIncome = 0;
+      while (cursor < sorted.length && isoDate(sorted[cursor].date) <= label) {
+        const t     = sorted[cursor];
+        const costs = (t.fees ?? 0) + (t.taxes ?? 0);
+        switch (t.type) {
+          case 'DEPOSIT':    cash += t.amount; break;
+          case 'WITHDRAWAL': cash -= t.amount; break;
+          case 'BUY':        if (t.etfIsin) cash -= t.quantity * (t.price ?? 0) + costs; break;
+          case 'SELL':       if (t.etfIsin) cash += t.quantity * (t.price ?? 0) - costs; break;
+          case 'INTEREST':
+          case 'DIVIDEND':   cash += t.amount; bucketIncome += t.amount; incomeTotal += t.amount; break;
+        }
+        cursor++;
+      }
+      base.push(Number(Math.max(0, cash).toFixed(2)));
+      income.push(bucketIncome);
+    }
+    // Contribution of a bucket = change of the balance that is not income.
+    const flows = base.map((value, i) => (i === 0 ? 0 : Number((value - base[i - 1] - income[i]).toFixed(2))));
+    const last = base[base.length - 1] ?? 0;
+    return { base, flows, cost: Math.max(0, Number((last - incomeTotal).toFixed(2))) };
   }
 
   /** A declared value has no history: its PV latente is known, its period variation is not. */
