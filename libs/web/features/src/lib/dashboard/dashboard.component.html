@@ -9,9 +9,9 @@
     <h1 class="page-title">Bonjour <em>{{ firstName() || '…' }}.</em></h1>
     @if (!isEmpty()) {
       <p class="page-sub">
-        Aujourd'hui, ton patrimoine {{ dayValue() >= 0 ? 'gagne' : 'perd' }}
+        Aujourd'hui, ton patrimoine financier {{ dayValue() >= 0 ? 'gagne' : 'perd' }}
         <span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ formatEuro(abs(dayValue()), 0) }}</span>
-        (<span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ formatPercent(dayPct(), 2) }}</span>).
+        (<span [class.hl-soft]="dayValue() >= 0" [class.hl-loss]="dayValue() < 0">{{ formatPercent(financialDayPct(), 2) }}</span>).
         @if (topAlerts().length > 0) {
           <br><b>{{ topAlerts().length }} recommandation{{ topAlerts().length > 1 ? 's' : '' }}</b> à traiter plus bas.
         }
