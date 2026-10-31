@@ -8,6 +8,7 @@ import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
 import { computeEtfOverlaps } from './overlap';
+import { envelopeBreakdown } from './envelope-breakdown';
 import { PositionSortKey, SortState, nextSort, sortRows } from './sort-rows';
 
 type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
@@ -143,6 +144,12 @@ export class PortfolioComponent {
   });
 
   protected rowVariation(e: Etf): VariationDto | undefined { return this.variationByIsin().get(e.isin); }
+
+  /** Per-envelope split of an instrument held in several envelopes (expanded row). */
+  protected breakdown(e: Etf) {
+    const position = this.performanceService.variationHeld().positions.find(p => p.id === e.isin);
+    return envelopeBreakdown(position?.byEnvelope ?? [], this.envelopeFilter() !== null);
+  }
 
   /**
    * Total row. Matches the service figures when the table is unfiltered or scoped

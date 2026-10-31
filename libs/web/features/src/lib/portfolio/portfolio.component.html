@@ -301,6 +301,22 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
                     </div>
                   </div>
                   <div style="width: 320px; flex-shrink: 0;">
+                    @if (breakdown(etf); as split) {
+                      @if (split.length > 0) {
+                        <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Par enveloppe · Var. {{ periodCaption() }}</h4>
+                        <table class="tbl tbl-compact breakdown" data-testid="envelope-breakdown" style="margin-bottom: 20px">
+                          <tbody>
+                            @for (part of split; track part.id) {
+                              <tr>
+                                <td>{{ part.label }}</td>
+                                <td class="r num">{{ formatNumber(part.value, 0) }} €</td>
+                                <td class="r"><ui-variation [amount]="part.variation" [pct]="part.variationPct" /></td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      }
+                    }
                     <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Détails de l'instrument</h4>
                     <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; font-size: 13px;">
                       <div style="display:flex; justify-content:space-between; margin-bottom:10px">
