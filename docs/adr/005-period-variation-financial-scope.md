@@ -43,6 +43,6 @@ The single displayed scope is **securities + livrets** across PEA, PEA-PME, CTO,
 
 - `PeriodVariationDto` exposes two totals: `total` (securities + livrets) and `positionsTotal` (securities only, for the positions table, which lists no livret).
 - `variation: null` means "no history to measure" (a declared value). `variationPct: null` alone means the € figure is known but its base is under 100 €. The UI shows a dash and sorts that figure last, never a misleading 0.
-- **Known gap:** fonds euros have no dedicated model. An AV entered as a declared value is counted (see above), but in an AV that also holds ETFs the fonds euros sit in the envelope's cash, which the clean boursier base leaves out. Fix by modelling fonds euros explicitly, or by counting AV cash as fonds euros. Either change touches every figure listed in Scope.
+- **Known gap:** fonds euros have no dedicated model. An AV entered as a declared value is counted (see above), but in an AV that also holds ETFs the fonds euros sit in the envelope's cash, which the clean boursier base leaves out. Resolved by [ADR 006](006-life-insurance-cash-is-fonds-euros.md): the cash of an AV with ETF purchases counts as its fonds euros.
 - Liabilities are hidden from the UI only. Their table, endpoints and data are untouched and can be brought back.
 - Non-goals: tax effects, fees and realised P&L are not part of the variation figure. They stay in the existing Bilan/fiscalité cards.

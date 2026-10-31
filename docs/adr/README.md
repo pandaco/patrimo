@@ -27,6 +27,7 @@ weighted-average but went FIFO because…") belong here, not in code comments.
 | 003 | [Security baseline (auth, headers, rate limit, dev-login gate)](./003-security-baseline.md) | Accepted |
 | 004 | [Redis-backed sessions with sliding TTL](./004-redis-sessions.md) | Accepted |
 | 005 | [Period variation excluding contributions, on the financial wealth](./005-period-variation-financial-scope.md) | Accepted |
+| 006 | [Life insurance: AV cash counts as fonds euros](./006-life-insurance-cash-is-fonds-euros.md) | Accepted |
 
 ## When to write an ADR
 
