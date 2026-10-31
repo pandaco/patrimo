@@ -310,14 +310,17 @@ export class DashboardComponent {
   protected readonly stripOrder   = signal<StripOrder>('best');
   private readonly tickerByIsin  = computed(() => new Map(this.etfs.all().map(e => [e.isin, e.ticker])));
 
-  /** Every position still held (a line sold during the window has no card). */
+  /**
+   * Every position still held (a line sold during the window has no card). The
+   * mini-curve is the position's own series for the selected period, so it
+   * explains the variation printed on the card — not a fixed year of prices.
+   */
   protected readonly stripCards = computed(() => {
-    const sparks  = this.etfs.sparks();
     const tickers = this.tickerByIsin();
     const held    = this.variation().positions.filter(p => p.value > 0);
     return sortStripPositions(held, this.stripMeasure(), this.stripOrder()).map(position => {
       const ticker = tickers.get(position.id) ?? '';
-      return { position, ticker, spark: sparks[ticker] ?? [] };
+      return { position, ticker, spark: position.series };
     });
   });
 

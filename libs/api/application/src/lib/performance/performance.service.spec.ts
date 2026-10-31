@@ -519,6 +519,103 @@ describe('PerformanceService', () => {
       expect(positionsTotal.variationPct).toBeCloseTo(-1.11, 2);
     });
 
+    describe('position curve (series)', () => {
+      it('starts a position bought mid-period at its purchase and ends on its current value', async () => {
+        const labels = await captureVariationLabels();
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[5] + 'T00:00:00Z') }),
+        ]);
+        mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 40 : 44 })) });
+
+        const [position] = (await service.getPeriodVariation('user-1', '1M')).positions;
+
+        // One point per day from the purchase day on — nothing before it, never a lead-in of zeros.
+        expect(position.series).toHaveLength(labels.length - 5);
+        expect(position.series[0]).toBe(400);
+        expect(position.series.at(-1)).toBe(position.value);
+        expect(position.series.at(-1)).toBe(440);
+      });
+
+      it('never lets money added mid-period bend the curve against the variation', async () => {
+        const labels = await captureVariationLabels();
+        const mid = Math.floor(labels.length / 2);
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+          // 440 € more at the middle, then the price slips to 38: a loss overall.
+          transaction({ type: 'BUY', quantity: 10, price: 44, envelopeId: 'env-1', date: new Date(labels[mid] + 'T00:00:00Z') }),
+        ]);
+        mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < mid ? 40 : i < labels.length - 1 ? 44 : 38 })) });
+
+        const [position] = (await service.getPeriodVariation('user-1', '1M')).positions;
+
+        expect(position.variation).toBe(-80);
+        // The raw value rises 400 → 760 because shares were added; the curve must still fall with the loss.
+        expect(position.series.at(-1)).toBe(760);
+        expect(position.series[0]).toBeGreaterThan(position.series.at(-1) as number);
+        expect(position.series[0] - (position.series.at(-1) as number)).toBeCloseTo(80, 2);
+      });
+
+      it('keeps the curve short whatever the length of the period, first and last points included', async () => {
+        const bought = new Date();
+        bought.setDate(bought.getDate() - 100);
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: bought }),
+        ]);
+        priceService.getHistorical.mockImplementation((_isin: string, _ticker: string, days: number) =>
+          Promise.resolve(Array.from({ length: days + 1 }, (_, i) => {
+            const day = new Date();
+            day.setDate(day.getDate() - (days - i));
+            return { date: day.toISOString().slice(0, 10), close: 40 + i * 0.01 };
+          })));
+
+        const { positions } = await service.getPeriodVariation('user-1', '6M');
+        const [position] = positions;
+
+        expect(position.series.length).toBeLessThanOrEqual(40);
+        expect(position.series.length).toBeGreaterThan(2);
+        expect(position.series.at(-1)).toBe(position.value);
+      });
+
+      it('draws a flat line at cost, not a crash, when there is no price history', async () => {
+        const bought = new Date();
+        bought.setDate(bought.getDate() - 20);
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY', quantity: 10, price: 40, envelopeId: 'env-1', date: bought }),
+        ]);
+        mockHistory({});
+
+        const [position] = (await service.getPeriodVariation('user-1', '3M')).positions;
+
+        expect(position.series.every(point => point === 400)).toBe(true);
+      });
+
+      it('gives a position sold during the period a curve that ends at zero and rises by the gain made', async () => {
+        const labels = await captureVariationLabels();
+        envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+        etfRepository.findAll.mockResolvedValue([etf({})]);
+        transactionRepository.findByUserId.mockResolvedValue([
+          transaction({ type: 'BUY',  quantity: 10, price: 40, envelopeId: 'env-1', date: new Date(labels[0]  + 'T00:00:00Z') }),
+          transaction({ type: 'SELL', quantity: 10, price: 44, envelopeId: 'env-1', date: new Date(labels[20] + 'T00:00:00Z') }),
+        ]);
+        mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < 10 ? 40 : 44 })) });
+
+        const [position] = (await service.getPeriodVariation('user-1', '1M')).positions;
+
+        expect(position.value).toBe(0);
+        expect(position.series.at(-1)).toBe(0);
+        // Proceeds taken out are not value: the curve climbs by the 40 € gained, from below zero.
+        expect((position.series.at(-1) as number) - position.series[0]).toBeCloseTo(40, 2);
+      });
+    });
+
     it('gives a percentage to a small position instead of hiding it below 100 € of capital', async () => {
       const labels = await captureVariationLabels();
       envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);

@@ -202,6 +202,13 @@ export interface VariationRowDto extends VariationDto {
 export interface PositionVariationDto extends VariationRowDto {
   /** The same figures split per envelope holding this instrument. */
   byEnvelope: VariationRowDto[];
+  /**
+   * Short value curve over the period, for the dashboard cards. It starts at the
+   * first day the position is held (never a lead-in of zeros), ends on `value`, and
+   * is neutralised for money added or withdrawn on the way, so it rises or falls
+   * exactly as much as `variation`. At most 40 points, first and last kept.
+   */
+  series: number[];
 }
 
 /**

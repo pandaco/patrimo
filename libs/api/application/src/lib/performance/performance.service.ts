@@ -32,6 +32,41 @@ const MIN_RETURN_CAPITAL = 100;
 // percentage is shown down to 1 €, under which the ratio is only rounding noise.
 const MIN_POSITION_CAPITAL = 1;
 
+// A card's mini-curve needs a shape, not every daily sample of a 5-year window.
+const MAX_SERIES_POINTS = 40;
+
+/**
+ * Value curve of one position for a card. Raw value would jump up whenever shares
+ * are bought and lie about the direction of the gain, so each point adds the
+ * money still to be put in afterwards: the curve then ends on today's value. The
+ * small gap left between its first point and `end − variation` (the first day's
+ * move, fees) is spread along the curve, so it ends untouched and climbs or falls
+ * by exactly the variation shown beside it. Starts at the first day the position
+ * is held.
+ */
+function positionSeries(base: number[], flows: number[], variation: number): number[] {
+  const start = base.findIndex(value => value > 0);
+  if (start === -1) return [];
+  const last = base.length - 1;
+  const raw: number[] = new Array<number>(base.length - start).fill(0);
+  let laterFlows = 0;
+  for (let i = last; i >= start; i--) {
+    raw[i - start] = base[i] + laterFlows;
+    laterFlows += flows[i] ?? 0;
+  }
+  const drift  = base[last] - variation - raw[0];
+  const length = raw.length;
+  const curve  = raw.map((point, i) => Number((point + (length > 1 ? drift * (1 - i / (length - 1)) : 0)).toFixed(2)));
+  return downsample(curve, MAX_SERIES_POINTS);
+}
+
+/** At most `max` evenly spread points, always keeping the first and the last. */
+function downsample(points: number[], max: number): number[] {
+  if (points.length <= max) return points;
+  const step = (points.length - 1) / (max - 1);
+  return Array.from({ length: max }, (_, i) => points[Math.round(i * step)]);
+}
+
 /**
  * Period return from a *clean invested base* and its external-flow series,
  * both aligned to the same daily/weekly axis. `base[i]` is the value of the
@@ -636,7 +671,8 @@ export class PerformanceService {
       }
 
       const cost = this.costBasisOf(trades);
-      positions.push({ id: isin, label, ...this.variationOf(base, flows, cost, spanDays), byEnvelope });
+      const figures = this.variationOf(base, flows, cost, spanDays);
+      positions.push({ id: isin, label, ...figures, byEnvelope, series: positionSeries(base, flows, figures.variation ?? 0) });
       positionsCost += cost;
       for (let i = 0; i < labels.length; i++) {
         positionsBase[i]  = Number((positionsBase[i]  + base[i]).toFixed(2));

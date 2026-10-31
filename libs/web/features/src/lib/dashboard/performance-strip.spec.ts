@@ -3,7 +3,7 @@ import { PositionVariationDto } from '@patrimo/contracts';
 import { sortStripPositions } from './performance-strip';
 
 function position(id: string, variation: number | null, variationPct: number | null): PositionVariationDto {
-  return { id, label: id, value: 1_000, pnl: 0, pnlPct: null, variation, variationPct, capitalBase: null, byEnvelope: [] };
+  return { id, label: id, value: 1_000, pnl: 0, pnlPct: null, variation, variationPct, capitalBase: null, byEnvelope: [], series: [] };
 }
 
 // A big line with a small % and a small line with a big %: € and % orders differ.
