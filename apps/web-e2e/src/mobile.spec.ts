@@ -82,8 +82,8 @@ test.describe('Mobile shell & responsive smoke', () => {
     }
   });
 
-  test('the positions table scrolls inside its wrapper instead of the page', async ({ page }) => {
-    // Deterministic wide table via the same stubs as the desktop spec.
+  test('positions render as cards on a phone instead of a table scrolling sideways', async ({ page }) => {
+    // Deterministic position via the same stubs as the desktop spec.
     const catalog = [
       {
         isin: 'IE00B4L5Y983', ticker: 'IWDA', name: 'iShares Core MSCI World',
@@ -103,10 +103,28 @@ test.describe('Mobile shell & responsive smoke', () => {
     await login(page);
     await page.goto('/portfolio');
 
-    const wrapper = page.locator('.table-scroll.wide');
-    await expect(wrapper.locator('[data-testid="positions-table"] tbody tr').first()).toBeVisible();
-    const scrolls = await wrapper.evaluate(el => el.scrollWidth > el.clientWidth);
-    expect(scrolls, 'wide positions table should overflow into its scroll wrapper').toBe(true);
+    const cards = page.locator('[data-testid="positions-cards"]');
+    await expect(cards.locator('ui-position-card')).toHaveCount(1);
+    // The 12-column table is not shown at phone width, and nothing scrolls sideways.
+    await expect(page.locator('[data-testid="positions-table"]')).toBeHidden();
+    expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
+
+    // Value, gain since purchase and the labelled period variation are on the card.
+    const card = cards.locator('ui-position-card').first();
+    await expect(card).toContainText('IWDA');
+    await expect(card).toContainText('850');
+    await expect(card.locator('.metric-label').first()).toHaveText('PV latente');
+    await expect(card.locator('.metric-label').nth(1)).toContainText('Var.');
+
+    // Total stays visible and sorting stays reachable through the chips.
+    await expect(cards.locator('[data-testid="positions-cards-total"]')).toBeVisible();
+    const variationChip = cards.locator('.sort-chip', { hasText: 'Var.' });
+    await variationChip.click();
+    await expect(variationChip).toHaveAttribute('aria-pressed', 'true');
+
+    // The detail opens from the card.
+    await card.locator('button.card-button').click();
+    await expect(cards.getByText("Détails de l'instrument")).toBeVisible();
     expect(await pageOverflow(page)).toBeLessThanOrEqual(1);
   });
 

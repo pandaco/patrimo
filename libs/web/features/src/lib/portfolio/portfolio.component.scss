@@ -11,3 +11,45 @@
   background: var(--paper-2);
   td { font-weight: 500; }
 }
+
+// ─── Détail déplié (tableau et cartes) ─────────────────────────────────────
+// Le gabarit est partagé : il retombe en colonne quand la place manque.
+.detail-layout { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.detail-chart  { flex: 1 1 320px; min-width: 0; }
+.detail-panel  { flex: 0 0 320px; max-width: 100%; }
+
+// ─── Vue cartes (téléphone) ────────────────────────────────────────────────
+// Sous 600 px (bande `sm` de apps/web/src/styles/_breakpoints.scss — garder les
+// valeurs alignées) le tableau de 12 colonnes cède la place à des cartes.
+.positions-cards { display: none; }
+
+.mobile-sort {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 12px 0 8px;
+}
+
+.sort-chip {
+  all: unset; box-sizing: border-box; cursor: pointer;
+  font-size: 12.5px; padding: 5px 12px; border-radius: 999px;
+  border: 1px solid var(--rule); background: var(--surface); color: var(--ink-2);
+  &.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  &:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+}
+
+.cards-total {
+  background: var(--paper-2); border-radius: 10px; padding: 12px 14px; margin: 4px 0 8px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.cards-total-head { display: flex; align-items: baseline; gap: 8px; }
+.cards-total-value { margin-left: auto; font-size: 18px; font-weight: 600; }
+.cards-total-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cards-total-metric { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+
+.position-card-item { border-top: 1px solid var(--rule-soft); }
+.position-card-item:first-of-type { border-top: 0; }
+.card-detail { padding: 4px 0 16px; }
+
+@media (max-width: 600px) {
+  .positions-table-view { display: none; }
+  .positions-cards { display: block; }
+}

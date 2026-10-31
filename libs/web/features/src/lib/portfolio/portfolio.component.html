@@ -165,8 +165,75 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
     </div>
   </div>
 
+  <!-- Détail déplié d'une position — partagé par le tableau et les cartes mobiles -->
+  <ng-template #detailTpl let-etf>
+      <div class="detail-layout">
+        <div class="detail-chart">
+          <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Évolution du cours (1A)</h4>
+          <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px;">
+            @if (sparks()[etf.ticker] && sparks()[etf.ticker].length > 0) {
+              <app-perf-chart [portfolio]="sparks()[etf.ticker]" [benchmark]="[]" />
+            } @else {
+              <div class="muted small" style="text-align: center; padding: 40px 0;">Données de cours non disponibles</div>
+            }
+          </div>
+        </div>
+        <div class="detail-panel">
+          @if (breakdown(etf); as split) {
+            @if (split.length > 0) {
+              <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Par enveloppe · Var. {{ periodCaption() }}</h4>
+              <table class="tbl tbl-compact breakdown" data-testid="envelope-breakdown" style="margin-bottom: 20px">
+                <tbody>
+                  @for (part of split; track part.id) {
+                    <tr>
+                      <td>{{ part.label }}</td>
+                      <td class="r num">{{ formatNumber(part.value, 0) }} €</td>
+                      <td class="r"><ui-variation [amount]="part.variation" [pct]="part.variationPct" /></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+          <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Détails de l'instrument</h4>
+          <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; font-size: 13px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+              <span class="muted">ISIN</span>
+              <span style="font-family:var(--font-mono)">{{ etf.isin }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+              <span class="muted">Émetteur</span>
+              <span>{{ etf.issuer }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+              <span class="muted">Frais (TER)</span>
+              <span>{{ formatNumber(etf.ter, 2) }} %</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+              <span class="muted">Distribution</span>
+              <span>{{ etf.distrib || 'Capitalisant' }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+              <span class="muted">Réplication</span>
+              <span>{{ etf.repli || 'Physique' }}</span>
+            </div>
+            <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--rule-soft)">
+              <div style="display:flex; justify-content:space-between; margin-bottom:10px">
+                <span class="muted">Valeur de marché</span>
+                <span style="font-weight:600">{{ formatNumber(rowValue(etf), 2) }} €</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span class="muted">Coût d'achat (PRU)</span>
+                <span>{{ formatNumber(rowCost(etf), 2) }} €</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </ng-template>
+
   <div class="card" style="padding:4px 12px">
-    <div class="table-scroll wide">
+    <div class="table-scroll wide positions-table-view">
     <table class="tbl" data-testid="positions-table">
       <thead>
         <tr>
@@ -289,75 +356,64 @@ PV latente % = (cours actuel / PRU − 1) × 100</pre>
           @if (expandedIsin() === etf.isin) {
             <tr style="background: var(--paper-2); border-top: 1px solid var(--rule-soft);">
               <td colspan="12" style="padding: 24px; box-shadow: inset 0 3px 6px rgba(0,0,0,0.02)">
-                <div class="row gap-24" style="align-items: flex-start">
-                  <div style="flex: 1; min-width: 0;">
-                    <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Évolution du cours (1A)</h4>
-                    <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px;">
-                      @if (sparks()[etf.ticker] && sparks()[etf.ticker].length > 0) {
-                        <app-perf-chart [portfolio]="sparks()[etf.ticker]" [benchmark]="[]" />
-                      } @else {
-                        <div class="muted small" style="text-align: center; padding: 40px 0;">Données de cours non disponibles</div>
-                      }
-                    </div>
-                  </div>
-                  <div style="width: 320px; flex-shrink: 0;">
-                    @if (breakdown(etf); as split) {
-                      @if (split.length > 0) {
-                        <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Par enveloppe · Var. {{ periodCaption() }}</h4>
-                        <table class="tbl tbl-compact breakdown" data-testid="envelope-breakdown" style="margin-bottom: 20px">
-                          <tbody>
-                            @for (part of split; track part.id) {
-                              <tr>
-                                <td>{{ part.label }}</td>
-                                <td class="r num">{{ formatNumber(part.value, 0) }} €</td>
-                                <td class="r"><ui-variation [amount]="part.variation" [pct]="part.variationPct" /></td>
-                              </tr>
-                            }
-                          </tbody>
-                        </table>
-                      }
-                    }
-                    <h4 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Détails de l'instrument</h4>
-                    <div style="background: var(--paper); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; font-size: 13px;">
-                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                        <span class="muted">ISIN</span>
-                        <span style="font-family:var(--font-mono)">{{ etf.isin }}</span>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                        <span class="muted">Émetteur</span>
-                        <span>{{ etf.issuer }}</span>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                        <span class="muted">Frais (TER)</span>
-                        <span>{{ formatNumber(etf.ter, 2) }} %</span>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                        <span class="muted">Distribution</span>
-                        <span>{{ etf.distrib || 'Capitalisant' }}</span>
-                      </div>
-                      <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                        <span class="muted">Réplication</span>
-                        <span>{{ etf.repli || 'Physique' }}</span>
-                      </div>
-                      <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--rule-soft)">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px">
-                          <span class="muted">Valeur de marché</span>
-                          <span style="font-weight:600">{{ formatNumber(rowValue(etf), 2) }} €</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                          <span class="muted">Coût d'achat (PRU)</span>
-                          <span>{{ formatNumber(rowCost(etf), 2) }} €</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ng-container *ngTemplateOutlet="detailTpl; context: { $implicit: etf }" />
               </td>
             </tr>
           }
         }
       </tbody>
     </table>
+    </div>
+
+    <!-- Vue cartes — téléphone uniquement (cf. portfolio.component.scss) -->
+    <div class="positions-cards" data-testid="positions-cards">
+      <div class="mobile-sort" role="group" aria-label="Trier les positions">
+        <span class="muted tiny">Trier par</span>
+        @for (option of mobileSortOptions(); track option.key) {
+          <button type="button" class="sort-chip" [class.active]="sort().key === option.key"
+                  [attr.aria-pressed]="sort().key === option.key" (click)="toggleSort(option.key)">
+            {{ option.label }} <span aria-hidden="true">{{ sortArrow(option.key) }}</span>
+          </button>
+        }
+      </div>
+      @if (loading() && filtered().length === 0) {
+        @for (i of [1,2,3]; track i) {
+          <div class="skeleton" style="height:96px;border-radius:8px;margin:12px 0"></div>
+        }
+      }
+      @if (filtered().length > 0) {
+        <div class="cards-total" data-testid="positions-cards-total">
+          <div class="cards-total-head">
+            <b>Total</b> <span class="muted tiny">{{ filtered().length }} ligne{{ filtered().length === 1 ? '' : 's' }}</span>
+            <span class="cards-total-value num">{{ formatNumber(total(), 0) }} €</span>
+          </div>
+          <div class="cards-total-metrics">
+            <div class="cards-total-metric">
+              <span class="muted tiny">PV latente</span>
+              <ui-variation [amount]="totalPnl()" [pct]="totalPnlPct()" />
+            </div>
+            <div class="cards-total-metric" [style.opacity]="variationLoading() ? 0.5 : 1">
+              <span class="muted tiny">Var. {{ periodCaption() }}</span>
+              <ui-variation [amount]="totalVariation().variation" [pct]="totalVariation().variationPct" />
+            </div>
+          </div>
+        </div>
+      }
+      @for (etf of sorted(); track etf.isin) {
+        <div class="position-card-item" [style.opacity]="variationLoading() ? 0.5 : 1">
+          <ui-position-card
+            [ticker]="etf.ticker" [name]="etf.name" [value]="rowValue(etf)"
+            [pnl]="rowPnl(etf)" [pnlPct]="rowPnlPct(etf)"
+            [variation]="rowVariation(etf)?.variation ?? null" [variationPct]="rowVariation(etf)?.variationPct ?? null"
+            [periodLabel]="periodCaption()" [expanded]="expandedIsin() === etf.isin"
+            (toggled)="toggleRow(etf.isin)" />
+          @if (expandedIsin() === etf.isin) {
+            <div class="card-detail">
+              <ng-container *ngTemplateOutlet="detailTpl; context: { $implicit: etf }" />
+            </div>
+          }
+        </div>
+      }
     </div>
   </div>
 

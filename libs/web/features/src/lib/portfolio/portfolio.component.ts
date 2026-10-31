@@ -1,9 +1,10 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { API_BASE_URL, Etf, etfCost, etfDayPct, etfPnl, etfPnlPct, EtfService, etfValue, ExposureService, PERIOD_OPTIONS, PeriodService, PerformanceService, TauxChangeService, TransactionService, EnvelopeService } from '@patrimo/data-access';
 import type { PerformancePeriod, VariationDto } from '@patrimo/contracts';
-import { BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
+import { BarComponent, DeltaComponent, PositionCardComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, formatNumber, formatQuantity, formatPercentRaw } from '@patrimo/ui';
 import { PerfChartComponent } from '../dashboard/perf-chart.component';
 import { firstValueFrom } from 'rxjs';
 import { computeRealized, startOfYearISO } from './realized-plusValue';
@@ -16,7 +17,7 @@ type AllocFilter = 'Toutes' | 'Core' | 'Satellite' | 'Obligations';
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [BarComponent, DeltaComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, PerfChartComponent],
+  imports: [NgTemplateOutlet, BarComponent, DeltaComponent, PositionCardComponent, SparklineComponent, TermComponent, TipDirective, VariationComponent, PerfChartComponent],
   templateUrl: './portfolio.component.html',
   styleUrl: './portfolio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -171,6 +172,12 @@ export class PortfolioComponent {
   // ─── Tri des colonnes ─────────────────────────────────────────────────────
 
   protected readonly sort = signal<SortState>({ key: 'value', direction: 'desc' });
+  /** Sort chips of the phone layout, which has no column headers to click. */
+  protected readonly mobileSortOptions = computed<{ key: PositionSortKey; label: string }[]>(() => [
+    { key: 'value',     label: 'Valeur' },
+    { key: 'pnl',       label: 'PV latente' },
+    { key: 'variation', label: `Var. ${this.periodCaption()}` },
+  ]);
   protected toggleSort(key: PositionSortKey): void { this.sort.update(current => nextSort(current, key)); }
   protected ariaSort(key: PositionSortKey): 'ascending' | 'descending' | 'none' {
     const { key: active, direction } = this.sort();
@@ -197,6 +204,7 @@ export class PortfolioComponent {
   protected readonly total     = computed(() => this.allEtfs().reduce((a, e) => a + etfValue(e), 0));
   protected readonly totalCost = computed(() => this.allEtfs().reduce((a, e) => a + etfCost(e), 0));
   protected readonly totalPnl  = computed(() => this.total() - this.totalCost());
+  protected readonly totalPnlPct = computed(() => this.totalCost() >= 1 ? (this.totalPnl() / this.totalCost()) * 100 : null);
   protected readonly totalDay  = computed(() => this.allEtfs().reduce((a, e) => a + (e.price - e.prev) * e.qty, 0));
 
   // Cost-basis-aware FIFO replay of every BUY/SELL, scoped to the current
