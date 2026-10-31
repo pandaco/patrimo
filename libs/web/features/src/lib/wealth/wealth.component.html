@@ -174,7 +174,9 @@
                 <td class="r num">{{ formatEuro(item.row.value, 0) }}</td>
                 <td class="r"><ui-variation [amount]="item.row.pnl" [pct]="item.row.pnlPct" /></td>
                 <td class="r" [style.opacity]="variationLoading() ? 0.5 : 1">
-                  <ui-variation [amount]="item.row.variation" [pct]="item.row.variationPct" />
+                  <ui-variation [amount]="item.row.variation" [pct]="item.row.variationPct"
+                                unavailable="Valeur déclarée"
+                                unavailableHint="Ce solde est saisi à la main : sans opérations ni cours, aucune variation de période n'est mesurable. Sa plus-value latente reste connue." />
                 </td>
               </tr>
             }

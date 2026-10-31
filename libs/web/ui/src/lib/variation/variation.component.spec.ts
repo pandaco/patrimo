@@ -2,10 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { VariationComponent } from './variation.component';
 
-function render(inputs: { amount: number | null; pct: number | null }): HTMLElement {
+function render(inputs: { amount: number | null; pct: number | null; unavailable?: string; unavailableHint?: string }): HTMLElement {
   const fixture: ComponentFixture<VariationComponent> = TestBed.createComponent(VariationComponent);
   fixture.componentRef.setInput('amount', inputs.amount);
   fixture.componentRef.setInput('pct', inputs.pct);
+  if (inputs.unavailable !== undefined) fixture.componentRef.setInput('unavailable', inputs.unavailable);
+  if (inputs.unavailableHint !== undefined) fixture.componentRef.setInput('unavailableHint', inputs.unavailableHint);
   fixture.detectChanges();
   return fixture.nativeElement as HTMLElement;
 }
@@ -37,5 +39,20 @@ describe('VariationComponent', () => {
     const el = render({ amount: null, pct: null });
     expect(el.querySelector('.amount')?.textContent?.trim()).toBe('—');
     expect(el.querySelector('.delta.flat')?.textContent?.trim()).toBe('—');
+  });
+
+  it('names why nothing is measurable instead of showing two ambiguous dashes', () => {
+    const el = render({ amount: null, pct: null, unavailable: 'Valeur déclarée', unavailableHint: 'Pas d\'historique' });
+    const note = el.querySelector('.unavailable');
+    expect(note?.textContent?.trim()).toBe('Valeur déclarée');
+    expect(note?.getAttribute('title')).toBe('Pas d\'historique');
+    expect(el.querySelector('.amount')).toBeNull();
+    expect(el.querySelector('.delta')).toBeNull();
+  });
+
+  it('keeps a real zero as a figure even when an unavailable label is given', () => {
+    const el = render({ amount: 0, pct: null, unavailable: 'Valeur déclarée' });
+    expect(el.querySelector('.unavailable')).toBeNull();
+    expect(el.querySelector('.amount')?.textContent?.trim()).toMatch(/^0\s?€$/);
   });
 });
