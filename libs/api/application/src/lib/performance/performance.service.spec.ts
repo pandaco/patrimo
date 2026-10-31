@@ -493,6 +493,38 @@ describe('PerformanceService', () => {
       expect(variation.envelopes.find(e => e.id === 'env-2')?.variation).toBe(0);
     });
 
+    it('gives a percentage to a small position instead of hiding it below 100 € of capital', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        // 50 € of capital: +25 € on the last label is a clean +50 %.
+        transaction({ type: 'BUY', quantity: 10, price: 5, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map((date, i) => ({ date, close: i < labels.length - 1 ? 5 : 7.5 })) });
+
+      const [position] = (await service.getPeriodVariation('user-1', '1M')).positions;
+
+      expect(position.variation).toBe(25);
+      expect(position.variationPct).toBeCloseTo(50, 1);
+      expect(position.pnlPct).toBeCloseTo(50, 1);
+    });
+
+    it('still withholds the percentage when the capital is too small to divide by', async () => {
+      const labels = await captureVariationLabels();
+      envelopeRepository.findByUserId.mockResolvedValue([env({ id: 'env-1', glyph: 'pea' })]);
+      etfRepository.findAll.mockResolvedValue([etf({})]);
+      transactionRepository.findByUserId.mockResolvedValue([
+        transaction({ type: 'BUY', quantity: 1, price: 0.5, envelopeId: 'env-1', date: new Date(labels[0] + 'T00:00:00Z') }),
+      ]);
+      mockHistory({ 'ISIN-ESE': labels.map(date => ({ date, close: 0.5 })) });
+
+      const [position] = (await service.getPeriodVariation('user-1', '1M')).positions;
+
+      expect(position.variationPct).toBeNull();
+      expect(position.pnlPct).toBeNull();
+    });
+
     it.each(['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', '3Y', '5Y', 'MAX'] as const)(
       'serves the %s period for a held position with a finite figure, never NaN',
       async period => {

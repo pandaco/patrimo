@@ -26,6 +26,12 @@ function glyphToCategory(glyph: string): WealthCategory {
 // which an asymmetric (looser) bound would leave half-counted.
 const MAX_DAILY_MOVE = 0.25;
 
+// Below this capital a percentage is noise for a whole envelope or category.
+const MIN_RETURN_CAPITAL = 100;
+// A single position can legitimately be small (a first 50 € purchase): its
+// percentage is shown down to 1 €, under which the ratio is only rounding noise.
+const MIN_POSITION_CAPITAL = 1;
+
 /**
  * Period return from a *clean invested base* and its external-flow series,
  * both aligned to the same daily/weekly axis. `base[i]` is the value of the
@@ -38,7 +44,7 @@ const MAX_DAILY_MOVE = 0.25;
  * base a contribution is neutralised (`base − flow − prev`) and only genuine
  * market/interest moves remain.
  */
-function periodReturn(base: number[], flows: number[], spanDays: number): WealthReturnDto {
+function periodReturn(base: number[], flows: number[], spanDays: number, minCapital = MIN_RETURN_CAPITAL): WealthReturnDto {
   const n = base.length;
   if (n < 2) return { eur: 0, twrPct: null, investedReturnPct: null, annualizedPct: null };
 
@@ -70,7 +76,7 @@ function periodReturn(base: number[], flows: number[], spanDays: number): Wealth
   // toward zero when money is deployed late in a long window and the ratio
   // blows up (the "294 %" trap). This stays the intuitive gain-over-money-in.
   const investedCapital = first + netFlows;
-  const investedReturnPct = investedCapital >= 100 ? Number(((eur / investedCapital) * 100).toFixed(2)) : null;
+  const investedReturnPct = investedCapital >= minCapital ? Number(((eur / investedCapital) * 100).toFixed(2)) : null;
 
   // Annualise only for windows of at least ~1 year (short-period extrapolation is noise).
   const annualizedPct = twrPct !== null && spanDays >= 360 && growth > 0
@@ -743,18 +749,18 @@ export class PerformanceService {
   /** A declared value has no history: its PV latente is known, its period variation is not. */
   private declaredVariationOf(value: number, cost: number): VariationDto {
     const pnl = Number((value - cost).toFixed(2));
-    return { value, pnl, pnlPct: cost >= 100 ? Number(((pnl / cost) * 100).toFixed(2)) : null, variation: null, variationPct: null };
+    return { value, pnl, pnlPct: cost >= MIN_POSITION_CAPITAL ? Number(((pnl / cost) * 100).toFixed(2)) : null, variation: null, variationPct: null };
   }
 
   /** One variation line from a clean value series, its contribution series and its cost basis. */
   private variationOf(base: number[], flows: number[], cost: number, spanDays: number): VariationDto {
     const value = base[base.length - 1] ?? 0;
     const pnl   = Number((value - cost).toFixed(2));
-    const { eur, investedReturnPct } = periodReturn(base, flows, spanDays);
+    const { eur, investedReturnPct } = periodReturn(base, flows, spanDays, MIN_POSITION_CAPITAL);
     return {
       value,
       pnl,
-      pnlPct: cost >= 100 ? Number(((pnl / cost) * 100).toFixed(2)) : null,
+      pnlPct: cost >= MIN_POSITION_CAPITAL ? Number(((pnl / cost) * 100).toFixed(2)) : null,
       variation: eur,
       variationPct: investedReturnPct,
     };
